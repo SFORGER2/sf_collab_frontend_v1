@@ -10,6 +10,7 @@ import ChatNotification from "./ChatNotification";
 import { chatAPI } from "@/utils/APIs/chatApi";
 
 
+
 // show name only on first message in a run (group/general/startup)
 function shouldShowSenderName(messages, index) {
   if (index === 0) return true;
@@ -118,9 +119,14 @@ const handleFileUpload = async ({ file, conversationId, token }) => {
   if (!token || !file || !conversationId) return null;
 
   try {
-    const response = await chatAPI.uploadFile(conversationId, file, "");
-    if (response?.success && response?.data?.message) {
-      return response.data.message.file_url;
+    // ✅ USING CENTRALIZED API
+    const data = await chatAPI.uploadFile(conversationId, file, file.name);
+    
+    if (data?.success && data?.data?.message) {
+      return data.data.message.file_url;
+    }
+    if (data?.message?.file_url) {
+      return data.message.file_url;
     }
     return null;
   } catch (e) {
