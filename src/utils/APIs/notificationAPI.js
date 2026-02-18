@@ -1,20 +1,9 @@
-/**
- * SF Collab Notification API - MERGED (keeps your existing baseURL + auth interceptor UI flow)
- * Adds: unified extractData, categories/priorities constants, more endpoints, and keeps existing ones.
- */
-
 import axios from "axios";
-import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from "./interceptors";
-import { API_BASE_URL } from "../config";
+import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from "./interceptors";
 
 
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+const api = axios.create(API_CONFIG);
 
 
 api.interceptors.request.use(

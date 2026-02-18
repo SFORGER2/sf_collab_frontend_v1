@@ -54,3 +54,10 @@ export const responseErrorInterceptor = (error) => {
 
   return Promise.reject(error);
 };
+export const API_CONFIG = {
+  baseURL: API_BASE_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+}
