@@ -3,6 +3,7 @@ import './MultiRoleProfileForm.css'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { setupProfileRequest } from '@/utils/APIs/authAPI'
+import { usersAPI } from '@/utils/APIs/userAPI'
 import LoadingSpinner from '../LoadingSpinner'
 
 const roleConfig = [
@@ -309,21 +310,13 @@ function MultiRoleProfileForm() {
         investorProfile,
       }
 
-      // Save to backend
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/users/complete-profile`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      })
+      // Save to backend using centralized API
+      const response = await usersAPI.completeProfile(payload, token)
 
-      if (!response.ok) {
+      if (!response.success) {
         throw new Error('Failed to save profile')
       }
 
-      const data = await response.json()
       toast.success('Multi-role profile saved successfully!')
       
       // Redirect to dashboard

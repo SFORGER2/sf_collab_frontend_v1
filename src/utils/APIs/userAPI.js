@@ -164,6 +164,15 @@ export const usersAPI = {
     });
     return response.data;
   },
+
+  completeProfile: async (profileData, accessToken) => {
+    const response = await api.post('/users/complete-profile', profileData, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  },
 };
 
 export default api;
