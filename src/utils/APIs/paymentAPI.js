@@ -82,6 +82,10 @@ export const paymentAPI = {
   getCredits: async () => {
     const response = await api.get('/payments/credits');
     return response.data;
+  },
+  getAITools: async () => {
+    const response = await api.get('/payments/ai-tools');
+    return response.data;
   }
 }
 

@@ -26,11 +26,9 @@ export const feedbackAPI = {
     return response.data.data;
   },
 
-  getAll: async (accessToken) => {
+  getAll: async (params) => {
     const response = await api.get("/feedback", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      params: params
     });
     return response.data;
   },

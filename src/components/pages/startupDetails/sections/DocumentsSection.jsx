@@ -29,7 +29,7 @@ const itemVariants = {
   },
 };
 
-export default function DocumentsSection({ documents, isCreator, id, fetchStartupData }) {
+export default function DocumentsSection({ documents, isAdmin, id, fetchStartupData }) {
   const [isUploadDocModalOpen, setIsUploadDocModalOpen] = useState(false);
   const [documentForm, setDocumentForm] = useState({
     document: null,
@@ -119,7 +119,7 @@ export default function DocumentsSection({ documents, isCreator, id, fetchStartu
             <Button onClick={() => setView("list")} variant={view === "list" ? "default" : "ghost"}>
               <List className="w-4 h-4" />
             </Button>
-            {isCreator && (
+            {isAdmin && (
             <Button
               onClick={() => setIsUploadDocModalOpen(true)}
               className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-lg hover:shadow-blue-500/50 transition-all"
@@ -194,7 +194,7 @@ export default function DocumentsSection({ documents, isCreator, id, fetchStartu
                         Download
                       </Button>
                     </motion.div>
-                    {isCreator && (
+                    {isAdmin && (
                       <motion.div className="flex gap-2" whileHover={{ scale: 1.02 }}>
                         <Button
                           size="sm"

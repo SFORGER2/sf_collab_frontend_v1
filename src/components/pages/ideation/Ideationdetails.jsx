@@ -792,7 +792,7 @@ const IdeationDetails = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowJoinModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+                className="absolute top-4 left-4 text-gray-400 hover:text-white transition-colors"
               >
                 <X className="h-5 w-5" />
               </motion.button>
@@ -871,7 +871,7 @@ const IdeationDetails = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowDeleteModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+                className="absolute top-4 left-4 text-gray-400 hover:text-white transition-colors"
               >
                 <X className="h-5 w-5" />
               </motion.button>

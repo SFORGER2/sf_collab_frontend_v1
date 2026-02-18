@@ -176,7 +176,7 @@ export default function MVPNavBar() {
         
         <div className="md:pt-0 pt-4 h-full flex items-center">
           <Link to="/" className='w-full h-full'>
-            <img src="/logo_white.svg" className="h-full md:left-0 left-1" alt="sf collab" />
+            <img loading="lazy" src="/logo_white.svg" className="h-full md:left-0 left-1" alt="sf collab" />
             </Link>
           </div>
 

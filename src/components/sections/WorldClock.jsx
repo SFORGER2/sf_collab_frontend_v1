@@ -160,12 +160,12 @@ export default function WorldClock() {
   ]
 
   return (
-    <div className=" p-4 md:p-6 lg:p-8 overflow-hidden ">
+    <div className="md:p-2 overflow-hidden ">
       <div className="w-full mx-auto">
         {/* Header */}
-        <Card className="h-38 relative overflow-hidden bg-transparent border-zinc-800 shadow-none mb-6">
+        <Card className="relative overflow-hidden bg-transparent border-zinc-800 shadow-none mb-6">
           {/* <div className="transition-all duration-1000  opacity-15"> */}
-              <img src="/world_clock.png" className=" absolute object-fill top-0 left-0  w-full h-fit -mt-80 opacity-15" />
+              <img loading="lazy" src="/world_clock.jpg" className=" absolute object-fill top-0 left-0  w-full h-fit -mt-80 opacity-15" />
             {/* </div> */}
           <CardContent className="p-6 relative ">
             
@@ -214,11 +214,11 @@ export default function WorldClock() {
         {/* Filters */}
         <Card className="bg-transparent relative overflow-hidden border-zinc-800 shadow-none mb-6">
           <CardContent className="p-6">
-            <img src="/design_2.png" className=" absolute object-fill top-0 left-0  w-full h-fit -mt-80 opacity-15" />
+            <img loading="lazy" src="/design_2.jpg" className=" absolute object-fill top-0 left-0  w-full h-fit -mt-80 opacity-15" />
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Search */}
               <div className="flex-1 relative">
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Search cities or countries..."
                   value={searchQuery}
@@ -269,7 +269,7 @@ export default function WorldClock() {
             return (
               <Card key={city} className="bg-transparent relative border-zinc-800 shadow-none hover:shadow-xl transition-all duration-300">
                 <CardContent className="p-4 md:p-6 relative">
-                  <img src="/design_3.png" className=" absolute object-cover top-0 left-0  w-full opacity-30" />
+                  <img loading="lazy" src="/design_3.jpg" className=" absolute object-cover top-0 left-0  w-full opacity-30" />
                   {/* Location Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">

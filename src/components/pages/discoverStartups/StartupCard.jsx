@@ -101,7 +101,7 @@ export default function StartupCard({
             <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-gray-900/30 to-transparent" />
 
             {/* Actions */}
-            <div className="absolute top-3 right-3 flex gap-2">
+            <div className="absolute top-3 left-3 flex gap-2">
               <Button
                 size="icon"
                 variant="ghost"

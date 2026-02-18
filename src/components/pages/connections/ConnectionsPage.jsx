@@ -354,7 +354,7 @@ export default function ConnectionsPage() {
         {/* Search */}
         {activeTab === TABS.CONNECTIONS && (
           <div className="relative max-w-md mb-6">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <Input
               placeholder="Search connections..."
               value={searchQuery}

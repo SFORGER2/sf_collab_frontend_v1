@@ -69,7 +69,7 @@ export default function MediaViewerSheet({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-4 bg-black/50 hover:bg-black/70 backdrop-blur-sm border-white/20"
+                  className="absolute left-4 bg-black/50 hover:bg-black/70 backdrop-blur-sm border-white/20"
                   onClick={() =>
                     setCurrentImageIndex((prev) => (prev + 1) % images.length)
                   }

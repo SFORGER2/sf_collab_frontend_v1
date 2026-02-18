@@ -256,8 +256,8 @@ export default function Login() {
           </div>
         </div> */}
         <div className="hidden lg:flex lg:w-1/2 relative bg-black">
-          {/* <img 
-            src="/collaboration.png"
+          {/* <img loading="lazy" 
+            src="/collaboration.jpg"
             className="w-full max-h-screen object-cover"
             alt="Recollab Background" 
           /> */}
@@ -291,7 +291,7 @@ export default function Login() {
       className="w-full h-full lg:w-1/2 max-h-screen flex items-center justify-center p-2">
         <img
           ref={revealImgRef}
-          src="/shiny_logo.png"
+          src="/shiny_logo.jpg"
           alt="Reveal effect"
           style={{
             position: 'absolute',

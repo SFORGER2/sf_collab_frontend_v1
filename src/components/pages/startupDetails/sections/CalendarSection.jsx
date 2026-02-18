@@ -55,7 +55,7 @@ const itemVariants = {
 const CalendarSection = ({
   calendarEvents,
   setCalendarEvents,
-  isCreator
+  isAdmin
 }) => {
   const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
   const [view, setView] = useState(localStorage.getItem("calendarView") || "agenda");
@@ -147,7 +147,7 @@ const CalendarSection = ({
             </motion.div>
           </div>
 
-          {isCreator && (
+          {isAdmin && (
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full md:w-auto">
               <Button
                 size="sm"
@@ -166,7 +166,7 @@ const CalendarSection = ({
       {view === "agenda" && (
         <CalendarAgendaView
           calendarEvents={calendarEvents}
-          isCreator={isCreator}
+          isAdmin={isAdmin}
           onEditEvent={handleEditEvent}
           onDeleteEvent={handleDeleteEvent}
           onOpenEvent={openEvent}
@@ -194,7 +194,7 @@ const CalendarSection = ({
         event={selectedEvent}
         open={modalOpen}
         onClose={setModalOpen}
-        isCreator={isCreator}
+        isAdmin={isAdmin}
         onEdit={handleEditEvent}
         onDelete={handleDeleteEvent}
         color={selectedColor}
@@ -212,7 +212,7 @@ export default CalendarSection;
 
 const CalendarAgendaView = ({
   calendarEvents,
-  isCreator,
+  isAdmin,
   onEditEvent,
   onDeleteEvent,
   onOpenEvent
@@ -302,7 +302,7 @@ const CalendarAgendaView = ({
                 </div>
               </div>
 
-              {isCreator && (
+              {isAdmin && (
                 <motion.div className="flex gap-1 flex-shrink-0" whileHover={{ scale: 1.05 }}>
                   <Button
                     size="icon"

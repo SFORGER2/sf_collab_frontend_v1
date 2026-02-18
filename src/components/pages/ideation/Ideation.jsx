@@ -92,6 +92,7 @@ const Ideation = ({ activeRole}) => {
           name: `${idea.creator.firstName} ${idea.creator.lastName}`,
           role: activeRole,
           avatar: idea.creator ? getProfilePicture(idea.creator) : '',
+          id: idea.creator?.id,
         },
         createdAt: new Date(idea.createdAt).toLocaleDateString("en-US", {
           month: "long",

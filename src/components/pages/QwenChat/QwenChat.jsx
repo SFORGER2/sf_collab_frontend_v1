@@ -33,7 +33,7 @@ const QwenChat = () => {
   const [maxTokens, setMaxTokens] = useState(4096);
   const [showSettings, setShowSettings] = useState(false);
   const [modelStatus, setModelStatus] = useState('loading');
-  const [modelResponseType, setModelResponseType] = useState('page_context');
+  const [modelResponseType, setModelResponseType] = useState('general_knowledge'); // 'page_context' or 'general_knowledge'
   
   const messagesEndRef = useRef(null);
   const { user, access_token } = useSelector((state) => state.auth);
@@ -243,7 +243,7 @@ const QwenChat = () => {
               </div>
               <div>
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-2">
-                  AI Assistant
+                  Qwen Chat
                 </h1>
                 <p className="text-lg text-gray-300">
                   Your intelligent conversation partner powered by <span className="font-semibold text-blue-400">Qwen 2.5</span>
@@ -323,21 +323,6 @@ const QwenChat = () => {
                     </Label>
 
                     <div className="flex gap-2">
-                      {/* Page Context */}
-                      <button
-                        onClick={() => setModelResponseType("page_context")}
-                        className={`
-        flex-1 px-2 py-1 rounded-full border text-sm font-medium transition-all
-        ${modelResponseType === "page_context"
-                            ? "bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400 text-white border-transparent shadow-lg scale-[1.02]"
-                            : "border-gray-600/50 text-gray-300 hover:border-gray-400 hover:text-white"
-                          }
-      `}
-                        aria-pressed={modelResponseType === "page_context"}
-                      >
-                        Page Context
-                      </button>
-
                       {/* General Knowledge */}
                       <button
                         onClick={() => setModelResponseType("general_knowledge")}
@@ -446,7 +431,7 @@ const QwenChat = () => {
                           : 'bg-purple-500'
                         }`}>
                         {message.role === 'user' ? (
-                          <img src={getProfilePicture(user)} alt="User Avatar" className="w-8 h-8 rounded-full object-cover" />
+                          <img loading="lazy" src={getProfilePicture(user)} alt="User Avatar" className="w-8 h-8 rounded-full object-cover" />
                         ) : (
                           <Bot className="h-4 w-4 text-white" />
                         )}

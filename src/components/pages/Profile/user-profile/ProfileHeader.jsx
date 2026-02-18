@@ -50,7 +50,7 @@ const ProfileHeader = ({
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute -bottom-40 -right-40 w-80 h-80 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 rounded-full blur-3xl"
+          className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 rounded-full blur-3xl"
         />
       </div>
 
@@ -61,7 +61,7 @@ const ProfileHeader = ({
       {/* Cover Photo */}
       <div className="relative h-48 dashboard-bg">
         {/* <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 via-purple-900/20 to-pink-900/20" />
-        <button className="absolute top-4 right-4 p-2 bg-black/50 rounded-lg hover:bg-black/70 transition-colors backdrop-blur-sm">
+        <button className="absolute top-4 left-4 p-2 bg-black/50 rounded-lg hover:bg-black/70 transition-colors backdrop-blur-sm">
           <Camera className="w-4 h-4" />
         </button> */}
       </div>
@@ -74,7 +74,7 @@ const ProfileHeader = ({
             whileHover={{ scale: 1.05 }}
             className="relative w-32 h-32  rounded-full border-4 border-gray-800 bg-gradient-to-br from-blue-500/20 to-purple-500/20 group/picture"
           >
-            <img 
+            <img loading="lazy" 
               src={getProfilePicture(user) }
               alt={user?.firstName}
               className="w-full h-full object-cover group-hover/picture:scale-110 rounded-full transition-transform duration-300"

@@ -323,7 +323,7 @@ export default function Knowledgedetails() {
     };
 
     return (
-      <div style={{zIndex: 9999}} className="fixed top-20 right-4 z-50">
+      <div style={{zIndex: 9999}} className="fixed top-20 left-4 z-50">
         <div className={`rounded-xl border p-4 backdrop-blur-sm ${styles[bookmarkNotification.type]}`}>
           <div className="flex items-center gap-3">
             {icons[bookmarkNotification.type]}

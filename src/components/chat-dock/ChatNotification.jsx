@@ -7,6 +7,7 @@ export default function ChatNotification({
   title,
   url,
   message,
+  onClick
 }) {
   if (!message) return null;
   const isMobile = window.matchMedia("(max-width: 640px)").matches;
@@ -29,6 +30,7 @@ export default function ChatNotification({
             if (isMobile) {
               window.location.href = url;
             } else {
+              onClick();
               setIsOpen(false);
             }
           }}

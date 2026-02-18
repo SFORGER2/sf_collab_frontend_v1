@@ -33,7 +33,7 @@ export default function NotificationAvatar({ src, name, type }) {
 
 
   return src ? (
-    <img 
+    <img loading="lazy" 
       src={src} 
       alt={name} 
       className="w-12 h-12 rounded-2xl object-cover shadow-lg ring-2 ring-white/10" 

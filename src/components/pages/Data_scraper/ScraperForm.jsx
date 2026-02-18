@@ -9,10 +9,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
 import { SiReact, SiNextdotjs, SiTypescript, SiTailwindcss } from 'react-icons/si';
 
 const featureItems = [
-    { icon: <img src="/thounder.png" className='w-full' />, metric: '99.9%', label: 'Success Rate', color: 'from-emerald-400 to-green-500' },
-    { icon: <img src="/rocket.png" className='w-full' />, metric: '<2s', label: 'Avg. Response', color: 'from-blue-400 to-cyan-500' },
-    { icon: <img src="/search.png" className='w-full' />, metric: '1000+', label: 'Sites Supported', color: 'from-purple-400 to-pink-500' },
-    { icon: <img src="/chart.png" className='w-full' />, metric: 'PDF', label: 'Export Formats', color: 'from-orange-400 to-red-500' }
+    { icon: <img loading="lazy" src="/thounder.jpg" className='w-full' />, metric: '99.9%', label: 'Success Rate', color: 'from-emerald-400 to-green-500' },
+    { icon: <img loading="lazy" src="/rocket.jpg" className='w-full' />, metric: '<2s', label: 'Avg. Response', color: 'from-blue-400 to-cyan-500' },
+    { icon: <img loading="lazy" src="/search.jpg" className='w-full' />, metric: '1000+', label: 'Sites Supported', color: 'from-purple-400 to-pink-500' },
+    { icon: <img loading="lazy" src="/chart.jpg" className='w-full' />, metric: 'PDF', label: 'Export Formats', color: 'from-orange-400 to-red-500' }
   ];
   
 function ScraperForm() {
@@ -172,7 +172,7 @@ function ScraperForm() {
                         <label htmlFor="url" className="flex items-center gap-3 text-lg font-semibold">
                         <div className="relative">
                             <div className="relative ">
-                            <span className="text-xl text-blue-300"><img src="/link.png" className='w-10' alt="link" /></span>
+                            <span className="text-xl text-blue-300"><img loading="lazy" src="/link.jpg" className='w-10' alt="link" /></span>
                             </div>
                         </div>
                         <span className="text-white font-medium">
@@ -200,7 +200,7 @@ function ScraperForm() {
                         />
                         
                         {/* Input status indicator */}
-                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
                             {url ? (
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
@@ -221,7 +221,7 @@ function ScraperForm() {
                         method: 'static',
                         label: 'Static Analysis',
                         description: 'Lightning-fast HTML parsing',
-                        icon:<img src='/thounder.png' className='w-16'/>,
+                        icon:<img loading="lazy" src='/thounder.jpg' className='w-16'/>,
                         gradient: 'from-blue-400 to-cyan-400',
                         borderColor: 'border-blue-400/30',
                         hoverBorder: 'border-blue-400/50',
@@ -232,7 +232,7 @@ function ScraperForm() {
                         method: 'dynamic',
                         label: 'Dynamic Rendering', 
                         description: 'Full JavaScript execution',
-                        icon:<img src='/rocket.png' className='w-16'/>,
+                        icon:<img loading="lazy" src='/rocket.jpg' className='w-16'/>,
                         gradient: 'from-purple-400 to-pink-400',
                         borderColor: 'border-purple-400/30',
                         hoverBorder: 'border-purple-400/50',

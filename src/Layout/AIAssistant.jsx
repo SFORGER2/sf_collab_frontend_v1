@@ -101,7 +101,7 @@ export default function AIAssistant({ callback = () => {}, isMobile = false }) {
   return (
     <>
       {/* Floating button */}
-      {!isOpen && (
+      {(!isOpen && !isMobile )&& (
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}

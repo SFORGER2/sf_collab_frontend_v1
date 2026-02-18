@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Edit3, MessageCircle, HamburgerIcon, Menu } from 'lucide-react';
 
@@ -16,7 +16,6 @@ import { useAppSocket } from "@/context/SocketProvider";
 import { useChatContacts } from "@/context/ChatContactsProvider";
 import { useSearchParams } from "react-router-dom";
 import { useSelector } from 'react-redux';
-import { usersAPI } from '@/utils/APIs/userAPI';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 import { chatAPI } from '@/utils/APIs/chatApi';
 
@@ -591,7 +590,7 @@ useEffect(() => {
 
 
   // Filter conversations by search and tab
-  const filteredConversations = conversations.filter(c => {
+  const filteredConversations = useMemo(() => conversations.filter(c => {
     // Filter by search
     if (searchTerm) {
       const name = c.name || c.participants?.find(p => String(p.id) !== String(currentUser?.id))?.firstName || '';
@@ -606,7 +605,13 @@ useEffect(() => {
     if (activeTab === 'general') return c.conversation_type === 'general';
     
     return true;
-  });
+  }).sort(
+    (a, b) => {
+      const aLast = toMs(a.last_message_at || a.updated_at || a.created_at) || 0;
+      const bLast = toMs(b.last_message_at || b.updated_at || b.created_at) || 0;
+      return bLast - aLast;
+    }
+  ), [conversations, searchTerm, activeTab, currentUser?.id]);
 
   
 

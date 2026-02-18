@@ -228,7 +228,9 @@ useEffect(() => {
       if (formData.roles.length === 0) {
         throw new Error("At least one role must be selected");
       }
-      
+      if (!formData.profile.country || !formData.preferences.timezone) {
+        throw new Error("Location must be set");
+      }
       if (formData.roles.includes('influencer') && !user?.roles?.includes('influencer')) {
         toast.info(
           <div className="flex flex-col gap-3 max-w-sm">
@@ -266,7 +268,7 @@ useEffect(() => {
       window.location.reload();
 
     } catch (e) {
-      toast.error(e.message);
+      toast.error(e.error);
     } finally {
       setSaving(false);
     }
@@ -278,7 +280,7 @@ useEffect(() => {
       await updateUser({ preferences: formData.preferences });
       toast.success("Preferences updated");
     } catch (e) {
-      toast.error(e.message);
+      toast.error(e.error);
     } finally {
       setSaving(false);
     }
@@ -343,7 +345,7 @@ useEffect(() => {
       // optionally redirect / logout
     } catch (err) {
       console.error(err);
-      toast.error(err.message || 'Failed to delete account');
+      toast.error(err.error || 'Failed to delete account');
     }
   };
 

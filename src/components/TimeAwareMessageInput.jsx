@@ -249,7 +249,7 @@ const TimeAwareMessageInput = ({ onSend, onTyping, conversationId }) => {
           <div className="mb-3 p-3 bg-[#1a1a1a] border border-gray-800 rounded-xl">
             <div className="flex items-center gap-3">
               {filePreview ? (
-                <img src={filePreview} alt="Preview" className="w-16 h-16 object-cover rounded-lg" />
+                <img loading="lazy" src={filePreview} alt="Preview" className="w-16 h-16 object-cover rounded-lg" />
               ) : (
                 <div className="w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center">
                   <Paperclip size={24} className="text-gray-500" />

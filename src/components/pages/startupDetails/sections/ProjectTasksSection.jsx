@@ -53,7 +53,7 @@ const itemVariants = {
   },
 };
 
-export default function ProjectTasksSection({ tasks, isCreator, setTasks, startupId, teamMembers }) {
+export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupId, teamMembers }) {
   const [openCreate, setOpenCreate] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -91,7 +91,7 @@ export default function ProjectTasksSection({ tasks, isCreator, setTasks, startu
   };
 
   const isVisible = (task) => {
-    if (isCreator) return true;
+    if (isAdmin) return true;
     if (task.visible_by === 'all' || task.visible_by === 'public') {
       return true;
     }
@@ -150,7 +150,7 @@ export default function ProjectTasksSection({ tasks, isCreator, setTasks, startu
             </motion.div>
           </div>
 
-          {isCreator && (
+          {isAdmin && (
             <Button
               onClick={() => setOpenCreate(true)}
               className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-lg hover:shadow-blue-500/50 transition-all"
@@ -191,7 +191,7 @@ export default function ProjectTasksSection({ tasks, isCreator, setTasks, startu
       {view === "list" && (
         <TaskListView
           filteredTasks={filteredTasks}
-          isCreator={isCreator}
+          isAdmin={isAdmin}
           isVisible={isVisible}
           user={user}
           handleStatusChange={handleStatusChange}
@@ -205,7 +205,7 @@ export default function ProjectTasksSection({ tasks, isCreator, setTasks, startu
       {view === "grid" && (
         <TaskGridView
           filteredTasks={filteredTasks}
-          isCreator={isCreator}
+          isAdmin={isAdmin}
           isVisible={isVisible}
           user={user}
           handleStatusChange={handleStatusChange}
@@ -233,7 +233,7 @@ export default function ProjectTasksSection({ tasks, isCreator, setTasks, startu
   );
 }
 
-const TaskCard = ({ task, isCreator, isVisible, user, handleStatusChange, handleDeleteTask, setEditMode, setSelectedTask, setOpenCreate }) => (
+const TaskCard = ({ task, isAdmin, isVisible, user, handleStatusChange, handleDeleteTask, setEditMode, setSelectedTask, setOpenCreate }) => (
   <Card
     className={`bg-gradient-to-br from-gray-800 to-gray-900 border transition-all hover:shadow-lg hover:shadow-blue-500/10 ${
       task.status === "completed"
@@ -412,7 +412,7 @@ const TaskCard = ({ task, isCreator, isVisible, user, handleStatusChange, handle
           )}
         </motion.div>
 
-        {isCreator && (
+        {isAdmin && (
           <motion.div className="flex gap-2" whileHover={{ scale: 1.02 }}>
             <Button
               size="sm"

@@ -344,7 +344,7 @@ const NotificationItem = ({ notification, onDelete }) => {
         {/* Avatar or Icon */}
         <div className="flex-shrink-0">
           {actor_avatar_url ? (
-            <img 
+            <img loading="lazy" 
               src={actor_avatar_url} 
               alt="" 
               className="w-10 h-10 rounded-full object-cover"

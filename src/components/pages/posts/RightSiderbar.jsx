@@ -26,7 +26,7 @@ export default function RightSidebar({ socialProfile }) {
           <div className="relative">
             <Search
               size={20}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-400"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400"
             />
             <Input
               placeholder="Search..."

@@ -14,13 +14,13 @@ import { useSelector } from "react-redux";
 import { API_BASE_URL } from "@/utils/config";
 import { motion } from "framer-motion";
 import connectionAPI from "@/utils/APIs/connectionAPI";
+import { ConnectionButton } from "@/components/connection/ConnectionButton";
 import { toast } from "react-toastify";
 
 export default function IdeationCard({ content, shouldBlur }) {
   const [likes, setLikes] = useState(content?.likes || 0);
   const [liked, setLiked] = useState(content?.hasLiked || false);
   const [bookmarked, setBookmarked] = useState(content?.hasBookmarked || false);
-  const [isConnected, setIsConnected] = useState(false);
   const { user, access_token } = useSelector((state) => state.auth);
 
   const handleLike = useCallback(
@@ -70,23 +70,8 @@ export default function IdeationCard({ content, shouldBlur }) {
     }
   };
 
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        const res = await connectionAPI.getStatus(
-          content.author.id,
-          access_token
-        );
-        setIsConnected(res.data.connected);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    if (user.id !== content.author.id) {
-      checkConnection();
-    }
-  }, [content.author.id, access_token, user.id]);
+  // Don't show connection button for own ideas
+  const isOwnIdea = user.id === content.author.id;
 
   return (
     <motion.div
@@ -116,9 +101,8 @@ export default function IdeationCard({ content, shouldBlur }) {
         )}
 
         <div
-          className={`p-6 space-y-4 h-full flex flex-col ${
-            shouldBlur ? "blur-sm pointer-events-none" : ""
-          }`}
+          className={`p-6 space-y-4 h-full flex flex-col ${shouldBlur ? "blur-sm pointer-events-none" : ""
+            }`}
         >
           {/* Image */}
           {content.imageUrl && (
@@ -140,7 +124,9 @@ export default function IdeationCard({ content, shouldBlur }) {
           )}
 
           {/* Author + Stage */}
-          <div className="flex items-start justify-between">
+          <Link
+            to={`/user-profile?id=${content.author.id}`}
+            className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <img
                 src={content.author.avatar}
@@ -162,7 +148,7 @@ export default function IdeationCard({ content, shouldBlur }) {
             >
               {content.stage}
             </span>
-          </div>
+          </Link>
 
           {/* Title + Description */}
           <div className="flex-1">
@@ -204,9 +190,8 @@ export default function IdeationCard({ content, shouldBlur }) {
                   className="flex items-center gap-1.5 hover:text-red-400 transition-colors"
                 >
                   <Heart
-                    className={`h-4 w-4 ${
-                      liked ? "text-red-500 fill-red-500" : ""
-                    }`}
+                    className={`h-4 w-4 ${liked ? "text-red-500 fill-red-500" : ""
+                      }`}
                   />
                   <span>{likes}</span>
                 </motion.button>
@@ -234,11 +219,10 @@ export default function IdeationCard({ content, shouldBlur }) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleBookmark}
-                className={`flex-1 py-2.5 px-3 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
-                  bookmarked
-                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/50"
-                    : "bg-white/5 text-gray-400 border border-gray-700/50 hover:border-emerald-500/30 hover:text-white"
-                }`}
+                className={`flex-1 py-2.5 px-3 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${bookmarked
+                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/50"
+                  : "bg-white/5 text-gray-400 border border-gray-700/50 hover:border-emerald-500/30 hover:text-white"
+                  }`}
                 aria-pressed={bookmarked}
               >
                 <Bookmark
@@ -268,9 +252,26 @@ export default function IdeationCard({ content, shouldBlur }) {
                 <Share2 className="h-4 w-4" />
                 Share
               </motion.button>
+
+              
             </div>
+            <div
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <ConnectionButton
+                userId={content.author.id}
+                size="sm"
+                className="w-full"
+              />
+            </div>
+            
           </div>
+          
         </div>
+        
       </Link>
     </motion.div>
   );

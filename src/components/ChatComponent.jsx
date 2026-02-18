@@ -271,7 +271,7 @@ const RightSidebarContent = ({
                     key={idx} 
                     className="aspect-square rounded-lg overflow-hidden bg-gray-900 hover:opacity-80 transition-all duration-200 cursor-pointer group relative"
                   >
-                    <img 
+                    <img loading="lazy" 
                       src={imageUrl} 
                       alt={file.file_name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
@@ -1771,7 +1771,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
         }
     
         return (
-          <div className="fixed top-25 right-4 z-999999" style={{ zIndex: 99999999999999 }}>
+          <div className="fixed top-25 left-4 z-999999" style={{ zIndex: 99999999999999 }}>
             <Alert className={styles[notification.type]}>
               <AlertDescription className="font-medium">
                 {notification.message}
@@ -1818,7 +1818,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
           {/* Close Button */}
           <button
             onClick={() => setShowWhiteboardModal(false)}
-            className="absolute top-4 right-4 z-50 p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all duration-200 group"
+            className="absolute top-4 left-4 z-50 p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all duration-200 group"
           >
             <X size={24} className="group-hover:rotate-90 transition-transform duration-200" />
           </button>
@@ -2793,7 +2793,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
       </div>
       {/* Debug Controls
             {process.env.NODE_ENV === 'development' && selectedConversation && (
-                <div className="fixed bottom-4 right-4 flex gap-2 z-50">
+                <div className="fixed bottom-4 left-4 flex gap-2 z-50">
                     <button 
                         onClick={() => {
                             handleUserTyping({

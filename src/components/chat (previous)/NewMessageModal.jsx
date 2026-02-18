@@ -58,7 +58,7 @@ const UserAvatar = ({ src, name, size = 'md', status = 'offline' }) => {
   return (
     <div className="relative inline-block flex-shrink-0">
       {showImage ? (
-        <img 
+        <img loading="lazy" 
           src={src} 
           alt={name} 
           className={`${sizes[size]} rounded-full object-cover bg-zinc-700`}

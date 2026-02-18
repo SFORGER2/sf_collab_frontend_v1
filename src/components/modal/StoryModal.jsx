@@ -60,7 +60,7 @@ const StoryModal = ({ isOpen, onClose }) => {
       >
         {/* Close button */}
         <button
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-200"
+          className="absolute top-3 left-3 text-gray-500 hover:text-gray-200"
           onClick={onClose}
         >
           ✕

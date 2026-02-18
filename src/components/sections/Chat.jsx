@@ -875,7 +875,7 @@ export default function Chat() {
               placeholder="Search contacts"
               className="w-full px-3 py-2 bg-[#181818] border-[#2d2d2d] border rounded-lg text-white placeholder-gray-400"
             />
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           </div>
         </div>
 

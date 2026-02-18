@@ -12,7 +12,8 @@ export default function BottomLinks({
     <div className="flex flex-col gap-2 items-center">
 
       
-      <div className="flex items-center justify-center w-fit px-3 py-2 rounded-lg transition-all hover:bg-amber-500/40 cursor-pointer hover:scale-105 hover:shadow-lg hover:shadow-amber-500/50 border border-amber-500/50">
+      <div
+        className="flex items-center justify-center w-fit rounded-lg transition-all">
         <SidebarFeedbackCard callback={callback} />
       </div>
       <Link

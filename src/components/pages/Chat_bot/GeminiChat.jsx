@@ -484,7 +484,7 @@ const GeminiChat = () => {
                         {/* Image Preview */}
                         {message.image && (
                           <div className="mb-2">
-                            <img 
+                            <img loading="lazy" 
                               src={message.image} 
                               alt="Uploaded" 
                               className="max-w-[200px] rounded-lg border border-gray-600"
@@ -569,7 +569,7 @@ const GeminiChat = () => {
                     {/* Image Upload */}
                     {imagePreview && (
                       <div className="flex items-center gap-2 p-2 bg-blue-400/10 rounded-lg border border-blue-400/30">
-                        <img 
+                        <img loading="lazy" 
                           src={imagePreview} 
                           alt="Preview" 
                           className="w-12 h-12 object-cover rounded"

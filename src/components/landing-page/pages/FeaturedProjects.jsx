@@ -73,7 +73,7 @@ export default function FeaturedProjects() {
   const ProjectCard = ({ project, onApply }) => {
     return (
       <div className="bg-[#111111] rounded-2xl overflow-hidden border border-gray-800 hover:border-purple-500/40 hover:shadow-[0_0_40px_rgba(139,92,246,0.2)] transition-all duration-300 flex flex-col h-full">
-        <img src={project.image} alt={project.title} className="w-full h-48 object-cover" />
+        <img loading="lazy" src={project.image} alt={project.title} className="w-full h-48 object-cover" />
         <div className="p-6 flex flex-col flex-grow">
           <div className="flex items-start justify-between mb-3">
             <h3 className="text-xl font-semibold text-white flex-1">{project.title}</h3>

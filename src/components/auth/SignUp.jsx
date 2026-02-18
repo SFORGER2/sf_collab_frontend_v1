@@ -294,8 +294,8 @@ export default function SignUp() {
           </div>
         </div> */}
         <div className="hidden lg:flex lg:w-1/2 relative bg-black">
-          {/* <img 
-            src="/collaboration.png"
+          {/* <img loading="lazy" 
+            src="/collaboration.jpg"
             className="w-full max-h-screen object-cover"
             alt="Recollab Background" 
           /> */}
@@ -329,7 +329,7 @@ export default function SignUp() {
       className="w-full h-full lg:w-1/2 max-h-screen flex items-center justify-center p-2">
         <img
           ref={revealImgRef}
-          src="/shiny_logo.png"
+          src="/shiny_logo.jpg"
           alt="Reveal effect"
           style={{
             position: 'absolute',
@@ -412,7 +412,7 @@ export default function SignUp() {
               <div className="space-y-2">
                 <label htmlFor="firstName" className="text-white text-sm">First Name *</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 right-3 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 left-3 pl-3 flex items-center pointer-events-none">
                     <User size={16} className="text-gray-500" />
                   </div>
                   <input
@@ -429,7 +429,7 @@ export default function SignUp() {
               <div className="space-y-2">
                 <label htmlFor="lastName" className="text-white text-sm">Last Name *</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 right-3 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 left-3 pl-3 flex items-center pointer-events-none">
                     <User size={16} className="text-gray-500" />
                   </div>
                   <input
@@ -449,7 +449,7 @@ export default function SignUp() {
             <div className="space-y-2 mb-2">
               <label htmlFor="email" className="text-white text-sm">Email *</label>
               <div className="relative">
-                <div className="absolute inset-y-0 right-3 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-3 pl-3 flex items-center pointer-events-none">
                   <Mail size={16} className="text-gray-500" />
                 </div>
                 <input
@@ -486,7 +486,7 @@ export default function SignUp() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button> */}

@@ -35,7 +35,7 @@ export default function AccountSecurity ({ formData, onChange, confirmedDelete, 
             <label className="block text-sm mb-2 text-gray-400">Current Password</label>
             <div className="relative">
               <input type={showCurrent ? "text" : "password"} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 pr-12" />
-              <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-3 text-gray-300">{showCurrent ? <EyeOff size={20} /> : <Eye size={20} />}</button>
+              <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute left-3 top-3 text-gray-300">{showCurrent ? <EyeOff size={20} /> : <Eye size={20} />}</button>
             </div>
           </div>
 
@@ -47,7 +47,7 @@ export default function AccountSecurity ({ formData, onChange, confirmedDelete, 
             <label className="block text-sm mb-2 text-gray-400">New Password</label>
             <div className="relative">
               <input type={showNew ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 pr-12" />
-              <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-3 text-gray-300">{showNew ? <EyeOff size={20} /> : <Eye size={20} />}</button>
+              <button type="button" onClick={() => setShowNew(!showNew)} className="absolute left-3 top-3 text-gray-300">{showNew ? <EyeOff size={20} /> : <Eye size={20} />}</button>
             </div>
           </div>
 
@@ -55,7 +55,7 @@ export default function AccountSecurity ({ formData, onChange, confirmedDelete, 
             <label className="block text-sm mb-2 text-gray-400">Confirm New Password</label>
             <div className="relative">
               <input type={showConfirm ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 pr-12" />
-              <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-3 text-gray-300">{showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}</button>
+              <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute left-3 top-3 text-gray-300">{showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}</button>
             </div>
           </div>
         </div>

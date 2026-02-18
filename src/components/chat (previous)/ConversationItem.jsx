@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import { plotCount } from "@/utils/plotCount";
 
 const toMs = (ts) => {
   if (!ts) return null;
@@ -116,7 +117,7 @@ const ConversationItem = ({
 
           {conversation.unread_count > 0 && (
             <span className="ml-2 w-5 h-5 flex items-center justify-center bg-indigo-500 text-zinc-900 text-[10px] font-bold rounded-full shrink-0">
-              {conversation.unread_count > 9 ? "9+" : conversation.unread_count}
+              {plotCount(conversation.unread_count)}
             </span>
           )}
         </div>

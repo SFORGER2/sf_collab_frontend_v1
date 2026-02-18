@@ -61,24 +61,23 @@ const Profile = () => {
   const [viewedUser, setViewedUser] = useState(null);
   const [loadingViewedUser, setLoadingViewedUser] = useState(false);
 
-  const token = useMemo(() => localStorage.getItem("access_token"), []);
-
   const isOtherUser =
     viewedUserId && authUser?.id && String(viewedUserId) !== String(authUser.id);
 
   const user = isOtherUser ? viewedUser : authUser;
-  console.log(user);
   useEffect(() => {
     const loadOtherUser = async () => {
       if (!isOtherUser) {
         setViewedUser(null);
         return;
       }
-      if (!token) return;
 
       setLoadingViewedUser(true);
       try {
-        const response = await usersAPI.getById(viewedUserId, token);
+        const params = {
+          include_stats: true,
+        }
+        const response = await usersAPI.getById(viewedUserId, params);
         const fetchedUser = response?.data?.user || response?.data || null;
 
         if (response?.success && fetchedUser) {
@@ -95,7 +94,7 @@ const Profile = () => {
     };
 
     loadOtherUser();
-  }, [isOtherUser, viewedUserId, token]);
+  }, [isOtherUser, viewedUserId]);
 
   if (!user || loadingViewedUser) {
     return (
@@ -321,7 +320,7 @@ const Profile = () => {
                           {/* Project Image */}
                           <div className="relative w-full h-48 rounded-t-2xl bg-linear-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 flex items-center justify-center overflow-hidden">
                             {project.image_url ? (
-                              <img src={project.image_url} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                              <img loading="lazy" src={project.image_url} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                             ) : (
                               <div className="text-5xl">📦</div>
                             )}

@@ -12,7 +12,7 @@ import { toast } from "react-toastify";
 // Hero Section Component
 export default function HeroSection({
   members,
-  isCreator,
+  isAdmin,
   startup,
   onJoinClick,
   getStageBadgeVariant,
@@ -167,7 +167,7 @@ export default function HeroSection({
               </Button>
             )}
             {
-              (isMember && !isCreator) &&
+              (isMember && !isAdmin) &&
               <Button
                 onClick={() => handleLeaveStartup(startup.id)}
                 variant="outline" className="border-red-600 bg-red-600 text-white hover:bg-red-600/20 hover:text-white">

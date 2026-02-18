@@ -71,12 +71,11 @@ const VerifyEmail = () => {
 
   const handleResendCode = async () => {
     try {
-      const response = await authAPI.sendVerificationCodeRequest(access_token);
-      console.log(response);
-      if (response.verification_token) {
+      const response = await authAPI.sendVerificationCodeRequest();
+      if (response.data.verification_token) {
         setTimeRemaining(900);
         toast.success("Verification code sent to your email");
-        window.location.search = `?token=${response.verification_token}`;
+        window.location.search = `?token=${response.data.verification_token}`;
       } else {
         toast.error("Failed to resend code");
       }
@@ -233,7 +232,6 @@ const VerifyEmail = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleResendCode}
-            disabled={timeRemaining > 300}
             className="w-full py-2 px-4 bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white font-medium rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed border border-white/10 text-sm"
           >
             Resend Code

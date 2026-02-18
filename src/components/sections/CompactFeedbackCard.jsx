@@ -88,7 +88,7 @@ const CompactFeedbackCard = () => {
   };
 
   return (
-    <div style={{zIndex: 999999999999}} className="fixed bottom-7 right-32 z-50 option-a option">
+    <div style={{zIndex: 999999999999}} className="fixed bottom-7 left-32 z-50 option-a option">
       <TooltipProvider>
         <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
           <TooltipTrigger asChild>
@@ -112,8 +112,8 @@ const CompactFeedbackCard = () => {
             onMouseLeave={() => setTooltipOpen(false)}
           >
             <h4 className="font-medium relative text-white text-center mb-2 flex items-center justify-center">
-              <img 
-                src="/feedback.png" 
+              <img loading="lazy" 
+                src="/feedback.jpg" 
                 className='p-2 h-12 w-12 absolute left-0 mt-1 group-hover:scale-105 transition-all duration-1000' 
                 alt="" 
               /> 

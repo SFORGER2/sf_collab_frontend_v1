@@ -55,7 +55,6 @@ const SendJoinRequestModal = ({ isOpen, onClose, startupRoles, startupId, startu
       const response = await startupsAPI.sendJoinRequest(startupId, payload);
 
       if (response?.success || response?.data?.success) {
-        toast.success('✅ Join request sent successfully! The founder will review it soon.');
         setFormData({
           message: '',
           role: 'member',

@@ -138,7 +138,11 @@ const DiscoverUsers = () => {
 
   const roleOptions = ['admin', 'moderator', 'member', 'founder', 'investor'];
   const statusOptions = ['active', 'inactive', 'suspended'];
-
+  const parseNumber = (num) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num;
+  }
   return (
     <div className="min-h-screen">
       <div className="w-full mx-auto px-2 md:px-4 sm:px-6 py-8">
@@ -209,7 +213,7 @@ const DiscoverUsers = () => {
             transition={{ delay: 0.4 }}
             className="text-lg sm:text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed"
           >
-            Connect with <span className="font-semibold text-white">innovators, founders, and creators</span>.
+            Connect with {totalUsers > 1000 ? `${parseNumber(totalUsers)} ` : "thousands of "} <span className="font-semibold text-white">innovators, founders, and creators</span>.
             Build your network and discover new opportunities.
           </motion.p>
         </motion.div>
@@ -246,7 +250,7 @@ const DiscoverUsers = () => {
                 <div>
                   <h4 className="text-sm font-medium text-gray-300 mb-2">Search</h4>
                   <div className="relative">
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       placeholder="Search users..."
                       value={searchQuery}

@@ -119,7 +119,7 @@ export default function LeftSidebar({ activeTab, onTabChange, onSettingsClick })
               onChange={(e) => handleSearch(e.target.value)}
               className="w-full bg-zinc-800 text-white rounded-lg px-4 py-2 text-sm outline-none border border-zinc-700 focus:border-blue-400"
             />
-            <Search className="absolute right-3 top-2.5 text-zinc-500" size={18} />
+            <Search className="absolute left-3 top-2.5 text-zinc-500" size={18} />
           </div>
           {searchResults.length > 0 && (
             <div className="mt-3 space-y-2 max-h-[200px] overflow-y-auto">

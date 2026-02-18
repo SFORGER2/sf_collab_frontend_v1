@@ -319,7 +319,7 @@ export default function MessageBubble({
         >
           <div className="relative w-full h-full flex items-center justify-center p-4">
             <button
-              className="absolute top-4 right-4 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white"
+              className="absolute top-4 left-4 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white"
               onClick={(e) => {
                 e.stopPropagation();
                 onDownload();
@@ -352,10 +352,16 @@ export default function MessageBubble({
 
       <div className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
         {/* Avatar column */}
-        <div className="w-8 shrink-0">
+        <div
+          onClick={() => {
+                if (!message?.sender?.id) return;
+                navigate(`/user-profile?id=${message.sender.id}`);
+              }}
+          className="w-8 shrink-0 cursor-pointer">
           {showAvatar && (
             <Avatar
               src={senderAvatar}
+              
               name={senderName || " "}
               size="sm"
               showStatus={false}
@@ -465,19 +471,34 @@ export default function MessageBubble({
               ) : (
                 <>
                   {/* Message content */}
-                  {!hideAutoFileText({
-                    fileUrl,
-                    isImage,
-                    content: message.content || message.original_content,
-                    fileName: message?.file_name,
-                  }) && (message.content || message.original_content)}
+                            <div className="flex gap-1 justify-center align-bottom">
+                            <div>
+                              {!hideAutoFileText({
+                              fileUrl,
+                              isImage,
+                              content: message.content || message.original_content,
+                              fileName: message?.file_name,
+                              }) && (message.content || message.original_content)}
+                              
+                              {message.is_edited && <span className="text-xs opacity-60 ml-1">(edited)</span>}
+                            </div>
+                            
+                            <span className="text-[0.6rem] text-gray-300 transition-opacity flex justify-end items-end-safe gap-1">
+                              {formatTime(ts)}
 
-                  {message.is_edited && <span className="text-xs opacity-60 ml-1">(edited)</span>}
-                </>
-              )}
-            </div>
+                              {isOwn && (() => {
+                              const st = getMsgStatus(message);
+                              if (st === "opened") return <Eye size={14} className="opacity-80" />;
+                              if (st === "delivered") return <CheckCheck size={14} className="opacity-80" />;
+                              return <Check size={14} className="opacity-80" />;
+                              })()}
+                            </span>
+                            </div>
+                          </>
+                          )}
+                        </div>
 
-            {/* Actions menu */}
+                        {/* Actions menu */}
             {isOwn && conversationId && !isEditing && (
               <div className="relative" ref={menuRef}>
                 <button
@@ -490,7 +511,7 @@ export default function MessageBubble({
                 </button>
 
                 {menuOpen && (
-                  <div className="absolute right-0 mt-1 w-32 bg-zinc-800 rounded-lg shadow-lg border border-zinc-700 z-50">
+                  <div className="absolute right-0 -top-20 mt-1 w-32 bg-zinc-800 rounded-lg shadow-lg border border-zinc-700 z-50">
                     <button
                       type="button"
                       onClick={handleEditClick}
@@ -514,17 +535,6 @@ export default function MessageBubble({
               </div>
             )}
 
-            {/* Timestamp and status */}
-            <span className="text-[10px] text-zinc-600 mt-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center gap-1">
-              <span>{formatTime(ts)}</span>
-
-              {isOwn && (() => {
-                const st = getMsgStatus(message);
-                if (st === "opened") return <Eye size={14} className="opacity-80" />;
-                if (st === "delivered") return <CheckCheck size={14} className="opacity-80" />;
-                return <Check size={14} className="opacity-80" />;
-              })()}
-            </span>
           </div>
         </div>
       </div>

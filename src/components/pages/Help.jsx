@@ -48,7 +48,7 @@ const Help = () => {
     {
       id: 1,
       title: 'Getting Started Guide',
-      icon: <img src="/roadmap.png" alt="" className="w-10 h-10 text-white"/>,
+      icon: <img loading="lazy" src="/roadmap.jpg" alt="" className="w-10 h-10 text-white"/>,
       description: 'Learn the fundamentals of our platform',
       link: '/getting-started',
       category: 'Basics',
@@ -57,7 +57,7 @@ const Help = () => {
     {
       id: 2,
       title: 'Project Management',
-      icon: <img src="/project.png" alt="" className="w-10 h-10 text-white"/>,
+      icon: <img loading="lazy" src="/project.jpg" alt="" className="w-10 h-10 text-white"/>,
       description: 'Advanced project management techniques',
       link: '/project-management',
       category: 'Advanced',
@@ -66,7 +66,7 @@ const Help = () => {
     {
       id: 3,
       title: 'Team Collaboration',
-      icon: <img src="/team.png" alt="" className="w-10 h-10 text-white"/>,
+      icon: <img loading="lazy" src="/team.jpg" alt="" className="w-10 h-10 text-white"/>,
       description: 'Optimize team workflow and communication',
       link: '/team-collaboration',
       category: 'Team',
@@ -75,7 +75,7 @@ const Help = () => {
     {
       id: 4,
       title: 'Video Tutorials',
-      icon: <img src="/video.png" alt="" className="w-10 h-10 text-white"/>,
+      icon: <img loading="lazy" src="/video.jpg" alt="" className="w-10 h-10 text-white"/>,
       description: 'Comprehensive step-by-step video guides',
       link: '/video-tutorials',
       category: 'Learning',
@@ -87,7 +87,7 @@ const Help = () => {
     {
       id: 1,
       title: 'Live Chat Support',
-      icon: <img src="/message_2.png" alt="message" className="w-16 h-16 text-white"/>,
+      icon: <img loading="lazy" src="/message_2.jpg" alt="message" className="w-16 h-16 text-white"/>,
       description: 'Instant assistance from our support team',
       details: 'Available 24/7 for premium users',
       badge: 'Instant',
@@ -96,7 +96,7 @@ const Help = () => {
     {
       id: 2,
       title: 'Phone Support',
-      icon: <img src="/call.png" alt="call" className="w-16 h-16 text-white"/>,
+      icon: <img loading="lazy" src="/call.png" alt="call" className="w-16 h-16 text-white"/>,
       description: 'Direct conversation with our experts',
       details: '+48 507 351 830 • Mon-Fri 8AM-8PM EST',
       badge: 'Priority',
@@ -105,7 +105,7 @@ const Help = () => {
     {
       id: 3,
       title: 'Email Support',
-      icon: <img src="/email.png" alt="email" className="w-16 h-16 text-white"/>,
+      icon: <img loading="lazy" src="/email.jpg" alt="email" className="w-16 h-16 text-white"/>,
       description: 'Detailed technical assistance',
       details: 'support@sfcollab.com • Response within 24 hours',
       badge: '24h Response',
@@ -182,7 +182,7 @@ const Help = () => {
             transition={{ delay: 0.5 }}
             className="max-w-2xl mx-auto relative"
           >
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search for articles, guides, or FAQs..."

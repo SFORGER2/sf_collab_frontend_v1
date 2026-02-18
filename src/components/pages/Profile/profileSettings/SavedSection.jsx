@@ -23,7 +23,7 @@ export default function SavedSection({ formData, onChange }) {
         {saved[activeTab].length === 0 ? <div className="text-center py-10 text-gray-500">No saved {activeTab} yet.</div> : saved[activeTab].map(item => (
           <div key={item.id} className="bg-gray-700/40 border border-gray-600 rounded-xl p-4 flex gap-4">
             <div className="w-20 h-20 rounded-lg bg-gray-600 overflow-hidden">
-              {item.thumbnail ? <img src={item.thumbnail} className="w-full h-full object-cover" alt="thumb" /> : <div className="flex items-center justify-center h-full text-gray-400 text-sm">No Image</div>}
+              {item.thumbnail ? <img loading="lazy" src={item.thumbnail} className="w-full h-full object-cover" alt="thumb" /> : <div className="flex items-center justify-center h-full text-gray-400 text-sm">No Image</div>}
             </div>
 
             <div className="flex-1">

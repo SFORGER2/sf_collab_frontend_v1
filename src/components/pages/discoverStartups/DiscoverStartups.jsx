@@ -7,7 +7,6 @@ import {
 import { Button } from '../../ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { startupAPI } from '../startupDetails/startUpAPI';
 import { toast } from 'react-toastify';
 import StartupCard from './StartupCard';
 import StartupCardSkeleton from './StartupCardSkeleton';
@@ -15,8 +14,8 @@ import StartupsHeader from './StartupsHeader';
 import StartupSearchAndFilter from './StartupSearchAndFilter';
 import ApplyToStartupModal from './ApplyToStartupModal';
 import { startupsAPI } from '@/utils/APIs/startupsAPI';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import usePaginatedFetch from '@/utils/hooks/usePaginated';
+import InfiniteList from '@/components/InfiniteList';
 
 const FUNDING_RANGES = [
   { label: 'Any', min: null, max: null },
@@ -28,7 +27,6 @@ const FUNDING_RANGES = [
   { label: 'Custom', min: null, max: null, custom: true }
 ];
 
-// Mode configuration
 const MODES = {
   discover: {
     headerTitle: 'Discover Your Next',
@@ -37,12 +35,7 @@ const MODES = {
     ctaButton: 'Add Startup',
     ctaRoute: '/register-startup',
     cardCta: 'View Details',
-    stats: [
-      // { value: '1.2K+', label: 'Active Startups' },
-      // { value: '$4.8B', label: 'Total Funding' },
-      // { value: '15K+', label: 'Open Roles' },
-      // { value: '94%', label: 'Hire Success Rate' }
-    ],
+    stats: [],
     emptyState: {
       title: 'No startups found',
       message: 'Try adjusting your filters or search query to discover more opportunities'
@@ -55,7 +48,7 @@ const MODES = {
     ctaButton: 'Create New Startup',
     ctaRoute: '/register-startup',
     cardCta: 'Manage',
-    stats: null, // Dynamic based on user data
+    stats: null,
     emptyState: {
       title: "You haven't created any startups yet",
       message: 'Create your first startup to get started. Build something amazing and find the right talent.'
@@ -64,24 +57,18 @@ const MODES = {
 };
 
 const DiscoverStartups = ({ myStartupsOnly = false }) => {
-  const [startups, setStartups] = useState([]);
   const [industries, setIndustries] = useState([]);
   const [stages, setStages] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndustry, setSelectedIndustry] = useState("All");
   const [selectedStage, setSelectedStage] = useState("All");
   const [selectedFundingRange, setSelectedFundingRange] = useState("Any");
   const [customMinFunding, setCustomMinFunding] = useState("");
   const [customMaxFunding, setCustomMaxFunding] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const navigate = useNavigate();
   
   const { user, access_token } = useSelector((state) => state.auth);
-  
-  const itemsPerPage = 9;
   const mode = myStartupsOnly ? 'myStartups' : 'discover';
   const modeConfig = MODES[mode];
 
@@ -100,53 +87,49 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
     };
   };
 
-  const fetchStartups = async (page = 1) => {
-    try {
-      setLoading(true);
-      const token = access_token;
-      if (!token) {
-        console.error('No access token found');
-        return;
-      }
-  
-      const fundingRange = getFundingRangeValues();
-      
+  const buildSearchString = () => {
+    const fundingRange = getFundingRangeValues();
+    const filters = [];
+    
+    if (searchQuery) filters.push(`search:${searchQuery}`);
+    if (selectedIndustry !== 'All') filters.push(`industry:${selectedIndustry}`);
+    if (selectedStage !== 'All') filters.push(`stage:${selectedStage}`);
+    if (fundingRange.min !== null) filters.push(`min_funding:${fundingRange.min}`);
+    if (fundingRange.max !== null) filters.push(`max_funding:${fundingRange.max}`);
+    
+    return filters.join('|');
+  };
 
-      const params = {
+  const {
+    items: startups,
+    total: totalStartups,
+    loading,
+    targetRef,
+  } = usePaginatedFetch({
+    fetchFn: ({ page, search }) => {
+      const fundingRange = getFundingRangeValues();
+      return startupsAPI.getAll({
         page,
+        per_page: 9,
         search: searchQuery,
-        per_page: itemsPerPage,
-        min_funding: fundingRange.min,
-        max_funding: fundingRange.max,
         industry: selectedIndustry !== 'All' ? selectedIndustry : undefined,
         stage: selectedStage !== 'All' ? selectedStage : undefined,
+        min_funding: fundingRange.min,
+        max_funding: fundingRange.max,
         my_startups: myStartupsOnly ? 'true' : 'false'
-      }
-      const response = await startupAPI.getAll(token, params);
-
-      const data = response;
-  
-      if (data.success) {
-        const startups = data.data.startups
-        setStartups(startups);
-        setTotalPages(data.data.pagination.pages);
-        setCurrentPage(data.data.pagination.page);
-      }
-    } catch (error) {
-      console.error('Error fetching startups:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      }, access_token);
+    },
+    search: buildSearchString(),
+    objectKey: 'startups',
+    enabled: !!access_token,
+  });
 
   const fetchFilters = async () => {
     try {
-  
       const [industriesData, stagesData] = await Promise.all([
         startupsAPI.getIndustries(),
         startupsAPI.getStages()
       ]); 
-  
   
       if (industriesData.success) setIndustries(industriesData.data.industries);
       if (stagesData.success) setStages(stagesData.data.stages);
@@ -156,15 +139,10 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   };
 
   useEffect(() => {
-    fetchStartups();
     if (mode === 'discover') {
       fetchFilters();
     }
-  }, []);
-
-  useEffect(() => {
-    fetchStartups(1);
-  }, [searchQuery, selectedIndustry, selectedStage, selectedFundingRange, customMinFunding, customMaxFunding, myStartupsOnly]);
+  }, [mode]);
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -174,8 +152,6 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
     setCustomMinFunding("");
     setCustomMaxFunding("");
   };
-
-
 
   const activeFiltersCount = [
     selectedIndustry !== "All",
@@ -206,79 +182,75 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
 
   return (
     <>
-    <div className="min-h-screen">
-      <div className="w-full mx-auto px-4 sm:px-6 py-2">
-        {/* Navigation */}
-        <motion.nav
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="sticky top-0 z-50"
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              {
-                !(startups.length > 0 &&
-                !user?.plan_id) &&
-              
-                <div className="hidden md:flex items-center gap-4 ml-auto">
-                  <Button
-                    variant={mode === 'myStartups' ? "default" : "ghost"}
-                    size="sm"
-                    className={mode === 'myStartups' ? "bg-blue-600 hover:bg-blue-700 text-white" : "text-gray-300 hover:text-black"}
-                    onClick={() => navigate(modeConfig.ctaRoute)}
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    {modeConfig.ctaButton}
+      <div className="min-h-screen">
+        <div className="w-full mx-auto px-4 sm:px-6 py-2">
+          {/* Navigation */}
+          <motion.nav
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="sticky top-0 z-50"
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between h-16">
+                {
+                  !(startups.length > 0 && !user?.plan_id) &&
+                  <div className="hidden md:flex items-center gap-4 ml-auto">
+                    <Button
+                      variant={mode === 'myStartups' ? "default" : "ghost"}
+                      size="sm"
+                      className={mode === 'myStartups' ? "bg-blue-600 hover:bg-blue-700 text-white" : "text-gray-300 hover:text-black"}
+                      onClick={() => navigate(modeConfig.ctaRoute)}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      {modeConfig.ctaButton}
+                    </Button>
+                  </div>
+                }
+              </div>
+            </div>
+          </motion.nav>
+          
+          <StartupsHeader mode={mode} modeConfig={modeConfig} />
+
+          <StartupSearchAndFilter
+            mode={mode}
+            industries={industries}
+            stages={stages}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedIndustry={selectedIndustry}
+            setSelectedIndustry={setSelectedIndustry}
+            selectedStage={selectedStage}
+            setSelectedStage={setSelectedStage}
+            selectedFundingRange={selectedFundingRange}
+            setSelectedFundingRange={setSelectedFundingRange}
+            customMinFunding={customMinFunding}
+            setCustomMinFunding={setCustomMinFunding}
+            customMaxFunding={customMaxFunding}
+            setCustomMaxFunding={setCustomMaxFunding}
+            clearFilters={clearFilters}
+            activeFiltersCount={activeFiltersCount}
+            formatCurrency={formatCurrency}
+            mobileFiltersOpen={mobileFiltersOpen}
+            setMobileFiltersOpen={setMobileFiltersOpen}
+            FUNDING_RANGES={FUNDING_RANGES}
+          />
+
+          <div className="flex flex-wrap relative gap-8">
+            {/* Startup Grid */}
+            <div className="flex-1">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-sm text-gray-400">
+                  {totalStartups} {totalStartups === 1 ? 'startup' : 'startups'} found
+                </p>
+                {mode === 'discover' && activeFiltersCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-black">
+                    Clear all filters
                   </Button>
-                </div>
-              }
-            </div>
-          </div>
-        </motion.nav>
-        
-        <StartupsHeader mode={mode} modeConfig={modeConfig} />
+                )}
+              </div>
 
-        <StartupSearchAndFilter
-          mode={mode}
-          industries={industries}
-          stages={stages}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedIndustry={selectedIndustry}
-          setSelectedIndustry={setSelectedIndustry}
-          selectedStage={selectedStage}
-          setSelectedStage={setSelectedStage}
-          selectedFundingRange={selectedFundingRange}
-          setSelectedFundingRange={setSelectedFundingRange}
-          customMinFunding={customMinFunding}
-          setCustomMinFunding={setCustomMinFunding}
-          customMaxFunding={customMaxFunding}
-          setCustomMaxFunding={setCustomMaxFunding}
-          clearFilters={clearFilters}
-          activeFiltersCount={activeFiltersCount}
-          formatCurrency={formatCurrency}
-          mobileFiltersOpen={mobileFiltersOpen}
-          setMobileFiltersOpen={setMobileFiltersOpen}
-          FUNDING_RANGES={FUNDING_RANGES}
-        />
-
-        <div className="flex flex-wrap relative gap-8">
-        
-          {/* Startup Grid */}
-          <div className="flex-1">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-gray-400">
-                {startups.length} {startups.length === 1 ? 'startup' : 'startups'} found
-              </p>
-              {mode === 'discover' && activeFiltersCount > 0 && (
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-black">
-                  Clear all filters
-                </Button>
-              )}
-            </div>
-
-            <AnimatePresence mode="wait">
-              {loading ? (
+              {loading && startups.length === 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                   {[...Array(6)].map((_, i) => (
                     <StartupCardSkeleton key={i} />
@@ -326,112 +298,27 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                     gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))'
                   }}
                 >
-                  {startups.map((startup, index) => (
-                    <StartupCard
-                      key={startup.id}
-                      startup={startup}
-                      index={index}
-                      getStageBadgeVariant={getStageBadgeVariant}
-                      mode={mode}
-                    />
-                  ))}
-                                      {/* !user?.plan_id && (*/}
-{/*
-                      {mode === "myStartups" &&
-                        
-                    startups.length > 0 && (
-                      <motion.div
-                        layout
-                        initial={{ opacity: 0, scale: 0.96 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.25, ease: "easeOut" }}
-                        className="w-full"
-                      >
-                        <div
-                          onClick={() => {
-                            toast.info("You've reached the maximum number of startups for your plan");
-                            navigate("/crowdfunding");
-                          }}
-                          className="
-          relative h-full min-h-[220px] cursor-pointer rounded-xl
-          border-2 border-dashed border-gray-700
-          bg-gray-900/40 backdrop-blur-sm
-          flex flex-col items-center justify-center gap-3
-          transition-all
-          hover:border-blue-500/50 hover:bg-gray-900/60
-          hover:shadow-[0_0_40px_-10px_rgba(59,130,246,0.25)]
-          group
-        "
-                        >
-                          <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gray-800/60 group-hover:bg-blue-500/10 transition">
-                            <Plus className="w-7 h-7 text-gray-400 group-hover:text-blue-400 transition-colors" />
-                          </div>
-
-                          <div className="text-center">
-                            <p className="text-sm font-semibold text-gray-300 group-hover:text-blue-400 transition-colors">
-                              Upgrade your plan
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1 max-w-[240px]">
-                              Unlock more startups and advanced features
-                            </p>
-                          </div>
-
-                          <span className="mt-2 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                            View plans →
-                          </span>
-                        </div>
-                      </motion.div>
-                    )} */}
-
+                  <InfiniteList
+                    items={startups}
+                    renderItem={(startup, index) => (
+                      <StartupCard
+                        key={startup.id}
+                        startup={startup}
+                        index={index}
+                        getStageBadgeVariant={getStageBadgeVariant}
+                        mode={mode}
+                      />
+                    )}
+                    sentinelRef={targetRef}
+                    loading={loading}
+                  />
                 </motion.div>
               )}
-            </AnimatePresence>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-8">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fetchStartups(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="border-gray-600 text-gray-300"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => fetchStartups(page)}
-                    className={currentPage === page
-                      ? "bg-blue-500 hover:bg-blue-600"
-                      : "border-gray-600 text-gray-300 hover:bg-gray-700"
-                    }
-                  >
-                    {page}
-                  </Button>
-                ))}
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fetchStartups(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="border-gray-600 text-gray-300"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    
-  </>
+    </>
   );
 };
 

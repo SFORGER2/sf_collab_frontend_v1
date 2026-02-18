@@ -174,10 +174,10 @@ export default function BusinessIdeaGenerator() {
               {/* Feature Stats */}
               <div className="flex flex-wrap justify-center gap-8 mb-12 animate-fade-in" style={{ animationDelay: '0.4s' }}>
                 {[
-                  { icon: <img src='/thounder.png' alt='Generation'/>, label: '90-Second Generation', value: 'Lightning Fast' },
-                  { icon: <img src='/brain.png' alt='Generation'/>, label: 'Smart Market Analysis', value: 'AI-Powered' },
-                  { icon: <img src='/investor.png' alt='Generation'/>, label: 'Investor-Ready Output', value: 'Professional' },
-                  { icon: <img src='/recycle.png' alt='Generation'/>, label: 'Multi-Step Planning', value: 'Comprehensive' }
+                  { icon: <img loading="lazy" src='/thounder.jpg' alt='Generation'/>, label: '90-Second Generation', value: 'Lightning Fast' },
+                  { icon: <img loading="lazy" src='/brain.jpg' alt='Generation'/>, label: 'Smart Market Analysis', value: 'AI-Powered' },
+                  { icon: <img loading="lazy" src='/investor.jpg' alt='Generation'/>, label: 'Investor-Ready Output', value: 'Professional' },
+                  { icon: <img loading="lazy" src='/recycle.jpg' alt='Generation'/>, label: 'Multi-Step Planning', value: 'Comprehensive' }
                 ].map((stat, index) => (
                   <div key={index} className="flex items-center gap-3 group">
                     <div className="text-2xl w-10  group-hover:scale-110 transition-transform duration-300">
@@ -308,13 +308,13 @@ export default function BusinessIdeaGenerator() {
               {[
                 { 
                   mode: 'ideas', 
-                  icon: <img src="/idea.png" className='w-30' alt="idea" />, 
+                  icon: <img loading="lazy" src="/idea.jpg" className='w-30' alt="idea" />, 
                   title: 'Ideation Mode', 
                   features: ['Market Gaps', 'Creative Concepts', 'Quick Brainstorming'] 
                 },
                 { 
                   mode: 'plan', 
-                  icon: <img src="/chart.png" className='w-30' alt="plan" />, 
+                  icon: <img loading="lazy" src="/chart.jpg" className='w-30' alt="plan" />, 
                   title: 'Planning Mode', 
                   features: ['Financial Models', 'Investor Docs', 'Full Strategy'] 
                 }

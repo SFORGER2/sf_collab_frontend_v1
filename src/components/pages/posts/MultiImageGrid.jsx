@@ -82,7 +82,7 @@ export default function MultiImageGrid({ images, onImageClick }) {
   return (
     <div className="relative">
       {images.length > 1 && (
-        <div className="absolute top-3 right-3 z-10 bg-black/70 backdrop-blur-sm rounded-full p-2">
+        <div className="absolute top-3 left-3 z-10 bg-black/70 backdrop-blur-sm rounded-full p-2">
           <Grid3X3 size={16} className="text-white" />
         </div>
       )}

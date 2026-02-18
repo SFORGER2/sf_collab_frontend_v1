@@ -1,4 +1,4 @@
-import { Building2, Save } from 'lucide-react';
+import { Building2, LightbulbIcon, Save } from 'lucide-react';
 import { Rocket, PlusSquare, BookOpen, MessageSquareHeart, Users } from 'lucide-react';
 import { Lightbulb } from 'lucide-react';
 import { aiTools, dashboardLink, socialSection, toolsSection } from '../sidebarCommons';
@@ -15,7 +15,7 @@ export function createFounderLinks(unreadMessagesCount = 0, userRoles = [], setA
     {
       id: 2,
       icon: <Rocket size={22} />,
-      href: "/my-startups",
+      href: "/discover-startups",
       label: "Startups",
       subItems: [
         { id: "discover-startups", href: "/discover-startups", label: "Discover", icon: <Rocket size={18} /> },
@@ -25,26 +25,19 @@ export function createFounderLinks(unreadMessagesCount = 0, userRoles = [], setA
 
       ]
     },
-    socialSection(3),
     {
-      id: 4,
-      icon: <BookOpen size={22} />,
-      href: "/knowledge",
-      label: "Learning",
-      subItems: [
-        { id: "knowledge", href: "/knowledge", label: "Knowledge", icon: <BookOpen size={18} /> },
-      ]
-    },
-    {
-      id: 5,
-      icon: <Lightbulb size={23} />,
+      id: 3,
+      icon: <LightbulbIcon size={22} />,
       href: "/ideation",
       label: "Ideation",
       subItems: [
-        { id: "ideation-board", href: "/ideation", label: "Ideation Board", icon: <Lightbulb size={18} /> },
+        { id: "Ideation-Board", href: "/ideation", label: "Ideation Board", icon: <LightbulbIcon size={18} /> },
+        { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
       ]
     },
-    aiTools(6),
-    toolsSection(7)
+    socialSection(4),
+    
+    aiTools(5),
+    toolsSection(6)
   ];
 }

@@ -83,7 +83,7 @@ const NotificationAvatar = ({ src, name, type }) => {
   }
 
   return src ? (
-    <img 
+    <img loading="lazy" 
       src={src} 
       alt={name} 
       className="w-12 h-12 rounded-2xl object-cover shadow-lg ring-2 ring-white/10" 
@@ -181,7 +181,7 @@ const ChatToast = ({
           e.stopPropagation();   // prevents the parent onClick (navigate)
           handleClose();
         }}
-        className="absolute top-3 right-3 p-1.5 rounded-xl bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all opacity-0 group-hover:opacity-100 z-10"
+        className="absolute top-3 left-3 p-1.5 rounded-xl bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all opacity-0 group-hover:opacity-100 z-10"
       >
         <X size={14} />
       </button>

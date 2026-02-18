@@ -39,7 +39,7 @@ const EditModal = ({ item, type, onSave, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-full max-w-md relative">
-        <button onClick={onClose} className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-white hover:bg-zinc-700 rounded-full">
+        <button onClick={onClose} className="absolute top-4 left-4 p-1.5 text-gray-400 hover:text-white hover:bg-zinc-700 rounded-full">
           <X size={18} />
         </button>
         <h3 className="text-lg font-semibold mb-4 capitalize">{item ? 'Edit' : 'Add'} {type}</h3>
@@ -249,7 +249,7 @@ export default function Profile() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-lg shadow-blue-500/5">
           {/* Cover Image */}
           <div className="relative h-48 sm:h-64 rounded-t-2xl group">
-            <img src={profileData.cover} alt="Cover" className="w-full h-full object-cover rounded-t-2xl" />
+            <img loading="lazy" src={profileData.cover} alt="Cover" className="w-full h-full object-cover rounded-t-2xl" />
             <input type="file" ref={coverImageRef} hidden accept="image/*" onChange={(e) => handleImageChange(e, 'cover')} />
             <div className="absolute inset-0 bg-linear-to-t from-zinc-900/80 to-transparent" />
             {isEditing && (
@@ -267,7 +267,7 @@ export default function Profile() {
           <div className="p-6 relative">
             <div className="flex flex-col sm:flex-row sm:items-end sm:gap-6">
               <div className="relative -mt-20 sm:-mt-24 w-32 h-32 sm:w-36 sm:h-36 group">
-                <img src={profileData.avatar} alt="Profile" className="rounded-full w-full h-full object-cover border-4 border-zinc-900 shadow-lg shadow-blue-500/20" />
+                <img loading="lazy" src={profileData.avatar} alt="Profile" className="rounded-full w-full h-full object-cover border-4 border-zinc-900 shadow-lg shadow-blue-500/20" />
                 <input type="file" ref={profileImageRef} hidden accept="image/*" onChange={(e) => handleImageChange(e, 'avatar')} />
                 <div className="absolute inset-0 rounded-full ring-2 ring-blue-500/50 ring-offset-4 ring-offset-zinc-900 animate-pulse" style={{ boxShadow: '0 0 15px rgba(59, 130, 246, 0.5)' }}></div>
                 {isEditing && (
@@ -448,7 +448,7 @@ export default function Profile() {
             {profileData.posts.map((post) => (
               <div key={post.id} className="p-4 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
                 <div className="flex items-start gap-4">
-                  <img src={profileData.avatar} alt={profileData.name} className="w-10 h-10 rounded-full" />
+                  <img loading="lazy" src={profileData.avatar} alt={profileData.name} className="w-10 h-10 rounded-full" />
                   <div className="flex-1">
                     <div className="flex items-baseline gap-2">
                       <p className="font-semibold text-white">{profileData.name}</p>
@@ -456,7 +456,7 @@ export default function Profile() {
                     </div>
                     <p className="mt-1 text-zinc-300 text-sm">{post.caption}</p>
                     {post.type === 'image' && post.mediaUrl && (
-                      <img src={post.mediaUrl} alt="Post content" className="mt-3 rounded-lg w-full object-cover max-h-72" />
+                      <img loading="lazy" src={post.mediaUrl} alt="Post content" className="mt-3 rounded-lg w-full object-cover max-h-72" />
                     )}
                     <div className="mt-3 flex items-center gap-4 text-xs text-zinc-400">
                       <div className="flex items-center gap-1.5">

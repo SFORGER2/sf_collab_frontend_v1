@@ -175,7 +175,7 @@ const Navbar = () => {
       >
         <Link to="/" className="flex-1 h-full flex items-center md:pl-0 ">
         <div className="md:pt-0 h-full flex-1 items-center">
-            <img src="/logo_white.svg" className="h-full md:left-0 left-1" alt="sf collab"/>
+            <img loading="lazy" src="/logo_white.svg" className="h-full md:left-0 left-1" alt="sf collab"/>
         </div>
         </Link>
          <div className="flex-1 flex justify-center items-center">

@@ -52,10 +52,8 @@ export const authAPI = {
     return response.data;
   },
 
-  sendVerificationCodeRequest: async (accessToken) => {
-    const response = await api.post('/auth/send-verification-code', {}, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+  sendVerificationCodeRequest: async () => {
+    const response = await api.post('/auth/send-verification-code', {});
     return response.data;
   },
 

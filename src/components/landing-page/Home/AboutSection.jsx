@@ -95,7 +95,7 @@ const AboutSection = () => {
       icon: <Zap className="w-6 h-6" />,
       position: "left",
       color: "gradient",
-      img:<img src="/f1.png" alt="" srcSet=""  className=" absolute object-fill h-full" />
+      img:<img loading="lazy" src="/f1.jpg" alt="" srcSet=""  className=" absolute object-fill h-full" />
     },
     {
       id: 2,
@@ -105,7 +105,7 @@ const AboutSection = () => {
       icon: <Brain className="w-6 h-6" />,
       position: "right",
       color: "silver",
-      img:<img src="/f2.png" alt="" srcSet=""  className=" absolute object-fill h-full" />
+      img:<img loading="lazy" src="/f2.jpg" alt="" srcSet=""  className=" absolute object-fill h-full" />
     },
     {
       id: 3,
@@ -115,7 +115,7 @@ const AboutSection = () => {
       icon: <TrendingUp className="w-6 h-6" />,
       position: "left",
       color: "platinum",
-      img:<img src="/f3.png" alt="" srcSet=""  className=" absolute object-fill h-full" />
+      img:<img loading="lazy" src="/f3.jpg" alt="" srcSet=""  className=" absolute object-fill h-full" />
     },
     {
       id: 4,
@@ -125,7 +125,7 @@ const AboutSection = () => {
       icon: <Building2 className="w-6 h-6" />,
       position: "right",
       color: "carbon",
-      img:<img src="/f4.png" alt="" srcSet=""  className=" absolute object-fill h-full" />
+      img:<img loading="lazy" src="/f4.jpg" alt="" srcSet=""  className=" absolute object-fill h-full" />
     },
     {
       id: 5,
@@ -135,7 +135,7 @@ const AboutSection = () => {
       icon: <Palette className="w-6 h-6" />,
       position: "left",
       color: "graphite",
-      img:<img src="/f5.png" alt="" srcSet=""  className=" absolute object-fill h-full" />
+      img:<img loading="lazy" src="/f5.jpg" alt="" srcSet=""  className=" absolute object-fill h-full" />
     },
     {
       id: 6,
@@ -145,7 +145,7 @@ const AboutSection = () => {
       icon: <Users className="w-6 h-6" />,
       position: "right",
       color: "titanium",
-      img:<img src="/f6.png" alt="" srcSet=""  className=" absolute object-fill h-full" />
+      img:<img loading="lazy" src="/f6.jpg" alt="" srcSet=""  className=" absolute object-fill h-full" />
     }
   ];
 
@@ -804,7 +804,7 @@ const AboutSection = () => {
                       ease: "easeInOut",
                       delay: 0.5
                     }}
-                    className="absolute -bottom-4 -right-4 w-16 h-16 bg-gradient-to-br from-gray-900 to-black rounded-xl border border-gray-700/50 backdrop-blur-sm shadow-2xl"
+                    className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-gray-900 to-black rounded-xl border border-gray-700/50 backdrop-blur-sm shadow-2xl"
                   >
                     <div className="absolute inset-2 border border-gray-700/30 rounded-lg flex items-center justify-center">
                       <div className="text-xl font-bold text-gray-600">{section.id}</div>

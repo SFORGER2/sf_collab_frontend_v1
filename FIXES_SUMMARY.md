@@ -56,7 +56,7 @@ Fixed critical mobile ScrollTrigger issues and missing navigation routes in the 
 **Problem:** Products page was using external Unsplash URLs that weren't loading, making the "AI Workflows" and "Operational Layer" cards appear without images.
 
 **Solution:** 
-- Updated Products.jsx to use local images from `/public` folder (f1.png through f6.png)
+- Updated Products.jsx to use local images from `/public` folder (f1.jpg through f6.jpg)
 - Added error handling for images with fallback icon
 - Enhanced card styling with gradient backgrounds
 - Added "System" label to each card
@@ -184,7 +184,7 @@ Fixed critical mobile ScrollTrigger issues and missing navigation routes in the 
 ## Notes
 
 - All ScrollTrigger animations now respect mobile constraints
-- Images load from `/public` folder (f1.png - f6.png)
+- Images load from `/public` folder (f1.jpg - f6.jpg)
 - Responsive breakpoints: Mobile (<768px), Tablet (768-1024px), Desktop (>1024px)
 - Automatic cleanup prevents memory leaks
 - Orientation change automatically refreshes ScrollTrigger instances

@@ -8,8 +8,8 @@ export function isUserProfileComplete(user) {
         const requiredFields = [
             'email',
             'firstName',
-            'lastName',
             'roles',
+            'timezone'
         ];
       
         for (const field of requiredFields) {

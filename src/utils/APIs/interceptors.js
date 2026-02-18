@@ -2,7 +2,8 @@ import { API_BASE_URL } from "../config";
 
 export const requestInterceptor = (config) => {
   const token = localStorage.getItem('access_token');
-  if (token) {
+  
+  if (!config.headers.Authorization && token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;

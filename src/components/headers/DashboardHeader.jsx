@@ -44,7 +44,7 @@ const DashboardHeader = ({ searchQuery, onSearchChange }) => {
                 placeholder="Search..."
                 className="relative w-full sm:w-[320px] px-4 py-2.5 pl-10 bg-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-white/30 text-white placeholder-gray-300 transition-all duration-200"
               />
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 z-10" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 z-10" />
             </div>
   
             {/* Optional: Glassmorphism Button */}

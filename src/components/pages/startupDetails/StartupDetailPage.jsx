@@ -41,6 +41,8 @@ import HeroSection from './sections/HeroSection';
 import StartupDetailSkeleton from './StartupDetailsSkeleton';
 import ProjectTasksSection from './sections/ProjectTasksSection';
 import AddTaskModal from './modals/AddTasksModal';
+import StartupAnnouncementsSection from './sections/StartupAnnouncementsSection';
+import { plotCount } from '@/utils/plotCount';
 
 /**
  * ManageJoinRequestsModal - For FOUNDERS/CREATORS to manage join requests
@@ -76,8 +78,8 @@ const StartupDetailPage = () => {
   const [projectGoals, setProjectGoals] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
   
-  const [isCreator, setIsCreator] = useState(false);
-  
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isFounder, setIsFounder] = useState(false);
   const {user,access_token,refreshToken} = useSelector((state) => state.auth);
 
   const [joinForm, setJoinForm] = useState({
@@ -144,7 +146,7 @@ const StartupDetailPage = () => {
       if (bookmarkData.success) setIsFavorited(bookmarkData.data.bookmarked || false);
     } catch (error) {
       console.error('Error fetching startup data:', error);
-      toast.error('Error loading startup data');
+      // toast.error('Error loading startup data');
 
     } finally {
       setLoading(false);
@@ -154,7 +156,7 @@ const StartupDetailPage = () => {
   const fetchJoinRequests = useCallback(async () => {
 
     
-    if (!isCreator || !access_token || !id) {
+    if (!isAdmin || !access_token || !id) {
 
       setJoinRequests([]);
       return;
@@ -179,7 +181,7 @@ const StartupDetailPage = () => {
       console.error('❌ Failed to load join requests:', error);
       setJoinRequests([]);
     }
-  }, [isCreator, access_token, id]);
+  }, [isAdmin, access_token, id]);
 
 
   useEffect(() => {
@@ -251,7 +253,6 @@ const StartupDetailPage = () => {
     e.preventDefault()
     try {
       const response = await startupsAPI.removeMember(id, memberId, access_token);
-      console.log("Response:", response);
       
       if (response.success) {
         toast.success('Member removed successfully');
@@ -319,31 +320,32 @@ const StartupDetailPage = () => {
       
       // Check 1: Is user the startup creator?
       const isStartupCreator = startup?.creator?.id === userId;
-      
+      console.log("Checking members for userId:", userId, "Members list:", members);
       // Check 2: Is user a member with creator/founder role?
-      const isMemberWithRole = members.find(m => m.userId === userId && ['creator', 'founder'].includes(m.role));
+      const isMemberWithRole = members.find(m => m.userId === userId && (['creator', 'founder'].includes(m.role) || m.admin));
     
       // User is creator if they are the startup creator OR have member founder role
-      const isCreatorUser = isStartupCreator || !!isMemberWithRole;
-      setIsCreator(isCreatorUser);
+      const isAdminUser = isStartupCreator || !!isMemberWithRole;
+      setIsAdmin(isAdminUser);
+      setIsFounder(isStartupCreator || (isMemberWithRole && ['creator', 'founder'].includes(isMemberWithRole.role)));
     }
   }, [members, user, startup]);
 
   useEffect(() => {
-    if (isCreator) {
+    if (isAdmin) {
       fetchJoinRequests();
     } else {
       setJoinRequests([]);
     }
-  }, [isCreator, fetchJoinRequests]);
+  }, [isAdmin, fetchJoinRequests]);
 
   // Also fetch when modal opens
   useEffect(() => {
-    if (isJoinModalOpen && isCreator && access_token) {
+    if (isJoinModalOpen && isAdmin && access_token) {
       fetchJoinRequests();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isJoinModalOpen, access_token, isCreator]);
+  }, [isJoinModalOpen, access_token, isAdmin]);
 
   useEffect(() => {
     if (joinRequests.length > 0 && joinRequests.length > joinRequestCountRef.current) {
@@ -432,18 +434,20 @@ const StartupDetailPage = () => {
             </div>
             
             <div className="flex flex-wrap h-auto items-center gap-2">
-              {isCreator && (
+              {isAdmin && (
                 <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate(`/register-startup?id=${startup?.id}`)}
-                    className="relative text-gray-300"
-                  >
-                    <MessageSquare className="w-4 h-4 mr-1" />
-                    Edit Startup
+                  {
+                    isFounder && <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/register-startup?id=${startup?.id}`)}
+                      className="relative text-gray-300"
+                    >
+                      <MessageSquare className="w-4 h-4 mr-1" />
+                      Edit Startup
                     
-                  </Button>
+                    </Button>
+                  }
 
                   <Button
                     variant="ghost"
@@ -455,18 +459,21 @@ const StartupDetailPage = () => {
                     Join Requests
                     {joinRequests.length > 0 && (
                       <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-[10px] font-semibold text-white bg-red-500 rounded-full">
-                        {joinRequests.length}
+                        {plotCount(joinRequests.length)}
                       </span>
                     )}
                   </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setIsDeleteStartupModalOpen(true)}
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Delete
-                  </Button>
+                  {
+                    isFounder && (
+                  
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setIsDeleteStartupModalOpen(true)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete
+                      </Button>)}
                 </>
               )}
               <Button
@@ -486,9 +493,9 @@ const StartupDetailPage = () => {
       {/* Hero Section */}
       <HeroSection
         startup={startup}
-        onJoinClick={() => isCreator ? setIsJoinModalOpen(true) : setIsSendJoinRequestModalOpen(true)}
+        onJoinClick={() => isAdmin ? setIsJoinModalOpen(true) : setIsSendJoinRequestModalOpen(true)}
         members={members}
-        isCreator={isCreator}
+        isAdmin={isAdmin}
         getStageBadgeVariant={getStageBadgeVariant}
         setAlertDescription={setAlertDescription}
         setShowAlert={setShowAlert}
@@ -561,6 +568,7 @@ const StartupDetailPage = () => {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-8">
+            <StartupAnnouncementsSection startup={startup} />
             <GamifiedStatsOverview startup={startup} stats={stats} formatCurrency={formatCurrency} goals={projectGoals} />
             <DescriptionSection startup={startup} formatCurrency={formatCurrency} />
             
@@ -571,7 +579,10 @@ const StartupDetailPage = () => {
           <TabsContent value="members">
             <TeamSection
               members={members}
-              isCreator={isCreator}
+              setMembers={setMembers}
+              startupId={id}
+              isFounder={isFounder}
+              isAdmin={isAdmin}
               onRemoveMember={handleRemoveMember}
               onJoinClick={() => setIsAddMemberModalOpen(true)}
             />
@@ -581,7 +592,7 @@ const StartupDetailPage = () => {
           <TabsContent value="documents">
             <DocumentsSection
               documents={documents}
-              isCreator={isCreator}
+              isAdmin={isAdmin}
               id={id}
               fetchStartupData={fetchStartupData}
             />
@@ -589,7 +600,7 @@ const StartupDetailPage = () => {
           <TabsContent value="tasks">
             <ProjectTasksSection
               tasks={projectTasks}
-              isCreator={isCreator}
+              isAdmin={isAdmin}
               setTasks={setProjectTasks}
               startupId={id}
               teamMembers={members}
@@ -599,7 +610,7 @@ const StartupDetailPage = () => {
           <TabsContent value="goals">
             <ProjectGoalsSection
               goals={projectGoals}
-              isCreator={isCreator}
+              isAdmin={isAdmin}
               setGoals={setProjectGoals}
               startupId={id}
               teamMembers={members}
@@ -611,7 +622,7 @@ const StartupDetailPage = () => {
             <CalendarSection
               calendarEvents={calendarEvents}
               setCalendarEvents={setCalendarEvents}
-              isCreator={isCreator}
+              isAdmin={isAdmin}
 
             />
           </TabsContent>
@@ -619,7 +630,7 @@ const StartupDetailPage = () => {
       </div>
 
       {/* Modals */}
-      {!isCreator && (
+      {!isAdmin && (
         <SendJoinRequestModal
           isOpen={isSendJoinRequestModalOpen}
           onClose={() => setIsSendJoinRequestModalOpen(false)}
@@ -633,12 +644,12 @@ const StartupDetailPage = () => {
         />
       )}
       
-      {isCreator &&
+      {isAdmin &&
         <>
           <AddMemberModal
             isOpen={isAddMemberModalOpen}
-          onClose={() => setIsAddMemberModalOpen(false)}
-          roles={startup?.roles || []}
+            onClose={() => setIsAddMemberModalOpen(false)}
+            roles={startup?.roles || []}
             onSubmit={handleAddMember}
             formData={memberForm}
             onFormChange={setMemberForm}

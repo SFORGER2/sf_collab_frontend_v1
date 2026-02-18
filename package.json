@@ -9,6 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "npm run build && aws s3 sync dist s3://sf-collab --delete --exclude \"uploads/*\" --profile sforger && aws cloudfront create-invalidation --distribution-id E2SNXEBSFRTHFE --paths \"/*\" --profile sforger",
+    "deploy:no-images": "npm run build && aws s3 sync dist s3://sf-collab --delete --exclude \"*\" --include \"*.html\" --include \"*.css\" --include \"*.js\" --include \"*.map\" --profile sforger && aws cloudfront create-invalidation --distribution-id E2SNXEBSFRTHFE --paths \"/*\" --profile sforger",
     "deploy:dev": "npm run build && aws s3 sync dist s3://sf-collab-pre-deploy --delete --exclude \"uploads/*\" --profile sforger && aws cloudfront create-invalidation --distribution-id E1QYCFGNGX3SX4 --paths \"/*\" --profile sforger",
     "lint": "eslint ."
   },

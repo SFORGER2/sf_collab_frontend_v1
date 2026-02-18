@@ -288,7 +288,7 @@ export default function AddTaskModal({
                 <SelectItem value="unassigned">Unassigned</SelectItem>
                 {teamMembers.map((member) => (
                   <SelectItem key={member.id} value={member.userId.toString()}>
-                    <img src={
+                    <img loading="lazy" src={
                       getProfilePicture(member)} alt="Profile picture" className="h-3 rounded-full" />
                     {member.fullName || `${member.firstName} ${member.lastName}`}
                   </SelectItem>

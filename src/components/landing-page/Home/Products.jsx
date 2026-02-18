@@ -268,7 +268,7 @@ const Products = () => {
             </div>
 
             <div 
-              className="absolute bottom-4 left-4 right-4 text-white space-y-1 z-10"
+              className="absolute bottom-4 left-4 left-4 text-white space-y-1 z-10"
               style={{
                 willChange: 'transform',
                 transform: 'translate3d(0,0,0)',

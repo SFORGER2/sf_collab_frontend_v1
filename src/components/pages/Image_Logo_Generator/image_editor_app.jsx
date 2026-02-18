@@ -1001,7 +1001,7 @@ const ImageEditor = () => {
                   />
                   
                   {/* Canvas Overlay Controls */}
-                  <div className="absolute top-4 right-4 flex gap-2">
+                  <div className="absolute top-4 left-4 flex gap-2">
                     <div className="bg-gray-800/80 backdrop-blur-sm rounded-lg px-3 py-2 text-sm text-white">
                       Zoom: {zoom}%
                     </div>

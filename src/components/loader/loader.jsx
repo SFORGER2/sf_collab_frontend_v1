@@ -9,7 +9,7 @@ export default function Loader() {
   }, []);
   return (
     <div className="loader-bg relative bg-black indent-0 flex justify-center items-center h-screen w-screen z-9999999999999">
-      <img src="/loader.gif" alt="Loading..." className="absolute inset-0 w-screen h-screen" />
+      <img loading="lazy" src="/loader.gif" alt="Loading..." className="absolute inset-0 w-screen h-screen" />
   
     </div>
 

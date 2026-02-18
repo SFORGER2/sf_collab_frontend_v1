@@ -348,7 +348,7 @@ export default function TaskProgress() {
           spotlightColor='rgba(20, 181, 138, 0.20)'
           className="mb-6 bg-transparent relative backdrop-blur-xl rounded-2xl border border-gray-700/50 overflow-hidden shadow-2xl"
         >
-            <img src="/design.png" className=" absolute object-cover top-0 left-0  w-full h-fit -mt-40 opacity-15" />
+            <img loading="lazy" src="/design.jpg" className=" absolute object-cover top-0 left-0  w-full h-fit -mt-40 opacity-15" />
         
           <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-emerald-500/30 to-green-600/30"></div>
           

@@ -262,6 +262,14 @@ export const startupsAPI = {
       },
     })
     return response.data
+  },
+  promoteMemberToAdmin: async (startupId, memberId) => {
+    const response = await api.post(`/startups/${startupId}/members/${memberId}/promote`, {})
+    return response.data
+  },
+  demoteMemberAdmin: async (startupId, memberId) => {
+    const response = await api.post(`/startups/${startupId}/members/${memberId}/demote`, {})
+    return response.data
   }
 }
 // Project Goals API

@@ -23,7 +23,7 @@ const SortableSection = ({ id, children, index, total, onMove }) => {
       className="relative mb-4 rounded-2xl border border-white/10 bg-white/5"
     >
       {/* Controls */}
-      <div className="absolute top-3 right-3 flex gap-1 z-10">
+      <div className="absolute top-3 left-3 flex gap-1 z-10">
         {/* Move up */}
         <button
           disabled={index === 0}

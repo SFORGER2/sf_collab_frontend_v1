@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import useGetPlanId from "@/utils/hooks/useGetPlanId";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
+import { paymentAPI } from "@/utils/APIs/paymentAPI";
 
 const stripePromise = STRIPE_PUBLIC_KEY ? loadStripe(STRIPE_PUBLIC_KEY) : null;
 
@@ -89,14 +90,17 @@ function CheckoutModal({ tier, onClose, selectedOption, setSelectedOption }) {
         )}
 
         {/* Features */}
-        <ul className="text-slate-300 mb-6 space-y-2">
-          {(tier.options.find(opt => opt.title === selectedOption?.title)?.features || tier.features).map((f, i) => (
-            <li key={i} className="flex items-center gap-2">
-              <span className="text-green-400">✓</span>
-              {f}
-            </li>
-          ))}
-        </ul>
+        {
+          tier?.options && selectedOption && (
+        
+            <ul className="text-slate-300 mb-6 space-y-2">
+              {(tier.options.find(opt => opt.title === selectedOption?.title)?.features || tier.features).map((f, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <span className="text-green-400">✓</span>
+                  {f}
+                </li>
+              ))}
+            </ul>)}
 
         <div className="flex gap-4">
           <button
@@ -120,6 +124,7 @@ function CheckoutModal({ tier, onClose, selectedOption, setSelectedOption }) {
 
 export default function CrowdfundingSection() {
   const [roles, setRoles] = useState([]);
+  const [aiTools, setAiTools] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState("USD");
@@ -150,13 +155,20 @@ export default function CrowdfundingSection() {
     const fetchPlans = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/payments/plans?type=crowdfunding`);
+        console.log("Fetched crowdfunding plans:", res.data);
         if (res.data.length > 0) {
           const plan = res.data[0];
           setRoles(plan.roles || []);
           setCurrency(plan.currency?.toUpperCase() || "USD");
         }
+
+        const aiRes = await paymentAPI.getAITools()
+        console.log("Fetched AI tools:", aiRes.data);
+
+          const aiPlan = aiRes.data;
+          setAiTools(aiPlan.tools || []);
       } catch (err) {
-        console.error("❌ Failed to load crowdfunding plans", err);
+        console.error("❌ Failed to load plans", err);
       } finally {
         setLoading(false);
       }
@@ -183,6 +195,7 @@ export default function CrowdfundingSection() {
     ((totalCrowdfunding / FUNDING_GOAL) * 100).toFixed(2),
     100
   );
+
   return (
     <>
       <section className="relative mb-20 py-24 px-6 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-white">
@@ -241,8 +254,7 @@ export default function CrowdfundingSection() {
               <span className="text-indigo-400 font-medium">Early supporters get permanent advantages 🚀</span>
             </div>
           </div>
-              {console.log(founderPlanId, "founder")}
-              {console.log(builderPlanId, "builder")}
+
           {/* ROLE TOGGLE */}
           <div className="relative mt-12 bg-neutral-900 border border-neutral-800 rounded-full flex p-1 max-w-md mx-auto">
             <div
@@ -307,6 +319,51 @@ export default function CrowdfundingSection() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* AI TOOLS SECTION */}
+          <div className="mt-24 space-y-8">
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+                Power Up with <span className="text-purple-400">AI Tools</span>
+              </h2>
+              <p className="text-white/60 max-w-2xl mx-auto">
+                Enhance your workflow with cutting-edge AI capabilities designed to boost productivity.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {aiTools.map((tool) => (
+                <div
+                  key={tool.id}
+                  className="flex flex-col justify-between bg-gradient-to-br from-purple-900/30 to-neutral-900 border border-purple-500/30 rounded-2xl p-6 hover:border-purple-500/60 transition"
+                >
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">{tool.title}</h3>
+                    {tool.description && (
+                      <p className="text-sm text-white/60 mb-4">{tool.description}</p>
+                    )}
+                    <p className="text-3xl font-bold text-purple-400 mb-4">
+                      {formatPrice(tool.price / 100)}
+                    </p>
+                    {tool.duration_months > 0 && (
+                      <p className="text-xs text-white/50 mb-4">
+                        {tool.duration_months} month{tool.duration_months > 1 ? "s" : ""}
+                      </p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setSelectedTier(tool);
+                    }}
+                    className="w-full py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 font-semibold hover:opacity-90 transition"
+                  >
+                    Get Started <ArrowRight className="w-4 h-4 inline-block ml-2" />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

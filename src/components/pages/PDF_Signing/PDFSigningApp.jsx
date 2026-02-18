@@ -653,7 +653,7 @@ const PDFSigningApp = () => {
                   {signatureData && !showSignaturePad && (
                     <div className="mt-3 p-2 bg-linear-to-r from-emerald-500/10 to-teal-500/10 rounded-lg border border-emerald-400/50">
                       <div className="bg-white/95 rounded p-1.5">
-                        <img 
+                        <img loading="lazy" 
                           src={signatureData} 
                           alt="Signature" 
                           className="w-full h-auto border border-slate-300 rounded" 
@@ -835,7 +835,7 @@ const PDFSigningApp = () => {
                                     onTouchStart={startDragging}
                                   >
                                     <div className="absolute inset-0 flex items-center justify-center">
-                                      <img 
+                                      <img loading="lazy" 
                                         src={signatureData} 
                                         alt="Signature" 
                                         className="w-full h-full object-contain pointer-events-none shrink-0"

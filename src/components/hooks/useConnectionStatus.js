@@ -20,7 +20,6 @@ export function useConnectionStatus(targetUserId) {
   const [requestId, setRequestId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-
   /**
    * Fetch current status from backend
    */

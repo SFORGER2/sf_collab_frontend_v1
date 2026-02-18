@@ -53,7 +53,7 @@ export default function SwipeActionModal({ user, onClose, onFriendRequest, onMes
           </div>
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            className="absolute top-4 left-4 p-2 hover:bg-gray-800 rounded-lg transition-colors"
           >
             <X size={20} className="text-gray-400" />
           </button>

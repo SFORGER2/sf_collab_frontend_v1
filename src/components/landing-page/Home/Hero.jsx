@@ -281,7 +281,7 @@ const Hero = () => {
         </div>
 
         {/* Interactive CTA */}
-            <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-20">
+            <div className="absolute bottom-4 left-4 md:bottom-6 md:right-6 z-20">
           <button
             onClick={openPopup}
             className=" group flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto px-0 py-0 md:px-5 md:py-2.5 rounded-full bg-transparent md:bg-transparent backdrop-blur-sm border border-white/20 font-medium cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-lg"
@@ -331,7 +331,7 @@ const Hero = () => {
           
           <button
             onClick={closePopup}
-            className="absolute top-3 right-3 md:top-4 md:right-4 z-50 bg-black/60 hover:bg-black/80 rounded-full p-2 transition-all backdrop-blur-sm"
+            className="absolute top-3 left-3 md:top-4 md:left-4 z-50 bg-black/60 hover:bg-black/80 rounded-full p-2 transition-all backdrop-blur-sm"
             aria-label="Close video"
           >
             <X className="text-white w-5 h-5 md:w-6 md:h-6" />

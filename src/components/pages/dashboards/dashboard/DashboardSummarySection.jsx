@@ -19,7 +19,7 @@ export default function DashboardSummaryCard({ userData }) {
             >
               <div className="w-full group relative flex flex-col gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-6 lg:p-8">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-blue-500/30 to-purple-600/30 opacity-75 group-hover:opacity-100 transition-opacity duration-300" />
-                <img 
+                <img loading="lazy" 
                   src="/design.png" 
                   className="absolute h-full w-full group-hover:opacity-50 transition-all duration-1000 -z-50 opacity-15" 
                   alt="design"
@@ -94,13 +94,13 @@ export default function DashboardSummaryCard({ userData }) {
                         {/* Quick Actions */}
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <div className="flex items-center justify-center gap-2 h-10 bg-blue-400/30 border border-blue-400 px-4 rounded-full">
-                    <img src="/flame.png" alt="flame" className="w-5 sm:w-6" />
+                    <img loading="lazy" src="/flame.jpg" alt="flame" className="w-5 sm:w-6" />
                     <small style={{ fontFamily: "Trade Winds, system-ui" }}>
                       {userData?.streak_days || 0}&nbsp;<strong>days</strong>
                     </small>
                   </div>
                   <div className="flex items-center justify-center gap-2 h-10 bg-purple-400/30 border border-purple-400 px-4 rounded-full">
-                    <img src="/trophy.png" alt="trophy" className="w-5 sm:w-6" />
+                    <img loading="lazy" src="/trophy.jpg" alt="trophy" className="w-5 sm:w-6" />
                     <small style={{ fontFamily: "Trade Winds, system-ui" }}>
                       {userData?.xp_points || 0}&nbsp;<strong>XP</strong>
                     </small>

@@ -100,7 +100,7 @@ const AccessRequestModal = ({ isOpen, onClose, permissionKey }) => {
     <>
       {/* Alert Component */}
       {alert.show && (
-        <div style={{zIndex:99999999999}} className="fixed top-10 right-4 z-50 max-w-md">
+        <div style={{zIndex:99999999999}} className="fixed top-10 left-4 z-50 max-w-md">
           <Alert variant={alert.variant}>
             <AlertTitle>{alert.title}</AlertTitle>
             <AlertDescription>{alert.description}</AlertDescription>

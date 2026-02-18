@@ -29,7 +29,7 @@ const DashboardSection = ({ searchQuery = '' }) => {
         color: "rgba(59, 130, 246, 0.15)",
         gradient: "from-blue-500/30 to-blue-600/30",
         accentColor: "blue",
-        image:<img src="/team.png" alt="" />
+        image:<img loading="lazy" src="/team.jpg" alt="" />
       },
       {
         id: 2,
@@ -45,7 +45,7 @@ const DashboardSection = ({ searchQuery = '' }) => {
         color: "rgba(16, 185, 129, 0.15)",
         gradient: "from-emerald-500/30 to-emerald-600/30",
         accentColor: "emerald",
-        image:<img src="/bulleseye.png" alt="" />
+        image:<img loading="lazy" src="/bulleseye.jpg" alt="" />
       },
       {
         id: 3,
@@ -61,7 +61,7 @@ const DashboardSection = ({ searchQuery = '' }) => {
         color: "rgba(245, 158, 11, 0.15)",
         gradient: "from-amber-500/30 to-amber-600/30",
         accentColor: "amber",
-        image:<img src="/profit.png" alt="" />
+        image:<img loading="lazy" src="/profit.jpg" alt="" />
       },
       {
         id: 4,
@@ -77,7 +77,7 @@ const DashboardSection = ({ searchQuery = '' }) => {
         color: "rgba(168, 85, 247, 0.15)",
         gradient: "from-purple-500/30 to-purple-600/30",
         accentColor: "purple",
-        image:<img src="/achievement.png" alt="" />
+        image:<img loading="lazy" src="/achievement.jpg" alt="" />
       }
     ]
   }, [user])
@@ -167,7 +167,7 @@ const DashboardSection = ({ searchQuery = '' }) => {
                 className={`w-full relative backdrop-blur-xl rounded-2xl border ${accentClasses.border} transition-all duration-500 overflow-hidden shadow-2xl hover:shadow-3xl hover:scale-[1.02] custom-spotlight-card`}
                 spotlightColor={card.color}
               >
-                    <img src="/design_2.png" className="object-cover w-fit h-full absolute top-0 left-0 group-hover:opacity-50 transition-all duration-1000 -z-50 opacity-15" />
+                    <img loading="lazy" src="/design_2.jpg" className="object-cover w-fit h-full absolute top-0 left-0 group-hover:opacity-50 transition-all duration-1000 -z-50 opacity-15" />
               
                 {/* Top Accent Line */}
                 <div className={`absolute top-0 left-0 right-0 h-1 bg-linear-to-r ${card.gradient} opacity-75 group-hover:opacity-100 transition-opacity duration-300`} />

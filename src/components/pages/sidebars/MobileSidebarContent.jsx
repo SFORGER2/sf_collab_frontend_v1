@@ -1,8 +1,9 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import BottomLinks from "./BottomLinks";
-import { Crown, Lock } from "lucide-react";
+import { Crown, Lock, ChevronDown } from "lucide-react";
 import { getAllRoutes } from "./sidebar/links";
+import { useState } from "react";
 
 export default function MobileSidebarContent({
   onLinkClick,
@@ -15,6 +16,7 @@ export default function MobileSidebarContent({
 }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const [expandedId, setExpandedId] = useState(null);
 
   /* -------------------- Animations -------------------- */
   const containerVariants = {
@@ -43,6 +45,10 @@ export default function MobileSidebarContent({
     onLinkClick();
   };
 
+  const toggleSubItems = (linkId) => {
+    setExpandedId(expandedId === linkId ? null : linkId);
+  };
+
   const baseItemClasses =
     "w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors";
 
@@ -60,18 +66,16 @@ export default function MobileSidebarContent({
       >
         {links.map((link) => {
           const isActive = getAllRoutes(link).includes(location.pathname);
-          const showSubs = shouldShowSubItems(link);
+          const showSubs = expandedId === link.id;
           const isUpcoming = link.isUpcoming;
 
           return (
             <motion.div key={link.id} variants={itemVariants}>
               {/* ---------- Main Item ---------- */}
               <motion.button
-                whileHover={!isUpcoming ? { scale: 1.02 } : undefined}
-                whileTap={!isUpcoming ? { scale: 0.98 } : undefined}
                 onClick={() => {
                   if (hasSubItems(link) && !link.href) {
-                    if (!isUpcoming) toggleExpand(link.id);
+                    if (!isUpcoming) toggleSubItems(link.id);
                     return;
                   }
                   handleNavigation(link);
@@ -95,6 +99,22 @@ export default function MobileSidebarContent({
                   {link.label}
                 </span>
 
+                {hasSubItems(link) && (
+                  <ChevronDown
+                    onClick={
+                      (e) => {
+                        e.stopPropagation();
+                        if (isUpcoming) return;
+                        toggleSubItems(link.id);
+                      }
+                    }
+                    size={18}
+                    className={`transition-transform ${
+                      showSubs ? "rotate-180" : ""
+                    }`}
+                  />
+                )}
+
                 {isUpcoming && (
                   <div className="flex items-center gap-1 text-xs text-gray-500">
                     <Lock size={14} />
@@ -115,14 +135,11 @@ export default function MobileSidebarContent({
                   >
                     {(link.subItems || []).map((subItem) => {
                       const isSubActive = location.pathname === subItem.href && location.pathname !== "/dashboard";
-
                       const isSubUpcoming = subItem.isUpcoming;
 
                       return (
                         <motion.button
                           key={subItem.id}
-                          whileHover={!isSubUpcoming ? { x: 4 } : undefined}
-                          whileTap={!isSubUpcoming ? { scale: 0.98 } : undefined}
                           onClick={() => {
                             if (isSubUpcoming) return;
                             if (subItem.onLinkClick) {

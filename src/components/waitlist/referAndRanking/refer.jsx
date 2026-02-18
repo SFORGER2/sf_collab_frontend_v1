@@ -885,7 +885,7 @@ const currentTier = RANK_REWARDS.find(
         </motion.div>
 
         {/* RELEASE TIMELINE */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
@@ -933,9 +933,9 @@ const currentTier = RANK_REWARDS.find(
                 <p className="text-sm text-neutral-300">Founding 1K & Early 2.5k badges persist across all SF products</p>
                 <p className="text-xs text-neutral-400 mt-1">Badge visibility, lifetime priority, future access consideration</p>
               </div>
-            </motion.div> */}
+            </motion.div> 
           </div>
-        </motion.div>
+        </motion.div> */}
       </div>
     </div>
   );

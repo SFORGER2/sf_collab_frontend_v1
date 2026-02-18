@@ -116,15 +116,19 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
         <div className="flex flex-wrap justify-center items-center gap-6">
           <div className="w-24 h-24 rounded-full bg-gray-700 overflow-hidden border-2 border-gray-600">
             {(user.profile.picture || formData.profile.picture) ? (
-              <img src={getProfilePicture(user) || formData.profile.picture} className="w-full h-full object-cover" alt="profile" />
+              <img loading="lazy" src={getProfilePicture(user) || formData.profile.picture} className="w-full h-full object-cover" alt="profile" />
             ) : (
               <div className="flex items-center justify-center text-gray-400 text-sm h-full">No image</div>
             )}
           </div>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer transition-colors font-medium">
+            <button
+              onClick={
+                () => document.querySelector('#profileInput').click()
+              }
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer transition-colors font-medium">
               Upload
-              <input type="file" accept="image/*" className="hidden" onChange={handleImage} />
+              <input id="profileInput" type="file" accept="image/*" className="hidden" onChange={handleImage} />
             </button>
             {formData.profile.picture && (
               <button type="button" onClick={() => setFormData(prev => ({ ...prev, profile: { ...prev.profile, picture: null } }))} className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors font-medium border border-red-600/50">

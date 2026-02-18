@@ -254,6 +254,7 @@ export default function Calendar() {
         ...eventForm,
         user_id: user?.id,
         start_date: new Date(eventForm.start_date).toISOString(),
+        startup_id: null,
         end_date: eventForm.end_date ? new Date(eventForm.end_date).toISOString() : null
       }
 
@@ -275,13 +276,14 @@ export default function Calendar() {
         setEventForm({
           title: '',
           description: '',
+
           start_date: '',
           end_date: '',
           all_day: false,
           category: 'event',
           color: '',
           location: '',
-          startup_id: '',
+          startup_id: null,
           link: '',
           reminder_minutes: 30
         })
@@ -675,42 +677,42 @@ export default function Calendar() {
   
   return (
     <div className="overflow-hidden text-white">
-      <div className="w-full mx-auto px-4 py-8">
+      <div className="w-full mx-auto py-4 md:py-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div className="flex flex-col gap-4 mb-6 md:mb-8">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2.5 bg-blue-500/10 rounded-lg">
-                <CalendarIcon className="h-6 w-6 text-blue-400" />
+            <div className="flex items-center gap-2 md:gap-3 mb-2">
+              <div className="p-2 md:p-2.5 bg-blue-500/10 rounded-lg">
+                <CalendarIcon className="h-5 md:h-6 w-5 md:w-6 text-blue-400" />
               </div>
-              <ShinyText 
-                text="Calendar" 
-                disabled={false} 
-                speed={3} 
-                className='text-2xl font-bold' 
+              <ShinyText
+                text="Calendar"
+                disabled={false}
+                speed={3}
+                className='text-xl md:text-2xl font-bold'
               />
             </div>
-            <p className="text-gray-400 text-lg ml-14">Plan and organize your schedule</p>
+            <p className="text-gray-400 text-sm md:text-lg ml-10 md:ml-14">Plan and organize your schedule</p>
           </div>
 
-          <div style={{ zIndex: 99 }} className="flex items-center gap-3">
-            <div data-aos='fade-left' data-aos-delay="100">
-              <Button 
-                className="rounded-md flex gap-2 w-[110px] items-center justify-center hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-900 cursor-pointer bg-white text-black"
-                size="sm" 
-                onClick={goToToday} 
+          <div style={{ zIndex: 99 }} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3 w-full sm:w-auto">
+            <div className="flex-1 sm:flex-none" data-aos='fade-left' data-aos-delay="100">
+              <Button
+                className="rounded-md flex gap-2 w-full sm:w-[110px] items-center justify-center hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-900 cursor-pointer bg-white text-black"
+                size="sm"
+                onClick={goToToday}
               >
-                <CalendarIcon size={18} className="hover:animate-pulse" /> Today
+                <CalendarIcon size={16} className="hover:animate-pulse" /> Today
               </Button>
             </div>
-            
-            <div data-aos='fade-left' data-aos-delay="200">
-              <ShineButton 
-                className="rounded-md flex h-8.5 gap-2 w-[140px] items-center justify-center text-white"
-                label="New Event" 
-                icon={<Plus size={18} className="hover:animate-pulse" />}
-                size="sm" 
-                bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+        
+            <div className="flex-1 sm:flex-none" data-aos='fade-left' data-aos-delay="200">
+              <ShineButton
+                className="rounded-md flex gap-2 w-full sm:w-[140px] h-8.5 items-center justify-center text-white"
+                label="New Event"
+                icon={<Plus size={16} className="hover:animate-pulse" />}
+                size="sm"
+                bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)"
                 onClick={() => {
                   setSelectedEvent(null)
                   setEventForm({
@@ -727,256 +729,261 @@ export default function Calendar() {
                     reminder_minutes: 30
                   })
                   setShowEventModal(true)
-                }} 
+                }}
               />
             </div>
           </div>
         </div>
 
         {/* Filters and Controls */}
-        <div className="mb-6">
+        <div className="mb-4 md:mb-6">
           <SpotlightCard
             spotlightColor="rgba(59, 130, 246, 0.10)"
-            className="backdrop-blur-xl bg-transparent relative rounded-2xl border border-gray-700/50 overflow-hidden"
+            className="backdrop-blur-xl bg-transparent relative rounded-xl md:rounded-2xl border border-gray-700/50 overflow-hidden"
           >
-            <img src="/design_2.png" className=" absolute object-cover top-0 left-0  w-full h-fit -mt-60 opacity-15" />
-            <div className="p-4" style={{zIndex:99999}}>
-              <div className="flex flex-col md:flex-row justify-end items-center mb-6 gap-4">
-                <div data-aos='fade-left' data-aos-delay="300">
-                  <ButtonGroup>
-                    <Button 
+            <img loading="lazy" src="/design_2.jpg" className="absolute object-cover top-0 left-0 w-full h-fit -mt-60 opacity-15" />
+            <div className="p-2 md:p-4" style={{ zIndex: 99999 }}>
+              <div className="flex flex-col gap-3 md:gap-4 mb-4 md:mb-6">
+                <div className="flex flex-col sm:flex-row gap-2 md:gap-3 overflow-x-auto pb-2" data-aos='fade-left' data-aos-delay="300">
+                  <ButtonGroup className="flex-shrink-0">
+                    <Button
                       onClick={() => handleExportCalendar('json')}
-                      className="flex gap-2 items-center justify-center bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-800 cursor-pointer text-black border-none"
+                      className="flex gap-1 md:gap-2 items-center justify-center bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-800 cursor-pointer text-black border-none text-xs md:text-sm"
                     >
-                      <FileJson size={16} className="hover:animate-pulse" />
-                      JSON Format
+                      <FileJson size={14} className="hover:animate-pulse" />
+                      <span className="hidden sm:inline">JSON</span>
                     </Button>
-                    
+                
                     <ButtonGroupSeparator />
-                    
-                    <Button 
+                
+                    <Button
                       onClick={() => handleExportCalendar('csv')}
-                      className="flex gap-2 items-center justify-center bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-800 cursor-pointer text-black border-none"
+                      className="flex gap-1 md:gap-2 items-center justify-center bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-800 cursor-pointer text-black border-none text-xs md:text-sm"
                     >
-                      <FileSpreadsheet size={16} className="hover:animate-pulse" />
-                      CSV Format
+                      <FileSpreadsheet size={14} className="hover:animate-pulse" />
+                      <span className="hidden sm:inline">CSV</span>
                     </Button>
-                    
+                
                     <ButtonGroupSeparator />
-                    
-                    <Button 
+                
+                    <Button
                       onClick={() => handleExportCalendar('ical')}
-                      className="flex gap-2 items-center justify-center bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-800 cursor-pointer text-black border-none"
+                      className="flex gap-1 md:gap-2 items-center justify-center bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-800 cursor-pointer text-black border-none text-xs md:text-sm"
                     >
-                      <CalendarFile size={16} className="hover:animate-pulse" />
-                      iCal Format
+                      <CalendarFile size={14} className="hover:animate-pulse" />
+                      <span className="hidden sm:inline">iCal</span>
                     </Button>
                   </ButtonGroup>
                 </div>
               </div>
-              <div className="flex flex-col md:flex-row gap-4 items-center justify-between" >
+
+              <div className="flex flex-col gap-3 md:gap-4">
                 {/* View Controls */}
-                <div className="flex items-center gap-2" style={{zIndex:99999}}>
-                  <Button
-                    onClick={() => navigateMonth('prev')}
-                    variant="outline"
-                    size="sm"
-                    className="border-gray-700 text-gray-600 hover:text-gray-950 hover:border-blue-500"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  
-                  <h2 className="text-xl font-bold text-white mx-4">
-                    {format(currentDate, 'MMMM yyyy')}
-                  </h2>
-                  
-                  <Button
-                    onClick={() => navigateMonth('next')}
-                    variant="outline"
-                    size="sm"
-                    className="border-gray-700 text-gray-600 hover:text-gray-950 hover:border-blue-500"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {/* View Tabs */}
-                <Tabs value={filters.view} onValueChange={(value) => setFilters({...filters, view: value})}>
-                  <TabsList style={{zIndex:99999}} className="bg-gray-800/50 border border-gray-700">
-                    {viewOptions.map((view) => (
-                      <TabsTrigger key={view.value} value={view.value} className={`${filters.view === view.value?'':'text-white'}`}>
-                        {view.icon}
-                        {view.label}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
-
-                {/* Filter Button */}
-                <div className="flex items-center gap-2" style={{zIndex:99999}}>
-                  <div data-aos='fade-left' data-aos-delay="300">
-                    <Button 
-                      className="rounded-md flex gap-2 w-[130px] items-center bg-transparent hover:bg-transparent cursor-pointer justify-center text-white"
-                      size="sm" 
-                      onClick={() => setShowFilters(!showFilters)} 
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3" style={{ zIndex: 99999 }}>
+                  <div className="flex items-center gap-1 md:gap-2 justify-between sm:justify-start">
+                    <Button
+                      onClick={() => navigateMonth('prev')}
+                      variant="outline"
+                      size="sm"
+                      className="border-gray-700 text-gray-600 hover:text-gray-950 hover:border-blue-500 p-2"
                     >
-                    <Filter size={16} className="hover:animate-pulse" /> Filters 
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                
+                    <h2 className="text-lg md:text-xl font-bold text-white flex-1 sm:flex-none text-center">
+                      {format(currentDate, 'MMM yyyy')}
+                    </h2>
+                
+                    <Button
+                      onClick={() => navigateMonth('next')}
+                      variant="outline"
+                      size="sm"
+                      className="border-gray-700 text-gray-600 hover:text-gray-950 hover:border-blue-500 p-2"
+                    >
+                      <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={fetchEvents}
-                    disabled={loading}
-                  >
-                    <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                  </Button>
-                </div>
-              </div>
 
-              {/* Advanced Filters */}
-              {showFilters && (
-                <div className="mt-4 p-4 border border-gray-700 rounded-lg bg-gray-800/30 relative" style={{ zIndex: 50 }}>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {/* Category Filter */}
-                    <div className="space-y-2">
-                      <Label className="text-sm text-gray-400">Category</Label>
-                      <Select
-                        value={filters.category}
-                        onValueChange={(value) => setFilters({...filters, category: value})}
-                      >
-                        <SelectTrigger className="border-gray-700 bg-gray-800/50" style={{ zIndex: 60 }}>
-                          <SelectValue placeholder="All categories" />
-                        </SelectTrigger>
-                        <SelectContent 
-                          className="bg-gray-800 border-gray-700" 
-                          position="popper"
-                          style={{ 
-                            zIndex: 9999999,
-                            position: 'absolute'
-                          }}
-                        >
-                          <SelectItem value="all">All Categories</SelectItem>
-                          {eventCategories.map(cat => (
-                            <SelectItem key={cat.value} value={cat.value} className="flex text-white hover:text-gray-800 items-center gap-2">
-                              <div 
-                                className="w-3 h-3 rounded-full" 
-                                style={{ backgroundColor: cat.color }}
-                              />
-                              {cat.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-              
-                    {/* Startup Filter */}
-                    <div className="space-y-2">
-                      <Label className="text-sm text-gray-400">Startup</Label>
-                      <Select
-                        value={filters.startup_id}
-                        onValueChange={(value) => setFilters({...filters, startup_id: value})}
-                      >
-                        <SelectTrigger className="border-gray-700 bg-gray-800/50" style={{ zIndex: 60 }}>
-                          <SelectValue placeholder="All startups" />
-                        </SelectTrigger>
-                        <SelectContent 
-                          className="bg-gray-800 border-gray-700" 
-                          position="popper"
-                          style={{ 
-                            zIndex: 9999999,
-                            position: 'absolute'
-                          }}
-                        >
-                          <SelectItem value="all">All Startups</SelectItem>
-                          {userStartups.length > 0 ? (
-                            userStartups.map(startup => (
-                              <SelectItem key={startup.id} value={startup.id.toString()} className="text-white hover:text-gray-800">
-                                {startup.name}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no-startups" disabled>No startups found</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-              
-                    {/* Date Range */}
-                    <div className="space-y-2">
-                      <Label className="text-sm text-gray-400">Date Range</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="date"
-                          className="border-gray-700 bg-gray-800/50"
-                          value={filters.start_date ? format(filters.start_date, 'yyyy-MM-dd') : ''}
-                          onChange={(e) => setFilters({
-                            ...filters, 
-                            start_date: e.target.value ? new Date(e.target.value) : null
-                          })}
-                        />
-                        <Input
-                          type="date"
-                          className="border-gray-700 bg-gray-800/50"
-                          value={filters.end_date ? format(filters.end_date, 'yyyy-MM-dd') : ''}
-                          onChange={(e) => setFilters({
-                            ...filters, 
-                            end_date: e.target.value ? new Date(e.target.value) : null
-                          })}
-                        />
-                      </div>
-                    </div>
-              
-                    {/* Search */}
-                    <div className="space-y-2">
-                      <Label className="text-sm text-gray-400">Search</Label>
-                      <div className="relative">
-                        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                        <Input
-                          placeholder="Search events..."
-                          className="pl-10 border-gray-700 bg-gray-800/50"
-                          value={filters.search}
-                          onChange={(e) => setFilters({...filters, search: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                  </div>
-              
-                  {/* Additional Filters */}
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={filters.upcoming_only}
-                        onCheckedChange={(checked) => setFilters({...filters, upcoming_only: checked})}
-                      />
-                      <Label className="text-sm text-gray-400">Show upcoming only</Label>
-                    </div>
-                    
-                    <div data-aos='fade-left' data-aos-delay="400">
-                      <ShineButton
-                        className="rounded-md flex gap-2 w-[150px] items-center justify-center text-white"
-                        label="Clear Filters"
-                        icon={<X size={16} className="hover:animate-pulse" />}
+                  {/* View Tabs - Horizontal scroll on mobile */}
+                  <Tabs value={filters.view} onValueChange={(value) => setFilters({ ...filters, view: value })} className="w-full sm:w-auto">
+                    <TabsList style={{ zIndex: 99999 }} className="bg-gray-800/50 border border-gray-700 w-full sm:w-auto grid grid-cols-3">
+                      {viewOptions.map((view) => (
+                        <TabsTrigger key={view.value} value={view.value} className={`text-xs md:text-sm py-2 ${filters.view === view.value ? '' : 'text-white'}`}>
+                          {view.icon}
+                          <span className="hidden sm:inline ml-1">{view.label}</span>
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+
+                  {/* Filter Button */}
+                  <div className="flex items-center gap-1 md:gap-2 w-full sm:w-auto" style={{ zIndex: 99999 }}>
+                    <div className="flex-1 sm:flex-none" data-aos='fade-left' data-aos-delay="300">
+                      <Button
+                        className="rounded-md flex gap-2 w-full sm:w-[130px] items-center bg-transparent hover:bg-transparent cursor-pointer justify-center text-white text-sm"
                         size="sm"
-                        bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)"
-                        onClick={() => {
-                          setFilters({
-                            category: 'all',
-                            startup_id: 'all',
-                            view: 'month',
-                            upcoming_only: false,
-                            search: '',
-                            start_date: null,
-                            end_date: null
-                          })
-                          setSelectedEvent(null)
-                        }} 
-                      />
+                        onClick={() => setShowFilters(!showFilters)}
+                      >
+                        <Filter size={16} className="hover:animate-pulse" />
+                        <span className="hidden sm:inline">Filters</span>
+                      </Button>
                     </div>
+                
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={fetchEvents}
+                      disabled={loading}
+                      className="p-2"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    </Button>
                   </div>
                 </div>
-              )}
+
+                {/* Advanced Filters */}
+                {showFilters && (
+                  <div className="p-3 md:p-4 border border-gray-700 rounded-lg bg-gray-800/30 relative" style={{ zIndex: 50 }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                      {/* Category Filter */}
+                      <div className="space-y-2">
+                        <Label className="text-xs md:text-sm text-gray-400">Category</Label>
+                        <Select
+                          value={filters.category}
+                          onValueChange={(value) => setFilters({ ...filters, category: value })}
+                        >
+                          <SelectTrigger className="border-gray-700 bg-gray-800/50 text-sm" style={{ zIndex: 60 }}>
+                            <SelectValue placeholder="All categories" />
+                          </SelectTrigger>
+                          <SelectContent
+                            className="bg-gray-800 border-gray-700"
+                            position="popper"
+                            style={{
+                              zIndex: 9999999,
+                              position: 'absolute'
+                            }}
+                          >
+                            <SelectItem value="all">All Categories</SelectItem>
+                            {eventCategories.map(cat => (
+                              <SelectItem key={cat.value} value={cat.value} className="flex text-white hover:text-gray-800 items-center gap-2">
+                                <div
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: cat.color }}
+                                />
+                                {cat.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+            
+                      {/* Startup Filter */}
+                      <div className="space-y-2">
+                        <Label className="text-xs md:text-sm text-gray-400">Startup</Label>
+                        <Select
+                          value={filters.startup_id}
+                          onValueChange={(value) => setFilters({ ...filters, startup_id: value })}
+                        >
+                          <SelectTrigger className="border-gray-700 bg-gray-800/50 text-sm" style={{ zIndex: 60 }}>
+                            <SelectValue placeholder="All startups" />
+                          </SelectTrigger>
+                          <SelectContent
+                            className="bg-gray-800 border-gray-700"
+                            position="popper"
+                            style={{
+                              zIndex: 9999999,
+                              position: 'absolute'
+                            }}
+                          >
+                            <SelectItem value="all">All Startups</SelectItem>
+                            {userStartups.length > 0 ? (
+                              userStartups.map(startup => (
+                                <SelectItem key={startup.id} value={startup.id.toString()} className="text-white hover:text-gray-800">
+                                  {startup.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no-startups" disabled>No startups found</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+            
+                      {/* Date Range */}
+                      <div className="space-y-2 sm:col-span-2 lg:col-span-1">
+                        <Label className="text-xs md:text-sm text-gray-400">Date Range</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="date"
+                            className="border-gray-700 bg-gray-800/50 text-sm"
+                            value={filters.start_date ? format(filters.start_date, 'yyyy-MM-dd') : ''}
+                            onChange={(e) => setFilters({
+                              ...filters,
+                              start_date: e.target.value ? new Date(e.target.value) : null
+                            })}
+                          />
+                          <Input
+                            type="date"
+                            className="border-gray-700 bg-gray-800/50 text-sm"
+                            value={filters.end_date ? format(filters.end_date, 'yyyy-MM-dd') : ''}
+                            onChange={(e) => setFilters({
+                              ...filters,
+                              end_date: e.target.value ? new Date(e.target.value) : null
+                            })}
+                          />
+                        </div>
+                      </div>
+            
+                      {/* Search */}
+                      <div className="space-y-2">
+                        <Label className="text-xs md:text-sm text-gray-400">Search</Label>
+                        <div className="relative">
+                          <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                          <Input
+                            placeholder="Search..."
+                            className="pl-3 pr-8 border-gray-700 bg-gray-800/50 text-sm"
+                            value={filters.search}
+                            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+            
+                    {/* Additional Filters */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-700">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={filters.upcoming_only}
+                          onCheckedChange={(checked) => setFilters({ ...filters, upcoming_only: checked })}
+                        />
+                        <Label className="text-xs md:text-sm text-gray-400">Upcoming only</Label>
+                      </div>
+                  
+                      <div className="w-full sm:w-auto" data-aos='fade-left' data-aos-delay="400">
+                        <ShineButton
+                          className="rounded-md flex gap-2 w-full sm:w-[150px] items-center justify-center text-white text-sm"
+                          label="Clear"
+                          icon={<X size={14} className="hover:animate-pulse" />}
+                          size="sm"
+                          bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)"
+                          onClick={() => {
+                            setFilters({
+                              category: 'all',
+                              startup_id: 'all',
+                              view: 'month',
+                              upcoming_only: false,
+                              search: '',
+                              start_date: null,
+                              end_date: null
+                            })
+                            setSelectedEvent(null)
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </SpotlightCard>
         </div>
@@ -984,7 +991,7 @@ export default function Calendar() {
         {/* Calendar View */}
         <div className="mb-6">
           {filters.view === 'month' && (
-            <div  className="mb-4 grid grid-cols-7 gap-px bg-gray-800 rounded-lg overflow-hidden">
+            <div className="mb-4 grid grid-cols-7 gap-px bg-gray-800 rounded-lg overflow-hidden">
               {weekDays.map((day) => (
                 <div key={day} className="p-3 text-center bg-gray-800/50 border-b border-gray-700">
                   <span className="text-sm font-semibold text-gray-400">{day}</span>
@@ -1004,12 +1011,12 @@ export default function Calendar() {
                 <h3 className="text-lg font-semibold text-gray-400 mb-2">No events found</h3>
                 <p className="text-gray-500 mb-4">Try adjusting your filters or create a new event</p>
                 <div data-aos='fade-up' data-aos-delay="100">
-                  <ShineButton 
+                  <ShineButton
                     className="rounded-md flex gap-2 w-40 items-center justify-center text-white mx-auto"
-                    label="Create Event" 
+                    label="Create Event"
                     icon={<Plus size={18} className="hover:animate-pulse" />}
-                    size="sm" 
-                    bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+                    size="sm"
+                    bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)"
                     onClick={() => {
                       setSelectedEvent(null)
                       setEventForm({
@@ -1026,7 +1033,7 @@ export default function Calendar() {
                         reminder_minutes: 30
                       })
                       setShowEventModal(true)
-                    }} 
+                    }}
                   />
                 </div>
               </CardContent>
@@ -1070,7 +1077,7 @@ export default function Calendar() {
                 <div>
                   <p className="text-sm text-gray-400">This Month</p>
                   <p className="text-2xl font-bold text-purple-400">
-                    {events.filter(e => 
+                    {events.filter(e =>
                       new Date(e.start_date).getMonth() === currentDate.getMonth() &&
                       new Date(e.start_date).getFullYear() === currentDate.getFullYear()
                     ).length}
@@ -1115,7 +1122,7 @@ export default function Calendar() {
               <Label className="text-white">Title *</Label>
               <Input
                 value={eventForm.title}
-                onChange={(e) => setEventForm({...eventForm, title: e.target.value})}
+                onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
                 placeholder="Event title"
                 className="border-gray-700 bg-gray-800/50 text-white"
               />
@@ -1126,7 +1133,7 @@ export default function Calendar() {
               <Label className="text-white">Description</Label>
               <Textarea
                 value={eventForm.description}
-                onChange={(e) => setEventForm({...eventForm, description: e.target.value})}
+                onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
                 placeholder="Event description"
                 rows={3}
                 className="border-gray-700 bg-gray-800/50 text-white"
@@ -1140,7 +1147,7 @@ export default function Calendar() {
                 <Input
                   type="datetime-local"
                   value={eventForm.start_date}
-                  onChange={(e) => setEventForm({...eventForm, start_date: e.target.value})}
+                  onChange={(e) => setEventForm({ ...eventForm, start_date: e.target.value })}
                   className="border-gray-700 bg-gray-800/50 text-white"
                 />
               </div>
@@ -1149,7 +1156,7 @@ export default function Calendar() {
                 <Input
                   type="datetime-local"
                   value={eventForm.end_date}
-                  onChange={(e) => setEventForm({...eventForm, end_date: e.target.value})}
+                  onChange={(e) => setEventForm({ ...eventForm, end_date: e.target.value })}
                   className="border-gray-700 bg-gray-800/50 text-white"
                 />
               </div>
@@ -1160,7 +1167,7 @@ export default function Calendar() {
               <Label className="text-white">Category</Label>
               <Select
                 value={eventForm.category}
-                onValueChange={(value) => setEventForm({...eventForm, category: value})}
+                onValueChange={(value) => setEventForm({ ...eventForm, category: value })}
               >
                 <SelectTrigger className="border-gray-700 bg-gray-800/50 text-white" style={{ zIndex: 9999999 }}>
                   <SelectValue placeholder="Select category" />
@@ -1169,8 +1176,8 @@ export default function Calendar() {
                   {eventCategories.map(cat => (
                     <SelectItem key={cat.value} value={cat.value}>
                       <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
+                        <div
+                          className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: cat.color }}
                         />
                         {cat.label}
@@ -1187,7 +1194,7 @@ export default function Calendar() {
                 <Label className="text-white">Location</Label>
                 <Input
                   value={eventForm.location}
-                  onChange={(e) => setEventForm({...eventForm, location: e.target.value})}
+                  onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
                   placeholder="Event location"
                   className="border-gray-700 bg-gray-800/50 text-white"
                 />
@@ -1197,7 +1204,7 @@ export default function Calendar() {
                 <Label className="text-white">Link</Label>
                 <Input
                   value={eventForm.link}
-                  onChange={(e) => setEventForm({...eventForm, link: e.target.value})}
+                  onChange={(e) => setEventForm({ ...eventForm, link: e.target.value })}
                   placeholder="https://..."
                   className="border-gray-700 bg-gray-800/50 text-white"
                 />
@@ -1209,7 +1216,7 @@ export default function Calendar() {
               <Label className="text-white">Reminder</Label>
               <Select
                 value={eventForm.reminder_minutes.toString()}
-                onValueChange={(value) => setEventForm({...eventForm, reminder_minutes: parseInt(value)})}
+                onValueChange={(value) => setEventForm({ ...eventForm, reminder_minutes: parseInt(value) })}
               >
                 <SelectTrigger className="border-gray-700 bg-gray-800/50 text-white" style={{ zIndex: 9999999 }}>
                   <SelectValue placeholder="Select reminder" />
@@ -1229,7 +1236,7 @@ export default function Calendar() {
             <div className="flex items-center gap-2">
               <Switch
                 checked={eventForm.all_day}
-                onCheckedChange={(checked) => setEventForm({...eventForm, all_day: checked})}
+                onCheckedChange={(checked) => setEventForm({ ...eventForm, all_day: checked })}
               />
               <Label className="text-white">All day event</Label>
             </div>
@@ -1282,5 +1289,5 @@ export default function Calendar() {
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
+  );
+};

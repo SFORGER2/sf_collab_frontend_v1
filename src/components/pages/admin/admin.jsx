@@ -25,6 +25,7 @@ import { feedbackAPI } from '@/utils/APIs/feedbackAPI';
 import StartupAdminItems from './StartupAdminItems';
 import UserAdminItems from './UserAdminItems';
 import { paymentAPI } from '@/utils/APIs/paymentAPI';
+import AdminSendAnnouncementSection from './SendAnnouncementsSection';
 
 // Register chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
@@ -434,6 +435,7 @@ const AdminDashboard = () => {
             </ul>
           </div>
           <AdminIdeasReviewSection />
+          <AdminSendAnnouncementSection />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50">
               <h2 className="text-xl font-semibold mb-4 text-gray-100">👥 Users List</h2>

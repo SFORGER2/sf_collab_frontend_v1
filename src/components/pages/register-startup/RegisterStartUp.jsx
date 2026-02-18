@@ -711,7 +711,7 @@ export default function RegisterStartUp() {
                           </Tooltip>
                         </Label>
                         <div className="relative">
-                          <Building2 className="absolute right-4 top-4 text-gray-400" size={20} />
+                          <Building2 className="absolute left-4 top-4 text-gray-400" size={20} />
                           <Input
                             id="name"
                             type="text"
@@ -769,7 +769,7 @@ export default function RegisterStartUp() {
                           </Tooltip>
                         </Label>
                         <div className="relative">
-                          <MapPin className="absolute right-4 top-4 text-gray-400" size={20} />
+                          <MapPin className="absolute left-4 top-4 text-gray-400" size={20} />
                           <Input
                             id="location"
                             type="text"
@@ -813,7 +813,7 @@ export default function RegisterStartUp() {
                           </Tooltip>
                         </Label>
                         <div className="relative">
-                          <User className="absolute right-4 top-4 text-gray-400" size={20} />
+                          <User className="absolute left-4 top-4 text-gray-400" size={20} />
                           <Input
                             id="firstName"
                             type="text"
@@ -842,7 +842,7 @@ export default function RegisterStartUp() {
                           </Tooltip>
                         </Label>
                         <div className="relative">
-                          <User className="absolute right-4 top-4 text-gray-400" size={20} />
+                          <User className="absolute left-4 top-4 text-gray-400" size={20} />
                           <Input
                             id="lastName"
                             type="text"
@@ -876,7 +876,7 @@ export default function RegisterStartUp() {
                           </Tooltip>
                         </Label>
                         <div className="relative">
-                          <Mail className="absolute right-4 top-4 text-gray-400" size={20} />
+                          <Mail className="absolute left-4 top-4 text-gray-400" size={20} />
                           <Input
                             id="email"
                             type="email"

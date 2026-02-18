@@ -116,7 +116,7 @@ export default function App() {
         try {
           // console.log(access_token);
           const response = await usersAPI.getMyRoles();
-          setUserRoles([...response.data.map(role => role.role), 'General']);
+          setUserRoles([...response.data.map(role => role.role)]);
           // setUserRoles(['admin', 'influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
           // setActiveRole('member');
         } catch (error) {

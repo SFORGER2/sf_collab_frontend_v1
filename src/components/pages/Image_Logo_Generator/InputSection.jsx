@@ -10,6 +10,7 @@ import { Loader2, Sparkles, Building2, Palette, Brush, Tag, Download, InfoIcon, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../ui/tooltip';
 import { motion } from 'framer-motion';
+import { toast } from "react-toastify";
 export default function InputSection({
   formData,
   setFormData,
@@ -63,18 +64,17 @@ export default function InputSection({
       e.preventDefault();
       
       if (!formData.company_name.trim()) {
-        setError('Company name is required');
+        toast.error('Company name is required');
         return;
       }
       
       const token = access_token;
       if (!token) {
-        setError('Please log in to generate logos');
+        toast.error('You must be logged in to generate logos');
         return;
       }
       
       setLoading(true);
-      setError('');
       setLogos([]);
   
       try {
@@ -97,11 +97,11 @@ export default function InputSection({
         setLogos(response.images);
         setSloganDesigns(response.slogan_designs);
       } catch (err) {
+        toast.error(err?.error || 'Failed to generate logos. Please try again later.');
         if (err.status === 402) {
           setError('Insufficient credits. Please top up your account.');
           return;
         }
-        setError(err.response.data.error || 'Failed to generate logos. Please try again.');
         console.error('Logo generation error:', err);
       } finally {
         setLoading(false);
@@ -118,7 +118,6 @@ export default function InputSection({
         additional_notes: ''
       });
       setLogos([]);
-      setError('');
     };
   return <motion.div
               initial={{ opacity: 0, x: -30 }}

@@ -26,7 +26,7 @@ export default function UserCard({ user, index, onUserClick, onSendMessage, onCo
           <div className="flex items-start gap-4 mb-4">
             <motion.div whileHover={{ scale: 1.05 }} className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 ring-2 ring-slate-700 shadow-lg flex-shrink-0">
               {user.avatar_url ? (
-                <img src={`${API_URL}${user.avatar_url}`} alt={user.first_name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                <img loading="lazy" src={`${API_URL}${user.avatar_url}`} alt={user.first_name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
                   {user.first_name?.charAt(0)}{user.last_name?.charAt(0)}

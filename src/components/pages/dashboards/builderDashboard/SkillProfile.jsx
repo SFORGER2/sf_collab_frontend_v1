@@ -331,7 +331,7 @@ const SkillProfile = () => {
                   {/* Project Image */}
                   <div className="relative w-full h-48 rounded-t-2xl bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 flex items-center justify-center overflow-hidden">
                     {project.image_url ? (
-                      <img src={project.image_url} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                      <img loading="lazy" src={project.image_url} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                     ) : (
                       <div className="text-6xl">📦</div>
                     )}

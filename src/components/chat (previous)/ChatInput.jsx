@@ -41,7 +41,7 @@ const FilePreview = ({ file, onRemove }) => {
   return (
     <div className="relative inline-block">
       {isImage && preview ? (
-        <img 
+        <img loading="lazy" 
           src={preview} 
           alt={file.name} 
           className="h-16 w-16 object-cover rounded-lg border border-zinc-700"

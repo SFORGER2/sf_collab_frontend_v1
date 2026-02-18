@@ -91,7 +91,7 @@ const ProfileSetting = () => {
             </div>
             <div className="flex gap-4 items-center w-[50%]">
               <div className="w-24 h-24 rounded-full overflow-hidden text-center py-4 border border-white/10">
-                <img 
+                <img loading="lazy" 
                   src="/default-user.jpeg" 
                   alt="Profile" 
                   className="w-full h-full object-cover" 

@@ -4,132 +4,27 @@
  */
 
 import axios from "axios";
+import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from "./interceptors";
+import { API_BASE_URL } from "../config";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
+
 
 const api = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// =======================
-// AUTH INTERCEPTOR (PERMANENT FIX)
-// =======================
 
-// Safe JSON parse (returns null if invalid)
-const safeParse = (v) => {
-  try { return JSON.parse(v); } catch { return null; }
-};
+api.interceptors.request.use(
+  requestInterceptor,
+  requestErrorInterceptor
+);
 
-// Redux-persist sometimes stores values as "\"token\"" (double-stringified)
-const unwrapPersistedString = (v) => {
-  if (typeof v !== "string") return v;
-  const parsed = safeParse(v);
-  return typeof parsed === "string" ? parsed : v;
-};
-
-const getTokenFromStorage = () => {
-  // 1) Direct keys (many apps store tokens this way)
-  const directKeys = ["access_token", "accessToken", "token", "jwt"];
-  for (const k of directKeys) {
-    const v = localStorage.getItem(k);
-    if (v) return unwrapPersistedString(v);
-  }
-
-  // 2) persist:auth (your current attempt — but make it robust)
-  const rawAuth = localStorage.getItem("persist:auth");
-  if (rawAuth) {
-    const parsedAuth = safeParse(rawAuth);
-    if (parsedAuth && typeof parsedAuth === "object") {
-      const candidates = [
-        parsedAuth.access_token,
-        parsedAuth.accessToken,
-        parsedAuth.token,
-        parsedAuth.jwt,
-        parsedAuth.tokens,           // sometimes tokens is nested
-        parsedAuth.auth,             // sometimes auth is nested
-      ].filter(Boolean);
-
-      for (const c of candidates) {
-        // if nested JSON string
-        const maybeObj = typeof c === "string" ? safeParse(c) : c;
-        if (typeof maybeObj === "string" && maybeObj) return maybeObj;
-
-        if (maybeObj && typeof maybeObj === "object") {
-          const t =
-            maybeObj.access_token ||
-            maybeObj.accessToken ||
-            maybeObj.token ||
-            maybeObj.jwt ||
-            maybeObj.access;
-          if (t) return unwrapPersistedString(t);
-        }
-
-        // last fallback
-        const t2 = unwrapPersistedString(c);
-        if (typeof t2 === "string" && t2) return t2;
-      }
-    }
-  }
-
-  // 3) persist:root (very common with redux-persist)
-  const rawRoot = localStorage.getItem("persist:root");
-  if (rawRoot) {
-    const parsedRoot = safeParse(rawRoot);
-    if (parsedRoot && typeof parsedRoot === "object") {
-      // try common slice names
-      const sliceNames = ["auth", "user", "session"];
-      for (const s of sliceNames) {
-        if (!parsedRoot[s]) continue;
-
-        const slice = typeof parsedRoot[s] === "string" ? safeParse(parsedRoot[s]) : parsedRoot[s];
-        if (!slice || typeof slice !== "object") continue;
-
-        const t =
-          slice.access_token ||
-          slice.accessToken ||
-          slice.token ||
-          slice.jwt ||
-          (slice.tokens && (slice.tokens.access_token || slice.tokens.accessToken || slice.tokens.token));
-        if (t) return unwrapPersistedString(t);
-      }
-    }
-  }
-
-  return null;
-};
-
-api.interceptors.request.use((config) => {
-  try {
-    const token = getTokenFromStorage();
-
-    // IMPORTANT: make sure headers exists
-    config.headers = config.headers || {};
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  } catch (e) {
-    console.error("Auth interceptor error:", e);
-  }
-
-  return config;
-});
-
-
-
-
-// ==============================
-// RESPONSE INTERCEPTOR (kept)
-// ==============================
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("API Error:", error.response?.status, error.response?.data);
-    return Promise.reject(error);
-  }
+  responseInterceptor,
+  responseErrorInterceptor
 );
 
 // =======================
@@ -162,6 +57,7 @@ export const NOTIFICATION_CATEGORIES = {
   FRIEND: "friend",
   APPLICATION: "application",
   NEWSLETTER: "newsletter", // optional but useful for your UI tab
+  ANNOUNCEMENT: "announcement", // optional but useful for your UI tab
 };
 
 export const NOTIFICATION_PRIORITIES = {
@@ -187,7 +83,12 @@ export const notificationAPI = {
         ...params,
       },
     });
-    return extractData(response);
+    // Dont want to return announcements/newsletter in this general call to avoid confusion with your specific tabs
+    const data = extractData(response) || {};
+    if (data.notifications) {
+      data.notifications = data.notifications.filter(n => ![NOTIFICATION_CATEGORIES.ANNOUNCEMENT, NOTIFICATION_CATEGORIES.NEWSLETTER].includes(n.category));
+    }
+    return data;
   },
 
   /**
@@ -212,7 +113,7 @@ export const notificationAPI = {
         params: { limit },
       });
       return extractData(response);
-    } catch (err) {
+    } catch {
       // Fallback to query filtering
       const response = await api.get("/notifications", {
         params: { priority: "high,critical", is_read: "false", per_page: limit, page: 1 },
@@ -270,7 +171,7 @@ export const notificationAPI = {
     try {
       const response = await api.put(`/notifications/${notificationId}/read`);
       return extractData(response);
-    } catch (err) {
+    } catch {
       const response = await api.post(`/notifications/${notificationId}/read`);
       return extractData(response);
     }
@@ -283,7 +184,7 @@ export const notificationAPI = {
     try {
       const response = await api.put(`/notifications/${notificationId}/unread`);
       return extractData(response);
-    } catch (err) {
+    } catch {
       const response = await api.post(`/notifications/${notificationId}/unread`);
       return extractData(response);
     }
@@ -299,7 +200,7 @@ export const notificationAPI = {
     try {
       const response = await api.put("/notifications/mark-all-read", { category });
       return extractData(response);
-    } catch (err) {
+    } catch {
       const params = category ? { category } : {};
       const response = await api.post("/notifications/mark-all-read", {}, { params });
       return extractData(response);
@@ -328,7 +229,7 @@ export const notificationAPI = {
         notificationIds,
       });
       return extractData(response);
-    } catch (err) {
+    } catch {
       const response = await api.post("/notifications/bulk/mark-read", {
         notification_ids: notificationIds,
         notificationIds,
@@ -355,7 +256,7 @@ export const notificationAPI = {
     try {
       const response = await api.delete("/notifications/delete-all-read");
       return extractData(response);
-    } catch (err) {
+    } catch {
       const response = await api.delete("/notifications/read");
       return extractData(response);
     }
@@ -383,7 +284,7 @@ export const notificationAPI = {
         data: { notification_ids: notificationIds, notificationIds },
       });
       return extractData(response);
-    } catch (err) {
+    } catch {
       const response = await api.post("/notifications/bulk/delete", {
         notificationIds,
         notification_ids: notificationIds,
@@ -425,6 +326,23 @@ export const notificationAPI = {
     const response = await api.post("/notes", noteData);
     return extractData(response);
   },
+
+  getAnnouncements: async () => {
+    const response = await api.get("/notifications/broadcasts");
+    return extractData(response);
+  },
+  createAnnouncement: async (announcementData) => {
+    const response = await api.post("/notifications/broadcasts", announcementData);
+    return extractData(response);
+  },
+  getNewsletter: async () => {
+    const response = await api.get("/notifications/bulletins");
+    return extractData(response);
+  },
+  createNewsletter: async (newsletterData) => {
+    const response = await api.post("/notifications/bulletins", newsletterData);
+    return extractData(response)
+  }
 };
 
 export default notificationAPI;

@@ -1,25 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
-import { DrawLineText } from "../gsap/draw-line-text";
-import { HelpCircle, MapPinIcon, StarIcon, Repeat, Crown, Hammer, Megaphone, Shield } from "lucide-react";
-import { ProfilePeek } from "../gsap/profile-peek";
+import { HelpCircle, Crown, Hammer, Megaphone, Shield } from "lucide-react";
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 import GlareHover from "../ui/GlareHover";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logoutUser } from "../../services/auth/authThunks";
 import { useDispatch, useSelector } from "react-redux";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
-import LoadingSpinner from "../LoadingSpinner";
 import AOS from 'aos';
 import 'aos/dist/aos.css'; 
-import { FaUserPlus } from "react-icons/fa6";
-import { IoChatbubbles, IoLogIn } from "react-icons/io5";
+import { IoChatbubbles } from "react-icons/io5";
 import { TiThMenu } from "react-icons/ti";
 import { ShineButton } from '../lightswind/shine-button';
-
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import getNotificationsWithPreferences from "@/utils/getNotificationsWithPreferences";
 import { notificationAPI } from "@/utils/APIs/notificationAPI";
+import { plotCount } from "@/utils/plotCount";
 
 // Simple icon components
 const BellIcon = () => (
@@ -70,11 +65,12 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
   const handleLogout = async () => {
     setLoaderState(true);
     try {
-      await dispatch(logoutUser());
       setTimeout(() => {
-        navigate("/login", { replace: true });
+        window.location.href = "/login";
         setLoaderState(false);
-      }, 2000);
+      }, 1000);
+      dispatch(logoutUser());
+      
     } catch (err) {
       console.error("Logout error:", err);
       setLoaderState(false);
@@ -204,7 +200,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
 
       <div className="logo h-full z-50 scale-140">
         <Link to={user?.id ? `/dashboard` : '/'} className="group h-full cursor-pointer flex items-center">
-          <img data-aos="fade-right" data-aos-duration="600" src="/logo_white.svg" className="w-full h-full" alt="sf collab" />
+          <img loading="lazy" data-aos="fade-right" data-aos-duration="600" src="/logo_white.svg" className="w-full h-full" alt="sf collab" />
         </Link>
       </div>
 
@@ -234,7 +230,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                             notifications.filter(n => n.unread).length > 0 &&
                             <>
                             <span className="px-2.5 py-1 bg-red-600/10 text-rose-400 text-xs font-semibold rounded-full ring-1 ring-rose-500/20">
-                              {notifications.filter(n => n.unread).length} New
+                              {plotCount(notifications.filter(n => n.unread).length)} New
                               </span>
                               <span
                                 onClick={markAllRead}
@@ -298,7 +294,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                   <BellIcon />
                   {notifications.filter(n => n.unread).length > 0 && (
                     <span className="absolute top-0 right-0 text-xs bg-red-500 rounded-full px-1">
-                      {notifications.filter(n => n.unread).length}
+                      {plotCount(notifications.filter(n => n.unread).length)}
                     </span>
                   )}
                 </button>
@@ -366,7 +362,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                   }}
                   className="w-10 h-10 rounded-lg overflow-hidden"
                 >
-                  <img src={getProfilePicture(user)} className="w-full h-full object-cover" />
+                  <img loading="lazy" src={getProfilePicture(user)} className="w-full h-full object-cover" />
                 </button>
               </Tippy>
             </div>

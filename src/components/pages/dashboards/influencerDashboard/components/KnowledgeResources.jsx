@@ -299,7 +299,7 @@ function ResourceCard({
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         {/* Badge */}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 left-3">
           <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-pink-500/90 text-white flex items-center gap-1">
             <Star className="w-3 h-3 fill-current" />
             {resource.rating}

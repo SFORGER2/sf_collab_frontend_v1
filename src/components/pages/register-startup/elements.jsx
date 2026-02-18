@@ -28,35 +28,35 @@ const roleTypes = [
 const startupStages = [
     { 
       value: "idea", 
-      icon: <img src="/idea.png" className="w-14" alt="Concept phase"/>, 
+      icon: <img loading="lazy" src="/idea.jpg" className="w-14 rounded-full" alt="Concept phase"/>, 
       label: "Idea", 
       description: "Concept phase",
       tooltip: "Just an idea on paper. No product built yet. Looking for co-founders and initial validation."
     },
     { 
       value: "validation", 
-      icon: <img src="/seed.png" className="w-14" alt="Initial funding"/>, 
+      icon: <img loading="lazy" src="/seed.jpg" className="w-14 rounded-full" alt="Initial funding"/>, 
       label: "Validation", 
       description: "Initial funding",
       tooltip: "Secured initial funding. Building MVP. Small team forming. Early customer validation."
     },
     { 
       value: "early", 
-      icon: <img src="/rocket.png" className="w-14" alt="Product development"/>, 
+      icon: <img loading="lazy" src="/rocket.jpg" className="w-14 rounded-full" alt="Product development"/>, 
       label: "Early", 
       description: "Product development",
       tooltip: "MVP launched. First customers onboarded. Product-market fit exploration. Growing team."
     },
     { 
       value: "growth", 
-      icon: <img src="/progress.png" className="w-14" alt="Scaling operations"/>, 
+      icon: <img loading="lazy" src="/progress.jpg" className="w-14 rounded-full" alt="Scaling operations"/>, 
       label: "Growth", 
       description: "Scaling operations",
       tooltip: "Strong product-market fit. Rapid user growth. Scaling team and operations. Series A/B funding."
     },
     { 
       value: "scale", 
-      icon: <img src="/thounder.png" className="w-14" alt="Market expansion"/>, 
+      icon: <img loading="lazy" src="/thounder.jpg" className="w-14 rounded-full" alt="Market expansion"/>, 
       label: "Scale", 
       description: "Market expansion",
       tooltip: "Established market position. Expanding to new markets. Large team. Focus on optimization and growth."

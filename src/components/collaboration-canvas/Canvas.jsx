@@ -3491,7 +3491,7 @@ const Canvas = ({ conversationId, currentUserId ,wsClient}) => {
 
                 {/* Notification Toaster */}
                 {showNotification && (
-                    <div className="fixed bottom-4 right-4 z-[999999] animate-in fade-in slide-in-from-bottom-5">
+                    <div className="fixed bottom-4 left-4 z-[999999] animate-in fade-in slide-in-from-bottom-5">
                         <Alert variant={notification.type === 'success' ? 'default' : 'destructive'}>
                             <AlertTitle>
                                 <div className="flex items-center gap-2">

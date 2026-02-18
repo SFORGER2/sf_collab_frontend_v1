@@ -13,7 +13,7 @@ import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
 // Project Goals Section
-export default function ProjectGoalsSection({ goals, isCreator, startupId, setGoals, teamMembers = [] }) {
+export default function ProjectGoalsSection({ goals, isAdmin, startupId, setGoals, teamMembers = [] }) {
   const [openCreate, setOpenCreate] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState(null);
@@ -86,7 +86,7 @@ export default function ProjectGoalsSection({ goals, isCreator, startupId, setGo
         <Button onClick={() => setView("list")} variant={view === "list" ? "default" : "ghost"}>
         <List className="w-4 h-4"/>
         </Button>
-        {isCreator && (
+        {isAdmin && (
         <Button onClick={() => setOpenCreate(true)} className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-lg hover:shadow-blue-500/50 transition-all">
           <SquarePlus className="w-4 h-4 mr-2" />
           New Goal
@@ -192,7 +192,7 @@ export default function ProjectGoalsSection({ goals, isCreator, startupId, setGo
           <div className="text-sm text-gray-400">
             Due: {new Date(goal.target_date).toLocaleDateString()}
           </div>
-          {isCreator && (
+          {isAdmin && (
             <motion.div className="flex gap-2" whileHover={{ scale: 1.02 }}>
             <Button
               size="sm"

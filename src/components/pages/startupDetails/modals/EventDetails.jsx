@@ -9,7 +9,7 @@ import { Clock, MapPin, Pencil, Trash2, Repeat2, Bell, Link } from "lucide-react
 import { useMemo } from "react";
 
 export default function EventDetailsModal({
-  event, open, onClose, isCreator, onEdit, onDelete, color
+  event, open, onClose, isAdmin, onEdit, onDelete, color
 }) {
   
   const timeLeft = useMemo(() => {
@@ -137,7 +137,7 @@ export default function EventDetailsModal({
           )}
 
           {/* Actions */}
-          {isCreator && (
+          {isAdmin && (
             <div className="flex justify-end gap-2 pt-4">
               <Button
                 variant="destructive"

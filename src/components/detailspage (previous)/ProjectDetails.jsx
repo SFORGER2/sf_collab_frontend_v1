@@ -215,7 +215,7 @@ export default function ProjectDetails() {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="h-16 w-16 rounded-md overflow-hidden bg-zinc-700 flex items-center justify-center">
-                    <img src={goal.startup.logo || allimg.profileImg} alt={goal.startup.name} className="h-full w-full object-cover" />
+                    <img loading="lazy" src={goal.startup.logo || allimg.profileImg} alt={goal.startup.name} className="h-full w-full object-cover" />
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold">{goal.title}</h1>
@@ -295,7 +295,7 @@ export default function ProjectDetails() {
               <div className="space-y-4">
                 {goal.comments.map((c)=> (
                   <div key={c.id} className="flex gap-4">
-                    <img src={c.user?.avatar} alt={c.user?.name} className="w-10 h-10 rounded-full object-cover" />
+                    <img loading="lazy" src={c.user?.avatar} alt={c.user?.name} className="w-10 h-10 rounded-full object-cover" />
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <div className="text-sm font-medium">{c.user?.name}</div>
@@ -309,7 +309,7 @@ export default function ProjectDetails() {
 
               <div className="mt-6">
                 <div className="flex gap-4">
-                  <img src={allimg.profileImg} alt="you" className="w-10 h-10 rounded-full" />
+                  <img loading="lazy" src={allimg.profileImg} alt="you" className="w-10 h-10 rounded-full" />
                   <div className="flex-1">
                     <textarea value={commentText} onChange={(e)=> setCommentText(e.target.value)} placeholder="Write a comment..." className="w-full bg-[#0F0F0F] rounded-xl p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" />
                     <div className="flex items-center justify-between mt-3 gap-4">

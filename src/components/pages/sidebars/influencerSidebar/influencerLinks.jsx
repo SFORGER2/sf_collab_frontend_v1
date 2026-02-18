@@ -1,11 +1,35 @@
 import { BriefcaseBusiness, Share2, TrendingUp, Wallet } from "lucide-react";
-import { aiTools, toolsSection, dashboardLink } from "../sidebarCommons";
+import { aiTools, toolsSection, dashboardLink, socialSection } from "../sidebarCommons";
 
 export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
     dashboardLink(userRoles, setActiveRole),
     {
-      id: 2,
+          id: 2,
+          icon: <Rocket size={22} />,
+          href: "/discover-startups",
+          label: "Discover Startups",
+          subItems: [
+            { id: "discover-startups", href: "/discover-startups", label: "Discover Startups", icon: <Rocket size={18} /> },
+            { id: "saved-startups", href: "/saved-startups", label: "Saved Startups", icon: <Save size={18} /> },
+          ]
+    
+    },
+    {
+          id: 3,
+          icon: <LightbulbIcon size={22} />,
+          href: "/ideation",
+          label: "Ideation",
+          subItems: [
+            { id: "Ideation-Board", href: "/ideation", label: "Ideation Board", icon: <LightbulbIcon size={18} /> },
+            { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
+          ]
+    },
+    
+    socialSection(4),
+    
+    {
+      id: 5,
       icon: <BriefcaseBusiness size={22} />,
       href: "/campaigns",
       label: "Campaigns",
@@ -16,7 +40,7 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
       ]
     },
     {
-      id: 3,
+      id: 6,
       icon: <TrendingUp size={22} />,
       href: "/statistics",
       label: "Statistics",
@@ -28,7 +52,7 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
       ]
     },
     {
-      id: 4,
+      id: 7,
       icon: <Share2 size={22} />,
       href: "/links-assets",
       label: "Links & Assets",
@@ -40,7 +64,7 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
       ]
     },
     {
-      id: 5,
+      id: 8,
       icon: <Wallet size={22} />,
       href: "/payouts",
       label: "Payouts",
@@ -51,8 +75,8 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
         { id: "bank-details", href: "/payouts/bank-details", label: "Bank Details" },
       ]
     },
-    aiTools(6),
-    toolsSection(7)
+    aiTools(9),
+    toolsSection(10)
   ];
 }
 

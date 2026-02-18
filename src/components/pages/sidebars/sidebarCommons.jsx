@@ -1,4 +1,4 @@
-import { BarChart3, Bot, BrainCircuit, BriefcaseBusiness, Calculator, ClipboardList, Cpu, Database, Earth, FileSignature, FileTerminal, FileText, Images, Lightbulb, MessageSquare, MessageSquareHeart, Rss, StickyNote, Users, Wand2 } from "lucide-react";
+import { BarChart3, Bot, BrainCircuit, BriefcaseBusiness, Calculator, ClipboardList, Cpu, Database, Earth, FileSignature, FileTerminal, FileText, Images, Lightbulb, MessageSquare, MessageSquareHeart, Rss, StickyNote, UserPlus, Users, Wand2 } from "lucide-react";
 import { BsGear, BsPeople } from "react-icons/bs";
 import { IoChatbubbles } from "react-icons/io5";
 import { LuLayoutDashboard } from "react-icons/lu";
@@ -65,12 +65,12 @@ export function socialSection(id) {
   return {
       id,
       icon: <Rss size={22} />,
-      href: "/connections",
+      href: "/posts",
       label: "Social",
       subItems: [
         { id: "posts-feed", href: "/posts", label: "Social Feed", icon: <MessageSquareHeart size={18} /> },
-        { id: "connections", href: "/connections", label: "Connections", icon: <MessageSquare size={18} /> },
-        { id: "discover-users", href: "/discover-users", label: "Discover Users", icon: <Users size={18} /> },
+        { id: "connections", href: "/connections", label: "Connections", icon: <UserPlus size={18} /> },
+        // { id: "discover-users", href: "/discover-users", label: "Discover Users", icon: <Users size={18} /> },
       ],
     }
 }

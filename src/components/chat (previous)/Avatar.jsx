@@ -131,7 +131,7 @@ export default function Avatar({
   return (
     <div className={`relative inline-block flex-shrink-0 ${className}`}>
       {showImage ? (
-        <img 
+        <img loading="lazy" 
           src={resolvedSrc} 
           alt={name || "User"} 
           className={`${sizes[size]} rounded-full object-cover bg-zinc-700`}
