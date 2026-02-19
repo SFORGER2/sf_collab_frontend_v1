@@ -15,8 +15,7 @@ import {
   DialogTitle,
 } from "../../ui/dialog";
 import { Textarea } from "../../ui/textarea";
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { permissionsAPI, accessRequestsAPI } from "@/utils/APIs/permissionsAPI";
 
 const AccessRequestModal = ({ isOpen, onClose, permissionKey }) => {
   const [reason, setReason] = useState("");
@@ -40,54 +39,35 @@ const AccessRequestModal = ({ isOpen, onClose, permissionKey }) => {
 
     setIsSubmitting(true);
     try {
-      // First, we need to find the permission ID by key
-      const token = localStorage.getItem("access_token");
-      
       // Get all permissions to find the ID
-      const permissionsResponse = await fetch(`${API_URL}/permissions`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const permissionsData = await permissionsAPI.getAll();
+      const permission = permissionsData.data.permissions.find(p => p.key === permissionKey);
       
-      if (permissionsResponse.ok) {
-        const permissionsData = await permissionsResponse.json();
-        const permission = permissionsData.data.permissions.find(p => p.key === permissionKey);
-        
-        if (!permission) {
-          throw new Error("Permission not found");
-        }
+      if (!permission) {
+        throw new Error("Permission not found");
+      }
 
-        // Submit the access request
-        const response = await fetch(`${API_URL}/access-requests`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            permission_id: permission.id,
-            reason: reason
-          })
-        });
+      // Submit the access request
+      const response = await accessRequestsAPI.create({
+        permission_id: permission.id,
+        reason: reason
+      });
 
-        if (response.ok) {
-          showAlert("Success", "Access request submitted successfully. An administrator will review your request.");
-          setTimeout(() => {
-            onClose();
-            setReason("");
-            hideAlert();
-          }, 4000);
-        } else {
-          const error = await response.json();
-          showAlert("Error", error.message);
-          setTimeout(() => {
-            onClose();
-            setReason("");
-            hideAlert();
-          }, 4000);
-          throw new Error(error.message || "Failed to submit request");
-        }
+      if (response.success) {
+        showAlert("Success", "Access request submitted successfully. An administrator will review your request.");
+        setTimeout(() => {
+          onClose();
+          setReason("");
+          hideAlert();
+        }, 4000);
+      } else {
+        showAlert("Error", response.message || "Failed to submit request");
+        setTimeout(() => {
+          onClose();
+          setReason("");
+          hideAlert();
+        }, 4000);
+        throw new Error(response.message || "Failed to submit request");
       }
     } catch (error) {
       showAlert("Error", error.message || "Failed to submit access request", "destructive");

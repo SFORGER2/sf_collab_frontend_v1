@@ -31,7 +31,7 @@ import { useSelector } from 'react-redux'
 import { ShineButton } from '../lightswind/shine-button'
 import { Download, FileJson, FileSpreadsheet, Calendar as CalendarFile } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { startupsAPI } from '@/utils/APIs/startupsAPI'
+import { startupsAPI, calendarEventsAPI } from '@/utils/APIs/startupsAPI'
 import { API_URL } from '@/utils/config'
 
 const colors = [
@@ -145,37 +145,29 @@ export default function Calendar() {
   const fetchEvents = async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams()
+      const params = {}
       
       if (filters.startup_id && filters.startup_id !== 'all') {
-        params.append('startup_id', filters.startup_id)
+        params.startup_id = filters.startup_id
       }
       
       if (filters.category && filters.category !== 'all') {
-        params.append('category', filters.category)
+        params.category = filters.category
       }
       
       if (filters.start_date) {
-        params.append('start_date', filters.start_date.toISOString())
+        params.start_date = filters.start_date.toISOString()
       }
       
       if (filters.end_date) {
-        params.append('end_date', filters.end_date.toISOString())
+        params.end_date = filters.end_date.toISOString()
       }
       
       if (filters.upcoming_only) {
-        params.append('upcoming_only', 'true')
+        params.upcoming_only = true
       }
 
-      const url = `${API_URL}/calendar-events?${params.toString()}`
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-
-      const data = await response.json()
+      const data = await calendarEventsAPI.getAll(params)
 
       if (data.success) {
         setEvents(data.data.events || [])
@@ -258,16 +250,7 @@ export default function Calendar() {
         end_date: eventForm.end_date ? new Date(eventForm.end_date).toISOString() : null
       }
 
-      const response = await fetch(`${API_URL}/calendar-events`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(eventData)
-      })
-
-      const data = await response.json()
+      const data = await calendarEventsAPI.create(eventData)
 
       if (data.success) {
         toast.success('Event created successfully')
@@ -306,16 +289,7 @@ export default function Calendar() {
         end_date: eventForm.end_date ? new Date(eventForm.end_date).toISOString() : null
       }
 
-      const response = await fetch(`${API_URL}/calendar-events/${selectedEvent.id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(eventData)
-      })
-
-      const data = await response.json()
+      const data = await calendarEventsAPI.update(selectedEvent.id, eventData)
 
       if (data.success) {
         toast.success('Event updated successfully')
@@ -335,14 +309,7 @@ export default function Calendar() {
     if (!window.confirm('Are you sure you want to delete this event?')) return
 
     try {
-      const response = await fetch(`${API_URL}/calendar-events/${eventId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${access_token}`
-        }
-      })
-
-      const data = await response.json()
+      const data = await calendarEventsAPI.delete(eventId)
 
       if (data.success) {
         toast.success('Event deleted successfully')
@@ -621,23 +588,10 @@ export default function Calendar() {
         params.append('end_date', filters.end_date.toISOString())
       }
   
-      const url = `${API_URL}/calendar-events/export?${params.toString()}`
-      
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${access_token}`
-        }
-      })
+      const response = await calendarEventsAPI.export(format, user?.id)
   
-      if (!response.ok) {
-        throw new Error('Export failed')
-      }
-  
-      const contentType = response.headers.get('content-type')
-      
-      if (contentType.includes('application/json')) {
-        const data = await response.json()
-        const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' })
+      if (format === 'json') {
+        const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' })
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
@@ -646,15 +600,15 @@ export default function Calendar() {
         a.click()
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
-      } else if (contentType.includes('text/csv') || contentType.includes('text/calendar')) {
-        const blob = await response.blob()
+      } else {
+        const blob = response.data || response
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         
         let filename = `calendar_export_${new Date().toISOString().split('T')[0]}`
-        if (contentType.includes('text/csv')) {
+        if (format === 'csv') {
           filename += '.csv'
-        } else if (contentType.includes('text/calendar')) {
+        } else if (format === 'ical') {
           filename += '.ics'
         }
         

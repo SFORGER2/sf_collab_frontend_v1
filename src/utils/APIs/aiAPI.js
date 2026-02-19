@@ -112,6 +112,69 @@ export const aiAPI = {
     });
     return response.data;
   },
+
+  // ============================================================================
+  // GEMINI API
+  // ============================================================================
+
+  // Gemini health check
+  geminiHealth: async () => {
+    const response = await api.get('/gemini/health');
+    return response.data;
+  },
+
+  // Get Gemini models
+  geminiGetModels: async () => {
+    const response = await api.get('/gemini/models');
+    return response.data;
+  },
+
+  // Gemini chat
+  geminiChat: async (message, model = 'gemini-pro') => {
+    const response = await api.post('/gemini/chat', {
+      message,
+      model,
+    });
+    return response.data;
+  },
+
+  // Gemini analyze image
+  geminiAnalyzeImage: async (formData) => {
+    const response = await api.post('/gemini/analyze-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // ============================================================================
+  // CLOUDFLARE AI API
+  // ============================================================================
+
+  // CF health check
+  cfHealth: async () => {
+    const response = await api.get('/cf/health');
+    return response.data;
+  },
+
+  // Get CF models
+  cfGetModels: async () => {
+    const response = await api.get('/cf/models');
+    return response.data;
+  },
+
+  // CF generate image
+  cfGenerate: async ({ prompt, model, num_steps = 20, guidance = 7.5, strength = 1, width = 1024, height = 1024 }) => {
+    const response = await api.post('/cf/generate', {
+      prompt,
+      model,
+      num_steps,
+      guidance,
+      strength,
+      width,
+      height,
+    });
+    return response.data;
+  },
 };
 
 export default api;

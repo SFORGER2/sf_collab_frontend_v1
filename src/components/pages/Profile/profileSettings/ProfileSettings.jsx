@@ -15,6 +15,8 @@ import axios from 'axios';
 import { API_URL } from '@/utils/config';
 import { updateUser as updateUserSlice } from '@/services/auth/authSlice';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { usersAPI } from '@/utils/APIs/userAPI';
+import { authAPI } from '@/utils/APIs/authAPI';
 /**
  * Updated Settings UI wired to backend routes:
   - GET /auth/me
@@ -191,20 +193,12 @@ useEffect(() => {
   ----------------------------------------- */
   const dispatch = useDispatch();
   const updateUser = async (payload, isMultipart = false) => {
-    const res = await fetch(`${API_URL}/users/${user.id}`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-        ...(isMultipart ? {} : { "Content-Type": "application/json" }),
-      },
-      body: isMultipart ? payload : JSON.stringify(payload),
-    });
+    const contentType = isMultipart ? 'multipart/form-data' : 'application/json';
+    const data = await usersAPI.updateProfile(user.id, payload, access_token, contentType);
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || "Update failed");
+    if (!data.success) {
+      throw new Error(data.error || "Update failed");
     }
-    const data = await res.json();
     dispatch(updateUserSlice(data.data.user))
     return data;
   };
@@ -323,20 +317,13 @@ useEffect(() => {
       return;
     }
     try {
-      const res = await fetch(`${API_URL}/users/${user.id}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || 'Delete account failed');
+      const res = await usersAPI.delete(user.id, access_token);
+      if (!res.success) {
+        throw new Error(res.message || 'Delete account failed');
       }
       toast.success('Account deletion submitted');
-      const logoutResponse = await fetch(`${API_URL}/auth/logout`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-      });
-      if (logoutResponse.ok) {
+      const logoutResponse = await authAPI.logoutRequest(access_token);
+      if (logoutResponse.success) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refreshToken');
         // Clear local auth state - adjust as needed for your auth management
@@ -453,13 +440,5 @@ useEffect(() => {
     </div>
   );
 };
-
-
-
-
-
-
-
-
 
 export default ProfileSettings;

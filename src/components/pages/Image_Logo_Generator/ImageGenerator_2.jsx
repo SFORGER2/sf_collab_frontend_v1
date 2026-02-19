@@ -10,8 +10,7 @@ import { Slider } from '../../ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Progress } from '../../ui/progress';
 import { Switch } from '../../ui/switch';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { aiAPI } from '@/utils/APIs/aiAPI';
 
 const ImageGenerator = () => {
   const [model, setModel] = useState('flux');
@@ -36,13 +35,8 @@ const ImageGenerator = () => {
 
   const checkServiceStatus = async () => {
     try {
-      const response = await fetch(`${API_URL}/cf/health`);
-      if (response.ok) {
-        const data = await response.json();
-        setServiceStatus(data.success ? 'ready' : 'error');
-      } else {
-        setServiceStatus('error');
-      }
+      const data = await aiAPI.cfHealth();
+      setServiceStatus(data.success ? 'ready' : 'error');
     } catch (err) {
       setServiceStatus('error');
     }
@@ -50,8 +44,7 @@ const ImageGenerator = () => {
 
   const loadModels = async () => {
     try {
-      const response = await fetch(`${API_URL}/cf/models`);
-      const data = await response.json();
+      const data = await aiAPI.cfGetModels();
       if (data.success) {
         setAvailableModels(data.models);
       }
@@ -83,27 +76,19 @@ const ImageGenerator = () => {
         });
       }, 300);
 
-      const response = await fetch(`${API_URL}/cf/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model,
-          prompt,
-          width,
-          height,
-          negative_prompt: negativePrompt
-        }),
+      const data = await aiAPI.cfGenerate({
+        model,
+        prompt,
+        width,
+        height,
+        negative_prompt: negativePrompt
       });
 
       clearInterval(progressInterval);
       setProgress(100);
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        if (response.status === 500 && retryCount < 2) {
+      if (!data.success) {
+        if (retryCount < 2) {
           setTimeout(() => handleGenerate(retryCount + 1), 2000);
           return;
         }

@@ -7,8 +7,7 @@ import { Upload, Download, RefreshCw, Sparkles, Image as ImageIcon, Wand2, Palet
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Progress } from '../../ui/progress';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { toolsAPI } from '@/utils/APIs/toolsAPI';
 
 const AnimeConverter = () => {
   const [originalImage, setOriginalImage] = useState(null);
@@ -78,22 +77,17 @@ const AnimeConverter = () => {
         });
       }, 300);
 
-      const response = await fetch(`${API_URL}/anime-converter/convert-advanced`, {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await toolsAPI.animeConvert(formData);
 
       clearInterval(progressInterval);
       setProgress(100);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to convert to anime');
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to convert to anime');
       }
 
       // Get the anime image
-      const blobResult = await response.blob();
-      const imageUrl = URL.createObjectURL(blobResult);
+      const imageUrl = response.image || response.data?.image;
       setAnimeImage(imageUrl);
 
     } catch (err) {

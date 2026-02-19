@@ -17,8 +17,7 @@ import { Input } from '../../ui/input';
 import { Switch } from '../../ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Progress } from '../../ui/progress';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { toolsAPI } from '@/utils/APIs/toolsAPI';
 
 const ImageEditor = () => {
   const canvasRef = useRef(null);
@@ -306,28 +305,15 @@ const ImageEditor = () => {
       }, 100);
       
       // Use backend if available, otherwise apply client-side filters
-      if (API_URL) {
-        const response = await fetch(`${API_URL}/image-editor/process`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            image: dataUrl,
-            operation: operation,
-            params: { value: value / 100 }
-          }),
+      try {
+        const data = await toolsAPI.imageEditorProcess({
+          image: dataUrl,
+          operation: operation,
+          params: { value: value / 100 }
         });
         
         clearInterval(progressInterval);
         setProgress(100);
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to apply filter');
-        }
-        
-        const data = await response.json();
         
         if (!data.success) {
           throw new Error(data.error || 'Failed to apply filter');
@@ -363,7 +349,7 @@ const ImageEditor = () => {
             }
           }
         });
-      } else {
+      } catch (apiErr) {
         // Client-side filter fallback
         console.log('Applying filter client-side:', operation, value);
         // Note: For production, you'd implement actual client-side filtering
@@ -445,28 +431,17 @@ const ImageEditor = () => {
       }, 100);
       
       // Try to save via backend if available
-      if (API_URL) {
-        try {
-          const response = await fetch(`${API_URL}/image-editor/save`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              image: dataUrl,
-              filename: `edited-${Date.now()}.png`
-            }),
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            if (!data.success) {
-              console.warn('Backend save failed, downloading locally:', data.error);
-            }
-          }
-        } catch (backendErr) {
-          console.warn('Backend unavailable, downloading locally:', backendErr.message);
+      try {
+        const data = await toolsAPI.imageEditorSave({
+          image: dataUrl,
+          filename: `edited-${Date.now()}.png`
+        });
+        
+        if (!data.success) {
+          console.warn('Backend save failed, downloading locally:', data.error);
         }
+      } catch (backendErr) {
+        console.warn('Backend unavailable, downloading locally:', backendErr.message);
       }
       
       clearInterval(progressInterval);

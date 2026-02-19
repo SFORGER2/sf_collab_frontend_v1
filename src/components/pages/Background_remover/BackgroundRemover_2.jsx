@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from '../../ui/switch';
 import { Progress } from '../../ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { toolsAPI } from '@/utils/APIs/toolsAPI';
+import { API_BASE_URL } from '@/utils/config';
 
 const BackgroundRemover = () => {
   const [originalImage, setOriginalImage] = useState(null);
@@ -34,8 +34,7 @@ const BackgroundRemover = () => {
 
   const loadModels = async () => {
     try {
-      const response = await fetch(`${API_URL}/background-remover/models`);
-      const data = await response.json();
+      const data = await toolsAPI.backgroundRemoverGetModels();
       if (data.success) {
         setAvailableModels(data.data.models);
       }
@@ -46,8 +45,8 @@ const BackgroundRemover = () => {
 
   const checkServiceStatus = async () => {
     try {
-      const response = await fetch(`${API_URL}/background-remover/models`);
-      if (response.ok) {
+      const data = await toolsAPI.backgroundRemoverGetModels();
+      if (data.success) {
         setServiceStatus('ready');
       } else {
         setServiceStatus('error');
@@ -109,22 +108,17 @@ const BackgroundRemover = () => {
         });
       }, 200);
 
-      const response = await fetch(`${API_URL}/background-remover/remove`, {
-        method: 'POST',
-        body: formData,
-      });
+      const data = await toolsAPI.backgroundRemoverRemove(formData);
 
       clearInterval(progressInterval);
       setProgress(100);
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
+      if (!data.success) {
         throw new Error(data.error || 'Failed to remove background');
       }
 
       // Get the processed image
-      const imageUrl = `${API_URL}${data.data.image_url.replace('/api', '')}`;
+      const imageUrl = `${API_BASE_URL}${data.data.image_url.replace('/api', '')}`;
       setProcessedImage(imageUrl);
 
     } catch (err) {

@@ -15,8 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../ui/dialog";
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { accessRequestsAPI } from "@/utils/APIs/permissionsAPI";
 
 const AccessRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -31,17 +30,8 @@ const AccessRequests = () => {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await fetch(`${API_URL}/access-requests?status=pending`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setRequests(data.data.access_requests || []);
-      }
+      const data = await accessRequestsAPI.getAll({ status: 'pending' });
+      setRequests(data.data.access_requests || []);
     } catch (error) {
       console.error("Error fetching access requests:", error);
       toast({
@@ -60,17 +50,9 @@ const AccessRequests = () => {
 
   const handleApprove = async (requestId) => {
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await fetch(`${API_URL}/access-requests/${requestId}/approve`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({})
-      });
+      const response = await accessRequestsAPI.approve(requestId);
 
-      if (response.ok) {
+      if (response.success) {
         toast({
           title: "Success",
           description: "Access request approved successfully",
@@ -78,8 +60,7 @@ const AccessRequests = () => {
         setShowApproveDialog(false);
         fetchRequests();
       } else {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to approve request");
+        throw new Error(response.message || "Failed to approve request");
       }
     } catch (error) {
       toast({
@@ -92,19 +73,9 @@ const AccessRequests = () => {
 
   const handleReject = async (requestId) => {
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await fetch(`${API_URL}/access-requests/${requestId}/reject`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          rejection_reason: rejectionReason
-        })
-      });
+      const response = await accessRequestsAPI.reject(requestId, rejectionReason);
 
-      if (response.ok) {
+      if (response.success) {
         toast({
           title: "Success",
           description: "Access request rejected successfully",
@@ -113,8 +84,7 @@ const AccessRequests = () => {
         setRejectionReason("");
         fetchRequests();
       } else {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to reject request");
+        throw new Error(response.message || "Failed to reject request");
       }
     } catch (error) {
       toast({

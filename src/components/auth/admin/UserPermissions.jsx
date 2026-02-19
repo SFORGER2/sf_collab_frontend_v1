@@ -21,8 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../ui/select";
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { permissionsAPI, userPermissionsAPI } from "@/utils/APIs/permissionsAPI";
+import { usersAPI } from "@/utils/APIs/userAPI";
 
 const UserPermissions = () => {
   const [userPermissions, setUserPermissions] = useState([]);
@@ -51,31 +51,23 @@ const UserPermissions = () => {
   const fetchUserPermissions = async (page = 1) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("access_token");
-      
-      // Build query parameters
-      const params = new URLSearchParams({
-        page: page.toString(),
-        per_page: pagination.per_page.toString(),
-        only_active: onlyActive.toString()
-      });
+      const params = {
+        page,
+        per_page: pagination.per_page,
+        only_active: onlyActive
+      };
       
       if (searchUser) {
-        params.append('user_id', searchUser);
+        params.userId = searchUser;
       }
       
       if (searchPermission) {
-        params.append('permission_id', searchPermission);
+        params.permissionId = searchPermission;
       }
       
-      const response = await fetch(`${API_URL}/user-permissions?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const data = await userPermissionsAPI.getAll(params);
       
-      if (response.ok) {
-        const data = await response.json();
+      if (data.success) {
         setUserPermissions(data.data.user_permissions || []);
         setPagination({
           page: data.data.pagination.page,
@@ -98,16 +90,9 @@ const UserPermissions = () => {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await fetch(`${API_URL}/users?per_page=100`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data.data.users || []);
+      const data = await usersAPI.getAll({ per_page: 100 });
+      if (data.success) {
+        setUsers(data.data?.users || data.users || []);
       }
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -116,15 +101,8 @@ const UserPermissions = () => {
 
   const fetchPermissions = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await fetch(`${API_URL}/permissions`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
+      const data = await permissionsAPI.getAll();
+      if (data.success) {
         setPermissions(data.data.permissions || []);
       }
     } catch (error) {
@@ -149,20 +127,12 @@ const UserPermissions = () => {
     }
 
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await fetch(`${API_URL}/user-permissions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          user_id: parseInt(grantData.user_id),
-          permission_id: parseInt(grantData.permission_id)
-        })
+      const response = await userPermissionsAPI.create({
+        user_id: parseInt(grantData.user_id),
+        permission_id: parseInt(grantData.permission_id)
       });
 
-      if (response.ok) {
+      if (response.success) {
         toast({
           title: "Success",
           description: "Permission granted successfully",
@@ -171,8 +141,7 @@ const UserPermissions = () => {
         setGrantData({ user_id: "", permission_id: "" });
         fetchUserPermissions(pagination.page);
       } else {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to grant permission");
+        throw new Error(response.message || "Failed to grant permission");
       }
     } catch (error) {
       toast({
@@ -187,15 +156,9 @@ const UserPermissions = () => {
     if (!selectedPermission) return;
 
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await fetch(`${API_URL}/user-permissions/${selectedPermission.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await userPermissionsAPI.delete(selectedPermission.id);
 
-      if (response.ok) {
+      if (response.success) {
         toast({
           title: "Success",
           description: "Permission revoked successfully",
@@ -203,8 +166,7 @@ const UserPermissions = () => {
         setShowRevokeDialog(false);
         fetchUserPermissions(pagination.page);
       } else {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to revoke permission");
+        throw new Error(response.message || "Failed to revoke permission");
       }
     } catch (error) {
       toast({

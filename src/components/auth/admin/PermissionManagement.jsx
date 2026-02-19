@@ -30,8 +30,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../ui/tabs";
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { permissionsAPI } from "@/utils/APIs/permissionsAPI";
 
 const PermissionManagement = () => {
   const [permissions, setPermissions] = useState([]);
@@ -54,20 +53,15 @@ const PermissionManagement = () => {
 
   const fetchPermissions = async (page = 1) => {
     setLoading(true);
-    const token = localStorage.getItem("access_token");
-    
-    let url = `${API_URL}/permissions?page=${page}&per_page=${pagination.per_page}`;
-    if (search) url += `&search=${encodeURIComponent(search)}`;
     
     try {
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const data = await permissionsAPI.getAll({
+        page,
+        per_page: pagination.per_page,
+        search: search || undefined
       });
       
-      if (response.ok) {
-        const data = await response.json();
+      if (data.success) {
         setPermissions(data.data.permissions || []);
         setPagination(data.data.pagination);
         
@@ -101,18 +95,10 @@ const PermissionManagement = () => {
       return;
     }
 
-    const token = localStorage.getItem("access_token");
     try {
-      const response = await fetch(`${API_URL}/permissions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
+      const response = await permissionsAPI.create(formData);
 
-      if (response.ok) {
+      if (response.success) {
         toast({
           title: "Success",
           description: "Permission created successfully",
@@ -121,8 +107,7 @@ const PermissionManagement = () => {
         setFormData({ key: "", description: "", category: "General" });
         fetchPermissions(pagination.page);
       } else {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to create permission");
+        throw new Error(response.message || "Failed to create permission");
       }
     } catch (error) {
       toast({
@@ -143,18 +128,10 @@ const PermissionManagement = () => {
       return;
     }
 
-    const token = localStorage.getItem("access_token");
     try {
-      const response = await fetch(`${API_URL}/permissions/${selectedPermission.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
+      const response = await permissionsAPI.update(selectedPermission.id, formData);
 
-      if (response.ok) {
+      if (response.success) {
         toast({
           title: "Success",
           description: "Permission updated successfully",
@@ -162,8 +139,7 @@ const PermissionManagement = () => {
         setShowEditDialog(false);
         fetchPermissions(pagination.page);
       } else {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update permission");
+        throw new Error(response.message || "Failed to update permission");
       }
     } catch (error) {
       toast({
@@ -177,16 +153,10 @@ const PermissionManagement = () => {
   const handleDeletePermission = async () => {
     if (!selectedPermission) return;
 
-    const token = localStorage.getItem("access_token");
     try {
-      const response = await fetch(`${API_URL}/permissions/${selectedPermission.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await permissionsAPI.delete(selectedPermission.id);
 
-      if (response.ok) {
+      if (response.success) {
         toast({
           title: "Success",
           description: "Permission deleted successfully",
@@ -194,8 +164,7 @@ const PermissionManagement = () => {
         setShowDeleteDialog(false);
         fetchPermissions(pagination.page);
       } else {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to delete permission");
+        throw new Error(response.message || "Failed to delete permission");
       }
     } catch (error) {
       toast({

@@ -53,6 +53,54 @@ export const toolsAPI = {
     const response = await api.delete(`/pdf/delete/${filename}`);
     return response.data;
   },
+
+  // ============================================================================
+  // ANIME CONVERTER API
+  // ============================================================================
+
+  // Convert image to anime style
+  animeConvert: async (formData) => {
+    const response = await api.post('/anime-converter/convert-advanced', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // ============================================================================
+  // BACKGROUND REMOVER API
+  // ============================================================================
+
+  // Get available background remover models
+  backgroundRemoverGetModels: async () => {
+    const response = await api.get('/background-remover/models');
+    return response.data;
+  },
+
+  // Remove background from image
+  backgroundRemoverRemove: async (formData) => {
+    const response = await api.post('/background-remover/remove', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // ============================================================================
+  // IMAGE EDITOR API
+  // ============================================================================
+
+  // Process image with editor
+  imageEditorProcess: async (formData) => {
+    const response = await api.post('/image-editor/process', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // Save edited image
+  imageEditorSave: async (imageData) => {
+    const response = await api.post('/image-editor/save', imageData);
+    return response.data;
+  },
 };
 
 export default api;

@@ -10,8 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Slider } from '../../ui/slider';
 import { Input } from '../../ui/input';
 import { Switch } from '../../ui/switch';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import { aiAPI } from '@/utils/APIs/aiAPI';
 
 const GeminiChat = () => {
   const [messages, setMessages] = useState([
@@ -55,8 +54,8 @@ const GeminiChat = () => {
 
   const checkServiceStatus = async () => {
     try {
-      const response = await fetch(`${API_URL}/gemini/health`);
-      if (response.ok) {
+      const response = await aiAPI.geminiHealth();
+      if (response) {
         setServiceStatus('ready');
       } else {
         setServiceStatus('error');
@@ -68,8 +67,7 @@ const GeminiChat = () => {
 
   const loadModels = async () => {
     try {
-      const response = await fetch(`${API_URL}/gemini/models`);
-      const data = await response.json();
+      const data = await aiAPI.geminiGetModels();
       if (data.success) {
         setAvailableModels(data.models);
       }
@@ -100,7 +98,7 @@ const GeminiChat = () => {
     setImagePreview(null);
 
     try {
-      let response;
+      let data;
       
       // If there's an image, use analyze-image endpoint
       if (imageFile) {
@@ -108,28 +106,13 @@ const GeminiChat = () => {
         formData.append('image', imageFile);
         formData.append('prompt', input || 'Describe this image');
         
-        response = await fetch(`${API_URL}/gemini/analyze-image`, {
-          method: 'POST',
-          body: formData,
-        });
+        data = await aiAPI.geminiAnalyzeImage(formData);
       } else {
         // Regular chat
-        response = await fetch(`${API_URL}/gemini/chat`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            prompt: input,
-            temperature: temperature,
-            max_tokens: maxTokens
-          }),
-        });
+        data = await aiAPI.geminiChat(input, selectedModel);
       }
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
+      if (!data.success) {
         throw new Error(data.error || 'Request failed');
       }
 
