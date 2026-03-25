@@ -109,8 +109,8 @@ import BuilderStartups from "./components/pages/builderStartups/BuilderStartups.
 import InviteToStartup from "./components/pages/inviteToStartup/InviteToStartup.jsx";
 import MarketplacePage from './components/pages/marketplace/MarketplacePage';
 import MentorshipDiscovery from "./components/pages/Mentorship/MentorDiscoveryPage.jsx";
-import MentorDashboard from './components/pages/mentorship/MentorDashboard';
-import MyMentorshipRequests from './components/pages/mentorship/MyMentorshipRequests';
+import MentorDashboard from './components/pages/Mentorship/MentorDashboard';
+import MyMentorshipRequests from './components/pages/Mentorship/MyMentorshipRequests';
 
 
 
