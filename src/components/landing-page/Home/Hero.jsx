@@ -256,7 +256,7 @@ const Hero = () => {
         {/* Layer 3 — Proof-Driven Subline */}
         <div className="relative z-10 mt-4 md:mt-6 max-w-xl md:max-w-2xl px-4 md:text-auto text- text-center">
           <p className="text-base md:text-lg lg:text-xl text-white/85 font-light tracking-wide leading-relaxed">
-            The real-time canvas where distributed teams build, think, and create in sync.
+            The real-time canvas where distributed teams build, think, and create in syncing.
             <span className="block mt-2 text-sm md:text-base text-white/50 md:pt-0 pt-6 font-normal">
               Sub-50ms sync • Infinite workspace • Enterprise-grade
             </span>
