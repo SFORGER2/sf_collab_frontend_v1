@@ -329,4 +329,145 @@ export const storeAPI = {
   },
 };
 
+// ============================================================================
+// BALANCE API  (real-money wallet)
+// ============================================================================
+
+export const balanceAPI = {
+  getBalance: async () => {
+    try {
+      const response = await api.get('/balance');
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, 'Failed to load balance');
+    }
+  },
+
+  getTransactions: async (params = {}) => {
+    try {
+      const response = await api.get('/balance/transactions', { params });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, 'Failed to load balance transactions');
+    }
+  },
+
+  deposit: async (amountDollars) => {
+    try {
+      const response = await api.post('/balance/deposit', { amount: amountDollars });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, 'Failed to deposit');
+    }
+  },
+
+  withdraw: async (amountDollars) => {
+    try {
+      const response = await api.post('/balance/withdraw', { amount: amountDollars });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, 'Failed to withdraw');
+    }
+  },
+
+  pay: async (data) => {
+    try {
+      const response = await api.post('/balance/pay', data);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, 'Failed to process payment');
+    }
+  },
+
+  // Escrow
+  createEscrow: async (data) => {
+    try {
+      const response = await api.post('/balance/escrow', data);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, 'Failed to create escrow');
+    }
+  },
+
+  listEscrows: async (params = {}) => {
+    try {
+      const response = await api.get('/balance/escrow', { params });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, 'Failed to load escrows');
+    }
+  },
+
+  approveEscrow: async (id) => {
+    try {
+      const response = await api.post(`/balance/escrow/${id}/approve`);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, 'Failed to approve escrow');
+    }
+  },
+
+  cancelEscrow: async (id, reason) => {
+    try {
+      const response = await api.post(`/balance/escrow/${id}/cancel`, { reason });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, 'Failed to cancel escrow');
+    }
+  },
+};
+
+
+// ============================================================================
+// CRYSTALS API  (visibility acceleration — NOT money)
+// ============================================================================
+
+export const crystalsAPI = {
+  getWallet: async () => {
+    try {
+      const response = await api.get('/crystals');
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, 'Failed to load crystal wallet');
+    }
+  },
+
+  getTransactions: async (params = {}) => {
+    try {
+      const response = await api.get('/crystals/transactions', { params });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, 'Failed to load crystal transactions');
+    }
+  },
+
+  getBoosts: async (params = {}) => {
+    try {
+      const response = await api.get('/crystals/boosts', { params });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, 'Failed to load boosts');
+    }
+  },
+
+  getPricing: async () => {
+    try {
+      const response = await api.get('/crystals/pricing');
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, 'Failed to load crystal pricing');
+    }
+  },
+
+  applyBoost: async (data) => {
+    try {
+      const response = await api.post('/crystals/boost', data);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, 'Failed to apply boost');
+    }
+  },
+};
+
+
 export default api;

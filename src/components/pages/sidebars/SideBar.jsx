@@ -47,6 +47,7 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
         <DesktopSidebarContent
           links={links}
           currentContextId={currentContextId}
+          expandedItems={expandedItems}
           toggleExpand={toggleExpand}
           hasSubItems={hasSubItems}
           shouldShowSubItems={shouldShowSubItems}
@@ -86,8 +87,9 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
               onLinkClick={handleMobileLinkClick}
               links={links}
               currentContextId={currentContextId}
-              isAdmin={isAdmin}
+              expandedItems={expandedItems}
               toggleExpand={toggleExpand}
+              isAdmin={isAdmin}
               hasSubItems={hasSubItems}
               shouldShowSubItems={shouldShowSubItems}  
               callback={() => setIsOpen(false)}

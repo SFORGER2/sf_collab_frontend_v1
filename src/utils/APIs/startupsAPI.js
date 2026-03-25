@@ -236,6 +236,14 @@ inviteMember: async (startupId, payload) => {
   return response.data
 },
 
+getMyInvitation: async (startupId) => {
+  // Fetches only the current user's own pending invitation — no manager role needed
+  const response = await api.get(
+    `/startups/${startupId}/invitations/mine`
+  )
+  return response.data
+},
+
 getInvitations: async (startupId, params = {}) => {
   const response = await api.get(
     `/startups/${startupId}/invitations`,
@@ -257,8 +265,9 @@ acceptInvitation: async (startupId, invitationId) => {
 },
 
 declineInvitation: async (startupId, invitationId) => {
+  // Backend route is /reject, not /decline
   const response = await api.post(
-    `/startups/${startupId}/invitations/${invitationId}/decline`
+    `/startups/${startupId}/invitations/${invitationId}/reject`
   )
   return response.data
 },

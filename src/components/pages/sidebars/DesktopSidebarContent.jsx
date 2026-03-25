@@ -8,6 +8,7 @@ import { useState } from "react";
 export default function DesktopSidebarContent({
   links = [],
   currentContextId,
+  expandedItems = {},
   toggleExpand,
   hasSubItems,
   shouldShowSubItems,
@@ -17,17 +18,12 @@ export default function DesktopSidebarContent({
 }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [expandedId, setExpandedId] = useState(null);
   const [isHovered, setIsHovered] = useState(false);
 
   const handleNavigation = (link) => {
     if (link.isUpcoming) return;
     if (link.href) navigate(link.href);
     onLinkClick?.();
-  };
-
-  const toggleSubItems = (linkId) => {
-    setExpandedId(expandedId === linkId ? null : linkId);
   };
 
   const baseItemClasses =
@@ -62,7 +58,7 @@ export default function DesktopSidebarContent({
         <div className="flex flex-col gap-1 overflow-y-auto px-2.5">
           {links.map((link) => {
           const isActive = getAllRoutes(link).includes(location.pathname);
-            const showSubs = expandedId === link.id;
+            const showSubs = expandedItems[link.id] ?? false;
             const isUpcoming = link.isUpcoming;
 
             return (
@@ -71,7 +67,7 @@ export default function DesktopSidebarContent({
                 <button
                   onClick={() => {
                     if (hasSubItems(link) && !link.href) {
-                      if (!isUpcoming) toggleSubItems(link.id);
+                      if (!isUpcoming) toggleExpand(link.id);
                       return;
                     }
                     handleNavigation(link);
@@ -88,7 +84,6 @@ export default function DesktopSidebarContent({
                   `}
                 >
                   {/* ICON — always rendered */}
-                  {console.log(link.id)}
                   <div className="flex items-center justify-center w-6">
                     {link.icon}
                   </div>
@@ -109,7 +104,7 @@ export default function DesktopSidebarContent({
                           onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
-                            toggleSubItems(link.id)
+                            toggleExpand(link.id);
                           }}
                           size={18}
                           className={`ml-auto transition-transform ${showSubs ? "rotate-180" : ""

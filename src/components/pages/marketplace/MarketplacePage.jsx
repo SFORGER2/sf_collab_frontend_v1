@@ -11,10 +11,10 @@ import {
   CheckCircle, AlertCircle, Loader2, ArrowLeft,
   DollarSign, FileUp, Image, Sparkles, ShieldCheck,
   LayoutGrid, List, SlidersHorizontal, ChevronDown,
-  Zap, Crown, Tag, Filter,
+  Zap, Crown, Tag, Filter, CreditCard, Gem, ExternalLink,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { categoryAPI, listingAPI, sellerAPI, myListingsAPI } from '@/utils/APIs/MarketplaceAPI';
+import { categoryAPI, listingAPI, sellerAPI, myListingsAPI, purchaseAPI, earningsAPI, boostAPI } from '@/utils/APIs/MarketplaceAPI';
 import { API_BASE_URL } from '@/utils/config';
 
 // ─── URL helper ───────────────────────────────────────────────────
@@ -244,11 +244,82 @@ const ListCard = ({ listing, onClick }) => {
 };
 
 // ─── Listing Detail Modal ─────────────────────────────────────────
-const ListingDetailModal = ({ listing, onClose }) => {
+const ListingDetailModal = ({ listing, onClose, myPurchases = [] }) => {
   if (!listing) return null;
   const Icon  = CATEGORY_ICONS[listing.category?.slug] || Package;
   const color = CATEGORY_COLORS[listing.category?.slug] || CATEGORY_COLORS.development;
   const [activePreview, setActivePreview] = useState(0);
+  const [purchasing, setPurchasing]       = useState(false);
+  const [boosting, setBoosting]           = useState(false);
+  const [boostUnits, setBoostUnits]       = useState(1);
+  const [showBoost, setShowBoost]         = useState(false);
+  const [rating, setRating]              = useState(0);
+  const [reviewText, setReviewText]       = useState('');
+  const [ratingLoading, setRatingLoading] = useState(false);
+  const [tab, setTab]                     = useState('details'); // details | boost | rate
+
+  // Check if current user already purchased this listing
+  const myPurchase = myPurchases.find(p => String(p.listing_id) === String(listing.id));
+  const alreadyPurchased = !!myPurchase;
+  const alreadyRated     = myPurchase?.rating != null;
+
+  const handlePurchase = async () => {
+    setPurchasing(true);
+    try {
+      const res = await purchaseAPI.purchase(listing.id);
+      if (res.success) {
+        toast.success(res.message || 'Purchase successful!');
+        if (res.download_url) {
+          window.open(`${BACKEND_URL}${res.download_url}`, '_blank');
+        }
+        onClose();
+      } else {
+        toast.error(res.error || 'Purchase failed');
+      }
+    } catch { toast.error('Purchase failed'); }
+    finally { setPurchasing(false); }
+  };
+
+  const handleDownload = async () => {
+    const res = await purchaseAPI.getDownloadUrl(listing.id);
+    if (res.success && res.download_url) {
+      window.open(`${BACKEND_URL}${res.download_url}`, '_blank');
+    } else {
+      toast.error('Download not available');
+    }
+  };
+
+  const handleBoost = async () => {
+    setBoosting(true);
+    try {
+      const res = await boostAPI.boostListing(listing.id, boostUnits);
+      if (res.success) {
+        toast.success(res.message || 'Listing boosted!');
+        setShowBoost(false);
+      } else {
+        toast.error(res.error || 'Boost failed');
+      }
+    } catch { toast.error('Boost failed'); }
+    finally { setBoosting(false); }
+  };
+
+  const handleRate = async () => {
+    if (!rating) { toast.error('Select a star rating first'); return; }
+    if (!myPurchase) { toast.error('You must purchase this listing first'); return; }
+    setRatingLoading(true);
+    try {
+      const res = await purchaseAPI.rate(myPurchase.id, rating, reviewText);
+      if (res.success) {
+        toast.success('Rating submitted!');
+        setTab('details');
+      } else {
+        toast.error(res.error || 'Rating failed');
+      }
+    } catch { toast.error('Rating failed'); }
+    finally { setRatingLoading(false); }
+  };
+
+  const boostCost = 100 * boostUnits;
 
   return (
     <AnimatePresence>
@@ -269,7 +340,7 @@ const ListingDetailModal = ({ listing, onClose }) => {
           className="bg-[#0f1116] border border-white/[0.08] rounded-t-3xl sm:rounded-2xl
                      w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto"
         >
-          {/* Drag handle on mobile */}
+          {/* Drag handle */}
           <div className="flex justify-center pt-3 pb-1 sm:hidden">
             <div className="w-10 h-1 bg-white/20 rounded-full" />
           </div>
@@ -282,121 +353,271 @@ const ListingDetailModal = ({ listing, onClose }) => {
               </div>
               <div>
                 <div className={`text-xs font-medium ${color.text} mb-0.5`}>
-                  {listing.category?.name}
-                  {listing.item_type && ` · ${listing.item_type}`}
+                  {listing.category?.name}{listing.item_type && ` · ${listing.item_type}`}
                 </div>
                 <h2 className="text-white font-bold text-base leading-tight">{listing.title}</h2>
               </div>
             </div>
-            <button onClick={onClose}
-              className="text-gray-500 hover:text-white transition-colors p-1 -mt-1 -mr-1">
+            <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors p-1 -mt-1 -mr-1">
               <X size={20} />
             </button>
           </div>
 
-          {/* Preview images */}
-          {listing.preview_images?.length > 0 && (
-            <div className="px-5 mb-4">
-              <div className="rounded-xl overflow-hidden bg-[#0d0f14] aspect-video">
-                <img src={getFileUrl(listing.preview_images[activePreview])}
-                     alt="Preview"
-                     className="w-full h-full object-cover" />
-              </div>
-              {listing.preview_images.length > 1 && (
-                <div className="flex gap-2 mt-2">
-                  {listing.preview_images.map((url, i) => (
-                    <button key={i} onClick={() => setActivePreview(i)}
-                      className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-colors
-                        ${i === activePreview ? 'border-blue-500' : 'border-transparent opacity-50 hover:opacity-80'}`}>
-                      <img src={getFileUrl(url)} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
+          {/* Tabs — only show boost/rate if relevant */}
+          <div className="flex items-center gap-1 px-5 mb-1">
+            {[
+              { key: 'details', label: 'Details' },
+              ...(alreadyPurchased && !alreadyRated ? [{ key: 'rate', label: '⭐ Rate' }] : []),
+              ...(listing.seller ? [{ key: 'boost', label: '💎 Boost' }] : []),
+            ].map(t => (
+              <button key={t.key} onClick={() => setTab(t.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors
+                  ${tab === t.key ? 'bg-white/[0.08] text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* ── DETAILS TAB ── */}
+          {tab === 'details' && (
+            <>
+              {/* Preview images */}
+              {listing.preview_images?.length > 0 && (
+                <div className="px-5 mb-4">
+                  <div className="rounded-xl overflow-hidden bg-[#0d0f14] aspect-video">
+                    <img src={getFileUrl(listing.preview_images[activePreview])} alt="Preview"
+                         className="w-full h-full object-cover" />
+                  </div>
+                  {listing.preview_images.length > 1 && (
+                    <div className="flex gap-2 mt-2">
+                      {listing.preview_images.map((url, i) => (
+                        <button key={i} onClick={() => setActivePreview(i)}
+                          className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-colors
+                            ${i === activePreview ? 'border-blue-500' : 'border-transparent opacity-50 hover:opacity-80'}`}>
+                          <img src={getFileUrl(url)} alt="" className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
+              )}
+
+              <div className="px-5 pb-6 space-y-4">
+                <p className="text-gray-400 text-sm leading-relaxed">{listing.description}</p>
+
+                {listing.tags?.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {listing.tags.map((t, i) => (
+                      <span key={i} className="text-[11px] bg-white/[0.04] text-gray-400
+                                               border border-white/[0.06] px-2 py-0.5 rounded-full">
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Seller card */}
+                <div className="flex items-center gap-3 bg-white/[0.03] rounded-xl p-3.5 border border-white/[0.05]">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600
+                                  flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                    {listing.seller?.user?.name?.[0] || 'S'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-white font-medium text-sm">{listing.seller?.user?.name}</span>
+                      {listing.seller?.is_verified && <ShieldCheck size={13} className="text-blue-400" />}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                      <span>{listing.seller?.delivery_history_count} deliveries</span>
+                      <span>·</span>
+                      <span>Trust {listing.seller?.trust_score}/100</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <Eye size={12} /> {listing.views_count}
+                  </div>
+                </div>
+
+                {/* Price breakdown */}
+                <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.05] space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Price</span>
+                    <span className="text-white font-bold text-lg">${listing.price?.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-600">
+                    <span>Platform fee (10%)</span>
+                    <span>${listing.platform_fee?.toFixed(2)}</span>
+                  </div>
+                  <div className="border-t border-white/[0.05] pt-2 flex justify-between text-sm">
+                    <span className="text-gray-500">Seller receives</span>
+                    <span className="text-emerald-400 font-medium">${listing.seller_receives?.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="flex items-center gap-5 text-sm text-gray-500">
+                  <span className="flex items-center gap-1.5"><Download size={14} /> {listing.downloads_count}</span>
+                  <span className="flex items-center gap-1.5"><Eye size={14} /> {listing.views_count}</span>
+                  {listing.rating > 0 && (
+                    <span className="flex items-center gap-1.5 text-yellow-400">
+                      <Star size={14} fill="currentColor" />
+                      {listing.rating.toFixed(1)} ({listing.rating_count})
+                    </span>
+                  )}
+                </div>
+
+                {/* CTA */}
+                {alreadyPurchased ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20
+                                    rounded-xl px-4 py-3">
+                      <CheckCircle size={16} className="text-emerald-400 flex-shrink-0" />
+                      <span className="text-emerald-300 text-sm font-medium">You own this resource</span>
+                    </div>
+                    <motion.button whileTap={{ scale: 0.98 }} onClick={handleDownload}
+                      className="w-full bg-white/[0.06] hover:bg-white/[0.10] text-white font-semibold
+                                 py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+                      <Download size={16} /> Download File
+                    </motion.button>
+                    {!alreadyRated && (
+                      <button onClick={() => setTab('rate')}
+                        className="w-full text-yellow-400 text-sm py-2 hover:text-yellow-300 transition-colors flex items-center justify-center gap-1.5">
+                        <Star size={14} /> Leave a rating
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-xs text-gray-600 mb-2.5 flex items-center gap-1.5">
+                      <CreditCard size={12} /> Paid from your Balance wallet
+                    </p>
+                    <motion.button whileTap={{ scale: 0.98 }} onClick={handlePurchase}
+                      disabled={purchasing}
+                      className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500
+                                 hover:to-blue-400 disabled:opacity-50 text-white font-semibold py-3.5
+                                 rounded-xl transition-all shadow-lg shadow-blue-600/20
+                                 flex items-center justify-center gap-2">
+                      {purchasing
+                        ? <><Loader2 size={16} className="animate-spin" /> Processing...</>
+                        : <><CreditCard size={16} /> Purchase for ${listing.price?.toFixed(2)}</>
+                      }
+                    </motion.button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* ── RATE TAB ── */}
+          {tab === 'rate' && (
+            <div className="px-5 pb-6 space-y-4 pt-2">
+              {alreadyRated ? (
+                <div className="text-center py-8">
+                  <CheckCircle size={40} className="text-emerald-400 mx-auto mb-3" />
+                  <p className="text-white font-semibold">Already rated</p>
+                  <p className="text-gray-500 text-sm mt-1">You gave this {myPurchase.rating} stars</p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-gray-400 text-sm">How was your experience with <span className="text-white">{listing.title}</span>?</p>
+
+                  {/* Star picker */}
+                  <div className="flex items-center justify-center gap-3 py-4">
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <button key={n} onClick={() => setRating(n)}>
+                        <Star size={36}
+                          className={`transition-colors ${n <= rating ? 'text-yellow-400' : 'text-gray-700'}`}
+                          fill={n <= rating ? 'currentColor' : 'none'} />
+                      </button>
+                    ))}
+                  </div>
+                  {rating > 0 && (
+                    <p className="text-center text-gray-400 text-sm">
+                      {['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent!'][rating]}
+                    </p>
+                  )}
+
+                  <textarea rows={3} value={reviewText}
+                    onChange={e => setReviewText(e.target.value)}
+                    placeholder="Share your thoughts (optional)..."
+                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5
+                               text-white text-sm placeholder-gray-600 focus:outline-none
+                               focus:border-blue-500/50 resize-none" />
+
+                  <motion.button whileTap={{ scale: 0.98 }} onClick={handleRate}
+                    disabled={ratingLoading || !rating}
+                    className="w-full bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 text-black
+                               font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+                    {ratingLoading ? <Loader2 size={15} className="animate-spin" /> : <Star size={15} />}
+                    Submit Rating
+                  </motion.button>
+                </>
               )}
             </div>
           )}
 
-          <div className="px-5 pb-6 space-y-4">
-            <p className="text-gray-400 text-sm leading-relaxed">{listing.description}</p>
-
-            {/* Tags */}
-            {listing.tags?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {listing.tags.map((t, i) => (
-                  <span key={i} className="text-[11px] bg-white/[0.04] text-gray-400
-                                           border border-white/[0.06] px-2 py-0.5 rounded-full">
-                    #{t}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Seller */}
-            <div className="flex items-center gap-3 bg-white/[0.03] rounded-xl p-3.5 border border-white/[0.05]">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600
-                              flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                {listing.seller?.user?.name?.[0] || 'S'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-white font-medium text-sm">{listing.seller?.user?.name}</span>
-                  {listing.seller?.is_verified && <ShieldCheck size={13} className="text-blue-400" />}
+          {/* ── BOOST TAB ── */}
+          {tab === 'boost' && (
+            <div className="px-5 pb-6 space-y-4 pt-2">
+              <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Gem size={16} className="text-purple-400" />
+                  <p className="text-purple-300 font-semibold text-sm">Visibility Boost</p>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-                  <span>{listing.seller?.delivery_history_count} deliveries</span>
-                  <span>·</span>
-                  <span>Trust {listing.seller?.trust_score}/100</span>
+                <p className="text-gray-400 text-xs leading-relaxed">
+                  Boost your listing to the top of discovery results using Crystals.
+                  Crystals only accelerate visibility — they cannot reduce prices or affect reputation.
+                </p>
+              </div>
+
+              <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.05] space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Cost per 24h</span>
+                  <span className="text-purple-400 font-semibold">100 crystals</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-gray-400 text-sm">Duration</span>
+                  <div className="flex items-center gap-2 ml-auto">
+                    <button onClick={() => setBoostUnits(u => Math.max(1, u - 1))}
+                      className="w-8 h-8 bg-white/[0.06] rounded-lg text-white hover:bg-white/[0.10] transition-colors">
+                      −
+                    </button>
+                    <span className="text-white font-semibold w-8 text-center">{boostUnits}</span>
+                    <button onClick={() => setBoostUnits(u => Math.min(7, u + 1))}
+                      className="w-8 h-8 bg-white/[0.06] rounded-lg text-white hover:bg-white/[0.10] transition-colors">
+                      +
+                    </button>
+                  </div>
+                  <span className="text-gray-500 text-sm">{boostUnits * 24}h</span>
+                </div>
+                <div className="border-t border-white/[0.05] pt-3 flex justify-between text-sm">
+                  <span className="text-gray-400">Total cost</span>
+                  <span className="text-white font-bold">{boostCost} crystals</span>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                <Eye size={12} /> {listing.views_count}
-              </div>
-            </div>
 
-            {/* Price breakdown */}
-            <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.05] space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Price</span>
-                <span className="text-white font-bold text-lg">${listing.price?.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-xs text-gray-600">
-                <span>Platform fee (10%)</span>
-                <span>${listing.platform_fee?.toFixed(2)}</span>
-              </div>
-              <div className="border-t border-white/[0.05] pt-2 flex justify-between text-sm">
-                <span className="text-gray-500">Seller receives</span>
-                <span className="text-emerald-400 font-medium">${listing.seller_receives?.toFixed(2)}</span>
-              </div>
-            </div>
-
-            {/* Stats row */}
-            <div className="flex items-center gap-5 text-sm text-gray-500">
-              <span className="flex items-center gap-1.5"><Download size={14} /> {listing.downloads_count}</span>
-              <span className="flex items-center gap-1.5"><Eye size={14} /> {listing.views_count}</span>
-              {listing.rating > 0 && (
-                <span className="flex items-center gap-1.5 text-yellow-400">
-                  <Star size={14} fill="currentColor" />
-                  {listing.rating.toFixed(1)} ({listing.rating_count})
-                </span>
+              {listing.is_boosted && (
+                <div className="flex items-center gap-2 bg-purple-500/10 border border-purple-500/20
+                                rounded-xl px-4 py-3 text-sm text-purple-300">
+                  <Sparkles size={14} />
+                  Listing is currently boosted until {listing.boost_expires_at
+                    ? new Date(listing.boost_expires_at).toLocaleDateString()
+                    : '—'}
+                </div>
               )}
-            </div>
 
-            {/* CTA */}
-            <div>
-              <p className="text-xs text-gray-600 mb-2.5 flex items-center gap-1.5">
-                <DollarSign size={12} /> Paid using Balance wallet — real money, not crystals
-              </p>
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => toast.info('Marketplace purchases coming soon!')}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500
-                           hover:to-blue-400 text-white font-semibold py-3.5 rounded-xl
-                           transition-all duration-200 shadow-lg shadow-blue-600/20"
-              >
-                Purchase for ${listing.price?.toFixed(2)}
+              <motion.button whileTap={{ scale: 0.98 }} onClick={handleBoost} disabled={boosting}
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500
+                           hover:to-purple-400 disabled:opacity-50 text-white font-semibold py-3.5
+                           rounded-xl transition-all shadow-lg shadow-purple-600/20
+                           flex items-center justify-center gap-2">
+                {boosting
+                  ? <><Loader2 size={16} className="animate-spin" /> Boosting...</>
+                  : <><Sparkles size={16} /> Boost for {boostCost} crystals</>
+                }
               </motion.button>
             </div>
-          </div>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
@@ -817,11 +1038,12 @@ const MarketplacePage = () => {
   const [categories, setCategories]   = useState([]);
   const [listings, setListings]       = useState([]);
   const [loading, setLoading]         = useState(true);
-  const [viewMode, setViewMode]       = useState('grid'); // 'grid' | 'list'
+  const [viewMode, setViewMode]       = useState('grid');
   const [selectedListing, setSelectedListing] = useState(null);
   const [showCreate, setShowCreate]   = useState(false);
   const [showMyListings, setShowMyListings] = useState(false);
   const [myListings, setMyListings]   = useState([]);
+  const [myPurchases, setMyPurchases] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
 
   const [filters, setFilters] = useState({
@@ -834,6 +1056,10 @@ const MarketplacePage = () => {
   useEffect(() => {
     categoryAPI.getAll().then(res => {
       if (res.success) setCategories(res.categories);
+    });
+    // Load user's purchases so modal can show owned state
+    purchaseAPI.getMyPurchases().then(res => {
+      if (res.success) setMyPurchases(res.purchases);
     });
   }, []);
 
@@ -1148,7 +1374,11 @@ const MarketplacePage = () => {
       {/* ── Modals ─────────────────────────────────────── */}
       <AnimatePresence>
         {selectedListing && (
-          <ListingDetailModal listing={selectedListing} onClose={() => setSelectedListing(null)} />
+          <ListingDetailModal
+            listing={selectedListing}
+            onClose={() => setSelectedListing(null)}
+            myPurchases={myPurchases}
+          />
         )}
         {showCreate && (
           <CreateListingModal

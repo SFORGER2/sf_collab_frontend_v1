@@ -93,6 +93,19 @@ const NotificationBell = () => {
       if (template_key.includes('contribution') || template_key.includes('poll')) {
         return '/contribution';
       }
+
+      // Mentorship -> /mentors/dashboard or /mentors/my-requests
+      if (template_key.includes('mentorship') || template_key.includes('mentor')) {
+        if (template_key.includes('received') || template_key.includes('rated')) {
+          return '/mentors/dashboard';
+        }
+        return '/mentors/my-requests';
+      }
+
+      // Marketplace -> /marketplace
+      if (template_key.includes('marketplace') || template_key.includes('purchase') || template_key.includes('listing')) {
+        return '/marketplace';
+      }
     }
     
     // Category-based fallback
@@ -103,6 +116,9 @@ const NotificationBell = () => {
       case 'team': return '/discover-startups';
       case 'financial': return '/crowdfunding';
       case 'account': return '/setting';
+      case 'mentorship': return '/mentors/my-requests';
+      case 'marketplace': return '/marketplace';
+      case 'payment': return '/wallet';
       default: return '/dashboard';
     }
   };

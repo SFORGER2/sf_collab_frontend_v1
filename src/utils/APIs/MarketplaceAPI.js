@@ -98,8 +98,85 @@ export const sellerAPI = {
 // ============================================================================
 // MY LISTINGS (SELLER)
 // ============================================================================
-export const myListingsAPI = {
-  getAll: async (params = {}) => {
+// ============================================================================
+// PURCHASE API
+// ============================================================================
+export const purchaseAPI = {
+  purchase: async (listingId) => {
+    try {
+      const res = await api.post(`/marketplace/listings/${listingId}/purchase`);
+      return res.data;
+    } catch (e) { return handleError(e, 'Failed to purchase listing'); }
+  },
+
+  getDownloadUrl: async (listingId) => {
+    try {
+      const res = await api.get(`/marketplace/listings/${listingId}/download`);
+      return res.data;
+    } catch (e) { return handleError(e, 'Failed to get download link'); }
+  },
+
+  getMyPurchases: async () => {
+    try {
+      const res = await api.get('/marketplace/my-purchases');
+      return res.data;
+    } catch (e) { return handleError(e, 'Failed to load purchases'); }
+  },
+
+  rate: async (purchaseId, rating, reviewText = '') => {
+    try {
+      const res = await api.post(`/marketplace/purchases/${purchaseId}/rate`, {
+        rating, review_text: reviewText
+      });
+      return res.data;
+    } catch (e) { return handleError(e, 'Failed to submit rating'); }
+  },
+};
+
+// ============================================================================
+// SELLER EARNINGS & PAYOUT API
+// ============================================================================
+export const earningsAPI = {
+  getEarnings: async () => {
+    try {
+      const res = await api.get('/marketplace/seller/earnings');
+      return res.data;
+    } catch (e) { return handleError(e, 'Failed to load earnings'); }
+  },
+
+  requestPayout: async () => {
+    try {
+      const res = await api.post('/marketplace/seller/payout');
+      return res.data;
+    } catch (e) { return handleError(e, 'Failed to request payout'); }
+  },
+};
+
+// ============================================================================
+// CRYSTAL BOOST API
+// ============================================================================
+export const boostAPI = {
+  boostListing: async (listingId, durationUnits = 1) => {
+    try {
+      const res = await api.post(`/marketplace/listings/${listingId}/boost`, {
+        duration_units: durationUnits
+      });
+      return res.data;
+    } catch (e) { return handleError(e, 'Failed to boost listing'); }
+  },
+
+  getBoostStatus: async (listingId) => {
+    try {
+      const res = await api.get(`/marketplace/listings/${listingId}/boost`);
+      return res.data;
+    } catch (e) { return handleError(e, 'Failed to get boost status'); }
+  },
+};
+
+// ============================================================================
+// MY LISTINGS (SELLER)
+// ============================================================================
+export const myListingsAPI = {  getAll: async (params = {}) => {
     try {
       const res = await api.get('/marketplace/my-listings', { params });
       return res.data;

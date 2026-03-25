@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import BottomLinks from "./BottomLinks";
 import { Crown, Lock, ChevronDown } from "lucide-react";
 import { getAllRoutes } from "./sidebar/links";
-import { useState } from "react";
 
 export default function MobileSidebarContent({
   onLinkClick,
   links = [],
   isAdmin,
+  expandedItems = {},
   toggleExpand,
   hasSubItems,
   shouldShowSubItems,
@@ -16,7 +16,6 @@ export default function MobileSidebarContent({
 }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [expandedId, setExpandedId] = useState(null);
 
   /* -------------------- Animations -------------------- */
   const containerVariants = {
@@ -45,10 +44,6 @@ export default function MobileSidebarContent({
     onLinkClick();
   };
 
-  const toggleSubItems = (linkId) => {
-    setExpandedId(expandedId === linkId ? null : linkId);
-  };
-
   const baseItemClasses =
     "w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors";
 
@@ -66,7 +61,7 @@ export default function MobileSidebarContent({
       >
         {links.map((link) => {
           const isActive = getAllRoutes(link).includes(location.pathname);
-          const showSubs = expandedId === link.id;
+          const showSubs = expandedItems[link.id] ?? false;
           const isUpcoming = link.isUpcoming;
 
           return (
@@ -77,7 +72,7 @@ export default function MobileSidebarContent({
               <motion.button
                 onClick={() => {
                   if (hasSubItems(link) && !link.href) {
-                    if (!isUpcoming) toggleSubItems(link.id);
+                    if (!isUpcoming) toggleExpand(link.id);
                     return;
                   }
                   handleNavigation(link);
@@ -107,7 +102,7 @@ export default function MobileSidebarContent({
                       (e) => {
                         e.stopPropagation();
                         if (isUpcoming) return;
-                        toggleSubItems(link.id);
+                        toggleExpand(link.id);
                       }
                     }
                     size={18}

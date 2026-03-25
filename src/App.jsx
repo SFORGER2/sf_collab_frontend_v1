@@ -108,6 +108,9 @@ import AIToolsGuard from "./components/ai/AIToolsGuard.jsx";
 import BuilderStartups from "./components/pages/builderStartups/BuilderStartups.jsx";
 import InviteToStartup from "./components/pages/inviteToStartup/InviteToStartup.jsx";
 import MarketplacePage from './components/pages/marketplace/MarketplacePage';
+import MentorshipDiscovery from "./components/pages/Mentorship/MentorDiscoveryPage.jsx";
+import MentorDashboard from './components/pages/mentorship/MentorDashboard';
+import MyMentorshipRequests from './components/pages/mentorship/MyMentorshipRequests';
 
 
 
@@ -383,6 +386,12 @@ export default function App() {
 
                   {/* ====== MARKETPLACE ====== */}
                   <Route path="marketplace" element={<MarketplacePage />} />
+
+                  {/* Mentorship */}
+                  <Route path="mentors" element={<MentorshipDiscovery />} />
+                  <Route path="mentor-dashboard" element={<MentorDashboard />} />
+                  <Route path="my-mentorship-requests" element={<MyMentorshipRequests />} />
+
 
                   <Route path="setting" element={<Setting />}>
                     <Route index element={<ProfileSetting />} />

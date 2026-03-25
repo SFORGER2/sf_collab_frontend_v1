@@ -148,34 +148,18 @@ const [pendingInvitation, setPendingInvitation] = useState(null);
   };
 
 const fetchUserInvitation = useCallback(async () => {
+  // Skip if user is already an admin/member — they don't need to see an invitation banner
   if (!user || !id || isAdmin) return;
 
   try {
-    let response = await startupsAPI.getInvitations(id, {
-      status: 'pending',
-      per_page: 50
-    });
-
-    response = response?.data;
-
-    let invitations = [];
-
-    if (Array.isArray(response)) {
-      invitations = response;
-    } else if (response?.invitations && Array.isArray(response.invitations)) {
-      invitations = response.invitations;
-    }
-
-   const currentUserId = user?.id || user?.userId || user?.user_id;
-
-const myInvite = invitations.find(inv =>
-  inv.user_id === currentUserId
-);
-
-    setPendingInvitation(myInvite || null);
-
+    // Use the dedicated /mine endpoint which doesn't require manager role
+    const response = await startupsAPI.getMyInvitation(id);
+    const invitation = response?.data?.invitation || null;
+    setPendingInvitation(invitation);
   } catch (error) {
-    console.error("Error fetching invitations:", error);
+    // 403 or network error — just hide the invitation banner silently
+    console.error("Error fetching invitation:", error);
+    setPendingInvitation(null);
   }
 }, [user, id, isAdmin]);
 const fetchJoinRequests = useCallback(async () => {

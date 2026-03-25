@@ -5,7 +5,7 @@ import {
   History, ShoppingBag, Sparkles, RefreshCw, ChevronRight,
   Zap, X, Plus, Minus, RotateCcw, DollarSign, Gem,
 } from 'lucide-react';
-import { walletAPI } from '@/utils/APIs/walletAPI';
+import { walletAPI, balanceAPI, crystalsAPI } from '@/utils/APIs/walletAPI';
 import { paymentAPI } from '@/utils/APIs/paymentAPI';
 import useGetCredits from '@/utils/hooks/useGetCredits';
 import { useSelector } from 'react-redux';
@@ -45,7 +45,8 @@ const WalletDashboard = () => {
   const sfCoins = useGetCredits();
 
   const [wallet, setWallet] = useState(null);
-  const [walletBalance, setWalletBalance] = useState(0); // cents
+  const [walletBalance, setWalletBalance] = useState(0); // cents — real money Balance
+  const [crystalBalance, setCrystalBalance] = useState(0); // crystals
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
@@ -85,10 +86,11 @@ const WalletDashboard = () => {
   const fetchWalletData = async () => {
     try {
       setLoading(true);
-      const [balanceRes, historyRes, paymentRes] = await Promise.all([
+      const [balanceRes, historyRes, realBalanceRes, crystalRes] = await Promise.all([
         walletAPI.getBalance(),
         walletAPI.getHistory({ per_page: 20 }),
-        paymentAPI.getWalletBalance().catch(() => null),
+        balanceAPI.getBalance().catch(() => null),   // real-money Balance
+        crystalsAPI.getWallet().catch(() => null),   // crystal wallet
       ]);
 
       if (balanceRes?.success && balanceRes.wallet) {
@@ -98,8 +100,16 @@ const WalletDashboard = () => {
         }));
       }
       if (historyRes?.success) setTransactions(historyRes.transactions || []);
-      // balance is in cents
-      if (paymentRes?.data) setWalletBalance(paymentRes.data.balance || 0);
+
+      // Real-money Balance — stored in cents
+      if (realBalanceRes?.success && realBalanceRes.balance) {
+        setWalletBalance(realBalanceRes.balance.available_cents ?? 0);
+      }
+
+      // Crystal wallet balance
+      if (crystalRes?.success && crystalRes.crystal_wallet) {
+        setCrystalBalance(crystalRes.crystal_wallet.balance ?? 0);
+      }
     } catch (err) {
       console.error(err);
       toast.error('Failed to load wallet data');
@@ -229,7 +239,7 @@ const WalletDashboard = () => {
               </button>
             </div>
             <p className="text-gray-400 text-xs mb-1">SF Crystals</p>
-            <h2 className="text-3xl font-bold text-white mb-1">{(wallet?.premium_gems ?? 0).toLocaleString()}</h2>
+            <h2 className="text-3xl font-bold text-white mb-1">{crystalBalance.toLocaleString()}</h2>
             <p className="text-gray-500 text-xs">For visibility boosts</p>
           </div>
         </motion.div>
@@ -480,7 +490,7 @@ const DepositModal = ({ onClose, onSuccess }) => {
     if (!amount || parseFloat(amount) < 1) { toast.error('Minimum deposit is $1.00'); return; }
     try {
       setLoading(true);
-      // depositFunds takes cents
+      // Use payment route to create Stripe checkout session for deposit
       const result = await paymentAPI.depositFunds(Math.round(parseFloat(amount) * 100));
       if (result.success && result.url) {
         window.location.href = result.url;
@@ -536,7 +546,8 @@ const WithdrawModal = ({ walletBalance, onClose, onSuccess }) => {
     if (parseFloat(amount) > available) { toast.error('Insufficient balance'); return; }
     try {
       setLoading(true);
-      const result = await paymentAPI.withdrawFunds(Math.round(parseFloat(amount) * 100));
+      // Use balanceAPI which hits /api/balance/withdraw
+      const result = await balanceAPI.withdraw(parseFloat(amount));
       if (result.success) {
         toast.success(`$${parseFloat(amount).toFixed(2)} withdrawal initiated. Arrives in 2-3 business days.`);
         onSuccess();
