@@ -13,7 +13,7 @@ import { toast } from 'react-toastify';
 import useGetCredits from '@/utils/hooks/useGetCredits';
 import { motion } from 'framer-motion';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const ImageGenerator = () => {
   const [activeTab, setActiveTab] = useState('text-to-text');

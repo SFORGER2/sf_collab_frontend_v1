@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { connectionAPI } from '@/utils/APIs/connectionAPI';
 import { toast } from 'react-toastify';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const getUserId = (u) => u?.id ?? u?.user_id ?? u?._id ?? null;
 
@@ -529,7 +529,7 @@ export default function ConnectionsPage() {
 function UserCard({ user, subtitle, actions, onClick, isLoading }) {
   const fullName = user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown' : 'Unknown';
   const initials = `${user?.first_name?.charAt(0) || ''}${user?.last_name?.charAt(0) || ''}`;
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
   const avatarUrl = (() => {
     if (!user) return null;

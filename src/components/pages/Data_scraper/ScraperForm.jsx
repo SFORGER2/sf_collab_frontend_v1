@@ -5,7 +5,7 @@ import ScraperResults from './ScraperResults'
 import LoadingSpinner from './LoadingSpinner'
 import LogoLoop from '../../ui/LogoLoop'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 import { SiReact, SiNextdotjs, SiTypescript, SiTailwindcss } from 'react-icons/si';
 
 const featureItems = [

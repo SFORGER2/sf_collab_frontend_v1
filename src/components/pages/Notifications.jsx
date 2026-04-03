@@ -48,7 +48,7 @@ import { useNotifications as useNotificationsContext } from '../../contexts/Noti
 
 
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const Notifications = () => {
   const dispatch = useDispatch();

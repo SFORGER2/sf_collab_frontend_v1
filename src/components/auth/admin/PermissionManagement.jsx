@@ -31,7 +31,7 @@ import {
   TabsTrigger,
 } from "../../ui/tabs";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const PermissionManagement = () => {
   const [permissions, setPermissions] = useState([]);

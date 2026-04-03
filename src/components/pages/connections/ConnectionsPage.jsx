@@ -20,7 +20,7 @@ import UserCard from './UserCard';
 import LoadingSkeleton from './LoadingSkeleton';
 import ConfirmationModal from './ConfirmationModal';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const getUserId = (u) => u?.id ?? u?.user_id ?? u?._id ?? null;
 const getRequestId = (r) =>

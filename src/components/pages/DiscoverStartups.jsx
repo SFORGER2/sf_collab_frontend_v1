@@ -21,7 +21,7 @@ import { useSelector } from 'react-redux';
 import { startupAPI } from './startupDetails/startUpAPI';
 import { toast } from 'react-toastify';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const FUNDING_RANGES = [
   { label: 'Any', min: null, max: null },

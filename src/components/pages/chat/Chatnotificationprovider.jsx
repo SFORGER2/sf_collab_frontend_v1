@@ -33,9 +33,9 @@ const FLASH_DURATION = 60000;
 // NEW: Mute notification sounds for these conversation types
 const MUTED_CONVERSATION_TYPES = ['general'];
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-// turn "/uploads/..." into "http://localhost:5001/uploads/..."
+// turn "/uploads/..." into "http://localhost:5000/uploads/..."
 const resolveAvatarUrl = (src) => {
   if (!src) return null;
   if (typeof src !== "string") return null;

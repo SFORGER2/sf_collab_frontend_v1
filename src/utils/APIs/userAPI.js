@@ -48,11 +48,12 @@ export const usersAPI = {
   },
 
   updateProfile: async (userId, profileData, accessToken, dType = 'multipart/form-data') => {
+    const headers = {
+      'Content-Type': dType,
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    };
     const response = await api.put(`/users/${userId}`, profileData, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': dType,
-      },
+      headers,
     });
     return response.data;
   },

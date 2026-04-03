@@ -68,14 +68,23 @@ export default function CompleteProfilePopUp() {
 
     setLoading(true);
     try {
-      if (!user?.id) return 
-      const res = await usersAPI.updateProfile(user.id, formData, access_token, "application/json");
+      if (!user?.id) return;
+      const token = access_token || localStorage.getItem("access_token") || "";
+      const res = await usersAPI.updateProfile(user.id, formData, token, "application/json");
       console.log("Profile update response:", res);
-      dispatch(updateUserSlice(res.data.user));
+      const updatedUser = res?.data?.user || res?.user;
+      if (updatedUser) {
+        dispatch(updateUserSlice(updatedUser));
+      }
       toast.success("Profile completed successfully!");
     } catch (err) {
       console.error(err);
-      toast.error(err.message || "Failed to update profile");
+      const status = err?.response?.status;
+      if (status === 401) {
+        toast.error("Session expired. Please log in again.");
+      } else {
+        toast.error(err?.response?.data?.error || err.message || "Failed to update profile");
+      }
     } finally {
       setLoading(false);
     }

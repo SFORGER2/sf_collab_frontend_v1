@@ -3,7 +3,7 @@
 // const EquityAccess = () => {
 //   return (
 //     <section className="py-24 bg-gray-900 text-white">
-//       <div className="mx-auto w-full px-4">
+//       <div className="mx-auto max-w-6xl px-4">
         
 //         {/* Header */}
 //         <h2 className="text-4xl font-bold text-center">
@@ -70,7 +70,7 @@ const EquityAccess = () => {
       transition={{ duration: 0.8 }}
       className="py-20 "
     >
-      <div className="mx-auto w-full px-4">
+      <div className="mx-auto max-w-6xl px-4">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={inView ? { y: 0, opacity: 1 } : {}}

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Users, Layers, ArrowUpRight, UserCheck } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const mockMentorshipOverview = {
   programsCount: 3,

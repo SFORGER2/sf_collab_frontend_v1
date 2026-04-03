@@ -7,6 +7,12 @@ const __dirname = path.resolve();
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss(),],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/test/setupTests.js',
+    include: ['src/**/*.test.{js,jsx,ts,tsx}'],
+  },
   server: {
     host: true
   },

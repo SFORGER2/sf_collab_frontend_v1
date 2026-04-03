@@ -8,7 +8,7 @@ import { getProfilePicture } from '@/utils/getProfilePicture';
 import { useSelector } from 'react-redux';
 import InviteToStartup from './InviteToStartup';
 import AddFriend from './AddFriend';
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Helper function to format plan names
 const formatPlanName = (planId) => {

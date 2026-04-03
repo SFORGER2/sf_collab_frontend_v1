@@ -20,7 +20,7 @@ import { getProfilePicture } from '@/utils/getProfilePicture';
 import { chatAPI } from '@/utils/APIs/chatApi';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // ─── Feature 1: Tab persistence helpers ──────────────────────────────────
 const getTabKey = (userId) => `sfcollab:chat_tab:${userId}`;
