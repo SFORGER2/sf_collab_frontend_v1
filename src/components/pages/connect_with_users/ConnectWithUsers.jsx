@@ -10,7 +10,7 @@ import UserCardSkeleton from './UserCardSkeleton';
 import UserCard from './UserCard';
 import { usersAPI } from '@/utils/APIs/userAPI';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const containerVariants = {
   hidden: { opacity: 0 },

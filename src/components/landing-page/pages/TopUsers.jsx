@@ -8,7 +8,7 @@ import { usersAPI } from '@/utils/APIs/userAPI';
 import { useNavigate } from 'react-router-dom';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 
-const API_HOST = import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "") || 'http://localhost:5000';
+const API_HOST = import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "") || '';
 
 const containerVariants = {
   hidden: { opacity: 0 },

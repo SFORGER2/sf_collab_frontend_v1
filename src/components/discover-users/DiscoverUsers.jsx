@@ -19,7 +19,7 @@ import { getProfilePicture } from '@/utils/getProfilePicture';
 import usePaginatedFetch from '@/utils/hooks/usePaginated';
 import InfiniteList from '@/components/InfiniteList';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 const getAvatarUrl = (u) => {
   if (!u) return null;

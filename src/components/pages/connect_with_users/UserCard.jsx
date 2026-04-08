@@ -8,7 +8,7 @@ const cardVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export default function UserCard({ user, index, onUserClick, onSendMessage, onConnect, currentUser }) {
   const isCurrentUser = currentUser?.id === user.id;

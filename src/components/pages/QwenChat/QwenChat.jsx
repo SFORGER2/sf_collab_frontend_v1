@@ -14,7 +14,7 @@ import InputArea from './InputArea';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { aiAPI } from '@/utils/APIs/aiAPI';
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const QwenChat = () => {
   const [messages, setMessages] = useState([

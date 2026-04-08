@@ -19,7 +19,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { X, Check, Search, Users, MessageCircle, Loader2, AlertCircle } from 'lucide-react';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Status colors
 const STATUS_COLORS = {

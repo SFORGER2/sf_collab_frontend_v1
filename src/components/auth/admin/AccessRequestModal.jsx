@@ -16,7 +16,7 @@ import {
 } from "../../ui/dialog";
 import { Textarea } from "../../ui/textarea";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const AccessRequestModal = ({ isOpen, onClose, permissionKey }) => {
   const [reason, setReason] = useState("");

@@ -9,7 +9,7 @@ import { Switch } from '../../ui/switch';
 import { Progress } from '../../ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const BackgroundRemover = () => {
   const [originalImage, setOriginalImage] = useState(null);

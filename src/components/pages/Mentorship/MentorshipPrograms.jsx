@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const mockPrograms = [
   {

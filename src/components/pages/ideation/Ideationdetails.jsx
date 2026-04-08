@@ -66,7 +66,7 @@ const VisionDetails = () => {
   const { user, access_token } = useSelector((state) => state.auth);
   const { socket } = useSocket();
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API_URL = import.meta.env.VITE_API_URL || "";
 
   // Co-developer requests state (creator only)
   const [collabRequests, setCollabRequests] = useState([]);

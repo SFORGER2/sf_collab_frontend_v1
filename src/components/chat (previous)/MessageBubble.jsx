@@ -29,7 +29,7 @@ const FILE_BASE_URL =
   import.meta.env.VITE_SOCKET_API_URL ||
   (import.meta.env.VITE_API_URL
     ? String(import.meta.env.VITE_API_URL).replace(/\/api\/?$/, "")
-    : "http://localhost:5000");
+    : "");
 
 const resolveUrl = (url) => {
   if (!url) return null;

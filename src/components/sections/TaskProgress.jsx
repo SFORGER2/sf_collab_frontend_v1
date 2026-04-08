@@ -39,7 +39,7 @@ export default function TaskProgress() {
   })
 
   const userStartups = user?.relationships?.startups || []
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+  const API_URL = import.meta.env.VITE_API_URL || ''
 
   // Fetch tasks on component mount and when filters change
   useEffect(() => {
