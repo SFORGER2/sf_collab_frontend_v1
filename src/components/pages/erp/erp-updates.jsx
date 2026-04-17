@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ERPUpdates() {
   const [role, setRole] = useState("builder");
@@ -248,15 +249,18 @@ export default function ERPUpdates() {
         </div>
 
         {/* Updates Feed */}
-      <div className="space-y-8">
+        <div className="space-y-8">
           {currentUpdates.length === 0 ? (
             <div className="bg-[#111113] border border-dashed border-zinc-700 rounded-3xl p-16 text-center">
               <p className="text-zinc-400 text-xl">No updates yet.</p>
             </div>
           ) : (
             currentUpdates.map((update) => (
-              <div
+              <motion.div
                 key={update.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
                 className="bg-[#111113] border border-zinc-700 hover:border-violet-500/30 rounded-3xl py-8 md:px-8 px-6 transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-violet-500/10"
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -317,7 +321,7 @@ export default function ERPUpdates() {
                 <div className="mt-8 pt-6 border-t border-zinc-700 text-xs text-zinc-400 text-right">
                   Logged • Just now
                 </div>
-              </div>
+              </motion.div>
             ))
           )}
         </div>
@@ -367,106 +371,112 @@ export default function ERPUpdates() {
       </div>
 
       {/* Updates Modal*/}
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-2xl z-[9999] flex items-center justify-center p-6"
-          onClick={() => setIsModalOpen(false)}
-        >
+      <AnimatePresence>
+        {isModalOpen && (
           <div
-            className="bg-[#17171a] w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl border border-violet-300/10"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 bg-black/70 backdrop-blur-2xl z-[9999] flex items-center justify-center p-6"
+            onClick={() => setIsModalOpen(false)}
           >
-            <div className="px-8 pt-8 pb-4 flex items-center justify-between sticky top-0 bg-[#17171a] z-10 border-b border-zinc-800">
-              <div className="flex items-center gap-x-3">
-                <h2 className="text-3xl font-semibold tracking-tight">
-                  Submit Daily Update
-                </h2>
-              </div>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="w-10 h-10 flex items-center justify-center hover:bg-zinc-800 rounded-2xl transition-colors"
-              >
-                <X className="w-6 h-6 text-zinc-400" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-8">
-              <div>
-                <label className="flex items-center gap-x-2 text-sm font-medium text-zinc-400 mb-3">
-                  What did you do today?
-                </label>
-                <textarea
-                  value={formData.today}
-                  onChange={(e) =>
-                    setFormData({ ...formData, today: e.target.value })
-                  }
-                  className="w-full h-32 bg-[#1f1f24] border border-transparent focus:border-violet-400 rounded-3xl px-6 py-5 text-base resize-none outline-none placeholder:text-zinc-500"
-                  placeholder="Describe your key accomplishments today..."
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="flex items-center gap-x-2 text-sm font-medium text-zinc-400 mb-3">
-                  What will you do next?
-                </label>
-                <textarea
-                  value={formData.next}
-                  onChange={(e) =>
-                    setFormData({ ...formData, next: e.target.value })
-                  }
-                  className="w-full h-32 bg-[#1f1f24] border border-transparent focus:border-violet-400 rounded-3xl px-6 py-5 text-base resize-none outline-none placeholder:text-zinc-500"
-                  placeholder="Your plan for tomorrow..."
-                />
-              </div>
-
-              <div>
-                <label className="flex items-center gap-x-2 text-sm font-medium text-zinc-400 mb-3">
-                  Blockers
-                </label>
-                <textarea
-                  value={formData.blockers}
-                  onChange={(e) =>
-                    setFormData({ ...formData, blockers: e.target.value })
-                  }
-                  className="w-full h-24 bg-[#1f1f24] border border-transparent focus:border-violet-400 rounded-3xl px-6 py-5 text-base resize-none outline-none placeholder:text-zinc-500"
-                  placeholder="Any blockers or dependencies?"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-4">
-                  Progress rating
-                </label>
-                <div className="flex items-center justify-center gap-x-4 py-6 bg-[#1f1f24] rounded-3xl">
-                  {[...Array(5)].map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() =>
-                        setFormData({ ...formData, progress: i + 1 })
-                      }
-                      className="transition-transform hover:scale-110 focus:outline-none"
-                    >
-                      <Star
-                        className={`w-9 h-9 ${i + 1 <= formData.progress ? "text-yellow-400 fill-yellow-400" : "text-zinc-600"}`}
-                      />
-                    </button>
-                  ))}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="bg-[#17171a] w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl border border-violet-300/10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-8 pt-8 pb-4 flex items-center justify-between sticky top-0 bg-[#17171a] z-10 border-b border-zinc-800">
+                <div className="flex items-center gap-x-3">
+                  <h2 className="text-3xl font-semibold tracking-tight">
+                    Submit Daily Update
+                  </h2>
                 </div>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-10 h-10 flex items-center justify-center hover:bg-zinc-800 rounded-2xl transition-colors"
+                >
+                  <X className="w-6 h-6 text-zinc-400" />
+                </button>
               </div>
 
-              <button
-                type="submit"
-                className="w-full bg-gradient-to-br from-violet-600 to-purple-950 hover:from-violet-600 hover:to-purple-700 py-6 rounded-3xl font-semibold text-xl flex items-center justify-center gap-x-3 shadow-2xl shadow-violet-500/30 active:scale-[0.98] transition-all hover:cursor-pointer"
-              >
-                Submit Daily Update
-                <Send className="w-6 h-6" />
-              </button>
-            </form>
+              <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-8">
+                <div>
+                  <label className="flex items-center gap-x-2 text-sm font-medium text-zinc-400 mb-3">
+                    What did you do today?
+                  </label>
+                  <textarea
+                    value={formData.today}
+                    onChange={(e) =>
+                      setFormData({ ...formData, today: e.target.value })
+                    }
+                    className="w-full h-32 bg-[#1f1f24] border border-transparent focus:border-violet-400 rounded-3xl px-6 py-5 text-base resize-none outline-none placeholder:text-zinc-500"
+                    placeholder="Describe your key accomplishments today..."
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-x-2 text-sm font-medium text-zinc-400 mb-3">
+                    What will you do next?
+                  </label>
+                  <textarea
+                    value={formData.next}
+                    onChange={(e) =>
+                      setFormData({ ...formData, next: e.target.value })
+                    }
+                    className="w-full h-32 bg-[#1f1f24] border border-transparent focus:border-violet-400 rounded-3xl px-6 py-5 text-base resize-none outline-none placeholder:text-zinc-500"
+                    placeholder="Your plan for tomorrow..."
+                  />
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-x-2 text-sm font-medium text-zinc-400 mb-3">
+                    Blockers
+                  </label>
+                  <textarea
+                    value={formData.blockers}
+                    onChange={(e) =>
+                      setFormData({ ...formData, blockers: e.target.value })
+                    }
+                    className="w-full h-24 bg-[#1f1f24] border border-transparent focus:border-violet-400 rounded-3xl px-6 py-5 text-base resize-none outline-none placeholder:text-zinc-500"
+                    placeholder="Any blockers or dependencies?"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-zinc-400 mb-4">
+                    Progress rating
+                  </label>
+                  <div className="flex items-center justify-center gap-x-4 py-6 bg-[#1f1f24] rounded-3xl">
+                    {[...Array(5)].map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() =>
+                          setFormData({ ...formData, progress: i + 1 })
+                        }
+                        className="transition-transform hover:scale-110 focus:outline-none"
+                      >
+                        <Star
+                          className={`w-9 h-9 ${i + 1 <= formData.progress ? "text-yellow-400 fill-yellow-400" : "text-zinc-600"}`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-br from-violet-600 to-purple-950 hover:from-violet-600 hover:to-purple-700 py-6 rounded-3xl font-semibold text-xl flex items-center justify-center gap-x-3 shadow-2xl shadow-violet-500/30 active:scale-[0.98] transition-all hover:cursor-pointer"
+                >
+                  Submit Daily Update
+                  <Send className="w-6 h-6" />
+                </button>
+              </form>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }
