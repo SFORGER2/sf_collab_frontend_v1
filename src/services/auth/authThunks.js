@@ -9,12 +9,49 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await authAPI.loginRequest(credentials);
-      localStorage.setItem('access_token', response.data.access_token);
-      localStorage.setItem('refreshToken', response.data.refresh_token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      return response.data;
+      const data = response.data ?? response;
+
+      const access_token =
+        data.access_token ||
+        data.accessToken ||
+        data.token ||
+        response.headers?.['x-access-token'] ||
+        null;
+
+      const refresh_token =
+        data.refresh_token ||
+        data.refreshToken ||
+        null;
+
+      const user = data.user || data.userData || null;
+
+      if (!user) {
+        return rejectWithValue('Login failed: no user data returned');
+      }
+
+      if (access_token) {
+        localStorage.setItem('access_token', access_token);
+      }
+      if (refresh_token) {
+        localStorage.setItem('refreshToken', refresh_token);
+      }
+      localStorage.setItem('user', JSON.stringify(user));
+
+      return {
+        user,
+        access_token,
+        refresh_token,
+        token: access_token,
+        refreshToken: refresh_token,
+      };
     } catch (err) {
-      return rejectWithValue(err.message);
+      const message =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        err?.error ||
+        'Login failed';
+      return rejectWithValue(message);
     }
   }
 );

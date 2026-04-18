@@ -8,13 +8,16 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Target, CheckCircle, Circle, AlertCircle, ArrowRight,
   Users, Map, Lightbulb, TrendingUp, RefreshCw, Zap,
+  Rocket, Loader2, X, MessageSquare,
 } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '@/utils/config';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -48,14 +51,174 @@ const BREAKDOWN_META = {
   collaborators:          { label: 'Collaborators joined',  icon: Users,      max: 20 },
   collaborator_interest:  { label: 'Collaborator interest', icon: TrendingUp, max: 10 },
   activity:               { label: 'Recent activity',       icon: Zap,        max: 10 },
+  mentor_review:          { label: 'Mentor review',         icon: Target,     max: 10 },
+};
+
+// ── Activate Startup Modal ─────────────────────────────────────────────────
+
+const ActivateStartupModal = ({ ideaId, ideaTitle, onClose, onActivated }) => {
+  const [eligibility, setEligibility] = useState(null);
+  const [loading, setLoading]         = useState(true);
+  const [activating, setActivating]   = useState(false);
+  const [startupName, setStartupName] = useState(ideaTitle || '');
+
+  useEffect(() => {
+    const checkEligibility = async () => {
+      try {
+        const res = await api.get(`/activation/ideas/${ideaId}/eligibility`);
+        setEligibility(res.data);
+      } catch (e) {
+        toast.error('Failed to check eligibility');
+        onClose();
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkEligibility();
+  }, [ideaId]);
+
+  const handleActivate = async () => {
+    if (!startupName.trim()) {
+      toast.error('Enter a startup name');
+      return;
+    }
+    setActivating(true);
+    try {
+      const res = await api.post(`/activation/ideas/${ideaId}/activate`, {
+        startup_name: startupName.trim(),
+      });
+      if (res.data.success) {
+        toast.success(res.data.message || 'Startup activated!');
+        onActivated(res.data.startup);
+      } else {
+        toast.error(res.data.error || 'Activation failed');
+      }
+    } catch (e) {
+      const msg = e.response?.data?.error || 'Activation failed';
+      toast.error(msg);
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        onClick={e => e.stopPropagation()}
+        className="bg-[#0f1116] border border-white/[0.08] rounded-2xl w-full max-w-md p-6 space-y-5"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Rocket className="w-5 h-5 text-green-400" />
+            <h2 className="text-white font-bold">Activate as Startup</h2>
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+          </div>
+        ) : eligibility ? (
+          <>
+            {/* Eligibility checks */}
+            <div className="space-y-2">
+              {Object.entries(eligibility.checks || {}).map(([key, check]) => (
+                <div key={key} className={`flex items-center gap-3 p-3 rounded-xl border
+                  ${check.passed
+                    ? 'bg-green-500/10 border-green-500/20'
+                    : 'bg-red-500/10 border-red-500/20'}`}>
+                  {check.passed
+                    ? <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    : <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                  }
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${check.passed ? 'text-green-300' : 'text-red-300'}`}>
+                      {key === 'readiness_score' && `Readiness Score: ${Math.round(check.value)}% / ${check.required}%`}
+                      {key === 'collaborators'   && `Collaborators: ${check.value} / ${check.required} required`}
+                      {key === 'roadmap'         && `Roadmap: ${check.value} item${check.value !== 1 ? 's' : ''} defined`}
+                    </p>
+                    {!check.passed && check.message && (
+                      <p className="text-red-400/70 text-xs mt-0.5">{check.message}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {eligibility.eligible ? (
+              <>
+                {/* Startup name input */}
+                <div>
+                  <label className="text-xs text-gray-500 mb-1.5 block">Startup name</label>
+                  <input
+                    value={startupName}
+                    onChange={e => setStartupName(e.target.value)}
+                    placeholder="Enter startup name..."
+                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5
+                               text-white text-sm placeholder-gray-600 focus:outline-none
+                               focus:border-green-500/50"
+                  />
+                </div>
+
+                {/* What happens */}
+                <div className="bg-white/[0.03] border border-white/[0.05] rounded-xl p-4 text-xs text-gray-400 space-y-1.5">
+                  <p className="text-white font-medium mb-2 text-sm">What happens next:</p>
+                  <p className="flex items-center gap-2"><CheckCircle className="w-3 h-3 text-green-400 flex-shrink-0" /> Startup workspace is created</p>
+                  <p className="flex items-center gap-2"><CheckCircle className="w-3 h-3 text-green-400 flex-shrink-0" /> Team members are transferred</p>
+                  <p className="flex items-center gap-2"><CheckCircle className="w-3 h-3 text-green-400 flex-shrink-0" /> Roadmap items become milestones</p>
+                  <p className="flex items-center gap-2"><CheckCircle className="w-3 h-3 text-green-400 flex-shrink-0" /> Vision is archived</p>
+                </div>
+
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={handleActivate}
+                  disabled={activating || !startupName.trim()}
+                  className="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white
+                             font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  {activating
+                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Activating...</>
+                    : <><Rocket className="w-4 h-4" /> Activate Startup</>
+                  }
+                </motion.button>
+              </>
+            ) : (
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+                <p className="text-amber-300 text-sm font-medium mb-2">Not ready yet</p>
+                <ul className="space-y-1">
+                  {eligibility.blocking_reasons.map((reason, i) => (
+                    <li key={i} className="text-amber-200/70 text-xs flex items-center gap-2">
+                      <Circle className="w-2.5 h-2.5 flex-shrink-0" /> {reason}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        ) : null}
+      </motion.div>
+    </motion.div>
+  );
 };
 
 // ── main component ─────────────────────────────────────────────────────────
 
 const VisionReadinessCard = ({ ideaId, initialData = null, isCreator = false, onStateChange }) => {
-  const [data, setData] = useState(initialData);
-  const [loading, setLoading] = useState(!initialData);
+  const [data, setData]           = useState(initialData);
+  const [loading, setLoading]     = useState(!initialData);
   const [refreshing, setRefreshing] = useState(false);
+  const [showActivate, setShowActivate] = useState(false);
+  const navigate = useNavigate();
 
   const fetchReadiness = async () => {
     try {
@@ -211,29 +374,70 @@ const VisionReadinessCard = ({ ideaId, initialData = null, isCreator = false, on
         </div>
       )}
 
-      {/* Creator CTA when ready */}
-      {isCreator && score >= 70 && visionState !== 'ready_for_activation' && (
+      {/* Mentor CTA — show when score < 70 and creator */}
+      {isCreator && score < 70 && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20"
+        >
+          <p className="text-blue-300 text-sm font-medium mb-1 flex items-center gap-1.5">
+            <MessageSquare className="w-4 h-4" />
+            Get mentor support
+          </p>
+          <p className="text-blue-200/60 text-xs mb-3">
+            A mentor can review your vision and help you reach the activation threshold faster.
+          </p>
+          <button
+            onClick={() => navigate('/mentors', { state: { ideaId } })}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white
+                       text-sm font-medium hover:bg-blue-500 transition-colors"
+          >
+            Find a Mentor
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </motion.div>
+      )}
+
+      {/* Activation CTA — only when creator + score ≥ 70 */}
+      {isCreator && score >= 70 && visionState !== 'archived' && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="mt-4 p-4 rounded-xl bg-green-500/10 border border-green-500/30"
         >
-          <p className="text-green-300 text-sm font-medium mb-2 flex items-center gap-1.5">
-            <CheckCircle className="w-4 h-4" />
-            Vision is ready!
+          <p className="text-green-300 text-sm font-medium mb-1 flex items-center gap-1.5">
+            <Rocket className="w-4 h-4" />
+            Ready to activate!
           </p>
           <p className="text-green-200/70 text-xs mb-3">
-            You have enough signal to activate this vision as a startup.
+            Your vision meets the threshold. You can now activate it as a startup workspace.
           </p>
           <button
-            onClick={() => onStateChange?.('ready_for_activation')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-500 transition-colors"
+            onClick={() => setShowActivate(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600
+                       text-white text-sm font-medium hover:bg-green-500 transition-colors"
           >
-            Mark as Ready for Activation
+            Activate as Startup
             <ArrowRight className="w-4 h-4" />
           </button>
         </motion.div>
       )}
+
+      {/* Activation Modal */}
+      <AnimatePresence>
+        {showActivate && (
+          <ActivateStartupModal
+            ideaId={ideaId}
+            ideaTitle={data?.title}
+            onClose={() => setShowActivate(false)}
+            onActivated={(startup) => {
+              setShowActivate(false);
+              navigate(`/startup-details/${startup.id}`);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

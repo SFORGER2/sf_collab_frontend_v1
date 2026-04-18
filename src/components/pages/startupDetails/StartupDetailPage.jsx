@@ -68,6 +68,8 @@ const StartupDetailPage = () => {
   const [isSendJoinRequestModalOpen, setIsSendJoinRequestModalOpen] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isDeleteStartupModalOpen, setIsDeleteStartupModalOpen] = useState(false);
+  const [isDemoteModalOpen, setIsDemoteModalOpen] = useState(false);
+  const [demoting, setDemoting] = useState(false);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   
@@ -112,36 +114,50 @@ const [pendingInvitation, setPendingInvitation] = useState(null);
         include_milestones: true
       }
       const [startupResult, membersResult, documentsResult, statsResult, goalsResult, eventsResult, bookmarkResult, tasksResult] = await Promise.all([
-        startupsAPI.getById(id, user?.id).catch(err => ({ success: false, error: err })),
-        startupsAPI.getMembers(id).catch(err => ({ success: false, error: err })),
-        startupsAPI.getDocuments(id).catch(err => ({ success: false, error: err })),
-        startupsAPI.getStats(id).catch(err => ({ success: false, error: err })),
-        projectGoalsAPI.getAll(args).catch(err => ({ success: false, error: err })),
-        calendarEventsAPI.getAll(args).catch(err => ({ success: false, error: err })),
+        startupsAPI.getById(id, user?.id).catch(err => { console.error('❌ getById failed:', err?.response?.status, err?.message); return { success: false, error: err }; }),
+        startupsAPI.getMembers(id).catch(err => { console.error('❌ getMembers failed:', err?.message); return { success: false, error: err }; }),
+        startupsAPI.getDocuments(id).catch(err => { console.error('❌ getDocuments failed:', err?.message); return { success: false, error: err }; }),
+        startupsAPI.getStats(id).catch(err => { console.error('❌ getStats failed:', err?.message); return { success: false, error: err }; }),
+        projectGoalsAPI.getAll(args).catch(err => { console.error('❌ getGoals failed:', err?.message); return { success: false, error: err }; }),
+        calendarEventsAPI.getAll(args).catch(err => { console.error('❌ getEvents failed:', err?.message); return { success: false, error: err }; }),
         startupsAPI.getBookmarkStatus({ startupId: id, userId: user?.id }).catch(err => ({ success: false, error: err })),
-        tasksAPI.getAll(args).catch(err => ({ success: false, error: err })),
+        tasksAPI.getAll(args).catch(err => { console.error('❌ getTasks failed:', err?.message); return { success: false, error: err }; }),
       ]);
-      const startupData = startupResult.success ? startupResult : { success: false, data: null };
-      const membersData = membersResult.success ? membersResult : { success: false, data: { members: [] } };
-      const documentsData = documentsResult.success ? documentsResult : { success: false, data: { documents: [] } };
-      const statsData = statsResult.success ? statsResult : { success: false, data: { stats: null } };
-      const goalsData = goalsResult.success ? goalsResult : { success: false, data: { project_goals: [] } };
-      const eventsData = eventsResult.success ? eventsResult : { success: false, data: { events: [] } };
-      const bookmarkData = bookmarkResult.success ? bookmarkResult : { success: false, data: { bookmarked: false } };
-      const tasksData = tasksResult.success ? tasksResult : { success: false, data: { tasks: [] } };
-      console.log("Fetched startup data:", { startupData, membersData, documentsData, statsData, goalsData, eventsData, bookmarkData, tasksData });
-      if (startupData.success) setStartup(startupData.data.startup);
-      if (membersData.success) setMembers(membersData.data.members);
-      if (documentsData.success) setDocuments(documentsData.data.documents);
-      if (statsData.success) setStats(statsData.data.stats || {});
-      if (goalsData.success) setProjectGoals(goalsData.data.project_goals || []);
-      if (eventsData.success) setCalendarEvents(eventsData.data.events || []);
-      if (tasksData.success) setProjectTasks(tasksData.data.tasks || []);
-      if (bookmarkData.success) setIsFavorited(bookmarkData.data.bookmarked || false);
-    } catch (error) {
-      console.error('Error fetching startup data:', error);
-      // toast.error('Error loading startup data');
 
+      console.log('📦 Raw API results:', { startupResult, membersResult, statsResult });
+
+      // startupResult is the full axios response shape: { success, data: { startup }, message }
+      // Only show "not found" if we got a real 404 — not a network/auth error
+      if (startupResult.success) {
+        setStartup(startupResult.data?.startup || null);
+      } else {
+        // error.response?.status covers axios errors
+        // error?.status covers some transformed errors  
+        // If neither exists, it's a network/interceptor issue — don't show "not found"
+        const errStatus = startupResult.error?.response?.status || startupResult.error?.status;
+        if (errStatus === 404) {
+          console.error('❌ Startup not found (404)');
+          setStartup(null);
+        } else if (errStatus) {
+          console.error('❌ Could not load startup. Status:', errStatus);
+          setStartup(null);
+        } else {
+          // No status = network error or interceptor transformed the error
+          // Try again after a short delay rather than showing "not found"
+          console.error('❌ Could not load startup (no status — likely network/interceptor issue):', startupResult.error);
+          setStartup(null);
+        }
+      }
+
+      if (membersResult.success) setMembers(membersResult.data?.members || []);
+      if (documentsResult.success) setDocuments(documentsResult.data?.documents || []);
+      if (statsResult.success) setStats(statsResult.data?.stats || {});
+      if (goalsResult.success) setProjectGoals(goalsResult.data?.project_goals || []);
+      if (eventsResult.success) setCalendarEvents(eventsResult.data?.events || []);
+      if (tasksResult.success) setProjectTasks(tasksResult.data?.tasks || []);
+      if (bookmarkResult.success) setIsFavorited(bookmarkResult.data?.bookmarked || false);
+    } catch (error) {
+      console.error('❌ Unexpected error in fetchStartupData:', error);
     } finally {
       setLoading(false);
     }
@@ -157,8 +173,8 @@ const fetchUserInvitation = useCallback(async () => {
     const invitation = response?.data?.invitation || null;
     setPendingInvitation(invitation);
   } catch (error) {
-    // 403 or network error — just hide the invitation banner silently
-    console.error("Error fetching invitation:", error);
+    // Silently ignore — 404 means route not yet registered on this backend,
+    // plain object rejections mean interceptor transformed the error
     setPendingInvitation(null);
   }
 }, [user, id, isAdmin]);
@@ -350,6 +366,39 @@ const handleDeclineInvitation = async () => {
       console.error('Error deleting startup:', error);
     }
   };
+
+  // Convert solo startup → Vision
+  const handleDemoteToVision = async () => {
+    setDemoting(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/activation/startups/${id}/demote`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${access_token}`,
+          },
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Startup converted to Vision');
+        setIsDemoteModalOpen(false);
+        if (data.idea?.id) {
+          navigate(`/ideation/details?id=${data.idea.id}`);
+        } else {
+          navigate('/ideation');
+        }
+      } else {
+        toast.error(data.error || 'Conversion failed');
+      }
+    } catch (e) {
+      toast.error('Failed to convert startup to Vision');
+    } finally {
+      setDemoting(false);
+    }
+  };
   const handleCreateTask = async (taskData) => {
     try {
       const response = await tasksAPI.create({
@@ -377,8 +426,13 @@ const handleDeclineInvitation = async () => {
       <div className="min-h-screen flex items-center justify-center">
         <Card className="p-8 bg-gray-800 border-gray-700 text-center">
           <h2 className="text-2xl font-bold text-white mb-2">Startup Not Found</h2>
-          <p className="text-gray-400 mb-4">The startup you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate('/discover-startups')}>Back to Discover</Button>
+          <p className="text-gray-400 mb-4">
+            This startup doesn't exist, or there was a problem loading it.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="outline" onClick={fetchStartupData}>Try Again</Button>
+            <Button onClick={() => navigate('/discover-startups')}>Back to Discover</Button>
+          </div>
         </Card>
       </div>
     );
@@ -452,7 +506,19 @@ const handleDeclineInvitation = async () => {
                       >
                         <Trash2 className="w-4 h-4 mr-1" />
                         Delete
-                      </Button>)}
+                      </Button>)
+                  }
+                  {/* Convert to Vision — only for solo founders */}
+                  {isFounder && members.length <= 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsDemoteModalOpen(true)}
+                      className="text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 border border-violet-500/20"
+                    >
+                      ⟳ Convert to Vision
+                    </Button>
+                  )}
                 </>
               )}
               <Button
@@ -645,6 +711,16 @@ const handleDeclineInvitation = async () => {
             title="Delete Startup"
             message="Are you sure you want to delete this startup? This action cannot be undone."
             type="hard"
+          />
+
+          {/* Convert to Vision confirmation modal */}
+          <DeleteConfirmationModal
+            isOpen={isDemoteModalOpen}
+            onClose={() => setIsDemoteModalOpen(false)}
+            onConfirm={handleDemoteToVision}
+            title="Convert to Vision"
+            message={`"${startup?.name}" will be converted to a Vision so you can attract collaborators before re-activating as a startup. The startup will be archived.`}
+            type="soft"
           />
           <ManageJoinRequestsModal
             isOpen={isJoinModalOpen}

@@ -30,6 +30,7 @@ import { usersAPI } from "@/utils/APIs/userAPI";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import useSocket from "@/utils/hooks/useSocket";
 import DeleteConfirmationModal from "@/utils/confirm";
+import VisionReadinessCard from '@/components/pages/ideation/VisionReadinessCard';
 
 const BASE_URL = API_BASE_URL + "/ideas";
 
@@ -47,6 +48,7 @@ const VisionDetails = () => {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showSuggestModal, setShowSuggestModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [demoting, setDemoting] = useState(false);
   const [joinMessage, setJoinMessage] = useState("");
   const [joinName, setJoinName] = useState("");
   const [joinPosition, setJoinPosition] = useState("");
@@ -978,6 +980,29 @@ const VisionDetails = () => {
 
         {/* Sidebar */}
         <div className="space-y-8">
+
+          {/* Vision Readiness Card — always visible */}
+          <VisionReadinessCard
+            ideaId={ideaId}
+            initialData={idea}
+            isCreator={isCreator}
+            onStateChange={(newState) => {
+              setIdea(prev => ({ ...prev, visionState: newState }));
+            }}
+          />
+
+          {/* Converted Vision notice — shown when this is a demoted startup */}
+          {idea.tags?.includes('Converted Vision') && (
+            <div className="bg-violet-500/10 border border-violet-500/20 rounded-2xl p-5">
+              <p className="text-violet-300 text-sm font-semibold mb-1 flex items-center gap-2">
+                ⟳ Converted Vision
+              </p>
+              <p className="text-violet-200/70 text-xs leading-relaxed">
+                This project was converted to a Vision so you can attract collaborators before activation.
+              </p>
+            </div>
+          )}
+
           {/* Creator Card */}
           <Link to={`/user-profile?userId=${idea.creator?.id}`}>
             <motion.div

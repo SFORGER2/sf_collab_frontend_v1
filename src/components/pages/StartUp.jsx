@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
 import StartUpHeader from "../headers/StartUpHeader";
 import ScrollToTop from "../sections/ScrollToTop";
-
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import { startupsAPI } from "@/utils/APIs/startupsAPI";
 
 import {
   Users,
@@ -28,7 +26,7 @@ const StartUp = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [networkError, setNetworkError] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true); // <-- Loading state added
+  const [loading, setLoading] = useState(true);
 
   const getStageColor = (stage) => {
     const colors = {
@@ -43,38 +41,32 @@ const StartUp = () => {
 
   const fetchStartups = async () => {
     try {
-      setLoading(true); // <-- Start loading
+      setLoading(true);
       setNetworkError(false);
       setError("");
 
-      const res = await axios.get(
-        `${API_URL}/startup`,
-        {
-          params: {
-            page,
-            limit: 12,
-            industry:
-              selectedIndustry !== "All Industries" ? selectedIndustry : undefined,
-            stage: selectedStage !== "All Stages" ? selectedStage : undefined,
-            location:
-              selectedLocation !== "All Locations" ? selectedLocation : undefined,
-            search: searchQuery || undefined,
-          },
-        }
-      );
+      // ✅ Use the shared startupsAPI — has auth interceptors, correct base URL,
+      // and won't trigger logout on 401 the way raw axios does
+      const response = await startupsAPI.getAll({
+        page,
+        per_page: 12,
+        industry: selectedIndustry !== "All Industries" ? selectedIndustry : undefined,
+        stage: selectedStage !== "All Stages" ? selectedStage : undefined,
+        location: selectedLocation !== "All Locations" ? selectedLocation : undefined,
+        search: searchQuery || undefined,
+      });
 
-      const converted = res.data.startups.map((startup) => ({
-        ...startup,
-        logo: startup.logo,
-        banner: startup.banner,
-      }));
+      // ✅ Flask success_response wraps data under response.data
+      const data = response.data ?? response;
+      const items = data.startups ?? [];
+      const pagination = data.pagination ?? {};
 
-      setStartups(converted);
-      setTotalPages(res.data.pagination.totalPages);
+      setStartups(items);
+      setTotalPages(pagination.pages ?? 1);
     } catch (err) {
       console.error("Failed to fetch startups:", err);
       setNetworkError(true);
-      setError(err.message || "Unable to connect to the server.");
+      setError(err?.response?.data?.message || err.message || "Unable to connect to the server.");
     } finally {
       setLoading(false);
     }
@@ -82,6 +74,7 @@ const StartUp = () => {
 
   useEffect(() => {
     fetchStartups();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, searchQuery, selectedIndustry, selectedStage, selectedLocation]);
 
   const handleRetry = () => fetchStartups();
@@ -110,8 +103,7 @@ const StartUp = () => {
               Network Connection Issue
             </h3>
             <p className="text-gray-400 mb-6">
-              {error ||
-                "Unable to connect to the server. Please check your internet connection."}
+              {error || "Unable to connect to the server. Please check your internet connection."}
             </p>
             <div className="flex gap-3 justify-center">
               <button
@@ -141,7 +133,6 @@ const StartUp = () => {
         setSelectedLocation={setSelectedLocation}
       />
 
-      {/* Loading State */}
       {loading ? (
         <div className="flex justify-center py-20 text-gray-400 text-lg">
           Loading startups...
@@ -153,8 +144,7 @@ const StartUp = () => {
               No startups found
             </h3>
             <p className="text-gray-500">
-              Try adjusting your search terms or filters to find what you're
-              looking for.
+              Try adjusting your search terms or filters to find what you're looking for.
             </p>
           </div>
         </div>
@@ -162,9 +152,11 @@ const StartUp = () => {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5 p-4 max-sm:p-0">
             {startups.map((startup) => (
+              // ✅ Use startup.id (not startup._id) and path param (not query param)
+              // ✅ Route matches what StartupDetailPage expects: /startup-details/:id
               <Link
-                key={startup._id}
-                to={`/startup-details?id=${startup._id}`}
+                key={startup.id}
+                to={`/startup-details/${startup.id}`}
                 className="bg-[#232323] rounded-4xl h-full hover:bg-[#2A2A2A] transition-colors"
               >
                 <div className="w-full h-full p-2 max-sm:p-1">
@@ -174,7 +166,11 @@ const StartUp = () => {
                       <div className="flex items-center gap-3">
                         <div className="h-12 w-12 rounded-full overflow-hidden bg-zinc-700">
                           <img
-                            src={startup.logo || "https://via.placeholder.com/150"}
+                            src={startup.logo_url
+                              ? (startup.logo_url.startsWith('http')
+                                  ? startup.logo_url
+                                  : `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}${startup.logo_url}`)
+                              : "https://via.placeholder.com/150"}
                             alt={startup.name}
                             className="h-full w-full object-cover"
                           />
@@ -182,9 +178,7 @@ const StartUp = () => {
                         <h1 className="text-lg max-sm:text-base font-bold">{startup.name}</h1>
                       </div>
                       <button
-                        className={`${getStageColor(
-                          startup.stage
-                        )} text-xs max-sm:text-[10px] px-2 py-1 font-medium rounded-full`}
+                        className={`${getStageColor(startup.stage)} text-xs max-sm:text-[10px] px-2 py-1 font-medium rounded-full`}
                       >
                         {startup.stage}
                       </button>
@@ -224,7 +218,7 @@ const StartUp = () => {
                         </p>
                         <p className="flex items-center gap-2 text-sm">
                           <MapPin size={18} className="text-red-500" />
-                          <span>{startup.location}</span>
+                          <span>{startup.location || "Remote"}</span>
                         </p>
                       </div>
                       <div className="space-y-3">
@@ -239,7 +233,7 @@ const StartUp = () => {
                         </p>
                         <p className="flex items-center gap-2 text-sm text-green-500">
                           <DollarSign size={18} />
-                          <span>{startup.funding || "$0"} Raised</span>
+                          <span>${(startup.funding_amount || 0).toLocaleString()} Raised</span>
                         </p>
                         <p className="flex items-center gap-2 text-sm text-blue-500">
                           <Target size={18} />
@@ -254,7 +248,7 @@ const StartUp = () => {
             ))}
           </div>
 
-          {/* Pagination Buttons */}
+          {/* Pagination */}
           <div className="flex justify-center gap-4 py-6">
             <button
               className="px-4 py-2 bg-gray-700 text-white rounded-md disabled:opacity-50"
@@ -263,6 +257,9 @@ const StartUp = () => {
             >
               Previous
             </button>
+            <span className="px-4 py-2 text-gray-400 text-sm self-center">
+              Page {page} of {totalPages}
+            </span>
             <button
               className="px-4 py-2 bg-gray-700 text-white rounded-md disabled:opacity-50"
               disabled={page >= totalPages}
@@ -274,7 +271,6 @@ const StartUp = () => {
         </>
       )}
 
-      {/* Scroll to Top */}
       <ScrollToTop />
     </div>
   );
