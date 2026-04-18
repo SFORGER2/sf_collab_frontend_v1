@@ -9,6 +9,11 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await authAPI.loginRequest(credentials);
+      localStorage.setItem('access_token', response.access_token);
+      localStorage.setItem('refreshToken', response.refresh_token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      return response;
+=======
       const data = response.data ?? response;
 
       const access_token =
