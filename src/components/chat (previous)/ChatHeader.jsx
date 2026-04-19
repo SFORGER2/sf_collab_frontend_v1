@@ -10,6 +10,8 @@ import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import { ArrowLeft, LogOut, MoreVertical, Users, X as XIcon } from "lucide-react";
 import { chatAPI } from "@/utils/APIs/chatApi";
+import { resolveUserId } from "@/utils/resolveUserId";
+=======
 import { useUserPresence } from "@/context/SocketProvider";
 
 const ChatHeader = ({
@@ -43,7 +45,11 @@ const ChatHeader = ({
 
   const otherParticipant =
     conversation.conversation_type === "direct"
-      ? conversation.participants?.find((p) => String(p.id) !== String(currentUserId))
+      ? conversation.participants?.find((p) => {
+          const participantId = String(resolveUserId(p) ?? "");
+          const meId = String(currentUserId ?? "");
+          return participantId && participantId !== meId;
+        })
       : null;
 
   const { status: presenceStatus, statusText } = useUserPresence(
@@ -195,6 +201,14 @@ const ChatHeader = ({
               const isMe      = String(p.id) === String(currentUserId);
               const pic       = getProfilePicture(p);
               return (
+                <button
+                  key={resolveUserId(p) ?? p.id}
+                  type="button"
+                  onClick={() => {
+                    const targetId = resolveUserId(p);
+                    if (!isMe && targetId) navigate(`/user-profile?userId=${targetId}`);
+                  }}
+=======
                 <button key={p.id} type="button"
                   onClick={() => { if (!isMe) navigate(`/user-profile?userId=${p.id}`); }}
                   className={`w-full flex items-center gap-2.5 px-1 py-1.5 rounded-lg transition-colors text-left ${
