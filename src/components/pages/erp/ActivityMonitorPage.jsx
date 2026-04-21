@@ -20,11 +20,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
-import { requestInterceptor, responseInterceptor } from "../interceptors";
+import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
 
 const api = axios.create({ baseURL: "/api" });
 api.interceptors.request.use(requestInterceptor);
-api.interceptors.response.use(...responseInterceptor);
+api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const STATUS_META = {

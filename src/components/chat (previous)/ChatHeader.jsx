@@ -11,7 +11,6 @@ import { getProfilePicture } from "@/utils/getProfilePicture";
 import { ArrowLeft, LogOut, MoreVertical, Users, X as XIcon } from "lucide-react";
 import { chatAPI } from "@/utils/APIs/chatApi";
 import { resolveUserId } from "@/utils/resolveUserId";
-=======
 import { useUserPresence } from "@/context/SocketProvider";
 
 const ChatHeader = ({
@@ -208,9 +207,6 @@ const ChatHeader = ({
                     const targetId = resolveUserId(p);
                     if (!isMe && targetId) navigate(`/user-profile?userId=${targetId}`);
                   }}
-=======
-                <button key={p.id} type="button"
-                  onClick={() => { if (!isMe) navigate(`/user-profile?userId=${p.id}`); }}
                   className={`w-full flex items-center gap-2.5 px-1 py-1.5 rounded-lg transition-colors text-left ${
                     isMe ? "cursor-default hover:bg-zinc-800/30" : "hover:bg-zinc-800/60 cursor-pointer"
                   }`}>

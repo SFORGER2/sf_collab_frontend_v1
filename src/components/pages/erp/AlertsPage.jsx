@@ -11,12 +11,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { requestInterceptor, responseInterceptor } from "../interceptors";
+import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
 
 const api = axios.create({ baseURL: "/api" });
 api.interceptors.request.use(requestInterceptor);
-api.interceptors.response.use(...responseInterceptor);
+api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const ALERT_TYPES = [
@@ -53,6 +54,7 @@ export function AlertsPage() {
   const { user } = useSelector((s) => s.auth);
   const workspaceId = user?.workspace_id;
   const isAdmin = ["admin", "team_lead"].includes(user?.role);
+  const navigate = useNavigate();
 
   const [alerts, setAlerts]       = useState([]);
   const [digest, setDigest]       = useState(null);
@@ -172,6 +174,7 @@ export function AlertsPage() {
               isAdmin={isAdmin}
               onResolve={() => openResolveModal(a)}
               resolving={resolving === a.id}
+              onViewUser={(userId) => navigate(`/users/${userId}`)}
             />
           ))}
 
@@ -232,7 +235,7 @@ function DigestBar({ digest }) {
   );
 }
 
-function AlertCard({ alert, isAdmin, onResolve, resolving, resolved }) {
+function AlertCard({ alert, isAdmin, onResolve, resolving, resolved, onViewUser }) {
   const m = TYPE_META[alert.type] || TYPE_META.inactive_user;
   const p = PRIORITY_COLOR[alert.priority] || PRIORITY_COLOR.LOW;
 
@@ -279,14 +282,25 @@ function AlertCard({ alert, isAdmin, onResolve, resolving, resolved }) {
           </div>
         </div>
 
+        {/* Admin action buttons */}
         {isAdmin && !resolved && (
-          <button
-            onClick={onResolve}
-            disabled={resolving}
-            style={s.btnResolve}
-          >
-            {resolving ? "…" : "Resolve"}
-          </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+            <button
+              onClick={onResolve}
+              disabled={resolving}
+              style={s.btnResolve}
+            >
+              {resolving ? "…" : "Resolve"}
+            </button>
+            {alert.user_id && (
+              <button
+                onClick={() => onViewUser(alert.user_id)}
+                style={s.btnViewUser}
+              >
+                View user
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>
@@ -394,6 +408,9 @@ const s = {
                  padding: "6px 14px", color: "#9ca3af", fontSize: 13, cursor: "pointer" },
   btnResolve:  { background: "#1e1b4b", border: "1px solid #4338ca", borderRadius: 6,
                  padding: "6px 14px", color: "#a5b4fc", fontSize: 13, cursor: "pointer",
+                 whiteSpace: "nowrap", flexShrink: 0 },
+  btnViewUser: { background: "#1f2937", border: "1px solid #374151", borderRadius: 6,
+                 padding: "6px 14px", color: "#9ca3af", fontSize: 13, cursor: "pointer",
                  whiteSpace: "nowrap", flexShrink: 0 },
   btnPrimary:  { background: "#4f46e5", border: "none", borderRadius: 6,
                  padding: "8px 18px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" },

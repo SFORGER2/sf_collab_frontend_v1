@@ -14,11 +14,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
-import { requestInterceptor, responseInterceptor } from "../interceptors";
+import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
 
 const api = axios.create({ baseURL: "" }); // analytics_bp is at /analytics (no /api prefix per analytics.py)
 api.interceptors.request.use(requestInterceptor);
-api.interceptors.response.use(...responseInterceptor);
+api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const pct = (v) => (v != null ? `${Math.round(v)}%` : "—");
