@@ -118,6 +118,8 @@ import { AlertsPage } from "./components/pages/erp/AlertsPage.jsx";
 import { AnalyticsDashboard } from "./components/pages/erp/AnalyticsDashboard.jsx";
 import { ActivityMonitorPage } from "./components/pages/erp/ActivityMonitorPage.jsx";
 
+import MilestonePage from "./components/pages/milestones/MilestonePage.jsx";
+
 
 
 export default function App() {
@@ -405,6 +407,8 @@ export default function App() {
                   <Route path="erp/alerts" element={<AlertsPage />} />
                   <Route path="erp/analytics" element={<AnalyticsDashboard />} />
                   <Route path="erp/activity" element={<ActivityMonitorPage />} />
+
+                  <Route path="milestones" element={<MilestonePage />} />
 
                   <Route path="setting" element={<Setting />}>
                     <Route index element={<ProfileSetting />} />
