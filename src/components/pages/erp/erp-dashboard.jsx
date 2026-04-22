@@ -146,14 +146,15 @@ export default function ERPDashboard() {
                   </div>
                 </div>
 
-                <motion.button
+                <motion.a
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="px-5 py-2 text-white text-black text-sm font-semibold rounded-2xl flex items-center gap-2 transition-colors bg-gradient-to-r from-gray-400 to-gray-900 hover:cursor-pointer"
+                  href="/erp/updates"
                 >
                   Submit
                   <ArrowRight className="w-4 h-4" />
-                </motion.button>
+                </motion.a>
               </div>
 
               <div className="text-6xl font-semibold tracking-tighter bg-gradient-to-br from-white to-gray-900 bg-clip-text text-transparent mb-1">
@@ -313,14 +314,15 @@ export default function ERPDashboard() {
                 </p>
 
                 <div className="mt-auto">
-                  <motion.button
+                  <motion.a
+                    href="/erp/updates" // ← Add your URL here
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.96 }}
                     className="w-full bg-white text-purple-950 font-semibold py-4 rounded-3xl flex items-center justify-center gap-2 shadow-2xl hover:bg-white/95 transition-colors"
                   >
                     Log Today’s Progress
                     <Zap className="w-5 h-5" />
-                  </motion.button>
+                  </motion.a>
                 </div>
               </div>
             </motion.div>
