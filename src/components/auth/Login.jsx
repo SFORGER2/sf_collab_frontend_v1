@@ -62,12 +62,7 @@ export default function Login() {
   useEffect(() => {
     const handleOAuthMessage = async (event) => {
       const allowedOrigins = [
-<<<<<<< HEAD
-        "",
-        "",
-=======
         "http://localhost:5001",
->>>>>>> efb3aae40803182877be7aaf2b8cae856808229e
         window.location.origin,
         "http://127.0.0.1:5000",
         "https://sfclb.netlify.app",

@@ -112,6 +112,12 @@ import MentorshipDiscovery from "./components/pages/Mentorship/MentorDiscoveryPa
 import MentorDashboard from './components/pages/Mentorship/MentorDashboard';
 import MyMentorshipRequests from './components/pages/Mentorship/MyMentorshipRequests';
 
+// ── ERP Module ────────────────────────────────────────────────────────────────
+import { MyAttendancePage, WorkspaceAttendancePage } from "./components/pages/erp/AttendancePage.jsx";
+import { AlertsPage } from "./components/pages/erp/AlertsPage.jsx";
+import { AnalyticsDashboard } from "./components/pages/erp/AnalyticsDashboard.jsx";
+import { ActivityMonitorPage } from "./components/pages/erp/ActivityMonitorPage.jsx";
+
 
 
 export default function App() {
@@ -393,6 +399,13 @@ export default function App() {
                   <Route path="my-mentorship-requests" element={<MyMentorshipRequests />} />
 
 
+                  {/* ── ERP Module ────────────────────────────────────── */}
+                  <Route path="erp/attendance" element={<MyAttendancePage />} />
+                  <Route path="erp/attendance/workspace" element={<WorkspaceAttendancePage />} />
+                  <Route path="erp/alerts" element={<AlertsPage />} />
+                  <Route path="erp/analytics" element={<AnalyticsDashboard />} />
+                  <Route path="erp/activity" element={<ActivityMonitorPage />} />
+
                   <Route path="setting" element={<Setting />}>
                     <Route index element={<ProfileSetting />} />
                     <Route path="preferences" element={<Preferences />} />
@@ -426,4 +439,3 @@ export default function App() {
     </BrowserRouter>
   );
 };
-
