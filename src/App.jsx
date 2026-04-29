@@ -31,7 +31,7 @@ import StartupDetailPage from "./components/pages/startupDetails/StartupDetailPa
 import Profile from "./components/pages/Profile/user-profile/Profile.jsx";
 import ImageGenerator from "./components/pages/Image_Logo_Generator/ImageGenerator.jsx";
 import StartupLogoGenerator from "./components/pages/Image_Logo_Generator/StartupLogoGenerator.jsx";
-import QwenChat from './components/pages/QwenChat/QwenChat';
+import QwenChat from "./components/pages/QwenChat/QwenChat";
 import Waitlist from "./components/waitlist/Waitlist.jsx";
 import ReferPage from "./components/waitlist/referAndRanking/refer.jsx";
 import TermsAndConditions from "./components/pages/termsAndConditions/legalTerms.jsx";
@@ -78,7 +78,7 @@ import Crowdfunding from "./components/pages/crowdfunding/Crowdfunding.jsx";
 import Checkout from "./components/pages/checkout/Checkout.jsx";
 import ReturnPage from "./components/pages/checkout/CheckoutReturnPage.jsx";
 import Donate from "./components/pages/donate/Donate.jsx";
-import ConnectionsPage from './components/pages/connections/ConnectionsPage';
+import ConnectionsPage from "./components/pages/connections/ConnectionsPage";
 
 // Builder Dashboard Routes - Phase 2
 import SavedStartups from "./components/pages/dashboards/builderDashboard/SavedStartups.jsx";
@@ -88,16 +88,16 @@ import Rewards from "./components/pages/dashboards/builderDashboard/Rewards.jsx"
 import SkillProfile from "./components/pages/dashboards/builderDashboard/SkillProfile.jsx";
 import UserPage from "./components/pages/usersPage/UsersPage.jsx";
 // import MultiRoleProfileForm from "./components/pages/MultiRoleProfileForm.jsx";
-import { NotificationProvider } from './contexts/NotificationContext';
-import ToastNotification from './components/notifications/ToastNotification.jsx';
-import NotificationPage from './components/notifications/NotificationPage.jsx';
+import { NotificationProvider } from "./contexts/NotificationContext";
+import ToastNotification from "./components/notifications/ToastNotification.jsx";
+import NotificationPage from "./components/notifications/NotificationPage.jsx";
 import ToolsDashboard from "./components/pages/dashboards/toolsDashboard/ToolsDashboard.jsx";
 import CalculatorPage from "./components/pages/calculatorPage/CalculatorPage.jsx";
 import NotesPage from "./components/pages/notes/NotesPage.jsx";
 import BoardPage from "./components/pages/board/BoardPage.jsx";
 import WalletDashboard from "./components/pages/wallet/WalletDashboard";
 import StorePage from "./components/pages/store/StorePage";
-import LeaderboardPage from './components/pages/leaderboard/LeaderboardPage';
+import LeaderboardPage from "./components/pages/leaderboard/LeaderboardPage";
 import CaptionGenerator from "./components/pages/captionGenerator/CaptionGenerator.jsx";
 import VideoGenerator from "./components/pages/videoGenerator/VideoGenerator.jsx";
 import FounderManageApplications from "./components/pages/founder/manageApplications/FounderManageApplications.jsx";
@@ -107,7 +107,7 @@ import SavedIdeas from "./components/pages/ideation/SavedIdeas.jsx";
 import AIToolsGuard from "./components/ai/AIToolsGuard.jsx";
 import BuilderStartups from "./components/pages/builderStartups/BuilderStartups.jsx";
 import InviteToStartup from "./components/pages/inviteToStartup/InviteToStartup.jsx";
-import MarketplacePage from './components/pages/marketplace/MarketplacePage';
+import MarketplacePage from "./components/pages/marketplace/MarketplacePage";
 import MentorshipDiscovery from "./components/pages/Mentorship/MentorDiscoveryPage.jsx";
 import MentorDashboard from './components/pages/Mentorship/MentorDashboard';
 import MyMentorshipRequests from './components/pages/Mentorship/MyMentorshipRequests';
@@ -117,6 +117,9 @@ import { MyAttendancePage, WorkspaceAttendancePage } from "./components/pages/er
 import { AlertsPage } from "./components/pages/erp/AlertsPage.jsx";
 import { AnalyticsDashboard } from "./components/pages/erp/AnalyticsDashboard.jsx";
 import { ActivityMonitorPage } from "./components/pages/erp/ActivityMonitorPage.jsx";
+import ERPDashboard from "./components/pages/erp/erp-dashboard";
+import ERPUpdates from "./components/pages/erp/erp-updates";
+import DocumentsPage from "./components/pages/erp/erp-document-page"
 
 
 
@@ -124,13 +127,15 @@ export default function App() {
   const { access_token, user } = useSelector((state) => state.auth);
 
   const [userRoles, setUserRoles] = useState([]);
-  const [activeRole, setActiveRole] = useState(localStorage.getItem('activeRole') || 'member');
+  const [activeRole, setActiveRole] = useState(
+    localStorage.getItem("activeRole") || "member",
+  );
   useEffect(() => {
-    localStorage.setItem('activeRole', activeRole);
+    localStorage.setItem("activeRole", activeRole);
   }, [activeRole]);
   if (import.meta.env.PROD) {
-    console.log = () => { }
-    console.warn = () => { }
+    console.log = () => {};
+    console.warn = () => {};
   }
 
   useEffect(() => {
@@ -138,7 +143,7 @@ export default function App() {
       try {
         // console.log(access_token);
         const response = await usersAPI.getMyRoles();
-        setUserRoles([...response.data.map(role => role.role)]);
+        setUserRoles([...response.data.map((role) => role.role)]);
         // setUserRoles(['admin', 'influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
         // setActiveRole('member');
       } catch (error) {
@@ -146,10 +151,12 @@ export default function App() {
       }
     }
     const location = window.location;
-    if (!['/login', '/signup', '/verify-email'].includes(location.pathname) || location.pathname !== '/' && access_token)
+    if (
+      !["/login", "/signup", "/verify-email"].includes(location.pathname) ||
+      (location.pathname !== "/" && access_token)
+    )
       fetchUserRoles();
   }, [access_token]);
-
 
   function ScrollToTop() {
     const { pathname } = useLocation();
@@ -171,11 +178,13 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter> {/* Added this to provide context for useNavigate */}
-
+    <BrowserRouter>
+      {" "}
+      {/* Added this to provide context for useNavigate */}
       <SocketProvider token={access_token}>
-        <ChatNotificationProvider> {/* Wrap routes so the provider can navigate */}
-
+        <ChatNotificationProvider>
+          {" "}
+          {/* Wrap routes so the provider can navigate */}
           <ChatContactsProvider token={access_token}>
             <NotificationProvider>
               <ScrollToTop />
@@ -194,58 +203,97 @@ export default function App() {
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 {/* Refer and Waitlist */}
 
-                <Route path='membership-benefits' element={<MembershipBenefits />} />
-                <Route path='implementation-plans' element={<ImplementationPlans />} />
-                <Route path='featured-projects' element={<FeaturedProjects />} />
+                <Route
+                  path="membership-benefits"
+                  element={<MembershipBenefits />}
+                />
+                <Route
+                  path="implementation-plans"
+                  element={<ImplementationPlans />}
+                />
+                <Route
+                  path="featured-projects"
+                  element={<FeaturedProjects />}
+                />
                 {/* Terms and conditions and privacy policy */}
-                <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+                <Route
+                  path="/terms-and-conditions"
+                  element={<TermsAndConditions />}
+                />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/data-collection-and-tracking" element={<DataCollection />} />
+                <Route
+                  path="/data-collection-and-tracking"
+                  element={<DataCollection />}
+                />
                 <Route path="/pricing" element={<Pricing />} />
                 {/* Protected Routes */}
                 <Route
                   path="/"
                   element={
                     <ProtectedRoute>
-                      <Layout activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />
+                      <Layout
+                        activeRole={activeRole}
+                        setActiveRole={setActiveRole}
+                        userRoles={userRoles}
+                      />
                     </ProtectedRoute>
                   }
                 >
                   {/* Dashboard */}
                   <Route
                     path="dashboard"
-                    element={
-                      (() => {
-                        const props = { activeRole, setActiveRole, userRoles, setUserRoles };
-                        if (user && activeRole === 'influencer') {
-                          return <InfluencerDashboard {...props} />;
-                        } else if (user && activeRole === 'builder') {
-                          return <BuilderDashboard {...props} />;
-                        } else if (user && activeRole === 'founder') {
-                          return <FounderDashboard {...props} />;
-                        } else if (user && activeRole === 'investor') {
-                          return <InvestorDashboard {...props} />;
-                        } else {
-                          return <Dashboard {...props} />;
-                        }
-                      })()
-                    }
+                    element={(() => {
+                      const props = {
+                        activeRole,
+                        setActiveRole,
+                        userRoles,
+                        setUserRoles,
+                      };
+                      if (user && activeRole === "influencer") {
+                        return <InfluencerDashboard {...props} />;
+                      } else if (user && activeRole === "builder") {
+                        return <BuilderDashboard {...props} />;
+                      } else if (user && activeRole === "founder") {
+                        return <FounderDashboard {...props} />;
+                      } else if (user && activeRole === "investor") {
+                        return <InvestorDashboard {...props} />;
+                      } else {
+                        return <Dashboard {...props} />;
+                      }
+                    })()}
                   />
                   {/* <Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} /> */}
 
                   {/* ===== BUILDER DASHBOARD ROUTES ===== */}
-                  <Route path="builder/my-applications" element={<MyApplications />} />
+                  <Route
+                    path="builder/my-applications"
+                    element={<MyApplications />}
+                  />
                   <Route path="builder/my-work" element={<MyWork />} />
                   <Route path="builder/rewards" element={<Rewards />} />
-                  <Route path="builder/my-startups" element={<BuilderStartups myStartupsOnly={true} />} />
-                  <Route path="builder/profile-skills" element={<SkillProfile />} />
+                  <Route
+                    path="builder/my-startups"
+                    element={<BuilderStartups myStartupsOnly={true} />}
+                  />
+                  <Route
+                    path="builder/profile-skills"
+                    element={<SkillProfile />}
+                  />
                   <Route path="builder/profile" element={<SkillProfile />} />
 
                   {/* ===== FOUNDER ROUTES ===== */}
-                  <Route path="founder/my-applications" element={<FounderManageApplications />} />
-                  <Route path="founder/my-team" element={<FounderManageTeam />} />
-                  <Route path="founder/manage-tasks" element={<FounderManageTasks />} />
-
+                  <Route
+                    path="founder/my-applications"
+                    element={<FounderManageApplications />}
+                  />
+                  <Route
+                    path="founder/my-team"
+                    element={<FounderManageTeam />}
+                  />
+                  <Route
+                    path="founder/manage-tasks"
+                    element={<FounderManageTasks />}
+                  />
 
                   <Route
                     path="ai-dashboard"
@@ -262,24 +310,39 @@ export default function App() {
                   <Route path="admin" element={<AdminPage />} />
                   <Route path="refer" element={<ReferPage />} />
                   <Route path="join-sf" element={<JoinSF />} />
-                  <Route path="apply-influencer" element={<InfluencerApplication />} />
+                  <Route
+                    path="apply-influencer"
+                    element={<InfluencerApplication />}
+                  />
                   <Route path="profile-setup" element={<ProfileSetup />} />
                   <Route path="users/:id" element={<UserPage />} />
                   <Route path="user-profile" element={<Profile />} />
                   {/* Projects */}
 
                   <Route path="projects" element={<Project />} />
-                  <Route path="project-management" element={<ProjectManagement />} />
+                  <Route
+                    path="project-management"
+                    element={<ProjectManagement />}
+                  />
                   <Route path="project-details" element={<ProjectDetails />} />
 
                   {/* Ideation */}
-                  <Route path="ideation" element={<Ideation activeRole={activeRole} />} />
+                  <Route
+                    path="ideation"
+                    element={<Ideation activeRole={activeRole} />}
+                  />
                   <Route path="saved-ideas" element={<SavedIdeas />} />
-                  <Route path="ideation-details" element={<Ideationdetails />} />
+                  <Route
+                    path="ideation-details"
+                    element={<Ideationdetails />}
+                  />
 
                   {/* Knowledge */}
                   <Route path="knowledge" element={<Knowledge />} />
-                  <Route path="knowledge-details" element={<Knowledgedetails />} />
+                  <Route
+                    path="knowledge-details"
+                    element={<Knowledgedetails />}
+                  />
 
                   {/* Help */}
                   <Route path="help" element={<Help />} />
@@ -291,11 +354,16 @@ export default function App() {
                   {/* Posts */}
                   <Route path="posts" element={<Posts />} />
 
-
                   {/* Contribution */}
                   <Route path="contribution" element={<ContributionPage />} />
-                  <Route path="contribution-ideas" element={<ContributionIdeasPage />} />
-                  <Route path="contribution-polls" element={<ContributionPollsPage />} />
+                  <Route
+                    path="contribution-ideas"
+                    element={<ContributionIdeasPage />}
+                  />
+                  <Route
+                    path="contribution-polls"
+                    element={<ContributionPollsPage />}
+                  />
 
                   {/* Crowdfunding */}
                   <Route path="crowdfunding" element={<Crowdfunding />} />
@@ -304,7 +372,10 @@ export default function App() {
                   <Route path="donate" element={<Donate />} />
                   {/* Quick Guides */}
                   <Route path="getting-started" element={<GettingStarted />} />
-                  <Route path="team-collaboration" element={<TeamCollaboration />} />
+                  <Route
+                    path="team-collaboration"
+                    element={<TeamCollaboration />}
+                  />
 
                   {/* Saved Ideas */}
                   {/* <Route path="saved-ideas" element={<SavedList />} /> */}
@@ -312,10 +383,22 @@ export default function App() {
                   {/* Test Page */}
                   <Route path="test" element={<Test />} />
                   {/* Startups */}
-                  <Route path="register-startup" element={<RegisterStartUp />} />
-                  <Route path="discover-startups" element={<DiscoverStartups />} />
-                  <Route path="my-startups" element={<DiscoverStartups myStartupsOnly={true} />} />
-                  <Route path="startup-details/:id" element={<StartupDetailPage />} />
+                  <Route
+                    path="register-startup"
+                    element={<RegisterStartUp />}
+                  />
+                  <Route
+                    path="discover-startups"
+                    element={<DiscoverStartups />}
+                  />
+                  <Route
+                    path="my-startups"
+                    element={<DiscoverStartups myStartupsOnly={true} />}
+                  />
+                  <Route
+                    path="startup-details/:id"
+                    element={<StartupDetailPage />}
+                  />
                   <Route path="saved-startups" element={<SavedStartups />} />
                   <Route path="invitations" element={<InviteToStartup />} />
                   {/* <Route path="multi-role-profile-form" element={<MultiRoleProfileForm />} /> */}
@@ -395,9 +478,16 @@ export default function App() {
 
                   {/* Mentorship */}
                   <Route path="mentors" element={<MentorshipDiscovery />} />
-                  <Route path="mentor-dashboard" element={<MentorDashboard />} />
-                  <Route path="my-mentorship-requests" element={<MyMentorshipRequests />} />
-
+                  <Route
+                    path="mentor-dashboard"
+                    element={<MentorDashboard />}
+                  />
+                  <Route
+                    path="my-mentorship-requests"
+                    element={<MyMentorshipRequests />}
+                  />
+                  {/* ERP ROUTES */}
+                  
 
                   {/* ── ERP Module ────────────────────────────────────── */}
                   <Route path="erp/attendance" element={<MyAttendancePage />} />
@@ -405,6 +495,9 @@ export default function App() {
                   <Route path="erp/alerts" element={<AlertsPage />} />
                   <Route path="erp/analytics" element={<AnalyticsDashboard />} />
                   <Route path="erp/activity" element={<ActivityMonitorPage />} />
+                  <Route path="erp-dashboard" element={<ERPDashboard />} />
+                  <Route path="/erp/updates" element={<ERPUpdates />} />
+                  <Route path="/erp/documents" element={<DocumentsPage/>} />
 
                   <Route path="setting" element={<Setting />}>
                     <Route index element={<ProfileSetting />} />
@@ -414,7 +507,6 @@ export default function App() {
                 </Route>
                 <Route path="*" element={<NotFound />} />
                 {/* Catch all route */}
-
               </Routes>
               <ToastContainer
                 position="bottom-center"
@@ -427,15 +519,13 @@ export default function App() {
                 draggable
                 pauseOnHover
                 theme="dark"
-                style={{ bottom: '20px' }}
+                style={{ bottom: "20px" }}
               />
               <ToastNotification />
             </NotificationProvider>
           </ChatContactsProvider>
         </ChatNotificationProvider>
-
       </SocketProvider>
-
     </BrowserRouter>
   );
-};
+}
