@@ -16,6 +16,7 @@ import { X, Download, FileText, ExternalLink, Check, CheckCheck, MoreVertical, E
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import { chatAPI } from "@/utils/APIs/chatApi";
+import { resolveUserId } from "@/utils/resolveUserId";
 
 // Helper to reduce text length
 const reduceText = (text, maxLength = 20) => {
@@ -550,8 +551,9 @@ export default function MessageBubble({
         {/* Avatar column */}
         <div
           onClick={() => {
-            if (!message?.sender?.id) return;
-            navigate(`/user-profile?id=${message.sender.id}`);
+            const targetId = resolveUserId(message?.sender);
+            if (!targetId) return;
+            navigate(`/user-profile?userId=${targetId}`);
           }}
           className="w-8 shrink-0 cursor-pointer">
           {showAvatar && (

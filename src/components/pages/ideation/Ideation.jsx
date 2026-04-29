@@ -107,6 +107,10 @@ const Ideation = ({ activeRole}) => {
         comments: idea.commentsCount,
         collaborators: idea.teamSize,
         tags: idea.tags || [],
+        // Vision system fields
+        visionState: idea.visionState || idea.vision_state || 'public',
+        readinessScore: idea.readinessScore || idea.readiness_score || 0,
+        isConverted: (idea.tags || []).includes('Converted Vision'),
       }));
 
       setIdeas(mappedIdeas);
@@ -292,6 +296,26 @@ const Ideation = ({ activeRole}) => {
 
           return (
             <div key={content.id} className="group relative">
+              {/* Converted Vision badge */}
+              {content.isConverted && (
+                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5
+                                bg-violet-600/90 text-white text-[10px] font-semibold
+                                px-2 py-1 rounded-full backdrop-blur-sm shadow-lg">
+                  <span>⟳</span> Converted Vision
+                </div>
+              )}
+              {/* Readiness badge — only show when score > 0 */}
+              {content.readinessScore > 0 && (
+                <div className={`absolute top-3 right-3 z-20 text-[10px] font-bold
+                                 px-2 py-1 rounded-full backdrop-blur-sm shadow-lg
+                                 ${content.readinessScore >= 70
+                                   ? 'bg-green-600/90 text-white'
+                                   : content.readinessScore >= 40
+                                     ? 'bg-amber-500/90 text-white'
+                                     : 'bg-red-600/90 text-white'}`}>
+                  {Math.round(content.readinessScore)}% ready
+                </div>
+              )}
               {canAccess ? (
                 <IdeationCard content={content} shouldBlur={shouldBlur} /> 
               ) : (
