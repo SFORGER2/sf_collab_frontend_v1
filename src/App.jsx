@@ -110,17 +110,19 @@ import BuilderStartups from "./components/pages/builderStartups/BuilderStartups.
 import InviteToStartup from "./components/pages/inviteToStartup/InviteToStartup.jsx";
 import MarketplacePage from "./components/pages/marketplace/MarketplacePage";
 import MentorshipDiscovery from "./components/pages/Mentorship/MentorDiscoveryPage.jsx";
-import MentorDashboard from "./components/pages/Mentorship/MentorDashboard";
-import MyMentorshipRequests from "./components/pages/Mentorship/MyMentorshipRequests";
+import MentorDashboard from './components/pages/Mentorship/MentorDashboard';
+import MyMentorshipRequests from './components/pages/Mentorship/MyMentorshipRequests';
 
 // ── ERP Module ────────────────────────────────────────────────────────────────
-import {
-  MyAttendancePage,
-  WorkspaceAttendancePage,
-} from "./components/pages/erp/AttendancePage.jsx";
+import { MyAttendancePage, WorkspaceAttendancePage } from "./components/pages/erp/AttendancePage.jsx";
 import { AlertsPage } from "./components/pages/erp/AlertsPage.jsx";
 import { AnalyticsDashboard } from "./components/pages/erp/AnalyticsDashboard.jsx";
 import { ActivityMonitorPage } from "./components/pages/erp/ActivityMonitorPage.jsx";
+import ERPDashboard from "./components/pages/erp/erp-dashboard";
+import ERPUpdates from "./components/pages/erp/erp-updates";
+import DocumentsPage from "./components/pages/erp/erp-document-page"
+
+
 
 export default function App() {
   const { access_token, user } = useSelector((state) => state.auth);
@@ -194,7 +196,7 @@ export default function App() {
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/startuppage" element={<StartupPage />} />
                 <Route path="/products" element={<ProductsPage />} />
-                <Route path="/sf-drive" element={<FolderExplorerUI />} />
+                
                 <Route path="/explore_section" element={<Explore_Section />} />
 
                 {/* Public Authentication Routes */}
@@ -486,23 +488,20 @@ export default function App() {
                     path="my-mentorship-requests"
                     element={<MyMentorshipRequests />}
                   />
-
+                 
                   {/* ── ERP Module ────────────────────────────────────── */}
                   <Route path="erp/attendance" element={<MyAttendancePage />} />
-                  <Route
-                    path="erp/attendance/workspace"
-                    element={<WorkspaceAttendancePage />}
-                  />
+                  <Route path="erp/attendance/workspace" element={<WorkspaceAttendancePage />} />
                   <Route path="erp/alerts" element={<AlertsPage />} />
-                  <Route
-                    path="erp/analytics"
-                    element={<AnalyticsDashboard />}
-                  />
-                  <Route
-                    path="erp/activity"
-                    element={<ActivityMonitorPage />}
-                  />
+                  <Route path="erp/analytics" element={<AnalyticsDashboard />} />
+                  <Route path="erp/activity" element={<ActivityMonitorPage />} />
+                  <Route path="erp-dashboard" element={<ERPDashboard />} />
+                  <Route path="/erp/updates" element={<ERPUpdates />} />
+                  <Route path="/erp/documents" element={<DocumentsPage/>} />
 
+                  {/* sf drive */}
+                  <Route path="/sf-drive" element={<FolderExplorerUI />} />
+                    
                   <Route path="setting" element={<Setting />}>
                     <Route index element={<ProfileSetting />} />
                     <Route path="preferences" element={<Preferences />} />
