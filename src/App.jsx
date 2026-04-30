@@ -502,8 +502,6 @@ export default function App() {
 
                   {/* SF Drive Route */}
                   <Route path="/drive/file-details" element={<FileDetailPage />} />
-
-                  {/* sf drive */}
                   <Route path="/sf-drive" element={<FolderExplorerUI />} />
                     
                   <Route path="setting" element={<Setting />}>
