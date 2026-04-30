@@ -1,8 +1,31 @@
-import { BarChart2, BookOpen, ChartNoAxesGanttIcon, Eye, LightbulbIcon, Lock, Rocket, Save, TrendingUp } from 'lucide-react';
-import { FcDocument, FcInvite } from 'react-icons/fc';
-import { aiTools, toolsSection, dashboardLink, socialSection, ideation, wallet } from '../sidebarCommons';
+import {
+  BarChart2,
+  BookOpen,
+  ChartNoAxesGanttIcon,
+  Eye,
+  LightbulbIcon,
+  Lock,
+  Rocket,
+  Save,
+  TrendingUp,
+  FolderOpen,
+  HardDrive
+} from "lucide-react";
+import { FcDocument, FcInvite } from "react-icons/fc";
+import {
+  aiTools,
+  toolsSection,
+  dashboardLink,
+  socialSection,
+  ideation,
+  wallet,
+} from "../sidebarCommons";
 
-export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
+export function createInvestorLinks(
+  unreadMessagesCount,
+  userRoles = [],
+  setActiveRole,
+) {
   return [
     dashboardLink(userRoles, setActiveRole),
     {
@@ -11,12 +34,25 @@ export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActi
       href: "/discover-startups",
       label: "Discover Startups",
       subItems: [
-        { id: "discover-startups", href: "/discover-startups", label: "Discover Startups", icon: <Rocket size={18} /> },
-        { id: "saved-startups", href: "/saved-startups", label: "Saved Startups", icon: <Save size={18} /> },
-        { id: "my-invitations", href: "/invitations", label: "My Invitations", icon: <FcInvite size={18} />, }
-
-      ]
-
+        {
+          id: "discover-startups",
+          href: "/discover-startups",
+          label: "Discover Startups",
+          icon: <Rocket size={18} />,
+        },
+        {
+          id: "saved-startups",
+          href: "/saved-startups",
+          label: "Saved Startups",
+          icon: <Save size={18} />,
+        },
+        {
+          id: "my-invitations",
+          href: "/invitations",
+          label: "My Invitations",
+          icon: <FcInvite size={18} />,
+        },
+      ],
     },
     ideation(3),
     {
@@ -25,7 +61,7 @@ export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActi
       href: "/startup-analytics",
       label: "Startup Analytics",
       isUpcoming: true,
-      subItems: []
+      subItems: [],
     },
     {
       id: 5,
@@ -33,11 +69,31 @@ export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActi
       href: "/watchlist",
       label: "Watchlist / Deal Flow",
       isUpcoming: true,
-      subItems: []
+      subItems: [],
     },
     socialSection(7),
     aiTools(8),
     toolsSection(9),
-    wallet(10)
+    wallet(10),
+    {
+      id: 11,
+      icon: <FolderOpen size={22} />,
+      href: "/sfdrive",
+      label: "SF Drive",
+      subItems: [
+        {
+          id: "sfdrive-my-drive",
+          href: "/sfdrive/my-drive",
+          label: "My Drive",
+          icon: <HardDrive size={18} />,
+        },
+        {
+          id: "sfdrive-startup-drive",
+          href: "/sfdrive/startup-drive",
+          label: "Startup Drive",
+          icon: <Rocket size={18} />,
+        },
+      ],
+    },
   ];
 }

@@ -113,7 +113,8 @@ import MentorDashboard from "./components/pages/Mentorship/MentorDashboard";
 import MyMentorshipRequests from "./components/pages/Mentorship/MyMentorshipRequests";
 import ERPDashboard from "./components/pages/erp/erp-dashboard";
 import ERPUpdates from "./components/pages/erp/erp-updates";
-import DocumentsPage from "./components/pages/erp/erp-document-page"
+import DocumentsPage from "./components/pages/erp/erp-document-page";
+import FileDetailPage from "./components/pages/drive/fileDetails";
 
 export default function App() {
   const { access_token, user } = useSelector((state) => state.auth);
@@ -481,7 +482,10 @@ export default function App() {
                   {/* ERP ROUTES */}
                   <Route path="erp-dashboard" element={<ERPDashboard />} />
                   <Route path="/erp/updates" element={<ERPUpdates />} />
-                  <Route path="/erp/documents" element={<DocumentsPage/>} />
+                  <Route path="/erp/documents" element={<DocumentsPage />} />
+
+                  {/* SF Drive Route */}
+                  <Route path="/drive/file-details" element={<FileDetailPage />} />
 
                   <Route path="setting" element={<Setting />}>
                     <Route index element={<ProfileSetting />} />
