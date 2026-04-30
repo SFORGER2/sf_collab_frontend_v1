@@ -18,6 +18,7 @@ import { useSearchParams } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 import { chatAPI } from '@/utils/APIs/chatApi';
+import { resolveUserId } from '@/utils/resolveUserId';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -43,6 +44,8 @@ const toMs = (ts) => {
   const d = new Date(ts);
   return Number.isNaN(d.getTime()) ? null : d.getTime();
 };
+
+const isArchivedFlag = (value) => value === true || value === 1 || value === "1";
 
 const formatLastSeen = (ts, nowTs) => {
   const ms = toMs(ts);
@@ -210,9 +213,10 @@ const ChatPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchParams] = useSearchParams();
+  const currentUserId = useMemo(() => String(resolveUserId(currentUser) ?? ""), [currentUser]);
 
   // ─── Feature 1: Persisted tab (per-user, survives refresh + multi-tab) ──
-  const tabKey = currentUser?.id ? getTabKey(currentUser.id) : null;
+  const tabKey = currentUserId ? getTabKey(currentUserId) : null;
   const [activeTab, setActiveTab] = useState(() => {
     if (!tabKey) return 'all';
     try { const s = localStorage.getItem(tabKey); return VALID_TABS.includes(s) ? s : 'all'; }
@@ -225,13 +229,13 @@ const ChatPage = () => {
     // BroadcastChannel: sync to other browser tabs
     try {
       const bc = new BroadcastChannel('sfcollab:chat_tab');
-      if (currentUser?.id && bc) {
-        bc.postMessage({ userId: currentUser?.id, tab });
+      if (currentUserId && bc) {
+        bc.postMessage({ userId: currentUserId, tab });
         bc.close();
       }
       
     } catch {}
-  }, [tabKey, currentUser?.id]);
+  }, [tabKey, currentUserId]);
 
   // Listen for tab changes from other browser tabs
   useEffect(() => {
@@ -239,11 +243,11 @@ const ChatPage = () => {
     try {
       bc = new BroadcastChannel('sfcollab:chat_tab');
       bc.onmessage = (e) => {
-        if (e.data?.userId === currentUser?.id && VALID_TABS.includes(e.data?.tab)) setActiveTab(e.data.tab);
+        if (e.data?.userId === currentUserId && VALID_TABS.includes(e.data?.tab)) setActiveTab(e.data.tab);
       };
     } catch {}
     return () => { try { bc?.close(); } catch {} };
-  }, [currentUser?.id]);
+  }, [currentUserId]);
 
   // storage event fallback (older browsers)
   useEffect(() => {
@@ -276,16 +280,19 @@ const ChatPage = () => {
     if (!token) return;
     
     try {
-      const response = await chatAPI.getAllChats();
-      const data = response.data;
+      const data = await chatAPI.getAllChats();
       console.log("data:", data);
 
-      const convos = data.conversations || [];
-      console.log(response);
+      const convos = Array.isArray(data?.conversations)
+        ? data.conversations
+        : Array.isArray(data?.data?.conversations)
+          ? data.data.conversations
+          : [];
+      console.log(data);
       // ─── Feature 5: split active vs archived ─────────────────────────────
-      setConversations(convos.filter(c => !c.is_archived));
-      setArchivedConversations(convos.filter(c => c.is_archived));
-      setPinnedConversations(new Set(convos.filter(c => c.is_pinned).map(c => String(c.id))));
+      setConversations(convos.filter((c) => !isArchivedFlag(c?.is_archived)));
+      setArchivedConversations(convos.filter((c) => isArchivedFlag(c?.is_archived)));
+      setPinnedConversations(new Set(convos.filter((c) => !!c?.is_pinned).map((c) => String(c.id))));
 
       // Seed last-seen from backend fields so it still shows after you leave/re-enter chat
       // (works even if you didn't witness the user go offline in this session)
@@ -293,10 +300,12 @@ const ChatPage = () => {
         const next = { ...prev };
         for (const c of convos) {
           if (c?.conversation_type !== "direct") continue;
-          const other = c.participants?.find(
-            (p) => String(p.id) !== String(currentUser?.id)
-          );
-          if (!other?.id) continue;
+          const other = c.participants?.find((p) => {
+            const participantId = String(resolveUserId(p) ?? "");
+            return participantId && participantId !== currentUserId;
+          });
+          const otherId = resolveUserId(other);
+          if (!otherId) continue;
 
           // Only seed from last_seen (real disconnect time), NOT last_login
           const ts =
@@ -305,7 +314,7 @@ const ChatPage = () => {
             null;
 
           const ms = toMs(ts);
-          if (ms) next[String(other.id)] = ms;
+          if (ms) next[String(otherId)] = ms;
         }
         return next;
       });
@@ -315,16 +324,20 @@ const ChatPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [token, currentUser?.id]);
+  }, [token, currentUserId]);
 
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (conversationId) => {
     if (!token) return;
     
     try {
-      const response = await chatAPI.getMessages(conversationId, 100, 0);
-      const data = response.data;
-      setMessages((data.messages || []).map(normalizeMessage));
+      const data = await chatAPI.getMessages(conversationId, 100, 0);
+      const messagesPayload = Array.isArray(data?.messages)
+        ? data.messages
+        : Array.isArray(data?.data?.messages)
+          ? data.data.messages
+          : [];
+      setMessages(messagesPayload.map(normalizeMessage));
       socket?.emit('mark_read', { conversation_id: conversationId });
     } catch (error) {
       console.error('Failed to fetch messages:', error);
@@ -468,7 +481,7 @@ useEffect(() => {
     if (!userId) return;
     if (!friends?.length) return;
 
-    const friend = friends.find((f) => String(f.id) === String(userId));
+    const friend = friends.find((f) => String(resolveUserId(f) ?? "") === String(userId));
     if (!friend) return;
 
     handleOpenChatWithFriend(friend);
@@ -489,7 +502,7 @@ useEffect(() => {
 
       // ── Fix: skip own messages (avoids duplicate when socket echoes back) ──
       const senderId = String(data.message?.sender_id ?? '');
-      const myId = String(currentUser?.id ?? '');
+      const myId = currentUserId;
       const isOwn = senderId && myId && senderId === myId;
 
       if (isActive && !isOwn) {
@@ -549,7 +562,7 @@ useEffect(() => {
           // Guard: activeConversation or participants may be missing for some DMs
           const participants = activeConversation?.participants || [];
           const user =
-            participants.find((p) => String(p.id) === String(data.user_id)) ||
+            participants.find((p) => String(resolveUserId(p) ?? "") === String(data.user_id)) ||
             { id: data.user_id, firstName: "", lastName: "" }; // fallback so UI won't crash
 
           return [...prev, user];
@@ -649,7 +662,7 @@ useEffect(() => {
       socket.off("conversation_added", onConversationAdded);
       socket.off("conversation_removed", onConversationRemoved);
     };
-  }, [socket, activeConversation, fetchConversations]);
+  }, [socket, activeConversation, fetchConversations, currentUserId]);
 
   // ============================================
   // PRESENCE TRACKING (IDLE SUPPORT)
@@ -797,6 +810,8 @@ useEffect(() => {
   // Open chat with a friend (from sidebar)
   const handleOpenChatWithFriend = async (friend) => {
     console.log('handleOpenChatWithFriend called with friend:', friend);
+    const friendId = resolveUserId(friend);
+    if (!friendId) return;
     
     // Check if conversation already exists
     const existing = conversations.find(c => {
@@ -804,8 +819,9 @@ useEffect(() => {
       const isDirectType = c.conversation_type === 'direct';
       console.log('  - Is direct type:', isDirectType);
       const hasParticipant = c.participants?.some(p => {
-        const matches = String(p.id) === String(friend.id);
-        console.log(`    - Participant ${p.id} matches friend ${friend.id}:`, matches);
+        const participantId = resolveUserId(p);
+        const matches = String(participantId ?? "") === String(friendId);
+        console.log(`    - Participant ${participantId} matches friend ${friendId}:`, matches);
         return matches;
       });
       console.log('  - Has friend participant:', hasParticipant);
@@ -821,11 +837,9 @@ useEffect(() => {
       console.log('No existing conversation, creating new one...');
       // Create new conversation
       try {
-        console.log('Creating direct conversation for friend ID:', friend.id);
-        const response = await chatAPI.createDirectConversation(friend.id);
-        console.log('API response:', response);
-        
-        const data = response.data;
+        console.log('Creating direct conversation for friend ID:', friendId);
+        const data = await chatAPI.createDirectConversation(friendId);
+        console.log('API response:', data);
         console.log('Response data:', data);
         
         console.log('Conversation created successfully');
@@ -862,12 +876,11 @@ useEffect(() => {
   // Create a group conversation
   const handleCreateGroup = async (userIds, name) => {
     try {
-      const response = await chatAPI.createGroupConversation(name, userIds);
-      const data = response.data;
-      if (!response.ok || !data?.success) {
+      const data = await chatAPI.createGroupConversation(name, userIds);
+      if (data?.success === false) {
         return {
           success: false,
-          message: data?.error || data?.message || `Failed to create group chat (HTTP ${response.status})`,
+          message: data?.error || data?.message || 'Failed to create group chat.',
         };
       }
 
@@ -909,16 +922,17 @@ useEffect(() => {
   };
 
   // Send a message - FIX #1: Optimistic update so message appears instantly
-  const handleSendMessage = (content) => {
-    if (!content || !activeConversation || !socket) return;
+  const handleSendMessage = async (content) => {
+    if (!content || !activeConversation) return;
 
     // Build an optimistic message shown immediately, before socket echo
+    const optimisticId = `optimistic-${Date.now()}`;
     const optimisticMsg = normalizeMessage({
-      id: `optimistic-${Date.now()}`,
+      id: optimisticId,
       content,
-      sender_id: currentUser?.id,
+      sender_id: currentUserId,
       sender: {
-        id: currentUser?.id,
+        id: currentUserId,
         firstName: currentUser?.first_name || currentUser?.firstName || '',
         lastName: currentUser?.last_name || currentUser?.lastName || '',
         profilePicture: currentUser?.profile_picture || currentUser?.profilePicture || null,
@@ -931,11 +945,43 @@ useEffect(() => {
     // Show it immediately
     setMessages((prev) => [...prev, optimisticMsg]);
 
-    socket.emit('typing_stop', { conversation_id: activeConversation.id });
-    socket.emit('send_message', {
-      conversation_id: activeConversation.id,
-      content,
-    });
+    try {
+      // Persist first through REST so the message survives refresh.
+      const response = await chatAPI.sendMessage(activeConversation.id, content);
+      const serverMessage = response?.data?.message || response?.message || null;
+
+      if (serverMessage) {
+        const normalizedServerMessage = normalizeMessage(serverMessage);
+        setMessages((prev) => {
+          let replaced = false;
+          const next = prev.map((m) => {
+            if (!replaced && String(m.id) === String(optimisticId)) {
+              replaced = true;
+              return normalizedServerMessage;
+            }
+            return m;
+          });
+          return replaced ? next : [...next, normalizedServerMessage];
+        });
+
+        // Trigger server-side real-time fanout to user rooms without re-persisting.
+        if (socket && serverMessage?.id) {
+          socket.emit('send_message', {
+            conversation_id: activeConversation.id,
+            skip_persist: true,
+            persisted_message_id: serverMessage.id,
+          });
+        }
+      }
+
+      if (socket) {
+        socket.emit('typing_stop', { conversation_id: activeConversation.id });
+      }
+    } catch (error) {
+      // Roll back optimistic message when persistence fails.
+      setMessages((prev) => prev.filter((m) => String(m.id) !== String(optimisticId)));
+      console.error('Failed to persist message:', error);
+    }
     
     setMessageInput('');
     // ─── Feature 3: clear draft on send ──────────────────────────────────
@@ -976,7 +1022,7 @@ useEffect(() => {
     return source.filter(c => {
       // Filter by search
       if (searchTerm) {
-        const name = c.name || c.participants?.find(p => String(p.id) !== String(currentUser?.id))?.firstName || '';
+        const name = c.name || c.participants?.find((p) => String(resolveUserId(p) ?? "") !== currentUserId)?.firstName || '';
         if (!name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       }
       
@@ -998,7 +1044,7 @@ useEffect(() => {
         return bLast - aLast;
       }
     );
-  }, [conversations, archivedConversations, searchTerm, activeTab, currentUser?.id, pinnedConversations]);
+  }, [conversations, archivedConversations, searchTerm, activeTab, currentUserId, pinnedConversations]);
 
   
 
@@ -1012,12 +1058,15 @@ useEffect(() => {
   // ============================================
   const otherParticipant =
     activeConversation?.conversation_type === "direct"
-      ? activeConversation?.participants?.find(
-          (p) => String(p.id) !== String(currentUser?.id)
-        )
+      ? activeConversation?.participants?.find((p) => {
+          const participantId = String(resolveUserId(p) ?? "");
+          return participantId && participantId !== currentUserId;
+        })
       : null;
 
-  const otherId = otherParticipant?.id ? String(otherParticipant.id) : null;
+  const otherId = resolveUserId(otherParticipant)
+    ? String(resolveUserId(otherParticipant))
+    : null;
   const buildProfileUrl = (userId) =>
   userId ? `/user-profile?userId=${userId}` : "/user-profile";
   
@@ -1077,7 +1126,7 @@ useEffect(() => {
 
   // Typing overrides status text in header
   const typingNames = (typingUsers || [])
-    .filter((u) => String(u.id) !== String(currentUser?.id))
+    .filter((u) => String(resolveUserId(u) ?? "") !== currentUserId)
     .map((u) => u.firstName || u.first_name || "Someone");
   const typingStatusText = typingNames.length
     ? `${typingNames[0]} is typing...`
@@ -1206,7 +1255,7 @@ useEffect(() => {
                 setSidebarOpen(false);
               }}
               onlineUsers={onlineUsers}
-              currentUserId={currentUser.id}
+              currentUserId={currentUserId}
               lastActiveAt={lastActiveAt}
               lastSeenAt={lastSeenAt}
               nowTs={nowTs}
@@ -1269,7 +1318,7 @@ useEffect(() => {
             <div className="hidden md:block">
               <ChatHeader
                 conversation={activeConversation}
-                currentUserId={currentUser.id}
+                currentUserId={currentUserId}
                 presenceStatus={headerPresenceStatus}
                 statusText={headerStatusText}
                 onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
@@ -1282,7 +1331,7 @@ useEffect(() => {
             <div className="md:hidden border-b border-zinc-800">
               <ChatHeader
                 conversation={activeConversation}
-                currentUserId={currentUser.id}
+                currentUserId={currentUserId}
                 presenceStatus={headerPresenceStatus}
                 statusText={headerStatusText}
                 onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
@@ -1314,7 +1363,7 @@ useEffect(() => {
                 messages.map((message, index) => {
                   const prevMessage = index > 0 ? messages[index - 1] : null;
                   // Use String() comparison to avoid type mismatch
-                  const isOwn = String(message.sender_id) === String(currentUser.id);
+                  const isOwn = String(message.sender_id) === String(currentUserId);
                   
                   return (
                     <React.Fragment key={index}>
@@ -1328,7 +1377,7 @@ useEffect(() => {
                         message={message}
                         isOwn={isOwn}
                         showAvatar={shouldShowAvatar(message, index)}
-                        currentUserId={currentUser?.id}
+                        currentUserId={currentUserId}
                         conversationId={activeConversation?.id}
                         conversationType={activeConversation?.conversation_type}
                         setMessages={setMessages}
@@ -1395,7 +1444,7 @@ useEffect(() => {
           onOpenChat={handleOpenChatWithFriend}
           onNewMessage={() => setShowNewMessage(true)}
           token={token}
-          currentUserId={currentUser?.id}
+          currentUserId={currentUserId}
           isOpen={showContactsSidebar}
           onClose={() => setShowContactsSidebar(false)}
         />
@@ -1412,7 +1461,7 @@ useEffect(() => {
           onOpenChat={handleOpenChatWithFriend}
           onNewMessage={() => setShowNewMessage(true)}
           token={token}
-          currentUserId={currentUser?.id}
+          currentUserId={currentUserId}
           isOpen={showContactsSidebar}
           onClose={() => setShowContactsSidebar(false)}
         />
@@ -1453,7 +1502,7 @@ useEffect(() => {
         onSelectUser={handleOpenChatWithFriend}
         onCreateGroup={handleCreateGroup}
         token={token}
-        currentUserId={currentUser?.id}
+        currentUserId={currentUserId}
       />
     </div>
   );

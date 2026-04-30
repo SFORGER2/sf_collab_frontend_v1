@@ -62,14 +62,10 @@ export default function Login() {
   useEffect(() => {
     const handleOAuthMessage = async (event) => {
       const allowedOrigins = [
-        "",
-        "",
+        "http://localhost:5001",
         window.location.origin,
         "http://127.0.0.1:5000",
-        "null",
         "https://sfclb.netlify.app",
-        "https://sfclb.netlify.app/",
-        "https://sf-collab-backend-flask.onrender.com/",
         "https://sf-collab-backend-flask.onrender.com",
         "https://api.sfcollab.com",
       ];

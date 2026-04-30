@@ -18,9 +18,11 @@ import { API_BASE_URL } from '@/utils/config';
 import { toast } from 'react-toastify';
 
 const getToken = () =>
+  // The app stores the token under 'access_token' (set by authThunks/authSlice)
+  localStorage.getItem('access_token') ||
   localStorage.getItem('accessToken') ||
   localStorage.getItem('token') ||
-  sessionStorage.getItem('accessToken') || '';
+  sessionStorage.getItem('access_token') || '';
 
 const api = axios.create({ baseURL: API_BASE_URL });
 api.interceptors.request.use(cfg => {

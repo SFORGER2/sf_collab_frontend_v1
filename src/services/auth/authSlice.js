@@ -77,10 +77,11 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
-        state.access_token = action.payload.token;
-        state.refreshToken = action.payload.refreshToken;
-        state.isAuthenticated = true;
+state.access_token = action.payload.access_token ?? action.payload.token;
+state.refreshToken = action.payload.refresh_token ?? action.payload.refreshToken;
+state.isAuthenticated = !!(state.access_token || action.payload.user);
         state.hasCheckedProfile = true;
+        state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
