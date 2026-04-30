@@ -103,25 +103,12 @@ export function createInfluencerLinks(
     // wallet(8),
     aiTools(9),
     toolsSection(10),
-    {
+   {
       id: 11,
       icon: <FolderOpen size={22} />,
-      href: "/sfdrive",
+      href: "/sf-drive",
       label: "SF Drive",
-      subItems: [
-        {
-          id: "sfdrive-my-drive",
-          href: "/sfdrive/my-drive",
-          label: "My Drive",
-          icon: <HardDrive size={18} />,
-        },
-        {
-          id: "sfdrive-startup-drive",
-          href: "/sfdrive/startup-drive",
-          label: "Startup Drive",
-          icon: <Rocket size={18} />,
-        },
-      ],
+      subItems: [],
     },
   ];
 }

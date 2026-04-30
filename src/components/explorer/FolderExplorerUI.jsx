@@ -34,7 +34,7 @@ const mockFileSystem = {
     },
     {
       id: "f2",
-      name: "Design Assets",
+      name: "My Drive",
       type: "folder",
       updatedAt: "2026-04-27T10:00:00Z",
       children: [
