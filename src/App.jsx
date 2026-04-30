@@ -120,7 +120,8 @@ import { AnalyticsDashboard } from "./components/pages/erp/AnalyticsDashboard.js
 import { ActivityMonitorPage } from "./components/pages/erp/ActivityMonitorPage.jsx";
 import ERPDashboard from "./components/pages/erp/erp-dashboard";
 import ERPUpdates from "./components/pages/erp/erp-updates";
-import DocumentsPage from "./components/pages/erp/erp-document-page"
+import DocumentsPage from "./components/pages/erp/erp-document-page";
+import FileDetailPage from "./components/pages/drive/fileDetails";
 
 
 
@@ -497,7 +498,10 @@ export default function App() {
                   <Route path="erp/activity" element={<ActivityMonitorPage />} />
                   <Route path="erp-dashboard" element={<ERPDashboard />} />
                   <Route path="/erp/updates" element={<ERPUpdates />} />
-                  <Route path="/erp/documents" element={<DocumentsPage/>} />
+                  <Route path="/erp/documents" element={<DocumentsPage />} />
+
+                  {/* SF Drive Route */}
+                  <Route path="/drive/file-details" element={<FileDetailPage />} />
 
                   {/* sf drive */}
                   <Route path="/sf-drive" element={<FolderExplorerUI />} />

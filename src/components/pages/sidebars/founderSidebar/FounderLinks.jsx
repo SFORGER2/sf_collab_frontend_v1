@@ -14,6 +14,8 @@ import {
   BookOpen,
   MessageSquareHeart,
   Users,
+  FolderOpen,
+  HardDrive,
 } from "lucide-react";
 
 import { Lightbulb } from "lucide-react";
@@ -156,6 +158,26 @@ export function createFounderLinks(
           href: "/erp/settings",
           label: "Settings",
           icon: <Settings size={18} />,
+        },
+      ],
+    },
+    {
+      id: 12,
+      icon: <FolderOpen size={22} />,
+      href: "/sfdrive",
+      label: "SF Drive",
+      subItems: [
+        {
+          id: "sfdrive-my-drive",
+          href: "/sfdrive/my-drive",
+          label: "My Drive",
+          icon: <HardDrive size={18} />,
+        },
+        {
+          id: "sfdrive-startup-drive",
+          href: "/sfdrive/startup-drive",
+          label: "Startup Drive",
+          icon: <Rocket size={18} />,
         },
       ],
     },
