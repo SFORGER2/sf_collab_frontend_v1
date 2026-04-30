@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { FolderExplorerUI } from "./components/explorer/FolderExplorerUI";
 import Layout from "./Layout/Layout.jsx";
 import Project from "./components/pages/Project.jsx";
 import Ideation from "./components/pages/ideation/Ideation.jsx";
@@ -196,6 +197,7 @@ export default function App() {
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/startuppage" element={<StartupPage />} />
                 <Route path="/products" element={<ProductsPage />} />
+                
                 <Route path="/explore_section" element={<Explore_Section />} />
 
                 {/* Public Authentication Routes */}
@@ -487,9 +489,7 @@ export default function App() {
                     path="my-mentorship-requests"
                     element={<MyMentorshipRequests />}
                   />
-                  {/* ERP ROUTES */}
-                  
-
+                 
                   {/* ── ERP Module ────────────────────────────────────── */}
                   <Route path="erp/attendance" element={<MyAttendancePage />} />
                   <Route path="erp/attendance/workspace" element={<WorkspaceAttendancePage />} />
@@ -503,6 +503,9 @@ export default function App() {
                   {/* SF Drive Route */}
                   <Route path="/drive/file-details" element={<FileDetailPage />} />
 
+                  {/* sf drive */}
+                  <Route path="/sf-drive" element={<FolderExplorerUI />} />
+                    
                   <Route path="setting" element={<Setting />}>
                     <Route index element={<ProfileSetting />} />
                     <Route path="preferences" element={<Preferences />} />
