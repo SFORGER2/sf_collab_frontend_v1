@@ -123,6 +123,9 @@ import ERPUpdates from "./components/pages/erp/erp-updates";
 import DocumentsPage from "./components/pages/erp/erp-document-page";
 import FileDetailPage from "./components/pages/drive/fileDetails";
 
+import MeetingsTab from "./components/pages/meet/MeetingsTab.jsx";
+import PostMeetingSummaryPage from "./components/pages/meet/PostMeetingSummaryPage.jsx";
+
 
 
 export default function App() {
@@ -506,7 +509,12 @@ export default function App() {
                   {/* SF Drive Route */}
                   <Route path="/drive/file-details" element={<FileDetailPage />} />
                   <Route path="/sf-drive" element={<FolderExplorerUI />} />
+
+                  {/* SF Meet Route */}
+                  <Route path="meet"             element={<MeetingsTab />} />
+                  <Route path="meet/:id/summary" element={<PostMeetingSummaryPage />} />
                     
+
                   <Route path="setting" element={<Setting />}>
                     <Route index element={<ProfileSetting />} />
                     <Route path="preferences" element={<Preferences />} />
