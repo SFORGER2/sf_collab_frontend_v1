@@ -13,6 +13,8 @@ import SignUp from "./components/auth/SignUp.jsx";
 import RegisterStartUp from "./components/pages/register-startup/RegisterStartUp.jsx";
 import HomedetailsPage from "./components/detailspage (previous)/HomedetailsPage.jsx";
 import Ideationdetails from "./components/pages/ideation/Ideationdetails.jsx";
+import MeetingRoom from "./components/ui/meeting-room.jsx";
+import MeetingDetailPage from "./components/pages/meet/MeetingDetailPage.jsx";
 import Knowledgedetails from "./components/detailspage (previous)/Knowledgedetails.jsx";
 import ProjectDetails from "./components/detailspage (previous)/ProjectDetails.jsx";
 import Posts from "./components/pages/posts/Posts.jsx";
@@ -471,6 +473,8 @@ export default function App() {
                   <Route path="pdf-signing" element={<PDFSigningApp />} />
                   <Route path="calculator" element={<CalculatorPage />} />
                   <Route path="notes" element={<NotesPage />} />
+                  <Route path="meet/:id" element={<MeetingDetailPage />} />
+                  <Route path="meet/room/:id" element={<MeetingRoom />} />
                   {/* <Route path="board" element={<BoardPage />} /> */}
 
                   {/* User */}
