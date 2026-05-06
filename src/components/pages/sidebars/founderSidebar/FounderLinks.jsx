@@ -14,6 +14,8 @@ import {
   BookOpen,
   MessageSquareHeart,
   Users,
+  FolderOpen,
+  HardDrive,
 } from "lucide-react";
 
 import { Lightbulb } from "lucide-react";
@@ -158,6 +160,13 @@ export function createFounderLinks(
           icon: <Settings size={18} />,
         },
       ],
+    },
+    {
+      id: 12,
+      icon: <FolderOpen size={22} />,
+      href: "/sf-drive",
+      label: "SF Drive",
+      subItems: [],
     },
   ];
 }

@@ -10,7 +10,9 @@ import {
   TrendingUp,
   Settings,
   BarChart3,
+  FolderOpen,
   Bell,
+  HardDrive,
 } from "lucide-react";
 import {
   aiTools,
@@ -141,6 +143,13 @@ export function createBuilderLinks(
           icon: <Settings size={18} />,
         },
       ],
+    },
+    {
+      id: 12,
+      icon: <FolderOpen size={22} />,
+      href: "/sf-drive",
+      label: "SF Drive",
+      subItems: [],
     },
   ];
 }

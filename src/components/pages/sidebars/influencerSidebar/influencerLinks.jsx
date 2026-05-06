@@ -1,27 +1,62 @@
-import { BookOpen, BriefcaseBusiness, LightbulbIcon, Rocket, Save, Share2, TrendingUp, Wallet } from "lucide-react";
-import { aiTools, toolsSection, dashboardLink, socialSection, wallet, ideation } from "../sidebarCommons";
+import {
+  BookOpen,
+  BriefcaseBusiness,
+  LightbulbIcon,
+  Rocket,
+  Save,
+  Share2,
+  TrendingUp,
+  Wallet,
+  FolderOpen,
+  HardDrive,
+} from "lucide-react";
+import {
+  aiTools,
+  toolsSection,
+  dashboardLink,
+  socialSection,
+  wallet,
+  ideation,
+} from "../sidebarCommons";
 import { FcInvite } from "react-icons/fc";
 
-export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
+export function createInfluencerLinks(
+  unreadMessagesCount,
+  userRoles = [],
+  setActiveRole,
+) {
   return [
     dashboardLink(userRoles, setActiveRole),
     {
-          id: 2,
-          icon: <Rocket size={22} />,
+      id: 2,
+      icon: <Rocket size={22} />,
+      href: "/discover-startups",
+      label: "Discover Startups",
+      subItems: [
+        {
+          id: "discover-startups",
           href: "/discover-startups",
           label: "Discover Startups",
-          subItems: [
-            { id: "discover-startups", href: "/discover-startups", label: "Discover Startups", icon: <Rocket size={18} /> },
-            { id: "saved-startups", href: "/saved-startups", label: "Saved Startups", icon: <Save size={18} /> },
-            { id: "my-invitations", href: "/invitations", label: "My Invitations", icon: <FcInvite size={18} />, }
-            
-          ]
-    
+          icon: <Rocket size={18} />,
+        },
+        {
+          id: "saved-startups",
+          href: "/saved-startups",
+          label: "Saved Startups",
+          icon: <Save size={18} />,
+        },
+        {
+          id: "my-invitations",
+          href: "/invitations",
+          label: "My Invitations",
+          icon: <FcInvite size={18} />,
+        },
+      ],
     },
     ideation(3),
-    
+
     socialSection(4),
-    
+
     {
       id: 5,
       icon: <BriefcaseBusiness size={22} />,
@@ -29,9 +64,17 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
       label: "Campaigns",
       isUpcoming: true,
       subItems: [
-        { id: "active-campaigns", href: "/campaigns", label: "Active Campaigns" },
-        { id: "past-campaigns", href: "/campaigns/past", label: "Past Campaigns" },
-      ]
+        {
+          id: "active-campaigns",
+          href: "/campaigns",
+          label: "Active Campaigns",
+        },
+        {
+          id: "past-campaigns",
+          href: "/campaigns/past",
+          label: "Past Campaigns",
+        },
+      ],
     },
     {
       id: 6,
@@ -43,7 +86,7 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
       subItems: [
         { id: "performance", href: "/statistics", label: "Performance" },
         { id: "analytics", href: "/statistics/analytics", label: "Analytics" },
-      ]
+      ],
     },
     {
       id: 7,
@@ -55,32 +98,39 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
       subItems: [
         { id: "my-links", href: "/links-assets", label: "My Links" },
         { id: "assets", href: "/links-assets/assets", label: "Assets" },
-      ]
+      ],
     },
     // wallet(8),
     aiTools(9),
-    toolsSection(10)
+    toolsSection(10),
+   {
+      id: 11,
+      icon: <FolderOpen size={22} />,
+      href: "/sf-drive",
+      label: "SF Drive",
+      subItems: [],
+    },
   ];
 }
 
 // Helper to get current context based on pathname
 export function getCurrentContext(pathname) {
-  if (["/dashboard"].some(path => pathname.startsWith(path))) {
+  if (["/dashboard"].some((path) => pathname.startsWith(path))) {
     return 1;
   }
-  if (["/campaigns"].some(path => pathname.startsWith(path))) {
+  if (["/campaigns"].some((path) => pathname.startsWith(path))) {
     return 2;
   }
-  if (["/statistics"].some(path => pathname.startsWith(path))) {
+  if (["/statistics"].some((path) => pathname.startsWith(path))) {
     return 3;
   }
-  if (["/links-assets"].some(path => pathname.startsWith(path))) {
+  if (["/links-assets"].some((path) => pathname.startsWith(path))) {
     return 4;
   }
-  if (["/wallet"].some(path => pathname.startsWith(path))) {
+  if (["/wallet"].some((path) => pathname.startsWith(path))) {
     return 5;
   }
-  if (["/chat"].some(path => pathname.startsWith(path))) {
+  if (["/chat"].some((path) => pathname.startsWith(path))) {
     return 6;
   }
   return 1;
@@ -90,7 +140,7 @@ export function getCurrentContext(pathname) {
 export function getTopNavLinks(pathname, unreadMessagesCount = 0) {
   const contextId = getCurrentContext(pathname);
   const links = createInfluencerLinks(unreadMessagesCount);
-  const activeLink = links.find(link => link.id === contextId);
+  const activeLink = links.find((link) => link.id === contextId);
 
   if (activeLink && activeLink.subItems) {
     return activeLink.subItems;
