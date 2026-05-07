@@ -123,6 +123,8 @@ import ERPUpdates from "./components/pages/erp/erp-updates";
 import DocumentsPage from "./components/pages/erp/erp-document-page";
 import FileDetailPage from "./components/pages/drive/fileDetails";
 
+import MilestonePage from "./components/pages/milestones/MilestonePage.jsx";
+
 
 
 export default function App() {
@@ -500,8 +502,7 @@ export default function App() {
                   <Route path="/erp/updates" element={<ERPUpdates />} />
                   <Route path="/erp/documents" element={<DocumentsPage />} />
 
-                  {/* SF Drive Route */}
-                  <Route path="/drive/file-details" element={<FileDetailPage />} />
+                  <Route path="milestones" element={<MilestonePage />} />
 
                   {/* SF Drive Route */}
                   <Route path="/drive/file-details" element={<FileDetailPage />} />
