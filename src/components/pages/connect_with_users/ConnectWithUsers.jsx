@@ -9,8 +9,7 @@ import { mockUsers } from './usersMock';
 import UserCardSkeleton from './UserCardSkeleton';
 import UserCard from './UserCard';
 import { usersAPI } from '@/utils/APIs/userAPI';
-
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import connectionAPI from '@/utils/APIs/connectionAPI';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -36,14 +35,12 @@ const ConnectWithUsers = () => {
     try {
       setLoading(true);
 
-
       const response = await usersAPI.getAll({ page, per_page: itemsPerPage, search: query }, access_token);
 
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data.users || []);
-        setTotalPages(Math.ceil((data.total || 0) / itemsPerPage));
-        setTotalUsers(data.total || 0);
+      if (response.success) {
+        setUsers(response.data?.users || response.users || []);
+        setTotalPages(Math.ceil((response.data?.total || response.total || 0) / itemsPerPage));
+        setTotalUsers(response.data?.total || response.total || 0);
         setCurrentPage(page);
       }
     } catch (error) {
@@ -82,16 +79,9 @@ const ConnectWithUsers = () => {
   const handleConnect = async (userId, e) => {
     e.stopPropagation();
     try {
-      const response = await fetch(`${API_URL}/users/${userId}/connect`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
+      const response = await connectionAPI.sendRequest(userId);
 
-      if (response.ok) {
+      if (response.success) {
         fetchUsers(currentPage, searchQuery);
       }
     } catch (error) {
@@ -128,7 +118,6 @@ const ConnectWithUsers = () => {
 
             {/* Search Bar */}
             <div className="relative max-w-2xl">
-import { useNavigate } from 'react-router-dom';
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
               <Input
                 placeholder="Search by name, company, title, skills..."

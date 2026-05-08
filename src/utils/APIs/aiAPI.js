@@ -1,13 +1,7 @@
-import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
-import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
+import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+const api = axios.create(API_CONFIG)
 
 api.interceptors.request.use(
   requestInterceptor,
@@ -118,56 +112,69 @@ export const aiAPI = {
     });
     return response.data;
   },
-  // Generate caption (requires JWT)
-  generateCaption: async ({ prompt, model, platform = 'Instagram', tone = 'casual', contentType = 'text', temperature = 0.7, maxTokens = 200, image = null }) => {
-    const payload = {
-      prompt,
-      model,
-      platform,
-      tone,
-      content_type: contentType,
-      temperature,
-      max_tokens: maxTokens,
-    };
 
-    if (image) {
-      payload.image = image;
-    }
+  // ============================================================================
+  // GEMINI API
+  // ============================================================================
 
-    const response = await api.post('/ai/generate/caption', payload);
+  // Gemini health check
+  geminiHealth: async () => {
+    const response = await api.get('/gemini/health');
     return response.data;
   },
-  // Generate video (requires JWT)
-    generateVideo: async ({ mode, prompt, style = 'cinematic', duration = 10, files = null }) => {
-      const formData = new FormData();
-      formData.append('mode', mode);
-      formData.append('prompt', prompt);
-      formData.append('style', style);
-      formData.append('duration', duration);
-      
-      if (files) {
-        if (Array.isArray(files)) {
-          files.forEach((file, index) => {
-            formData.append(`file_${index}`, file);
-          });
-        } else {
-          formData.append('file', files);
-        }
-      }
-      
-      const response = await api.post('/video/generate', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      return response.data;
-    },
 
-    // Download generated video
-    downloadVideo: async (filename) => {
-      const response = await api.get(`/video/download/${filename}`, {
-        responseType: 'blob',
-      });
-      return response.data;
-    },
+  // Get Gemini models
+  geminiGetModels: async () => {
+    const response = await api.get('/gemini/models');
+    return response.data;
+  },
+
+  // Gemini chat
+  geminiChat: async (message, model = 'gemini-pro') => {
+    const response = await api.post('/gemini/chat', {
+      message,
+      model,
+    });
+    return response.data;
+  },
+
+  // Gemini analyze image
+  geminiAnalyzeImage: async (formData) => {
+    const response = await api.post('/gemini/analyze-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // ============================================================================
+  // CLOUDFLARE AI API
+  // ============================================================================
+
+  // CF health check
+  cfHealth: async () => {
+    const response = await api.get('/cf/health');
+    return response.data;
+  },
+
+  // Get CF models
+  cfGetModels: async () => {
+    const response = await api.get('/cf/models');
+    return response.data;
+  },
+
+  // CF generate image
+  cfGenerate: async ({ prompt, model, num_steps = 20, guidance = 7.5, strength = 1, width = 1024, height = 1024 }) => {
+    const response = await api.post('/cf/generate', {
+      prompt,
+      model,
+      num_steps,
+      guidance,
+      strength,
+      width,
+      height,
+    });
+    return response.data;
+  },
 };
 
 export default api;

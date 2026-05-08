@@ -18,8 +18,9 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { X, Check, Search, Users, MessageCircle, Loader2, AlertCircle } from 'lucide-react';
 import { getProfilePicture } from '@/utils/getProfilePicture';
+import { usersAPI } from '@/utils/APIs/userAPI';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
 
 // Status colors
 const STATUS_COLORS = {
@@ -173,22 +174,11 @@ const NewMessageModal = ({
     setError(null);
 
     try {
-      // Your backend uses /api/users?search=QUERY
-      const url = `${API_BASE_URL}/users?search=${encodeURIComponent(q)}&per_page=20`;
-      
-      const res = await fetch(url, {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        signal: controller.signal,
-      });
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-
-      const data = await res.json();
+      // ✅ USING CENTRALIZED API
+      const data = await usersAPI.getAll({
+        search: q,
+        per_page: 20
+      }, token);
       
       if (data.success && data.data?.users) {
         let users = data.data.users;

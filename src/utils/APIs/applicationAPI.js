@@ -1,13 +1,7 @@
-import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
-import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
+import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+const api = axios.create(API_CONFIG)
 api.interceptors.request.use(
   requestInterceptor,
   requestErrorInterceptor

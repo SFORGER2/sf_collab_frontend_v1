@@ -8,8 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from '../../ui/switch';
 import { Slider } from '../../ui/slider';
 import { Progress } from '../../ui/progress';
-
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import { toolsAPI } from '@/utils/APIs/toolsAPI';
 
 const BackgroundRemover = () => {
   const [originalImage, setOriginalImage] = useState(null);
@@ -31,8 +30,7 @@ const BackgroundRemover = () => {
 
   const loadModels = async () => {
     try {
-      const response = await fetch(`${API_URL}/background-remover/models`);
-      const data = await response.json();
+      const data = await toolsAPI.backgroundRemoverGetModels();
       if (data.success) {
         setAvailableModels(data.models);
       }
@@ -92,22 +90,17 @@ const BackgroundRemover = () => {
         });
       }, 200);
 
-      const response = await fetch(`${API_URL}/background-remover/remove`, {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await toolsAPI.backgroundRemoverRemove(formData);
 
       clearInterval(progressInterval);
       setProgress(100);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to remove background');
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to remove background');
       }
 
       // Get the processed image
-      const blobResult = await response.blob();
-      const imageUrl = URL.createObjectURL(blobResult);
+      const imageUrl = response.image || response.data?.image;
       setProcessedImage(imageUrl);
 
     } catch (err) {

@@ -49,6 +49,8 @@ import { fetchUserProfile } from '../../services/auth/authThunks';
 import { ConversationsCardSkeleton, MessagesSkeleton } from './Skeletons';
 import { API_BASE_URL, SOCKET_API_URL } from '@/utils/config';
 import { chatAPI } from '@/utils/APIs/chatApi';
+import { usersAPI } from '@/utils/api/userAPI';
+import { notificationAPI } from '@/utils/api/notificationAPI';
 
 import { toAbsoluteFileUrl } from "@/utils/toAbsoluteFileUrl";
 
@@ -463,32 +465,20 @@ const ChatComponent = () => {
   const fetchUsers = async (page = 1) => {
     try {
       setLoading(true);
-      const token = access_token;
             
-      if (!token) {
+      if (!access_token) {
         console.error('No access token found');
         return;
       }
-        
-            
-      const params = new URLSearchParams({
-        page: page.toString(),
-        per_page: itemsPerPage.toString()
-      });
-        
-      if (searchQuery) params.append('search', searchQuery);
-      if (selectedRole !== '') params.append('role', selectedRole);
-      if (selectedStatus !== '') params.append('status', selectedStatus);
 
-        
-      const response = await fetch(`${API_BASE_URL}/users?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-            
-      const data = await response.json();
+      // ✅ USING CENTRALIZED API
+      const data = await usersAPI.getAll({
+        page: page,
+        per_page: itemsPerPage,
+        search: searchQuery || '',
+        role: selectedRole || '',
+        status: selectedStatus || ''
+      }, access_token);
         
       if (data.success) {
                 
@@ -1038,20 +1028,8 @@ const ChatComponent = () => {
     }
       
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/chat/conversations?user_id=${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-      );
-          
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-          
-      const data = await response.json();
+      // ✅ USING CENTRALIZED API
+      const data = await chatAPI.getAllChats();
           
       // console.log('Conversations response:', data);
           
@@ -1093,20 +1071,8 @@ const ChatComponent = () => {
     }
       
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/chat/conversations/${conversationId}/messages?user_id=${userId}&limit=50`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-      );
-          
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-          
-      const data = await response.json();
+      // ✅ USING CENTRALIZED API
+      const data = await chatAPI.getMessages(conversationId, 50, 0);
           
       if (data.success && data.data?.messages) {
         setMessages(data.data.messages);
@@ -1136,20 +1102,8 @@ const ChatComponent = () => {
       return;
     }
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/chat/conversations/${conversationId}/files`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-      );
-            
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-            
-      const data = await response.json();
+      // ✅ USING CENTRALIZED API
+      const data = await chatAPI.getConversationFiles(conversationId);
             
       if (data.success && data.data?.files) {
         setConversationFiles(data.data.files);
@@ -1292,22 +1246,8 @@ const ChatComponent = () => {
       return;
     }
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/chat/conversations/${selectedConversation?.id}/messages/${deletedMessage?.id}?user_id=${userId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-            
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-            
-      const data = await response.json();
+      // ✅ USING CENTRALIZED API
+      const data = await chatAPI.deleteMessage(selectedConversation?.id, deletedMessage?.id);
             
       if (data.success) {
         setMessages(prev => prev.filter(msg => msg.id !== deletedMessage.id));
@@ -1337,22 +1277,8 @@ const ChatComponent = () => {
       return;
     }
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/chat/conversations/${conversationId}/mark-read?user_id=${userId}`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-            
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-            
-      const data = await response.json();
+      // ✅ USING CENTRALIZED API
+      const data = await chatAPI.markConversationRead(conversationId);
       if (!data.success) {
         throw new Error(data.message || "Failed to mark conversation as read");
       }
@@ -1404,23 +1330,13 @@ const ChatComponent = () => {
     };
       
     try {
-      const response = await fetch(`${API_BASE_URL}/notifications`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newNotification),
-      });
-  
-      if (response.ok) {
-        const result = await response.json();
-        // toast.success('notification created successfully')
+      // ✅ USING CENTRALIZED API
+      await notificationAPI.create(newNotification);
 
           
-      } else {
-        throw new Error('Failed to create notification');
-      }
+      
+      throw new Error('Failed to create notification');
+      
     } catch (error) {
       console.error("Failed to create notification:", error);
       // Fallback to local creation
@@ -1451,23 +1367,8 @@ const ChatComponent = () => {
         formData.append('message_type', 'file');
         formData.append('file', file);
                 
-        const response = await fetch(
-          `${API_BASE_URL}/chat/conversations/${selectedConversation.id}/messages`,
-          {
-            method: 'POST',
-            body: formData,
-            headers: {
-              'Authorization': `Bearer ${token}`
-            },
-            credentials: 'include',
-          }
-        );
-                
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-                
-        const data = await response.json();
+        // ✅ USING CENTRALIZED API
+        const data = await chatAPI.uploadFile(selectedConversation.id, file, messageContent || 'Sent a file');
                 
         if (data.success && data.data?.message) {
           const msg = formatMessageContent(data.data?.message?.content)
@@ -1486,27 +1387,8 @@ const ChatComponent = () => {
         }
       } else {
         // Handle text message
-        const response = await fetch(
-          `${API_BASE_URL}/chat/conversations/${selectedConversation.id}/messages`,
-          {
-            method: 'POST',
-            body: JSON.stringify({
-              sender_id: userId,
-              content: messageContent,
-              message_type: 'text'
-            }),
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-                
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-                
-        const data = await response.json();
+        // ✅ USING CENTRALIZED API
+        const data = await chatAPI.sendMessage(selectedConversation.id, messageContent);
                 
         if (data.success && data.data?.message) {
           const msg = formatT(data.data?.message?.content)
@@ -1565,29 +1447,13 @@ const ChatComponent = () => {
         return;
       }
             
-      const response = await fetch(
-        `${API_BASE_URL}/chat/conversations`,
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            created_by_id: userId,
-            participant_ids: participantIds,
-            name: conversationType === 'group' ? newConversationName : null,
-            conversation_type: conversationType,
-            description: conversationType === 'group' ? newConversationName + ' group chat' : null
-          }),
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-            
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // ✅ USING CENTRALIZED API
+      let data;
+      if (conversationType === 'direct') {
+        data = await chatAPI.createDirectConversation(participantIds[0]);
+      } else {
+        data = await chatAPI.createGroupConversation(newConversationName, participantIds);
       }
-            
-      const data = await response.json();
             
       if (data.success && data.data?.conversation) {
         const newConversation = data.data.conversation;
@@ -1783,20 +1649,8 @@ const ChatComponent = () => {
     if (!editingContent.trim()) return;
 
     try {
-      const data = await fetch(
-        `${API_BASE_URL}/chat/conversations/${selectedConversation.id}/messages/${messageId}`,
-        {
-          method: 'PUT',
-          body: JSON.stringify({
-            content: editingContent,
-            user_id: userId
-          }),
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      // ✅ USING CENTRALIZED API
+      const data = await chatAPI.editMessage(selectedConversation.id, messageId, editingContent);
 
       if (data.success && data.data.message) {
         setMessages(prev =>

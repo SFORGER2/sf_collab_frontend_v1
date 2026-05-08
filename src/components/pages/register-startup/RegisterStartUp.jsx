@@ -507,35 +507,14 @@ export default function RegisterStartUp() {
 }
       let response
       if (id) {
-        response = await fetch(`${API_URL}/startups/${id}`, {
-          method: "PUT",
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            // 'Content-Type': 'application/json',
-          },
-          body: submitData,
-        })
+        response = await startupsAPI.update(id, submitData, token);
       } else {
-
-        response = await fetch(`${API_URL}/startups/register`, {
-          method: "POST",
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            // 'Content-Type': 'application/json',
-          },
-          body: submitData,
-        });
+        response = await startupsAPI.register(submitData);
       }
       console.log("Startup registration response:", response);
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || data.message || "Registration failed");
-      }
-      if (response.status === 401) {
-        toast.error("Session expired. Please log in again.");
-        logoutUser();
-        return;
+      if (!response.success && !response.id) {
+        throw new Error(response.error || response.message || "Registration failed");
       }
 
       if (response.ok) {
