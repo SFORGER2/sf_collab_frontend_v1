@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { createInfluencerLinks } from './InfluencerLinks';
+import { createInfluencerLinks } from "./influencerLinks";
 import SideBar from '../SideBar';
-export default function InfluencerSidebar({ isOpen, setIsOpen, unreadMessagesCount, isAdmin, userRoles = [], setActiveRole = () => {} }) {
+export default function InfluencerSidebar({ isOpen, setIsOpen, unreadMessagesCount, isAdmin, userRoles = [], setActiveRole = () => { } }) {
   const [links, setLinks] = useState(createInfluencerLinks(unreadMessagesCount, userRoles, setActiveRole));
   useEffect(() => {
     setLinks(createInfluencerLinks(unreadMessagesCount, userRoles, setActiveRole));

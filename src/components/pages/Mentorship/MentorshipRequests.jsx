@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useParams } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const mockRequests = [
   {
@@ -92,7 +92,7 @@ const MentorshipRequests = () => {
 
   return (
     <div className="min-h-screen bg-black text-white px-4 py-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="w-full mx-auto space-y-8">
 
         {/* Header */}
         <div>

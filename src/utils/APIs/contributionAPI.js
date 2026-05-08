@@ -25,12 +25,9 @@ export const contributionAPI = {
     return response.data;
   },
 
-  getAllIdeas: async (params, accessToken) => {
+  getAllIdeas: async (params) => {
     const response = await api.get('/contribution-ideas', { 
-      params,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      params
     });
     return response.data;
   },

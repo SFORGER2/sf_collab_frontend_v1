@@ -1,4 +1,4 @@
-import { usersAPI } from "@/utils/APIs/userApi";
+import { usersAPI } from "@/utils/APIs/userAPI";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
@@ -46,7 +46,7 @@ export default function ContactForm({
       formData.append("name", contactForm.name);
       formData.append("email", contactForm.email);
       formData.append("message", contactForm.message);
-      
+
       if (includeFiles && files) {
         Array.from(files).forEach((file) => {
           formData.append("files", file);

@@ -1,17 +1,19 @@
 /**
- * ChatInput.jsx - FIXED VERSION
- * 
- * FIXES:
- * 1. Works with ChatPage props (value, onChange, onSend)
- * 2. REMOVED Plus button
- * 3. Emoji picker works
- * 4. File/Image upload works
+ * ChatInput.jsx - FULL RESTORED VERSION
+ * * FEATURES:
+ * 1. Responsive Image Editor (Mobile & Desktop)
+ * 2. Drawing & Text Annotations (Touch + Mouse)
+ * 3. Auto-expanding Textarea
+ * 4. Emoji Picker & Multi-file Support
+ * 5. Clipboard Image Paste support
  */
 
-import React, { useState, useRef } from 'react';
-import { Send, Smile, Paperclip, Image as ImageIcon, X, Loader2 } from 'lucide-react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { 
+  Send, Smile, Paperclip, Image as ImageIcon, 
+  X, Loader2, Type, Pencil, Trash2, Check 
+} from 'lucide-react';
 
-// Simple emoji list
 const EMOJI_LIST = [
   '😀', '😂', '🥰', '😍', '🤩', '😎', '🙂', '😊',
   '👍', '👎', '👏', '🙌', '🤝', '✌️', '🤞', '💪',
@@ -23,12 +25,14 @@ const EMOJI_LIST = [
   '🙏', '💕', '💞', '💓', '💗', '💖', '💘', '💝',
 ];
 
-// File preview component
+const COLORS = ['#ffffff', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+
+// --- SUB-COMPONENT: FILE PREVIEW ---
 const FilePreview = ({ file, onRemove }) => {
   const isImage = file?.type?.startsWith('image/');
   const [preview, setPreview] = useState(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isImage && file) {
       const reader = new FileReader();
       reader.onload = (e) => setPreview(e.target.result);
@@ -39,22 +43,23 @@ const FilePreview = ({ file, onRemove }) => {
   if (!file) return null;
 
   return (
-    <div className="relative inline-block">
+    <div className="relative inline-block mb-2 mr-2">
       {isImage && preview ? (
-        <img loading="lazy" 
+        <img 
           src={preview} 
-          alt={file.name} 
-          className="h-16 w-16 object-cover rounded-lg border border-zinc-700"
+          alt="preview" 
+          className="h-16 w-16 md:h-20 md:w-20 object-cover rounded-xl border border-zinc-700 shadow-md"
         />
       ) : (
-        <div className="h-16 px-3 flex items-center gap-2 bg-zinc-800 rounded-lg border border-zinc-700">
+        <div className="h-16 px-4 flex items-center gap-2 bg-zinc-800 rounded-xl border border-zinc-700">
           <Paperclip size={16} className="text-zinc-400" />
-          <span className="text-xs text-zinc-300 max-w-25 truncate">{file.name}</span>
+          <span className="text-xs text-zinc-300 max-w-[120px] truncate">{file.name}</span>
         </div>
       )}
       <button
+        type="button"
         onClick={onRemove}
-        className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
+        className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600 shadow-lg"
       >
         <X size={12} />
       </button>
@@ -62,24 +67,20 @@ const FilePreview = ({ file, onRemove }) => {
   );
 };
 
-// Emoji Picker component
+// --- SUB-COMPONENT: EMOJI PICKER ---
 const EmojiPicker = ({ isOpen, onSelect, onClose }) => {
   if (!isOpen) return null;
-
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute bottom-full right-0 mb-2 p-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-72">
-        <div className="grid grid-cols-8 gap-1 max-h-48 overflow-y-auto">
+      <div className="absolute bottom-full right-0 mb-3 p-2 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl z-50 w-64 md:w-72 max-h-80 overflow-y-auto">
+        <div className="grid grid-cols-8 gap-1">
           {EMOJI_LIST.map((emoji, index) => (
             <button
               key={index}
               type="button"
-              onClick={() => {
-                onSelect(emoji);
-                onClose();
-              }}
-              className="p-2 hover:bg-zinc-800 rounded-lg text-xl transition-colors"
+              onClick={() => { onSelect(emoji); onClose(); }}
+              className="p-2 hover:bg-zinc-800 rounded-lg text-xl transition-all active:scale-125"
             >
               {emoji}
             </button>
@@ -90,13 +91,12 @@ const EmojiPicker = ({ isOpen, onSelect, onClose }) => {
   );
 };
 
+// --- MAIN COMPONENT ---
 const ChatInput = ({ 
-  value = '',           // Controlled value from parent
-  onChange,             // Callback when text changes
-  onSend,               // Callback to send message
-  onFileUpload,         // Optional: function to upload file and get URL
-  socket,               // Optional: socket for file events
-  conversationId,       // Optional: for file uploads
+  value = '', 
+  onChange, 
+  onSend, 
+  onFileUpload, 
   disabled = false,
   placeholder = "Type a message..."
 }) => {
@@ -104,210 +104,221 @@ const ChatInput = ({
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   
+  // Image Editor States
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [activeTool, setActiveTool] = useState('pencil'); 
+  const [activeColor, setActiveColor] = useState('#ff0000');
+  const [textInput, setTextInput] = useState('');
+  
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const canvasRef = useRef(null);
+  const contextRef = useRef(null);
 
-  // Handle text input change
-  const handleInputChange = (e) => {
-    if (onChange) {
-      onChange(e.target.value);
+  // Auto-resize Logic
+  const handleTextareaResize = useCallback(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 120) + 'px';
     }
+  }, []);
+
+  // --- CANVAS ENGINE ---
+  useEffect(() => {
+    if (editorOpen && canvasRef.current && selectedFile) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.src = URL.createObjectURL(selectedFile);
+      
+      img.onload = () => {
+        const availableW = window.innerWidth * 0.9;
+        const availableH = window.innerHeight * 0.6; 
+
+        let width = img.width;
+        let height = img.height;
+        const ratio = Math.min(availableW / width, availableH / height);
+        
+        canvas.width = width * ratio;
+        canvas.height = height * ratio;
+        
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = 4;
+        contextRef.current = ctx;
+      };
+    }
+  }, [editorOpen, selectedFile]);
+
+  const getPos = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
   };
 
-  // Handle send
+  const startDrawing = (e) => {
+    if (activeTool !== 'pencil') return;
+    const { x, y } = getPos(e.nativeEvent);
+    contextRef.current.beginPath();
+    contextRef.current.moveTo(x, y);
+    contextRef.current.strokeStyle = activeColor;
+    contextRef.current.isDrawing = true;
+  };
+
+  const draw = (e) => {
+    if (!contextRef.current?.isDrawing || activeTool !== 'pencil') return;
+    if (e.cancelable) e.preventDefault(); 
+    const { x, y } = getPos(e.nativeEvent);
+    contextRef.current.lineTo(x, y);
+    contextRef.current.stroke();
+  };
+
+  const stopDrawing = () => { if (contextRef.current) contextRef.current.isDrawing = false; };
+
+  const handleCanvasClick = (e) => {
+    if (activeTool !== 'text' || !textInput) return;
+    const { x, y } = getPos(e.nativeEvent);
+    contextRef.current.font = "bold 24px Arial";
+    contextRef.current.fillStyle = activeColor;
+    contextRef.current.fillText(textInput, x, y);
+    setTextInput('');
+  };
+
+  const saveEditedImage = () => {
+    canvasRef.current.toBlob((blob) => {
+      const file = new File([blob], "edited_image.png", { type: "image/png" });
+      setSelectedFile(file);
+      setEditorOpen(false);
+    }, 'image/png');
+  };
+
+  // --- ACTIONS ---
   const handleSubmit = async (e) => {
     e?.preventDefault();
-    
     if (isUploading || disabled) return;
     
-    // Handle file upload first
     if (selectedFile) {
-      await handleFileSend();
-      return;
-    }
-    
-    // Handle text message
-    if (value?.trim()) {
+      setIsUploading(true);
+      try {
+        await onFileUpload(selectedFile, value.trim());
+        setSelectedFile(null);
+        if (onChange) onChange('');
+      } catch (err) { alert('Upload failed'); } 
+      finally { setIsUploading(false); }
+    } else if (value.trim()) {
       onSend(value.trim());
-      inputRef.current?.focus();
+      if (onChange) onChange('');
     }
+    if (inputRef.current) inputRef.current.style.height = '40px';
   };
 
-  // Handle file selection
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert('File size must be less than 10MB');
-        return;
-      }
-      setSelectedFile(file);
-    }
+    if (!file) return;
+    setSelectedFile(file);
+    if (file.type.startsWith('image/')) setEditorOpen(true);
     e.target.value = '';
   };
 
-  // Send file
-  const handleFileSend = async () => {
-    if (!selectedFile) return;
-
-    // If we have an onFileUpload function, use it
-    if (onFileUpload) {
-      setIsUploading(true);
-      
-      try {
-        const fileUrl = await onFileUpload(selectedFile);
-        
-        if (fileUrl && socket && conversationId) {
-          socket.emit('send_file', {
-            conversation_id: conversationId,
-            file_url: fileUrl,
-            file_name: selectedFile.name,
-            file_type: selectedFile.type.startsWith('image/') ? 'image' : 'file'
-          });
-        }
-        
-        setSelectedFile(null);
-      } catch (error) {
-        console.error('Failed to upload file:', error);
-        alert('Failed to upload file. Please try again.');
-      } finally {
-        setIsUploading(false);
+  const handlePaste = (e) => {
+    const items = e.clipboardData?.items;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        setSelectedFile(file);
+        setEditorOpen(true);
+        e.preventDefault();
       }
-    } else {
-      // No upload function - just send file name as message (fallback)
-      onSend(`[File: ${selectedFile.name}]`);
-      setSelectedFile(null);
-    }
-  };
-
-  // Handle emoji selection
-  const handleEmojiSelect = (emoji) => {
-    if (onChange) {
-      onChange((value || '') + emoji);
-    }
-    inputRef.current?.focus();
-  };
-
-  // Handle like/thumbs up
-  const handleLike = () => {
-    onSend('👍');
-  };
-
-  // Handle Enter key
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
     }
   };
 
   return (
-    <div className="border-t border-zinc-800 bg-zinc-900/50">
-      {/* File Preview */}
-      {selectedFile && (
-        <div className="px-3 md:px-4 pt-2 md:pt-3">
-          <FilePreview 
-            file={selectedFile} 
-            onRemove={() => setSelectedFile(null)} 
-          />
+    <div className="border-t border-zinc-800 bg-zinc-900/50 relative w-full">
+      
+      {/* --- IMAGE EDITOR MODAL --- */}
+      {editorOpen && (
+        <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-between p-4 touch-none overflow-hidden">
+          <div className="w-full max-w-2xl flex flex-wrap justify-center gap-2 bg-zinc-900 p-3 rounded-2xl border border-zinc-700 shadow-2xl">
+            <button type="button" onClick={() => setActiveTool('pencil')} className={`p-2 rounded-xl transition-colors ${activeTool === 'pencil' ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400'}`}><Pencil size={20}/></button>
+            <button type="button" onClick={() => setActiveTool('text')} className={`p-2 rounded-xl transition-colors ${activeTool === 'text' ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400'}`}><Type size={20}/></button>
+            <div className="flex gap-1.5 px-2 items-center overflow-x-auto">
+              {COLORS.map(c => (
+                <button key={c} type="button" onClick={() => setActiveColor(c)} className={`w-7 h-7 shrink-0 rounded-full border-2 transition-transform ${activeColor === c ? 'border-white scale-110' : 'border-transparent'}`} style={{backgroundColor: c}} />
+              ))}
+            </div>
+            <button type="button" onClick={() => setEditorOpen(false)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl"><Trash2 size={20}/></button>
+          </div>
+
+          {activeTool === 'text' && (
+            <div className="w-full max-w-md px-4 mt-2">
+              <input 
+                autoFocus 
+                className="w-full px-4 py-3 bg-zinc-800 border border-indigo-500 rounded-xl text-white outline-none shadow-lg" 
+                placeholder="Type then tap image..." 
+                value={textInput} 
+                onChange={(e) => setTextInput(e.target.value)} 
+              />
+            </div>
+          )}
+
+          <div className="flex-1 flex items-center justify-center w-full overflow-hidden my-4">
+            <canvas 
+              ref={canvasRef} 
+              onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing}
+              onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing}
+              onClick={handleCanvasClick}
+              className="max-w-full max-h-full cursor-crosshair shadow-2xl bg-zinc-800 rounded-lg touch-none"
+            />
+          </div>
+
+          <button type="button" onClick={saveEditedImage} className="w-full max-w-xs py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all mb-4">
+            <Check size={22} /> Done Editing
+          </button>
         </div>
       )}
 
-      {/* Input Area */}
-      <div className="p-2 md:p-3">
-        <form onSubmit={handleSubmit} className="flex items-center gap-1.5 md:gap-2">
-          {/* Image button */}
-          <button 
-            type="button"
-            onClick={() => imageInputRef.current?.click()}
-            className="p-1.5 md:p-2 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors shrink-0"
-            disabled={disabled || isUploading}
-            title="Send image"
-          >
-            <ImageIcon size={18} className="md:w-5 md:h-5" />
-          </button>
-          <input
-            ref={imageInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          
-          {/* File button */}
-          <button 
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="p-1.5 md:p-2 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors shrink-0"
-            disabled={disabled || isUploading}
-            title="Attach file"
-          >
-            <Paperclip size={18} className="md:w-5 md:h-5" />
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.doc,.docx,.txt,.xlsx,.xls,.ppt,.pptx,.zip,.rar,.png,.jpg,.jpeg,.gif"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
+      {/* --- MAIN INPUT BAR --- */}
+      <div className="max-w-7xl mx-auto px-2 py-2">
+        {selectedFile && <FilePreview file={selectedFile} onRemove={() => setSelectedFile(null)} />}
+        
+        <form onSubmit={handleSubmit} className="flex items-end gap-1 md:gap-2">
+          <div className="flex items-center gap-0.5 md:gap-1 pb-1">
+            <button type="button" onClick={() => imageInputRef.current?.click()} className="p-2 hover:bg-zinc-800 rounded-full text-indigo-400 transition-colors" disabled={disabled}><ImageIcon size={18} className="md:w-5 md:h-5" /></button>
+            <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-zinc-800 rounded-full text-indigo-400 transition-colors" disabled={disabled}><Paperclip size={18} className="md:w-5 md:h-5" /></button>
+            <input ref={imageInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+            <input ref={fileInputRef} type="file" onChange={handleFileSelect} className="hidden" />
+          </div>
 
-          {/* Text input */}
-          <div className="flex-1 relative min-w-0">
-            <input
+          <div className="flex-1 relative bg-zinc-800 rounded-2xl border border-zinc-700 focus-within:border-indigo-500/50 transition-all">
+            <textarea
               ref={inputRef}
-              type="text"
-              value={value || ''}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              onInput={handleTextareaResize}
+              onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
+              onPaste={handlePaste}
               placeholder={placeholder}
-              disabled={disabled || isUploading}
-              className="w-full px-3 md:px-4 py-2 md:py-2.5 pr-12 md:pr-14 bg-zinc-800 rounded-full text-xs md:text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-all"
+              rows={1}
+              className="w-full pl-3 pr-10 py-2.5 bg-transparent text-white text-sm outline-none resize-none max-h-[120px] scrollbar-hide"
             />
-            
-            {/* Emoji button */}
-            <div className="absolute right-1.5 md:right-2 top-1/2 -translate-y-1/2 shrink-0">
-              <button 
-                type="button"
-                onClick={() => setShowEmoji(!showEmoji)}
-                className="p-1 text-indigo-400 hover:text-indigo-300 rounded-full hover:bg-zinc-700/50 transition-colors"
-                disabled={disabled}
-              >
-                <Smile size={18} className="md:w-5 md:h-5" />
-              </button>
-              
-              <EmojiPicker 
-                isOpen={showEmoji}
-                onSelect={handleEmojiSelect}
-                onClose={() => setShowEmoji(false)}
-              />
+            <div className="absolute right-2 bottom-2">
+              <button type="button" onClick={() => setShowEmoji(!showEmoji)} className="p-1 text-zinc-500 hover:text-indigo-400 transition-colors"><Smile size={20} /></button>
+              <EmojiPicker isOpen={showEmoji} onSelect={(e) => onChange(value + e)} onClose={() => setShowEmoji(false)} />
             </div>
           </div>
 
-          {/* Send or Like button */}
-          {isUploading ? (
-            <div className="p-1.5 md:p-2 text-indigo-400 shrink-0">
-              <Loader2 size={18} className="md:w-5 md:h-5 animate-spin" />
-            </div>
-          ) : (value?.trim() || selectedFile) ? (
-            <button 
-              type="submit" 
-              className="p-1.5 md:p-2 text-indigo-400 hover:text-indigo-300 transition-colors disabled:opacity-50 shrink-0 hover:bg-zinc-700/50 rounded-full"
-              disabled={disabled}
-            >
-              <Send size={18} className="md:w-5 md:h-5" />
-            </button>
-          ) : (
-            <button 
-              type="button" 
-              onClick={handleLike}
-              className="p-1.5 md:p-2 text-lg md:text-xl hover:bg-zinc-700/50 rounded-full transition-colors shrink-0 disabled:opacity-50"
-              disabled={disabled}
-            >
-              👍
-            </button>
-          )}
+          <div className="pb-1">
+            {isUploading ? (
+              <div className="p-2.5 bg-indigo-600/20 rounded-full"><Loader2 size={20} className="text-indigo-400 animate-spin" /></div>
+            ) : (value.trim() || selectedFile) ? (
+              <button type="submit" className="p-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full transition-all active:scale-90 shadow-lg" disabled={disabled}><Send size={20} /></button>
+            ) : (
+              <button type="button" onClick={() => onSend('👍')} className="p-2.5 hover:bg-zinc-800 rounded-full text-xl transition-all active:scale-125" disabled={disabled}>👍</button>
+            )}
+          </div>
         </form>
       </div>
     </div>

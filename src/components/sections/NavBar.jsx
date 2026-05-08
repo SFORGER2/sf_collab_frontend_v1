@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { HelpCircle, Crown, Hammer, Megaphone, Shield } from "lucide-react";
+import { HelpCircle, Crown, Hammer, Megaphone, Shield, Wallet } from "lucide-react";
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 import GlareHover from "../ui/GlareHover";
@@ -48,7 +48,6 @@ const LogoutIcon = () => (
   </svg>
 );
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -60,7 +59,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
   const profileRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, access_token } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
 
   const handleLogout = async () => {
     setLoaderState(true);
@@ -207,10 +206,12 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
       <div className="flex items-center h-full gap-3 z-50">
         {user ? (
           <>
-            <Link to="/chat" className="p-2.5 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/10 text-slate-300 hover:text-white hover:from-blue-500/30 hover:to-cyan-500/20 border border-blue-500/20 transition-all duration-200">
+            <Link to="/chat" className="chat p-2.5 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/10 text-slate-300 hover:text-white hover:from-blue-500/30 hover:to-cyan-500/20 border border-blue-500/20 transition-all duration-200">
               <IoChatbubbles size={23} />
             </Link>
-            <div className="relative" ref={notificationRef}>
+            <div
+              id="notification-dropdown"
+              className="relative" ref={notificationRef}>
               {/* 🔔 NOTIFICATIONS */}
               <Tippy
                 content={
@@ -334,9 +335,13 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                         <Link to="/user-profile" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 rounded-lg transition-colors duration-200">
                           <UserIcon /> <span className="text-sm font-medium">Profile</span>
                         </Link>
+                        <Link to="/wallet" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 rounded-lg transition-colors duration-200">
+                          <Wallet size={18} /> <span className="text-sm font-medium">Wallet</span>
+                        </Link>
                         <Link to="/help" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 rounded-lg transition-colors duration-200">
                           <HelpCircle size={18} /> <span className="text-sm font-medium">Help</span>
                         </Link>
+                        
                         <Link to="/user-profile?page=settings" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 rounded-lg transition-colors duration-200">
                           <SettingsIcon /> <span className="text-sm font-medium">Settings</span>
                         </Link>

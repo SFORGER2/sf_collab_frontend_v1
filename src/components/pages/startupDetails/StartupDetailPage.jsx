@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -29,9 +30,9 @@ import { calendarEventsAPI, projectGoalsAPI, startupsAPI, tasksAPI } from '@/uti
 import { toast } from 'react-toastify';
 import SendJoinRequestModal from './modals/SendJoinRequestModal';
 import ManageJoinRequestsModal from './modals/ManageJoinRequestsModal';
+import AcceptInvitationModal from './modals/AcceptInvitationModal';
 import ProjectGoalsSection from './sections/ProjectGoalsSection';
 import CalendarSection from './sections/CalendarSection';
-import DeleteStartupModal from './modals/DeleteStartup';
 import AddMemberModal from './modals/AddMember';
 import DocumentsSection from './sections/DocumentsSection';
 import TeamSection from './sections/TeamSection';
@@ -43,6 +44,7 @@ import ProjectTasksSection from './sections/ProjectTasksSection';
 import AddTaskModal from './modals/AddTasksModal';
 import StartupAnnouncementsSection from './sections/StartupAnnouncementsSection';
 import { plotCount } from '@/utils/plotCount';
+import DeleteConfirmationModal from '@/utils/confirm';
 
 /**
  * ManageJoinRequestsModal - For FOUNDERS/CREATORS to manage join requests
@@ -66,6 +68,8 @@ const StartupDetailPage = () => {
   const [isSendJoinRequestModalOpen, setIsSendJoinRequestModalOpen] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isDeleteStartupModalOpen, setIsDeleteStartupModalOpen] = useState(false);
+  const [isDemoteModalOpen, setIsDemoteModalOpen] = useState(false);
+  const [demoting, setDemoting] = useState(false);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   
@@ -91,13 +95,8 @@ const StartupDetailPage = () => {
     github: ''
   });
 
-  const [memberForm, setMemberForm] = useState({
-    user_id: '',
-    first_name: '',
-    last_name: '',
-    role: ''
-  });
-
+  
+const [pendingInvitation, setPendingInvitation] = useState(null);
   const [joinRequests, setJoinRequests] = useState([]);
   const joinRequestCountRef = useRef(0);
 
@@ -105,55 +104,81 @@ const StartupDetailPage = () => {
   const fetchStartupData = async () => {
     try {
       setLoading(true);
-      const token = access_token;
-      if (!token) {
-        console.error('No access token found');
-        return;
-      }
+
   
       const args = {
         startup_id: id,
         per_page: 100,
         page: 1,
+        user_id: user?.id,
         include_milestones: true
       }
       const [startupResult, membersResult, documentsResult, statsResult, goalsResult, eventsResult, bookmarkResult, tasksResult] = await Promise.all([
-        startupsAPI.getById(id, token).catch(err => ({ success: false, error: err })),
-        startupsAPI.getMembers(id, token, args).catch(err => ({ success: false, error: err })),
-        startupsAPI.getDocuments(id, token).catch(err => ({ success: false, error: err })),
-        startupsAPI.getStats(id, token).catch(err => ({ success: false, error: err })),
-        projectGoalsAPI.getAll(args, token).catch(err => ({ success: false, error: err })),
-        calendarEventsAPI.getAll(args, token).catch(err => ({ success: false, error: err })),
+        startupsAPI.getById(id, user?.id).catch(err => { console.error('❌ getById failed:', err?.response?.status, err?.message); return { success: false, error: err }; }),
+        startupsAPI.getMembers(id).catch(err => { console.error('❌ getMembers failed:', err?.message); return { success: false, error: err }; }),
+        startupsAPI.getDocuments(id).catch(err => { console.error('❌ getDocuments failed:', err?.message); return { success: false, error: err }; }),
+        startupsAPI.getStats(id).catch(err => { console.error('❌ getStats failed:', err?.message); return { success: false, error: err }; }),
+        projectGoalsAPI.getAll(args).catch(err => { console.error('❌ getGoals failed:', err?.message); return { success: false, error: err }; }),
+        calendarEventsAPI.getAll(args).catch(err => { console.error('❌ getEvents failed:', err?.message); return { success: false, error: err }; }),
         startupsAPI.getBookmarkStatus({ startupId: id, userId: user?.id }).catch(err => ({ success: false, error: err })),
-        tasksAPI.getAll(args, token).catch(err => ({ success: false, error: err })),
+        tasksAPI.getAll(args).catch(err => { console.error('❌ getTasks failed:', err?.message); return { success: false, error: err }; }),
       ]);
-      const startupData = startupResult.success ? startupResult : { success: false, data: null };
-      const membersData = membersResult.success ? membersResult : { success: false, data: { members: [] } };
-      const documentsData = documentsResult.success ? documentsResult : { success: false, data: { documents: [] } };
-      const statsData = statsResult.success ? statsResult : { success: false, data: { stats: null } };
-      const goalsData = goalsResult.success ? goalsResult : { success: false, data: { project_goals: [] } };
-      const eventsData = eventsResult.success ? eventsResult : { success: false, data: { events: [] } };
-      const bookmarkData = bookmarkResult.success ? bookmarkResult : { success: false, data: { bookmarked: false } };
-      const tasksData = tasksResult.success ? tasksResult : { success: false, data: { tasks: [] } };
 
-      if (startupData.success) setStartup(startupData.data.startup);
-      if (membersData.success) setMembers(membersData.data.members);
-      if (documentsData.success) setDocuments(documentsData.data.documents);
-      if (statsData.success) setStats(statsData.data.stats || {});
-      if (goalsData.success) setProjectGoals(goalsData.data.project_goals || []);
-      if (eventsData.success) setCalendarEvents(eventsData.data.events || []);
-      if (tasksData.success) setProjectTasks(tasksData.data.tasks || []);
-      if (bookmarkData.success) setIsFavorited(bookmarkData.data.bookmarked || false);
+      console.log('📦 Raw API results:', { startupResult, membersResult, statsResult });
+
+      // startupResult is the full axios response shape: { success, data: { startup }, message }
+      // Only show "not found" if we got a real 404 — not a network/auth error
+      if (startupResult.success) {
+        setStartup(startupResult.data?.startup || null);
+      } else {
+        // error.response?.status covers axios errors
+        // error?.status covers some transformed errors  
+        // If neither exists, it's a network/interceptor issue — don't show "not found"
+        const errStatus = startupResult.error?.response?.status || startupResult.error?.status;
+        if (errStatus === 404) {
+          console.error('❌ Startup not found (404)');
+          setStartup(null);
+        } else if (errStatus) {
+          console.error('❌ Could not load startup. Status:', errStatus);
+          setStartup(null);
+        } else {
+          // No status = network error or interceptor transformed the error
+          // Try again after a short delay rather than showing "not found"
+          console.error('❌ Could not load startup (no status — likely network/interceptor issue):', startupResult.error);
+          setStartup(null);
+        }
+      }
+
+      if (membersResult.success) setMembers(membersResult.data?.members || []);
+      if (documentsResult.success) setDocuments(documentsResult.data?.documents || []);
+      if (statsResult.success) setStats(statsResult.data?.stats || {});
+      if (goalsResult.success) setProjectGoals(goalsResult.data?.project_goals || []);
+      if (eventsResult.success) setCalendarEvents(eventsResult.data?.events || []);
+      if (tasksResult.success) setProjectTasks(tasksResult.data?.tasks || []);
+      if (bookmarkResult.success) setIsFavorited(bookmarkResult.data?.bookmarked || false);
     } catch (error) {
-      console.error('Error fetching startup data:', error);
-      // toast.error('Error loading startup data');
-
+      console.error('❌ Unexpected error in fetchStartupData:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchJoinRequests = useCallback(async () => {
+const fetchUserInvitation = useCallback(async () => {
+  // Skip if user is already an admin/member — they don't need to see an invitation banner
+  if (!user || !id || isAdmin) return;
+
+  try {
+    // Use the dedicated /mine endpoint which doesn't require manager role
+    const response = await startupsAPI.getMyInvitation(id);
+    const invitation = response?.data?.invitation || null;
+    setPendingInvitation(invitation);
+  } catch (error) {
+    // Silently ignore — 404 means route not yet registered on this backend,
+    // plain object rejections mean interceptor transformed the error
+    setPendingInvitation(null);
+  }
+}, [user, id, isAdmin]);
+const fetchJoinRequests = useCallback(async () => {
 
     
     if (!isAdmin || !access_token || !id) {
@@ -183,25 +208,19 @@ const StartupDetailPage = () => {
     }
   }, [isAdmin, access_token, id]);
 
-
   useEffect(() => {
     if (id) {
       fetchStartupData();
 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id]); 
+
+  useEffect(() => {
+  fetchUserInvitation();
+}, [fetchUserInvitation]);
 
 
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
 
   const getStageBadgeVariant = (stage) => {
     const variants = {
@@ -214,57 +233,6 @@ const StartupDetailPage = () => {
     return variants[stage] || 'bg-gray-500/20 text-gray-400 border-gray-400/30';
   };
 
-
-  
-
-
-  // Member handlers
-  const handleAddMember = async (e) => {
-    e.preventDefault();
-    try {
-      if (!memberForm.role) {
-        toast.error('Please select a role for the member');
-        return
-      }
-      if (!memberForm.user_id) {
-        toast.error('Please select a user to add as a member');
-        return
-      }
-      const response = await startupsAPI.addMember(id, memberForm, access_token);
-
-
-      
-      if (response.success) {
-        toast.success('Member added successfully');
-        setIsAddMemberModalOpen(false);
-        setMemberForm({ user_id: '', first_name: '', last_name: '', role: 'member' });
-        fetchStartupData();
-      } else {
-        throw new Error('Failed to add member');
-      }
-    } catch (error) {
-
-      toast.error(error?.error || 'Error adding member');
-    }
-  };
-
-  const handleRemoveMember = async (e, memberId) => {
-    e.stopPropagation();
-    e.preventDefault()
-    try {
-      const response = await startupsAPI.removeMember(id, memberId, access_token);
-      
-      if (response.success) {
-        toast.success('Member removed successfully');
-        setMembers(prevMembers => prevMembers.filter(m => m.id !== memberId));
-      } else {
-        throw new Error('Failed to remove member');
-      }
-    } catch {
-      toast.error('Error removing member');
-    }
-  };
-  
   const handleAcceptJoinRequest = async (request) => {
     const requestId = request?.id || request?.request_id;
     if (!requestId) return;
@@ -312,6 +280,34 @@ const StartupDetailPage = () => {
         toast.error('Error updating favorite status');
     }
   };
+ const handleAcceptInvitation = async () => {
+  if (!pendingInvitation) return;
+
+  try {
+    await startupsAPI.acceptInvitation(id, pendingInvitation.id);
+    toast.success("You are now a member!");
+
+    setPendingInvitation(null);
+    fetchStartupData();
+
+  } catch (error) {
+    toast.error("Failed to accept invitation");
+  }
+};
+
+const handleDeclineInvitation = async () => {
+  if (!pendingInvitation) return;
+
+  try {
+    await startupsAPI.declineInvitation(id, pendingInvitation.id);
+    toast.info("Invitation declined");
+
+    setPendingInvitation(null);
+
+  } catch (error) {
+    toast.error("Failed to decline invitation");
+  }
+};
 
   useEffect(() => {
     if (user && startup) {
@@ -363,12 +359,44 @@ const StartupDetailPage = () => {
 
       
       if (response.success) {
-        toast.success('Startup deleted successfully');
-        navigate('/discover');
+        navigate('/discover-startups');
       } 
     } catch (error) {
       toast.error('Error deleting startup');
       console.error('Error deleting startup:', error);
+    }
+  };
+
+  // Convert solo startup → Vision
+  const handleDemoteToVision = async () => {
+    setDemoting(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/activation/startups/${id}/demote`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${access_token}`,
+          },
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Startup converted to Vision');
+        setIsDemoteModalOpen(false);
+        if (data.idea?.id) {
+          navigate(`/ideation/details?id=${data.idea.id}`);
+        } else {
+          navigate('/ideation');
+        }
+      } else {
+        toast.error(data.error || 'Conversion failed');
+      }
+    } catch (e) {
+      toast.error('Failed to convert startup to Vision');
+    } finally {
+      setDemoting(false);
     }
   };
   const handleCreateTask = async (taskData) => {
@@ -398,8 +426,13 @@ const StartupDetailPage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <Card className="p-8 bg-gray-800 border-gray-700 text-center">
           <h2 className="text-2xl font-bold text-white mb-2">Startup Not Found</h2>
-          <p className="text-gray-400 mb-4">The startup you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate('/discover-startups')}>Back to Discover</Button>
+          <p className="text-gray-400 mb-4">
+            This startup doesn't exist, or there was a problem loading it.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="outline" onClick={fetchStartupData}>Try Again</Button>
+            <Button onClick={() => navigate('/discover-startups')}>Back to Discover</Button>
+          </div>
         </Card>
       </div>
     );
@@ -473,7 +506,19 @@ const StartupDetailPage = () => {
                       >
                         <Trash2 className="w-4 h-4 mr-1" />
                         Delete
-                      </Button>)}
+                      </Button>)
+                  }
+                  {/* Convert to Vision — only for solo founders */}
+                  {isFounder && members.length <= 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsDemoteModalOpen(true)}
+                      className="text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 border border-violet-500/20"
+                    >
+                      ⟳ Convert to Vision
+                    </Button>
+                  )}
                 </>
               )}
               <Button
@@ -569,8 +614,8 @@ const StartupDetailPage = () => {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-8">
             <StartupAnnouncementsSection startup={startup} />
-            <GamifiedStatsOverview startup={startup} stats={stats} formatCurrency={formatCurrency} goals={projectGoals} />
-            <DescriptionSection startup={startup} formatCurrency={formatCurrency} />
+            <GamifiedStatsOverview startup={startup} stats={stats} goals={projectGoals} />
+            <DescriptionSection startup={startup} />
             
             <TechStackSection startup={startup} />
           </TabsContent>
@@ -583,8 +628,8 @@ const StartupDetailPage = () => {
               startupId={id}
               isFounder={isFounder}
               isAdmin={isAdmin}
-              onRemoveMember={handleRemoveMember}
-              onJoinClick={() => setIsAddMemberModalOpen(true)}
+              callback={fetchStartupData}
+              roles={startup.roles}
             />
           </TabsContent>
 
@@ -643,25 +688,39 @@ const StartupDetailPage = () => {
           }}
         />
       )}
-      
+      {pendingInvitation && !isAdmin && (
+  <AcceptInvitationModal
+    isOpen={true}
+    onClose={() => setPendingInvitation(null)}
+    startupName={startup?.name}
+    onAccept={handleAcceptInvitation}
+    onDecline={handleDeclineInvitation}
+  />
+)}
       {isAdmin &&
         <>
-          <AddMemberModal
-            isOpen={isAddMemberModalOpen}
-            onClose={() => setIsAddMemberModalOpen(false)}
-            roles={startup?.roles || []}
-            onSubmit={handleAddMember}
-            formData={memberForm}
-            onFormChange={setMemberForm}
-          />
-
-      
-
-          <DeleteStartupModal
+          <DeleteConfirmationModal
             isOpen={isDeleteStartupModalOpen}
             onClose={() => setIsDeleteStartupModalOpen(false)}
-            onConfirm={handleDeleteStartup}
-            startupName={startup.name}
+            onConfirm={() => {
+              handleDeleteStartup();
+              setIsDeleteStartupModalOpen(false);
+              navigate('/discover-startups');
+              toast.success('Startup deleted successfully');
+            }}
+            title="Delete Startup"
+            message="Are you sure you want to delete this startup? This action cannot be undone."
+            type="hard"
+          />
+
+          {/* Convert to Vision confirmation modal */}
+          <DeleteConfirmationModal
+            isOpen={isDemoteModalOpen}
+            onClose={() => setIsDemoteModalOpen(false)}
+            onConfirm={handleDemoteToVision}
+            title="Convert to Vision"
+            message={`"${startup?.name}" will be converted to a Vision so you can attract collaborators before re-activating as a startup. The startup will be archived.`}
+            type="soft"
           />
           <ManageJoinRequestsModal
             isOpen={isJoinModalOpen}
@@ -710,7 +769,7 @@ const StartupDetailPage = () => {
 
   
 // Gamified Stats Overview
-const GamifiedStatsOverview = ({ goals, startup, stats, formatCurrency }) => {
+const GamifiedStatsOverview = ({ goals, startup, stats }) => {
   const milestoneProgress = useMemo(() => {
     if (goals.length === 0) return 0;
     let progress = 0;

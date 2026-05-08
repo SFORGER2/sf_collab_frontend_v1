@@ -17,6 +17,7 @@ import {
 } from "../../ui/dialog";
 import { Textarea } from "../../ui/textarea";
 import { ScrollArea } from "../../ui/scroll-area";
+import ShinyText from "@/components/ui/ShinyText";
 // Comment Dialog Component
 export default function CommentDialog({ comments, postAuthor }) {
   const [newComment, setNewComment] = useState("");

@@ -12,8 +12,10 @@ import { Card, CardContent, CardHeader } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { Button } from "../../ui/button";
 import { Separator } from "../../ui/separator";
-import { userSocialAPI } from "@/utils/APIs/socialAPI";
+import { userSocialAPI, postsAPI } from "@/utils/APIs/socialAPI";
+import { postAPI } from "@/utils/APIs/postAPI";
 import { useSelector } from "react-redux";
+import PostActions from "./PostActions";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -27,17 +29,21 @@ const cardVariants = {
 // Post Card Component
 export default function PostCard({ post, onPostDeleted }) {
   const currentUser = useSelector((state) => state.auth.user);
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(
+    Boolean(post.isLiked || post.liked_by_current_user)
+  );
   const [bookmarked, setBookmarked] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(
+    Boolean(post.isSaved || post.saved_by_current_user)
+  );
   const [isEditing, setIsEditing] = useState(false);
-  const [editedCaption, setEditedCaption] = useState(post.caption || "");
+  const [editedCaption, setEditedCaption] = useState(post.caption || post.content || "");
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
   const commentInputRef = useRef(null);
-  const isOwnPost = currentUser && (post.author?._id === currentUser.id || post.author?.userId === currentUser.id);
+  const isOwnPost = currentUser && (post.author?._id === currentUser.id || post.author?.id === currentUser.id || post.author?.userId === currentUser.id);
 
   // Normalize media URLs - handle both backend media array format and mediaUrl string
   const getMediaUrls = () => {
@@ -58,8 +64,9 @@ export default function PostCard({ post, onPostDeleted }) {
   const handleDeletePost = async () => {
     if (!window.confirm("Delete this post?")) return;
     try {
-      await userSocialAPI.deletePost(post._id || post.id);
-      onPostDeleted?.(post._id || post.id);
+      const postId = post._id || post.id;
+      await postsAPI.delete(postId);
+      onPostDeleted?.(postId);
     } catch (error) {
       console.error("Delete failed:", error);
     }
@@ -68,8 +75,11 @@ export default function PostCard({ post, onPostDeleted }) {
   const handleEditPost = async () => {
     if (!editedCaption.trim()) return;
     try {
-      await userSocialAPI.editPost(post._id || post.id, { caption: editedCaption });
-      post.caption = editedCaption;
+      const postId = post._id || post.id;
+      await postsAPI.update(postId, {
+        content: editedCaption,
+      });
+      post.content = editedCaption;
       setIsEditing(false);
     } catch (error) {
       console.error("Edit failed:", error);
@@ -78,14 +88,36 @@ export default function PostCard({ post, onPostDeleted }) {
 
   const handleSavePost = async () => {
     try {
+      const postId = post._id || post.id;
+      const userId = currentUser?.id;
+      if (!userId) return;
+
       if (saved) {
-        await userSocialAPI.unsavePost(post._id || post.id);
+        await userSocialAPI.unsavePost(userId, postId);
       } else {
-        await userSocialAPI.savePost(post._id || post.id);
+        await userSocialAPI.savePost(userId, postId);
       }
       setSaved(!saved);
     } catch (error) {
       console.error("Save failed:", error);
+    }
+  };
+
+  const handleLikeClick = async () => {
+    try {
+      const postId = post._id || post.id;
+      const userId = currentUser?.id;
+      if (!userId) return;
+
+      const togglingTo = !liked;
+      if (togglingTo) {
+        await postsAPI.like(postId, userId);
+      } else {
+        await postsAPI.unlike(postId, userId);
+      }
+      setLiked(togglingTo);
+    } catch (error) {
+      console.error("Like failed:", error);
     }
   };
 
@@ -96,8 +128,13 @@ export default function PostCard({ post, onPostDeleted }) {
     }
     setLoadingComments(true);
     try {
-      const data = await userSocialAPI.getComments(post._id || post.id);
-      setComments(data.comments || []);
+      const postId = post._id || post.id;
+      const data = await postAPI.getComments(postId, {
+        page: 1,
+        per_page: 50,
+      });
+      const list = data.comments || data.data?.comments || [];
+      setComments(list);
       setShowComments(true);
     } catch (error) {
       console.error("Load comments failed:", error);
@@ -108,9 +145,17 @@ export default function PostCard({ post, onPostDeleted }) {
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
+    if (!currentUser) return;
+
     try {
-      const result = await userSocialAPI.addComment(post._id || post.id, { text: newComment });
-      setComments([...comments, result.comment]);
+      const postId = post._id || post.id;
+      const result = await postAPI.addComment(postId, newComment, {
+        author_id: currentUser.id,
+        author_first_name: currentUser.firstName || currentUser.first_name,
+        author_last_name: currentUser.lastName || currentUser.last_name,
+      });
+      const created = result.comment || result.data?.comment || result;
+      setComments([...comments, created]);
       setNewComment("");
     } catch (error) {
       console.error("Comment failed:", error);
@@ -119,8 +164,13 @@ export default function PostCard({ post, onPostDeleted }) {
 
   const handleDeleteComment = async (commentId) => {
     try {
-      await userSocialAPI.deleteComment(post._id || post.id, commentId);
-      setComments(comments.filter((c) => c._id !== commentId));
+      const postId = post._id || post.id;
+      await postAPI.deleteComment(postId, commentId);
+      setComments(
+        comments.filter(
+          (c) => c._id !== commentId && c.id !== commentId
+        )
+      );
     } catch (error) {
       console.error("Delete comment failed:", error);
     }
@@ -282,6 +332,7 @@ export default function PostCard({ post, onPostDeleted }) {
             post={post}
             liked={liked}
             setLiked={setLiked}
+            onLikeClick={handleLikeClick}
             bookmarked={bookmarked}
             setBookmarked={setBookmarked}
           />
@@ -301,12 +352,12 @@ export default function PostCard({ post, onPostDeleted }) {
             <div className="space-y-3 border-t border-zinc-800/50 pt-3">
               {/* Comments List */}
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                {comments.map((comment) => (
-                  <div key={comment._id} className="bg-zinc-800/30 rounded p-2 text-sm">
+                {comments.map((comment, cIdx) => (
+                  <div key={comment._id || comment.id || cIdx} className="bg-zinc-800/30 rounded p-2 text-sm">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <p className="font-semibold text-blue-400">{comment.author?.firstName || "User"}</p>
-                        <p className="text-zinc-300">{comment.text}</p>
+                        <p className="text-zinc-300">{comment.content ?? comment.text}</p>
                         <p className="text-xs text-zinc-500 mt-1">{new Date(comment.createdAt).toLocaleDateString()}</p>
                       </div>
                       {(currentUser?.id === comment.author?._id || isOwnPost) && (

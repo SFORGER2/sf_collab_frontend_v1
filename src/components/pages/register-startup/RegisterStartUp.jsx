@@ -1,39 +1,27 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Upload, Plus, X, ChevronRight, Minus,ChevronLeft, FileText, Building2, MapPin, Globe, Users, Rocket, CheckCircle, Image, AlertCircle, User, Mail, Eye, Star, Target, Trophy, Zap, Lightbulb, TrendingUp, DollarSign, PieChart, Target as TargetIcon, Calendar, BarChart3, InfoIcon, Code } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
+import { ChevronRight, ChevronLeft, Rocket, CheckCircle, Star, Trophy, Zap, Lightbulb, TrendingUp,  } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
-import { Textarea } from "../../ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
-import { Badge } from "../../ui/badge";
 import { Progress } from "../../ui/progress";
-import { Alert, AlertDescription } from "../../ui/alert";
-import { Label } from "../../ui/label";
-import { Separator } from "../../ui/separator";
 import { useSelector } from "react-redux";
-
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../../ui/tooltip"; 
-import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
 import { toast } from "react-toastify";
 import { API_URL } from "@/utils/config";
 import SidebarContent from "./SidebarContent";
 import { logoutUser } from "@/services/auth/authThunks";
-import StartupRoleCard from "./StartupRoleCard";
-import { industries, startupStages } from "./elements";
 import StartupReview from "./steps/9_StartupReview";
 import StartupRolesAndTechStack from "./steps/7_StartupRolesAndTeamStack";
-import Startup from "@/components/landing-page/pages/StartupPage";
 import StartupFinancialForm from "./steps/4_StartupFinancialForm";
-import { formatCurrency } from "@/lib/utils";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { startupsAPI } from "@/utils/APIs/startupsAPI";
+import IdeaLaunchingLoader from "./IdeaLaunchingLoader";
+import Branding from "./steps/5_branding";
+import Completion from "./steps/9_completion";
+import DocumentsUpload from "./steps/6_documents_upload";
+import FounderDetailsSection from "./steps/2_founderDetails";
+import StartupDetailsSection from "./steps/3_startupDetails";
+import CompanyInformationSection from "./steps/1_companyInformation";
 export default function RegisterStartUp() {
   const navigate = useNavigate();
   const { access_token, user } = useSelector((state) => state.auth);
@@ -56,6 +44,8 @@ export default function RegisterStartUp() {
   const [currentStep, setCurrentStep] = useState(1);
   const [query] = useSearchParams();
   const id = query.get('id') || null;
+  const ideaId = query.get('ideaId') || null;
+  const [ideaLoading, setIdeaLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     industry: "",
@@ -67,7 +57,6 @@ export default function RegisterStartUp() {
     creator_first_name: "",
     creator_last_name: "",
     creator_email: "",
-    
     revenue: 0,
     funding_amount: 0,
     funding_round: "pre-seed",
@@ -167,6 +156,57 @@ export default function RegisterStartUp() {
   
 
   }, [id, user?.id]);
+  useEffect(() => {
+    
+      async function fetchIdeaLaunch() {
+        try {
+          setIdeaLoading(true);
+          const response = await startupsAPI.getIdeaLaunchData(ideaId);
+          console.log("Idea launch data:", response);
+          if (response.success && response.data?.suggestions) {
+            const idea = response.data.suggestions;
+            setFormData(prev => ({
+              ...prev,
+              name: idea.name || "",
+              industry: idea.industry || "",
+              location: idea.location || "",
+              description: idea.description || "",
+              stage: idea.stage || "",
+              positions: idea.positions || 0,
+              roles: idea.roles || {},
+              revenue: 0,
+              funding_amount: 0,
+              funding_round: "pre-seed",
+              burn_rate: 0,
+              runway_months: 0,
+              valuation: 0,
+              financial_notes: "",
+              tech_stack: idea.tech_stack || [],
+            }));
+          }
+        } catch (error) {
+          console.error('Error fetching idea launch data:', error);
+          toast.error('Error fetching idea launch data');
+        } finally {
+          setIdeaLoading(false);
+        }
+      }
+    if (ideaId && !id) {
+      fetchIdeaLaunch();
+    }
+  }, [ideaId, id]);
+  useEffect(() => {
+    if (ideaId && !id) {
+      setTechStack(formData.tech_stack || []);
+      setRoles(
+        Object.entries(formData.roles || {}).map(([title, details]) => ({
+          title,
+          roleType: details.roleType || "Full Time",
+          positionsNumber: details.positionsNumber || 0,
+        }))
+      );
+    }
+  }, [formData, ideaId, id]);
   useEffect(() => {
     async function getStartupDocuments() {
       const response = await startupsAPI.getDocuments(id);
@@ -477,33 +517,39 @@ export default function RegisterStartUp() {
         throw new Error(response.error || response.message || "Registration failed");
       }
 
-      if (response.success || response.id) {
-        setXpPoints(1200); // Complete all XP
-        setCurrentStep(9); // Move to completion step
-        setFormData({
-          name: "",
-          industry: "",
-          location: "",
-          description: "",
-          stage: "",
-          positions: 0,
-          roles: {},
-          creator_first_name: "",
-          creator_last_name: "",
-          creator_email: "",
-          
-          revenue: 0,
-          funding_amount: 0,
-          funding_round: "pre-seed",
-          burn_rate: 0,
-          runway_months: 0,
-          valuation: 0,
-          financial_notes: "",
-          
-          tech_stack: []
-        })
+      if (response.ok) {
         localStorage.removeItem('formData');
         toast.success(`Startup ${id ? "updated" : "registered"} successfully!`);
+        if (id) {
+          // Edit mode: go directly to the startup detail page
+          navigate(`/startup-details/${id}`);
+        } else {
+          // Add mode: show the celebration / launch complete screen
+          setXpPoints(1200);
+          setCurrentStep(9);
+          setFormData({
+            name: "",
+            industry: "",
+            location: "",
+            description: "",
+            stage: "",
+            positions: 0,
+            roles: {},
+            creator_first_name: "",
+            creator_last_name: "",
+            creator_email: "",
+            
+            revenue: 0,
+            funding_amount: 0,
+            funding_round: "pre-seed",
+            burn_rate: 0,
+            runway_months: 0,
+            valuation: 0,
+            financial_notes: "",
+            
+            tech_stack: []
+          });
+        }
         
       } else {
         throw new Error(data.error || data.message || "Registration failed");
@@ -527,10 +573,11 @@ export default function RegisterStartUp() {
     }
   }, [currentStep, maxStep, id]);
   //! StepIndicator
+  const totalSteps = id ? 8 : 9;
   const StepIndicator = () => (
     <div className="mb-8 overflow-x-auto">
       <div className="flex items-center justify-start sm:justify-center min-w-max px-2">
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((step) => (
+        {[1, 2, 3, 4, 5, 6, 7, 8, ...(id ? [] : [9])].map((step) => (
           <div key={step} className="flex items-center">
             <div
               onClick={() => maxStep >= step && setCurrentStep(step)}
@@ -580,7 +627,7 @@ export default function RegisterStartUp() {
               </span>
             </div>
 
-            {step < 9 && (
+            {step < totalSteps && (
               <div
                 className={`
                 w-6 sm:w-12 h-1 mx-1 sm:mx-2 rounded-full
@@ -595,15 +642,12 @@ export default function RegisterStartUp() {
     </div>
   );
 
-  
-
-
-
   return (
     <div className="min-h-screen">
+      <IdeaLaunchingLoader loading={ideaLoading} />
       <div className="container mx-auto px-0 py-8 w-full">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 mt-10">
 
           <h1 className="text-4xl font-bold text-white mb-4">
             Build Your <span className="bg-linear-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Dream Team</span>
@@ -665,290 +709,27 @@ export default function RegisterStartUp() {
               <CardContent className="p-6">
                 {/* Step 1: Company Information */}
                 {currentStep === 1 && (
-                  <div className="space-y-6 animate-fadeIn">
-                    <div className="text-center mb-6">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-400/10 border border-blue-400/30 flex items-center justify-center mx-auto mb-4">
-                        <Building2 className="w-8 h-8 text-blue-400" />
-                      </div>
-                      <CardTitle className="text-2xl mb-2 text-white">Company Information</CardTitle>
-                      <CardDescription className="text-gray-300">Let's start with the basics of your startup</CardDescription>
-                    </div>
-                
-                    <div className="grid md:grid-cols-2 gap-5">
-                      <div className="space-y-3">
-                        <Label htmlFor="name" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
-                          <span>Startup Name <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge></span>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Your official startup name. This will be visible to all users and should match your legal business name.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <div className="relative">
-                          <Building2 className="absolute left-4 top-4 text-gray-400" size={20} />
-                          <Input
-                            id="name"
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => handleInputChange("name", e.target.value)}
-                            className="pl-12 h-11.5 border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                            placeholder="Enter your startup name"
-                          />
-                        </div>
-                      </div>
-                
-                      <div className="space-y-3">
-                        <Label htmlFor="industry" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
-                          <span>
-                            Industry <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
-                          </span>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Select the primary industry your startup operates in. This helps match you with relevant talent and investors.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <div className="relative">
-                          <Globe className="absolute right-4 top-3 text-gray-400 z-10" size={20} />
-                          <Select value={formData.industry} onValueChange={(value) => handleInputChange("industry", value)}>
-                            <SelectTrigger style={{ height: '45px' }} className="w-full border-gray-600 bg-gray-700/50 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all">
-                              <SelectValue placeholder="Select Industry" className="text-white" />
-                            </SelectTrigger>
-                            <SelectContent position="bottom" className="w-full bg-gray-800 border-gray-600 text-white">
-                              {industries.map(industry => (
-                                <SelectItem key={industry} value={industry} className="text-white hover:bg-gray-700 focus:bg-gray-700 "><span className="text-white w-full h-full hover:text-blue-400">{industry}</span></SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                
-                      <div className="space-y-3 md:col-span-2">
-                        <Label htmlFor="location" className="text-sm font-medium text-white  items-center gap-2 flex justify-between w-full">
-                          <span>Location <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge></span>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Your primary operating location. Include city and country. This helps local talent find your startup and indicates if you support remote work.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <div className="relative">
-                          <MapPin className="absolute left-4 top-4 text-gray-400" size={20} />
-                          <Input
-                            id="location"
-                            type="text"
-                            value={formData.location}
-                            onChange={(e) => handleInputChange("location", e.target.value)}
-                            className="pl-12 h-11.5 border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                            placeholder="City, Country"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <CompanyInformationSection
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  />
                 )}
 
                 {/* Step 2: Founder Details */}
                 {currentStep === 2 && (
-                  <div className="space-y-6 animate-fadeIn">
-                    <div className="text-center mb-6">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-400/10 border border-blue-400/30 flex items-center justify-center mx-auto mb-4">
-                        <User className="w-8 h-8 text-blue-400" />
-                      </div>
-                      <CardTitle className="text-2xl mb-2 text-white">Founder Information</CardTitle>
-                      <CardDescription className="text-gray-300">Tell us about yourself as the founder</CardDescription>
-                    </div>
-                
-                    <div className="grid md:grid-cols-2 gap-5">
-                      <div className="space-y-3">
-                        <Label htmlFor="firstName" className="text-sm font-medium text-white  items-center gap-2 flex justify-between w-full">
-                          <span>
-                            First Name <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
-                          </span>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Your legal first name as the founder. This builds credibility with potential team members and investors.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <div className="relative">
-                          <User className="absolute left-4 top-4 text-gray-400" size={20} />
-                          <Input
-                            id="firstName"
-                            type="text"
-                            value={formData.creator_first_name}
-                            onChange={(e) => handleInputChange("creator_first_name", e.target.value)}
-                            className="pl-12 h-11.5 border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                            placeholder="Your first name"
-                          />
-                        </div>
-                      </div>
-                
-                      <div className="space-y-3">
-                        <Label htmlFor="lastName" className="text-sm font-medium text-white  items-center gap-2 flex justify-between w-full">
-                          <span>
-                            Last Name <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
-                          </span>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Your legal last name. Complete founder profiles receive 47% more applications from qualified candidates.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <div className="relative">
-                          <User className="absolute left-4 top-4 text-gray-400" size={20} />
-                          <Input
-                            id="lastName"
-                            type="text"
-                            value={formData.creator_last_name}
-                            onChange={(e) => handleInputChange("creator_last_name", e.target.value)}
-                            className="pl-12 h-11.5 border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                            placeholder="Your last name"
-                          />
-                        </div>
-                      </div>
-                
-                      <div className="space-y-3 md:col-span-2">
-                        <Label htmlFor="email" className="text-sm font-medium text-white items-center flex justify-between w-full gap-2">
-                          <span>
-                            Email <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
-                          </span>
-                          {
-                            id && (
-                              <span className="text-sm text-yellow-400 italic">(We encrypt your email for security, please write it again)</span>
-                            )
-                          }
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Your professional email address. Using a company domain email enhances credibility and trust with potential team members.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <div className="relative">
-                          <Mail className="absolute left-4 top-4 text-gray-400" size={20} />
-                          <Input
-                            id="email"
-                            type="email"
-                            value={formData.creator_email}
-                            onChange={(e) => handleInputChange("creator_email", e.target.value)}
-                            className="pl-12 h-11.5 border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                            placeholder="your.email@company.com"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <FounderDetailsSection
+                    formData={formData}
+                    handleInputChange={handleInputChange}
+                    id={id}
+                  />
                 )}
 
                 {/* Step 3: Startup Details */}
                 {currentStep === 3 && (
-                  <div className="space-y-6 animate-fadeIn">
-                    <div className="text-center mb-6">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-400/10 border border-blue-400/30 flex items-center justify-center mx-auto mb-4">
-                        <Rocket className="w-8 h-8 text-blue-400" />
-                      </div>
-                      <CardTitle className="text-2xl mb-2 text-white">Startup Details</CardTitle>
-                      <CardDescription className="text-gray-300">Tell us more about your vision and stage</CardDescription>
-                    </div>
-
-                    <div className="space-y-5">
-                      <div>
-                        <Label htmlFor="description" className="text-sm font-medium mb-3 text-white flex items-center gap-2">
-                          <span>
-                            Description <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
-                          </span>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Describe your startup's mission, vision, and what makes it unique. A compelling description attracts 3x more qualified applicants and helps candidates understand your company culture.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                          <span className="text-gray-400 text-xs ml-auto">{formData.description.length}/500</span>
-                        </Label>
-                        <Textarea
-                          id="description"
-                          value={formData.description}
-                          onChange={(e) => handleInputChange("description", e.target.value)}
-                          rows={5}
-                          className="border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all resize-none"
-                          placeholder="Describe your startup's mission, vision, and what makes it unique..."
-                          maxLength={500}
-                        />
-                      </div>
-
-                      <div>
-                        <Label className="text-sm font-medium mb-3 text-white flex items-center gap-2">
-                          Current Stage <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
-                        </Label>
-                        <div className="flex flex-wrap gap-3">
-                          {startupStages.map((stage) => (
-                            <TooltipProvider key={stage.value}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Card
-                                    onClick={() => handleInputChange("stage", stage.value)}
-                                    className={`p-4 flex-1 cursor-pointer transition-all duration-200 border backdrop-blur-sm hover:scale-105 ${formData.stage === stage.value
-                                      ? 'border-blue-400 bg-blue-400/20 text-white shadow-lg shadow-blue-400/20'
-                                      : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-blue-400 hover:text-white'
-                                      }`}
-                                  >
-                                    <CardContent className="p-0 text-center">
-                                      <div className={`flex justify-center mb-2 ${formData.stage === stage.value ? 'text-blue-400' : 'text-gray-400'}`}>
-                                        {stage.icon}
-                                      </div>
-                                      <div className={`font-semibold text-sm ${formData.stage === stage.value ? 'text-white' : 'text-gray-300'}`}>
-                                        {stage.label}
-                                      </div>
-                                      <div className={`text-xs mt-2 ${formData.stage === stage.value ? 'text-blue-300' : 'text-gray-500'}`}>
-                                        {stage.description}
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-                                </TooltipTrigger>
-                                <TooltipContent arrowColor="bg-gray-800 fill-gray-800" side="top" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                                  <p className="text-sm">{stage.tooltip}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <StartupDetailsSection
+                    formData={formData}
+                    handleInputChange={handleInputChange}
+                  />
                 )}
 
                 {/* Step 4: Financial Foundation */}
@@ -961,224 +742,28 @@ export default function RegisterStartUp() {
                 />}
 
                 {/* Step 5: Branding */}
-                {currentStep === 5 && (
-                  <div className="space-y-6 animate-fadeIn">
-                    <div className="text-center mb-6">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-400/10 border border-blue-400/30 flex items-center justify-center mx-auto mb-4">
-                        <Image className="w-8 h-8 text-blue-400" />
-                      </div>
-                      <CardTitle className="text-2xl mb-2 text-white">Brand Identity</CardTitle>
-                      <CardDescription className="text-gray-300">Upload your logo and banner to stand out</CardDescription>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {/* Logo Upload */}
-                      <div className="space-y-3">
-                        <Label className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
-                          Company Logo <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Your company logo should be high-quality and recognizable. Square images work best. This will be displayed throughout the platform.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <Card
-                          onClick={() => logoInputRef.current?.click()}
-                          className="border-2 bg-blue-400/5 border-dashed border-gray-600 p-6 text-center cursor-pointer transition-all duration-200 hover:border-blue-400 hover:bg-blue-400/10 backdrop-blur-sm hover:scale-105"
-                        >
-                          <CardContent className="p-0">
-                            {logoFile || existingLogo ? (
-                              <div className="space-y-3">
-                                <div className="w-24 h-24 rounded-2xl border-4 border-blue-400/30 mx-auto overflow-hidden">
-                                  <img
-                                    src={logoFile ? URL.createObjectURL(logoFile) : existingLogo.startsWith('http') ? existingLogo : `${API_URL}${existingLogo}`}
-                                    alt="Logo preview"
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/30">
-                                  Logo uploaded
-                                </Badge>
-                              </div>
-                            ) : (
-                              <>
-                                <Upload className="w-10 h-10 text-blue-400 mx-auto mb-3" />
-                                <div className="text-gray-300 font-medium mb-1">Upload Logo</div>
-                                <div className="text-gray-500 text-xs">PNG, JPG up to 2MB</div>
-                              </>
-                            )}
-                            <input
-                              type="file"
-                              ref={logoInputRef}
-                              onChange={(e) => handleFileChange(e, "logo")}
-                              className="hidden"
-                              accept="image/*"
-                            />
-                          </CardContent>
-                        </Card>
-                      </div>
-
-                      {/* Banner Upload */}
-                      <div className="space-y-3">
-                        <Label className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
-                          Cover Banner
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>A cover banner helps your startup stand out. Use an image that represents your brand. Recommended size: 1200x300 pixels.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <Card
-                          onClick={() => bannerInputRef.current?.click()}
-                          className="border-2 bg-blue-400/5 border-dashed border-gray-600 p-6 text-center cursor-pointer transition-all duration-200 hover:border-blue-400 hover:bg-blue-400/10 backdrop-blur-sm hover:scale-105"
-                        >
-                          <CardContent className="p-0">
-                            {bannerFile || existingBanner ? (
-                              <div className="space-y-3">
-                                <img
-                                  src={bannerFile ? URL.createObjectURL(bannerFile) : existingBanner.startsWith('http') ? existingBanner : `${API_URL}${existingBanner}`}
-                                  alt="Banner preview"
-                                  className="w-full h-20 rounded-lg object-cover"
-                                />
-                                <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/30">
-                                  Banner uploaded
-                                </Badge>
-                              </div>
-                            ) : (
-                              <>
-                                <Upload className="w-10 h-10 text-blue-400 mx-auto mb-3" />
-                                <div className="text-gray-300 font-medium mb-1">Upload Banner</div>
-                                <div className="text-gray-500 text-xs">Optional - PNG, JPG up to 5MB</div>
-                              </>
-                            )}
-                            <input
-                              type="file"
-                              ref={bannerInputRef}
-                              onChange={(e) => handleFileChange(e, "banner")}
-                              className="hidden"
-                              accept="image/*"
-                            />
-                          </CardContent>
-                        </Card>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {currentStep === 5 && (<Branding
+                  logoFile={logoFile}
+                  existingLogo={existingLogo}
+                  bannerFile={bannerFile}
+                  existingBanner={existingBanner}
+                  logoInputRef={logoInputRef}
+                  bannerInputRef={bannerInputRef}
+                  handleFileChange={handleFileChange}
+                  formData={formData}
+                />)}
                 
                 {/* Step 6: Documents Upload */}
                 {currentStep === 6 && (
-                  <div className="space-y-6 animate-fadeIn">
-                    <div className="text-center mb-6">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-400/10 border border-blue-400/30 flex items-center justify-center mx-auto mb-4">
-                        <FileText className="w-8 h-8 text-blue-400" />
-                      </div>
-                      <CardTitle className="text-2xl mb-2 text-white">Company Documents</CardTitle>
-                      <CardDescription className="text-gray-300">Upload important documents for your startup</CardDescription>
-                    </div>
-
-                    <div className="space-y-6">
-                      <div className="space-y-3">
-                        <Label className="text-sm font-medium text-white flex items-center gap-2 justify-between w-full">
-                          Business Plan & Documents
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Upload your business plan, pitch deck, or other important documents. PDF, DOC, DOCX files up to 10MB.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <Card className="border-2 bg-blue-400/5 hover:scale-101 border-dashed border-gray-600 p-6 text-center cursor-pointer transition-all duration-200 hover:border-blue-400 hover:bg-blue-400/10 backdrop-blur-sm">
-                          <CardContent className="p-0">
-                            <Upload className="w-10 h-10 text-blue-400 mx-auto mb-3" />
-                            <div className="text-gray-300 font-medium mb-1">Upload Documents</div>
-                            <div className="text-gray-500 text-xs">PDF, DOC, DOCX up to 10MB each</div>
-            
-                            <input
-                              type="file"
-                              multiple
-                              accept=".pdf,.doc,.docx,.txt"
-                              className="hidden"
-                              id="document-upload"
-                              onChange={handleDocumentUpload}
-                            />
-                            <Button
-                              onClick={() => document.getElementById('document-upload')?.click()}
-                              className="mt-4 bg-blue-400 hover:bg-blue-500 text-white"
-                            >
-                              <Upload className="w-4 h-4 mr-2" />
-                              Select Files
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      </div>
-
-                      {/* Existing documents */}
-                      {existingDocuments.length > 0 && (
-                        <div className="space-y-3">
-                          <Label className="text-sm font-medium text-white">Existing Documents</Label>
-                          <div className="space-y-2">
-                            {existingDocuments
-                              .filter(doc => !removedDocumentIds.includes(doc.id))
-                              .map(doc => (
-                                <div key={doc.id} className="flex items-center justify-between p-3 border border-gray-600 rounded-lg hover:bg-gray-700/50 transition-colors">
-                                  <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 flex-1">
-                                    <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                                    <span className="text-white text-sm truncate">{doc.filename}</span>
-                                  </a>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setRemovedDocumentIds(prev => [...prev, doc.id])}
-                                    className="text-red-400 hover:text-red-500 hover:bg-red-500/10 flex-shrink-0"
-                                  >
-                                    <X size={16} />
-                                  </Button>
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Newly uploaded documents */}
-                      {uploadedDocuments.length > 0 && (
-                        <div className="space-y-3">
-                          <Label className="text-sm font-medium text-white">New Documents</Label>
-                          <div className="space-y-2">
-                            {uploadedDocuments.map((doc, index) => (
-                              <div key={index} className="flex items-center justify-between p-3 border border-gray-600 rounded-lg bg-green-500/5 hover:bg-green-500/10 transition-colors">
-                                <div className="flex items-center gap-3 flex-1">
-                                  <FileText className="w-4 h-4 text-green-400 flex-shrink-0" />
-                                  <span className="text-white text-sm truncate">{doc.name}</span>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => removeDocument(index)}
-                                  className="text-red-400 hover:text-red-500 hover:bg-red-500/10 flex-shrink-0"
-                                >
-                                  <X size={16} />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <DocumentsUpload
+                    existingDocuments={existingDocuments}
+                    uploadedDocuments={uploadedDocuments}
+                    removedDocumentIds={removedDocumentIds}
+                    handleDocumentUpload={handleDocumentUpload}
+                    removeDocument={removeDocument}
+                    setRemovedDocumentIds={setRemovedDocumentIds}
+                    formData={formData}
+                  />
                 )}
 
 
@@ -1200,71 +785,14 @@ export default function RegisterStartUp() {
                 )}
 
                 {/* Step 8: Review */}
-                {currentStep === 8 && <StartupReview formData={formData} logoFile={logoFile} existingLogo={existingLogo} bannerFile={bannerFile} existingBanner={existingBanner} newDocuments={newDocuments} existingDocuments={existingDocuments} removedDocumentIds={removedDocumentIds} roles={roles} techStack={techStack}  />}
+                {currentStep === 8 && <StartupReview formData={formData} logoFile={logoFile} existingLogo={existingLogo} bannerFile={bannerFile} existingBanner={existingBanner} newDocuments={newDocuments} existingDocuments={existingDocuments} removedDocumentIds={removedDocumentIds} roles={roles} techStack={techStack} />}
 
                 {/* Step 9: Completion */}
                 {currentStep === 9 && (
-                  <div className="text-center py-8 animate-fadeIn">
-                    <div className="w-24 h-24 bg-linear-to-r from-blue-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-bounce">
-                      <CheckCircle size={40} className="text-white" />
-                    </div>
-                    <CardTitle className="text-3xl mb-3 text-white">Launch Complete! 🚀</CardTitle>
-                    <CardDescription className="text-lg mb-6 max-w-md mx-auto text-gray-300">
-                      Your startup <span className="text-white font-semibold">{formData.name}</span> is now ready to change the world.
-                    </CardDescription>
-                    <div className="grid md:grid-cols-4 gap-4 max-w-2xl mx-auto mb-8">
-                      <Card className="p-4 border border-gray-600 bg-gray-700/50 backdrop-blur-sm">
-                        <CardContent className="p-0 text-center">
-                          <div className="text-2xl text-white font-bold">{roles.reduce((total, role) => total + (role.positionsNumber || 0), 0)}</div>
-                          <div className="text-gray-400 text-sm">Open Positions</div>
-                        </CardContent>
-                      </Card>
-                      <Card className="p-4 border border-gray-600 bg-gray-700/50 backdrop-blur-sm">
-                        <CardContent className="p-0 text-center">
-                          <div className="text-2xl text-white font-bold">{roles.length}</div>
-                          <div className="text-gray-400 text-sm">Roles Defined</div>
-                        </CardContent>
-                      </Card>
-                      <Card className="p-4 border border-gray-600 bg-gray-700/50 backdrop-blur-sm">
-                        <CardContent className="p-0 text-center">
-                          <div className="text-2xl text-white font-bold capitalize">{formData.stage}</div>
-                          <div className="text-gray-400 text-sm">Current Stage</div>
-                        </CardContent>
-                      </Card>
-                      <Card className="p-4 border border-gray-600 bg-gray-700/50 backdrop-blur-sm">
-                        <CardContent className="p-0 text-center">
-                          <div className="text-2xl text-white font-bold">1200</div>
-                          <div className="text-gray-400 text-sm">XP Earned</div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                    <div className="grid md:grid-cols-3 gap-4 max-w-2xl mx-auto mb-8">
-                      <Card className="p-4 border border-gray-600 bg-gray-700/50 backdrop-blur-sm">
-                        <CardContent className="p-0 text-center">
-                          <div className="text-lg text-white font-bold">{formatCurrency(formData.funding_amount)}</div>
-                          <div className="text-gray-400 text-sm">Total Funding</div>
-                        </CardContent>
-                      </Card>
-                      <Card className="p-4 border border-gray-600 bg-gray-700/50 backdrop-blur-sm">
-                        <CardContent className="p-0 text-center">
-                          <div className="text-lg text-white font-bold">{formatCurrency(formData.valuation)}</div>
-                          <div className="text-gray-400 text-sm">Valuation</div>
-                        </CardContent>
-                      </Card>
-                      <Card className="p-4 border border-gray-600 bg-gray-700/50 backdrop-blur-sm">
-                        <CardContent className="p-0 text-center">
-                          <div className="text-lg text-white font-bold">{formData.runway_months}m</div>
-                          <div className="text-gray-400 text-sm">Runway</div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                    <Button
-                      onClick={() => window.location.href = '/dashboard'}
-                      className="bg-blue-400 hover:bg-blue-500 text-white border-0 px-8 py-3 text-base transition-all hover:scale-105 shadow-lg shadow-blue-400/20"
-                    >
-                      Go to Dashboard
-                    </Button>
-                  </div>
+                  <Completion
+                    formData={formData}
+                    roles={roles}
+                  />
                 )}
 
                 {/* Navigation Buttons */}
@@ -1364,23 +892,6 @@ export default function RegisterStartUp() {
           </div>
         </div>
       </div>
-
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(75, 85, 99, 0.3);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(96, 165, 250, 0.5);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(96, 165, 250, 0.7);
-        }
-      `}</style>
     </div>
   );
 }

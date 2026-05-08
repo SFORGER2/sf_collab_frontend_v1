@@ -1,206 +1,202 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import BottomLinks from "./BottomLinks";
-import { Crown, Lock } from "lucide-react";
+import { Crown, Lock, ChevronDown } from "lucide-react";
 import { getAllRoutes } from "./sidebar/links";
 import { useState } from "react";
 
-export default function DesktopSidebarContent({ links = [], currentContextId, toggleExpand, hasSubItems, shouldShowSubItems, isAdmin }) {
+export default function DesktopSidebarContent({
+  links = [],
+  currentContextId,
+  expandedItems = {},
+  toggleExpand,
+  hasSubItems,
+  shouldShowSubItems,
+  isAdmin,
+  onLinkClick,
+  callback
+}) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [hoveredLinkId, setHoveredLinkId] = useState(null);
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05, delayChildren: 0.1 }
-    }
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleNavigation = (link) => {
+    if (link.isUpcoming) return;
+    if (link.href) navigate(link.href);
+    onLinkClick?.();
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, x: -10 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.3 } }
-  };
+  const baseItemClasses =
+    "w-full flex items-center justify-center px-3 py-3 rounded-lg transition-colors";
 
-  const subItemVariants = {
-    hidden: { opacity: 0, height: 0 },
-    visible: {
-      opacity: 1,
-      height: "auto",
-      transition: { duration: 0.2 }
-    },
-    exit: { opacity: 0, height: 0, transition: { duration: 0.2 } }
-  };
+  const upcomingClasses =
+    "opacity-50 cursor-not-allowed hover:bg-transparent";
 
   return (
-    <div className="flex flex-col justify-between h-full w-full py-2.5 overflow-y-auto">
-      <motion.div
-        className="flex flex-col gap-1 items-center px-1"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {links.map((link, index) => {
-          const isActive = getAllRoutes(link).includes(location.pathname);
-          const showSubs = shouldShowSubItems(link) || hoveredLinkId === link.id;
+    <div
+      className="sidebar hidden lg:flex fixed left-0 top-16 h-[calc(100vh-64px)] text-white"
+      style={{ zIndex: 9999999999 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Background */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
+          zIndex: -1
+        }}
+      />
 
-          if (link.isUpcoming) {
+      {/* Sidebar Container */}
+      <motion.div
+        className="flex flex-col justify-between h-full overflow-hidden py-2.5"
+        animate={{ width: isHovered ? 250 : 60 }}
+        transition={{ duration: 0.25, ease: "easeInOut" }}
+      >
+        <div className="flex flex-col gap-1 overflow-y-auto px-2.5">
+          {links.map((link) => {
+          const isActive = getAllRoutes(link).includes(location.pathname);
+            const showSubs = expandedItems[link.id] ?? false;
+            const isUpcoming = link.isUpcoming;
+
             return (
-              <motion.div
-                key={link.id} className="w-full" variants={itemVariants}>
-                <div className="relative group w-full flex justify-center">
-                  <div
-                    className={`flex items-center justify-center px-2 py-3 rounded-lg transition-colors cursor-not-allowed text-gray-600 bg-gray-800/50`}
-                  >
+              <div key={link.id}>
+                {/* Main Item */}
+                <button
+                  onClick={() => {
+                    if (hasSubItems(link) && !link.href) {
+                      if (!isUpcoming) toggleExpand(link.id);
+                      return;
+                    }
+                    handleNavigation(link);
+                  }}
+                  className={`
+                    w-full flex items-center
+                    ${isHovered ? "gap-3 px-3 justify-start" : "justify-center px-0"}
+                    py-3 rounded-lg transition-colors min-w-0
+                    ${isActive
+                                      ? "bg-blue-600/20 text-blue-400"
+                                      : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
+                                    }
+                    ${isUpcoming ? upcomingClasses : ""}
+                  `}
+                >
+                  {/* ICON — always rendered */}
+                  <div className="flex items-center justify-center w-6">
                     {link.icon}
                   </div>
 
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2.5 py-1.5 bg-zinc-800 text-white text-xs font-medium rounded-md whitespace-nowrap 
-opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none shadow-lg z-[99999999999]"
-                  >
-                    {link.label} (Coming Soon)
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full border-[6px] border-transparent border-b-zinc-800" />
-                  </motion.div>
-                </div>
-              </motion.div>
-            );
-          }
+                  {/* Everything else ONLY when hovered */}
+                  {isHovered && (
+                    <>
+                      <motion.span
+                        initial={false}
+                        animate={{ opacity: 1 }}
+                        className="text-sm font-medium whitespace-nowrap overflow-hidden"
+                      >
+                        {link.label}
+                      </motion.span>
 
-          return (
-            <motion.div
-              onMouseEnter={() => setHoveredLinkId(link.id)}
-              onMouseLeave={() => setHoveredLinkId(null)}
-              key={index} className="w-full" variants={itemVariants}>
-              <div className="relative group w-full flex justify-center">
-                {hasSubItems(link) ? (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      if (link.href) {
-                        navigate(link.href);
-                        return;
-                      }
-                      toggleExpand(link.id);
-                    }}
-                    className={`flex items-center justify-center px-2 py-3 rounded-lg transition-colors ${isActive
-                      ? "bg-blue-600/20 text-blue-400"
-                      : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-                      }`}
-                  >
-                    {link.icon}
-                    {link.unreadCount}
-                  </motion.button>
-                ) : (
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    asChild
-                  >
-                    <Link
-                      to={link.href}
-                      className={`flex items-center justify-center px-2 py-3 rounded-lg transition-colors ${isActive
-                        ? "bg-blue-600/20 text-blue-400"
-                        : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-                        }`}
-                    >
-                      {link.icon}
-                      {link.unreadCount}
-                    </Link>
-                  </motion.div>
-                )}
-
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2.5 py-1.5 bg-zinc-800 text-white text-xs font-medium rounded-md whitespace-nowrap 
-  opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none shadow-lg z-[99999999999]"
-                >
-                  {link.label}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full border-[6px] border-transparent border-b-zinc-800" />
-                </motion.div>
-              </div>
-
-              {showSubs && (
-                <motion.div
-                  variants={subItemVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="flex flex-col gap-0.5 mt-1 ml-1.5 pl-1.5 border-l border-zinc-700/50"
-                >
-                  {(link?.subItems || []).map((subItem) => {
-                    const isSubActive = location.pathname === subItem.href && location.pathname !== "/dashboard";
-
-                    return (
-                      <motion.button
-                        onClick={() => {
-                          if (subItem.onLinkClick) {
-                            subItem.onLinkClick();
-                            navigate(subItem.href);
-                            return;
-                          }
-                        }}
-                        key={subItem.id} className="relative group" whileHover={{ x: 4 }}>
-                        <Link
-                          to={subItem.onLinkClick ? "#" : subItem.href}
-                          className={`flex items-center justify-center px-2 py-2 rounded-md transition-colors ${isSubActive
-                            ? "bg-blue-600/30 text-white"
-                            : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"
+                      {hasSubItems(link) && (
+                        <ChevronDown
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            toggleExpand(link.id);
+                          }}
+                          size={18}
+                          className={`ml-auto transition-transform ${showSubs ? "rotate-180" : ""
                             }`}
-                        >
-                          {subItem.icon || (
-                            <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
-                          )}
-                        </Link>
+                        />
+                      )}
 
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          whileHover={{ opacity: 1 }}
-                          className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-zinc-800 text-white text-xs font-medium rounded-md whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none shadow-lg"
-                        >
-                          {subItem.label}
-                          <div className="absolute right-full top-1/2 -translate-y-1/2 border-[6px] border-transparent border-r-zinc-800" />
-                        </motion.div>
-                      </motion.button>
-                    );
-                  })}
-                </motion.div>
-              )}
-            </motion.div>
-          );
-        })}
+                      {!hasSubItems(link) && isUpcoming && (
+                        <Lock size={16} className="ml-auto opacity-60" />
+                      )}
+                    </>
+                  )}
+                </button>
 
-        {isAdmin && (
-          <motion.div className="relative group w-full" variants={itemVariants}>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} asChild>
-              <Link
-                to="/admin"
-                className={`w-full flex items-center justify-center px-2 py-3 rounded-lg transition-colors ${location.pathname === "/admin"
-                  ? "bg-yellow-600/20 text-yellow-400"
-                  : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-                  }`}
-              >
-                <Crown size={22} />
-              </Link>
-            </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileHover={{ opacity: 1 }}
-              className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-zinc-800 text-white text-xs font-medium rounded-md whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none shadow-lg"
+                {/* Sub Items */}
+                <AnimatePresence>
+                  {showSubs && isHovered && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex flex-col gap-0.5 mt-1 ml-4 pl-3 border-l border-zinc-700/50 overflow-hidden"
+                    >
+                      {(link.subItems || []).map((subItem) => {
+                      const isSubActive = location.pathname === subItem.href && location.pathname !== "/dashboard";
+
+
+                        return (
+                          <button
+                            key={subItem.id}
+                            onClick={() => {
+                              if (subItem.isUpcoming) return;
+                              navigate(subItem.href);
+                              subItem.onLinkClick?.();
+                              onLinkClick?.();
+                            }}
+                            className={`
+                              flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-colors
+                              ${isSubActive
+                                ? "bg-blue-600/30 text-white"
+                                : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"
+                              }
+                            `}
+                          >
+                            {subItem.icon || (
+                              <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                            )}
+
+                            <span className="text-xs font-medium flex-1 whitespace-nowrap">
+                              {subItem.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )
+                
+          })}
+
+          {/* Admin */}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              onClick={onLinkClick}
+              className={`w-full flex items-center ${isHovered ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-3 rounded-lg transition-colors ${location.pathname.startsWith("/admin") ? "bg-blue-600/20 text-blue-400" : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
+                }`}
             >
-              Admin Panel
-              <div className="absolute right-full top-1/2 -translate-y-1/2 border-[6px] border-transparent border-r-zinc-800" />
-            </motion.div>
-          </motion.div>
-        )}
-      </motion.div>
+              <div className="flex items-center justify-center w-6">
+                    <Crown size={22} />
+                  </div>
+              
+              <motion.span
+                animate={{
+                  opacity: isHovered ? 1 : 0,
+                  maxWidth: isHovered ? 160 : 0
+                }}
+                transition={{ duration: 0.2 }}
+                className="text-sm font-medium whitespace-nowrap overflow-hidden"
+              >
+                Admin Panel
+              </motion.span>
+            </Link>
+          )}
+        </div>
 
-      <BottomLinks />
+        <BottomLinks onLinkClick={onLinkClick} callback={callback} />
+      </motion.div>
     </div>
   );
 }

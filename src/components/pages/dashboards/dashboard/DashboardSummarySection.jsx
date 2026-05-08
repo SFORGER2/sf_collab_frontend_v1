@@ -19,11 +19,7 @@ export default function DashboardSummaryCard({ userData }) {
             >
               <div className="w-full group relative flex flex-col gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-6 lg:p-8">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-blue-500/30 to-purple-600/30 opacity-75 group-hover:opacity-100 transition-opacity duration-300" />
-                <img loading="lazy" 
-                  src="/design.png" 
-                  className="absolute h-full w-full group-hover:opacity-50 transition-all duration-1000 -z-50 opacity-15" 
-                  alt="design"
-                />
+
 
                 {/* Welcome Text */}
                 <div className="relative flex flex-col items-center justify-center gap-2 sm:gap-3">
@@ -50,48 +46,48 @@ export default function DashboardSummaryCard({ userData }) {
                 </div>
 
                 {/* Stats Row */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-                          {[
-                          {
-                            icon: "bg-green-400",
-                            value: userData?.active_startups_count || 0,
-                            label: "Active Startups",
-                          },
-                          {
-                            icon: "bg-blue-400",
-                            value: `$${userData?.total_revenue || 0}`,
-                            label: "Revenue",
-                          },
-                          {
-                            icon: "bg-purple-400",
-                            value: `${userData?.satisfaction_percentage || "98"}%`,
-                            label: "Satisfaction",
-                          },
-                          {
-                            icon: "bg-orange-400",
-                            value: userData?.last_activity_date 
-                            ? new Date(userData.last_activity_date).toLocaleDateString('en-US', { 
-                              year: 'numeric', 
-                              month: 'short', 
-                              day: 'numeric' 
-                              })
-                            : "Jan 1 2026",
-                            label: "Last activity",
-                          },
-                          ].map((stat) => (
-                          <div key={stat.label} className="flex flex-col items-center gap-1 text-center">
-                            <div className={`w-2 h-2 sm:w-3 sm:h-3 ${stat.icon} rounded-full animate-pulse`} />
-                            <span className="text-xs sm:text-sm text-white/70">
-                            <strong>{stat.value}</strong>
-                            </span>
-                            <span className="text-xs text-white/60" style={{ fontFamily: "Trade Winds, system-ui" }}>
-                            {stat.label}
-                            </span>
-                          </div>
-                          ))}
-                        </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                  {[
+                    {
+                      icon: "bg-green-400",
+                      value: userData?.active_startups_count || 0,
+                      label: "Active Startups",
+                    },
+                    {
+                      icon: "bg-blue-400",
+                      value: `$${userData?.total_revenue || 0}`,
+                      label: "Revenue",
+                    },
+                    {
+                      icon: "bg-purple-400",
+                      value: `${userData?.satisfaction_percentage || "98"}%`,
+                      label: "Satisfaction",
+                    },
+                    {
+                      icon: "bg-orange-400",
+                      value: userData?.last_activity_date
+                        ? new Date(userData.last_activity_date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })
+                        : "Jan 1 2026",
+                      label: "Last activity",
+                    },
+                  ].map((stat) => (
+                    <div key={stat.label} className="flex flex-col items-center gap-1 text-center">
+                      <div className={`w-2 h-2 sm:w-3 sm:h-3 ${stat.icon} rounded-full animate-pulse`} />
+                      <span className="text-xs sm:text-sm text-white/70">
+                        <strong>{stat.value}</strong>
+                      </span>
+                      <span className="text-xs text-white/60" style={{ fontFamily: "Trade Winds, system-ui" }}>
+                        {stat.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
 
-                        {/* Quick Actions */}
+                {/* Quick Actions */}
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <div className="flex items-center justify-center gap-2 h-10 bg-blue-400/30 border border-blue-400 px-4 rounded-full">
                     <img loading="lazy" src="/flame.jpg" alt="flame" className="w-5 sm:w-6" />

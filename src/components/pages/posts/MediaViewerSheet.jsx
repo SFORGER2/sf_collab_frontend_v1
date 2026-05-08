@@ -1,11 +1,6 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  ChevronRight
-} from "lucide-react";
-
+import { ChevronRight } from "lucide-react";
 import { Button } from "../../ui/button";
-
 import {
   Sheet,
   SheetContent,
@@ -14,6 +9,7 @@ import {
   SheetTrigger,
 } from "../../ui/sheet";
 import { Badge } from "../../ui/badge";
+import ShinyText from "@/components/ui/ShinyText";
 // Media Viewer Sheet Component
 export default function MediaViewerSheet({
   mediaUrl,

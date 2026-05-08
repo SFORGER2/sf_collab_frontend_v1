@@ -136,7 +136,7 @@ const SkillProfile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 text-white p-6">
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="w-full mx-auto space-y-8">
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>

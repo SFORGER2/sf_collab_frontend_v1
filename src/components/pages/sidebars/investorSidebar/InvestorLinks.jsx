@@ -1,6 +1,6 @@
-import { BarChart2, BookOpen, ChartNoAxesGanttIcon, Eye, LightbulbIcon, Lock, Rocket, Save } from 'lucide-react';
-import { FcDocument } from 'react-icons/fc';
-import { aiTools, toolsSection, dashboardLink, socialSection } from '../sidebarCommons';
+import { BarChart2, BookOpen, ChartNoAxesGanttIcon, Eye, LightbulbIcon, Lock, Rocket, Save, TrendingUp } from 'lucide-react';
+import { FcDocument, FcInvite } from 'react-icons/fc';
+import { aiTools, toolsSection, dashboardLink, socialSection, ideation, wallet } from '../sidebarCommons';
 
 export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
@@ -13,19 +13,12 @@ export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActi
       subItems: [
         { id: "discover-startups", href: "/discover-startups", label: "Discover Startups", icon: <Rocket size={18} /> },
         { id: "saved-startups", href: "/saved-startups", label: "Saved Startups", icon: <Save size={18} /> },
+        { id: "my-invitations", href: "/invitations", label: "My Invitations", icon: <FcInvite size={18} />, }
+
       ]
 
     },
-    {
-      id: 3,
-      icon: <LightbulbIcon size={22} />,
-      href: "/ideation",
-      label: "Ideation",
-      subItems: [
-        { id: "Ideation-Board", href: "/ideation", label: "Ideation Board", icon: <LightbulbIcon size={18} /> },
-        { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
-      ]
-    },
+    ideation(3),
     {
       id: 4,
       icon: <BarChart2 size={22} />,
@@ -42,9 +35,9 @@ export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActi
       isUpcoming: true,
       subItems: []
     },
-    socialSection(6),
-
-    aiTools(9),
-    toolsSection(10)
+    socialSection(7),
+    aiTools(8),
+    toolsSection(9),
+    wallet(10)
   ];
 }

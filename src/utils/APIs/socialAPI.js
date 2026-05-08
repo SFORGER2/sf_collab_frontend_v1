@@ -3,340 +3,261 @@ import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorI
 
 const api = axios.create(API_CONFIG)
 
-api.interceptors.request.use(
-  requestInterceptor,
-  requestErrorInterceptor
-);
+api.interceptors.request.use((config) => {
+  // Let axios set Content-Type automatically for FormData (multipart/form-data + boundary).
+  // For plain objects, default to application/json.
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  } else if (!config.headers['Content-Type']) {
+    config.headers['Content-Type'] = 'application/json';
+  }
+  return requestInterceptor(config);
+}, requestErrorInterceptor);
 
 api.interceptors.response.use(
   responseInterceptor,
   responseErrorInterceptor
 );
 
-// Posts API
+// Posts API (backend uses /api/posts)
 export const postsAPI = {
   getAll: async (params = {}) => {
-    const response = await api.get('/api/posts', {
+    const response = await api.get('/posts', {
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
-        user_id: params.userId,
-        author_id: params.authorId,
         type: params.postType,
         search: params.search,
-        include_comments: params.includeComments || false,
-        include_media: params.includeMedia || false,
-        current_user_id: params.currentUserId,
-        ...params,
+        include_comments: params.include_comments,
+        include_media: params.include_media,
+        current_user_id: params.current_user_id,
       },
     })
+    console.log("API Response for getAll posts:", response.data);
     return response.data
   },
 
   getById: async (postId, params = {}) => {
-    const response = await api.get(`/api/posts/${postId}`, {
+    const response = await api.get(`/posts/${postId}`, {
       params: {
-        include_comments: params.includeComments || false,
-        include_media: params.includeMedia || false,
-        current_user_id: params.currentUserId,
+        include_comments: params.include_comments,
+        include_media: params.include_media,
+        current_user_id: params.current_user_id,
       },
     })
     return response.data
   },
 
   create: async (postData) => {
-    const response = await api.post('/api/posts', postData)
+    const response = await api.post('/posts', postData)
     return response.data
   },
 
   update: async (postId, postData) => {
-    const response = await api.put(`/api/posts/${postId}`, postData)
+    const response = await api.put(`/posts/${postId}`, postData)
     return response.data
   },
 
   delete: async (postId) => {
-    const response = await api.delete(`/api/posts/${postId}`)
+    const response = await api.delete(`/posts/${postId}`)
     return response.data
   },
 
   like: async (postId, userId) => {
-    const response = await api.post(`/api/posts/${postId}/like`, { user_id: userId })
+    const response = await api.post(`/posts/${postId}/like`)
     return response.data
   },
 
   unlike: async (postId, userId) => {
-    const response = await api.post(`/api/posts/${postId}/unlike`, { user_id: userId })
+    const response = await api.post(`/posts/${postId}/like`)
     return response.data
   },
 
   addTag: async (postId, tag) => {
-    const response = await api.post(`/api/posts/${postId}/tags`, { tag })
+    const response = await api.post(`/posts/${postId}/tags`, { tag })
     return response.data
   },
 }
 
-// Post Comments API
-export const postCommentsAPI = {
+// Stories API (backend uses /api/stories)
+export const storiesAPI = {
   getAll: async (params = {}) => {
-    const response = await api.get('/api/post-comments', {
+    const response = await api.get('/stories', {
       params: {
         page: params.page || 1,
         per_page: params.per_page || 20,
-        post_id: params.postId,
-        author_id: params.authorId,
-        ...params,
+        active_only: params.activeOnly !== false,
       },
     })
     return response.data
   },
 
-  getById: async (commentId) => {
-    const response = await api.get(`/api/post-comments/${commentId}`)
+  getById: async (storyId, params = {}) => {
+    const response = await api.get(`/stories/${storyId}`)
     return response.data
   },
 
-  create: async (commentData) => {
-    const response = await api.post('/api/post-comments', commentData)
+  create: async (storyData) => {
+    const response = await api.post('/stories', storyData, {
+      headers: {
+        "Content-Type": undefined
+      }
+    })
     return response.data
   },
 
-  update: async (commentId, content) => {
-    const response = await api.put(`/api/post-comments/${commentId}`, { content })
+  update: async (storyId, storyData) => {
+    const response = await api.put(`/stories/${storyId}`, storyData)
     return response.data
   },
 
-  delete: async (commentId) => {
-    const response = await api.delete(`/api/post-comments/${commentId}`)
+  view: async (storyId, userId) => {
+    const response = await api.post(`/stories/${storyId}/view`, { user_id: userId })
     return response.data
   },
-}
 
-// Post Media API
-export const postMediaAPI = {
-  getAll: async (params = {}) => {
-    const response = await api.get('/api/post-media', {
+  getActive: async (userIds, currentUserId) => {
+    const response = await api.get('/stories', {
       params: {
-        page: params.page || 1,
-        per_page: params.per_page || 20,
-        post_id: params.postId,
-        media_type: params.mediaType,
-        ...params,
+        page: 1,
+        limit: 50,
+        active_only: true,
       },
     })
     return response.data
   },
 
-  getById: async (mediaId) => {
-    const response = await api.get(`/api/post-media/${mediaId}`)
-    return response.data
-  },
-
-  create: async (mediaData) => {
-    const response = await api.post('/api/post-media', mediaData)
-    return response.data
-  },
-
-  updateCaption: async (mediaId, caption) => {
-    const response = await api.put(`/api/post-media/${mediaId}/caption`, { caption })
-    return response.data
-  },
-
-  delete: async (mediaId) => {
-    const response = await api.delete(`/api/post-media/${mediaId}`)
+  delete: async (storyId) => {
+    const response = await api.delete(`/stories/${storyId}`)
     return response.data
   },
 }
+
 // User Social API
 export const userSocialAPI = {
   followUser: async (userId) => {
-    const response = await api.post(`/api/user-social/${userId}/follow`)
+    const response = await api.post(`/user-social/${userId}/follow`)
     return response.data
   },
 
   unfollowUser: async (userId) => {
-    const response = await api.post(`/api/user-social/${userId}/unfollow`)
+    const response = await api.post(`/user-social/${userId}/unfollow`)
     return response.data
   },
 
   getFollowers: async (userId, params = {}) => {
-    const response = await api.get(`/api/user-social/${userId}/followers`, {
+    const response = await api.get(`/user-social/${userId}/followers`, {
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
-        ...params,
       },
     })
     return response.data
   },
 
   getFollowing: async (userId, params = {}) => {
-    const response = await api.get(`/api/user-social/${userId}/following`, {
+    const response = await api.get(`/user-social/${userId}/following`, {
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
-        ...params,
       },
     })
     return response.data
   },
 
   likePost: async (userId, postId) => {
-    const response = await api.post(`/api/user-social/${userId}/like-post`, { post_id: postId })
+    const response = await api.post(`/user-social/${userId}/like-post`, { post_id: postId })
     return response.data
   },
 
   unlikePost: async (userId, postId) => {
-    const response = await api.post(`/api/user-social/${userId}/unlike-post`, { post_id: postId })
+    const response = await api.post(`/user-social/${userId}/unlike-post`, { post_id: postId })
     return response.data
   },
 
   savePost: async (userId, postId) => {
-    const response = await api.post(`/api/user-social/${userId}/save-post`, { post_id: postId })
+    const response = await api.post(`/posts/${postId}/save`)
     return response.data
   },
 
   unsavePost: async (userId, postId) => {
-    const response = await api.post(`/api/user-social/${userId}/unsave-post`, { post_id: postId })
+    const response = await api.post(`/posts/${postId}/unsave`)
     return response.data
   },
 
   blockUser: async (userId, blockedUserId) => {
-    const response = await api.post(`/api/user-social/${userId}/block/${blockedUserId}`)
+    const response = await api.post(`/user-social/${userId}/block/${blockedUserId}`)
     return response.data
   },
 
   unblockUser: async (userId, blockedUserId) => {
-    const response = await api.post(`/api/user-social/${userId}/unblock/${blockedUserId}`)
+    const response = await api.post(`/user-social/${userId}/unblock/${blockedUserId}`)
     return response.data
   },
 
   muteUser: async (userId, mutedUserId) => {
-    const response = await api.post(`/api/user-social/${userId}/mute/${mutedUserId}`)
+    const response = await api.post(`/user-social/${userId}/mute/${mutedUserId}`)
     return response.data
   },
 
   unmuteUser: async (userId, mutedUserId) => {
-    const response = await api.post(`/api/user-social/${userId}/unmute/${mutedUserId}`)
+    const response = await api.post(`/user-social/${userId}/unmute/${mutedUserId}`)
     return response.data
   },
 
   updatePreferences: async (userId, preferences) => {
-    const response = await api.put(`/api/user-social/${userId}/preferences`, preferences)
+    const response = await api.put(`/user-social/${userId}/preferences`, preferences)
     return response.data
   },
 
   updateInterestTags: async (userId, tags) => {
-    const response = await api.put(`/api/user-social/${userId}/interest-tags`, { tags })
+    const response = await api.put(`/user-social/${userId}/interest-tags`, { tags })
     return response.data
   },
 
   updateMatchPreferences: async (userId, preferences) => {
-    const response = await api.put(`/api/user-social/${userId}/match-preferences`, { preferences })
+    const response = await api.put(`/user-social/${userId}/match-preferences`, { preferences })
     return response.data
   },
 
   getSocialProfile: async (userId) => {
-    const response = await api.get(`/api/user-social/${userId}`)
+    const response = await api.get(`/user-social/${userId}`)
+    return response.data
+  },
+
+  createSocialProfile: async (userId) => {
+    const response = await api.post(`/user-social/${userId}`)
     return response.data
   },
 
   updatePrivacySettings: async (userId, settings) => {
-    const response = await api.put(`/api/user-social/${userId}/privacy`, settings)
+    const response = await api.put(`/user-social/${userId}/privacy`, settings)
     return response.data
   },
 
   getEngagementRate: async (userId) => {
-    const response = await api.get(`/api/user-social/${userId}/engagement-rate`)
-    return response.data
-  },
-
-  getUserSocialData: async (userId) => {
-    const response = await api.get(`/api/user-social/${userId}/data`)
-    return response.data
-  },
-
-
-  isFollowing: async (userId) => {
-    const response = await api.get(`/api/profile/${userId}/is-following`)
-    return response.data
-  },
-
-  // Explore and feed endpoints
-  getExplorePosts: async (params = {}) => {
-    const response = await api.get('/api/profile/explore', {
-      params: {
-        page: params.page || 1,
-        per_page: params.limit || 10,
-        ...params,
-      },
-    })
-    return response.data
-  },
-
-  getFeedPosts: async (params = {}) => {
-    const response = await api.get('/api/profile/posts', {
-      params: {
-        page: params.page || 1,
-        per_page: params.limit || 10,
-        ...params,
-      },
-    })
+    const response = await api.get(`/user-social/${userId}/engagement-rate`)
     return response.data
   },
 
   getSuggestions: async (limit = 5) => {
-    const response = await api.get('/api/profile/suggestions', {
-      params: { limit },
+    const response = await api.get('/user-social/suggestions', {
+      params: {
+        limit,
+      },
     })
     return response.data
   },
 
-  createStory: async (payload = {}) => {
-    const response = await api.post('/api/profile/stories', payload)
-    return response.data
-  },
-  getStories: async (params = {}) => {
-    const response = await api.get('/api/profile/stories', { params })
-    return response.data
-  },
-
-  // Delete post
-  deletePost: async (postId) => {
-    const response = await api.delete(`/api/profile/posts/${postId}`)
-    return response.data
-  },
-
-  // Edit post
-  editPost: async (postId, { caption }) => {
-    const response = await api.patch(`/api/profile/posts/${postId}`, { caption })
-    return response.data
-  },
-
-  // Get saved posts
-  getSavedPosts: async (params = {}) => {
-    const response = await api.get('/api/profile/saved-posts', { params })
-    return response.data
-  },
-
-  // Comments
-  addComment: async (postId, { text }) => {
-    const response = await api.post(`/api/profile/posts/${postId}/comments`, { text })
-    return response.data
-  },
-
-  getComments: async (postId, params = {}) => {
-    const response = await api.get(`/api/profile/posts/${postId}/comments`, { params })
-    return response.data
-  },
-
-  deleteComment: async (postId, commentId) => {
-    const response = await api.delete(`/api/profile/posts/${postId}/comments/${commentId}`)
-    return response.data
-  },
-
-  // Search users
-  searchUsers: async (q) => {
-    const response = await api.get('/api/profile/search', { params: { q } })
+  searchUsers: async (query, params = {}) => {
+    const response = await api.get('/users', {
+      params: {
+        search: query,
+        page: params.page || 1,
+        per_page: params.per_page || 10,
+        ...params,
+      },
+    })
     return response.data
   },
 }

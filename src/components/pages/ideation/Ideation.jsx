@@ -30,8 +30,9 @@ import { API_BASE_URL } from "@/utils/config";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import IdeationCard from "./IdeationCard";
 import { getStageColor } from "./getStageColor";
+import IdeationTutorial from "./IdeationTutorial";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 
 const Ideation = ({ activeRole}) => {
@@ -73,7 +74,7 @@ const Ideation = ({ activeRole}) => {
         params.append("search", searchQuery);
       }
 
-      const response = await ideaAPI.getAllIdeas(access_token, params);
+      const response = await ideaAPI.getAllIdeas(params);
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch ideas");
       }
@@ -106,6 +107,10 @@ const Ideation = ({ activeRole}) => {
         comments: idea.commentsCount,
         collaborators: idea.teamSize,
         tags: idea.tags || [],
+        // Vision system fields
+        visionState: idea.visionState || idea.vision_state || 'public',
+        readinessScore: idea.readinessScore || idea.readiness_score || 0,
+        isConverted: (idea.tags || []).includes('Converted Vision'),
       }));
 
       setIdeas(mappedIdeas);
@@ -132,12 +137,12 @@ const Ideation = ({ activeRole}) => {
   const handleCreateIdea = async (payload) => {
     try {
       if (!user || !access_token) {
-        throw new Error("You must be logged in to create an idea.");
+        throw new Error("You must be logged in to create a vision.");
       }
       const response = await ideaAPI.createIdea(payload, access_token, { 'Content-Type': 'multipart/form-data' });
 
       if (!response.success) {
-        throw new Error(response.message || "Failed to create idea");
+        throw new Error(response.message || "Failed to create vision");
       }
 
 
@@ -173,8 +178,8 @@ const Ideation = ({ activeRole}) => {
       setSortBy("latest");
       setSearchQuery("");
     } catch (err) {
-      console.error("Failed to create idea:", err);
-      setError(err.message || "Failed to create idea. Please try again.");
+      console.error("Failed to create vision:", err);
+      setError(err.message || "Failed to create vision. Please try again.");
     }
   };
 
@@ -207,7 +212,7 @@ const Ideation = ({ activeRole}) => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <p className="text-gray-300">Loading ideas...</p>
+        <p className="text-gray-300">Loading visions...</p>
       </div>
     );
   }
@@ -255,8 +260,9 @@ const Ideation = ({ activeRole}) => {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="mb-0">
+    <div className="min-h-screen bg-black pr-4">
+      <IdeationTutorial /> 
+      <div className="mb-0 mt-10">
         <IdeationHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -290,14 +296,34 @@ const Ideation = ({ activeRole}) => {
 
           return (
             <div key={content.id} className="group relative">
+              {/* Converted Vision badge */}
+              {content.isConverted && (
+                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5
+                                bg-violet-600/90 text-white text-[10px] font-semibold
+                                px-2 py-1 rounded-full backdrop-blur-sm shadow-lg">
+                  <span>⟳</span> Converted Vision
+                </div>
+              )}
+              {/* Readiness badge — only show when score > 0 */}
+              {content.readinessScore > 0 && (
+                <div className={`absolute top-3 right-3 z-20 text-[10px] font-bold
+                                 px-2 py-1 rounded-full backdrop-blur-sm shadow-lg
+                                 ${content.readinessScore >= 70
+                                   ? 'bg-green-600/90 text-white'
+                                   : content.readinessScore >= 40
+                                     ? 'bg-amber-500/90 text-white'
+                                     : 'bg-red-600/90 text-white'}`}>
+                  {Math.round(content.readinessScore)}% ready
+                </div>
+              )}
               {canAccess ? (
                 <IdeationCard content={content} shouldBlur={shouldBlur} /> 
               ) : (
-                <div className="block bg-[#1A1A1A] border border-white/10 rounded-xl h-full relative overflow-hidden cursor-not-allowed">
+                <div className={`block bg-[#1A1A1A] border border-white/10 rounded-xl h-full relative overflow-hidden cursor-not-allowed`}>
                   {shouldBlur && (
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-10 flex items-center justify-center">
                       <div className="text-center p-4">
-                        <div className="text-gray-400 text-sm mb-2">🔒 Private Idea</div>
+                        <div className="text-gray-400 text-sm mb-2">🔒 Private Vision</div>
                         <div className="text-gray-500 text-xs">Only the creator can view this</div>
                       </div>
                     </div>
@@ -394,18 +420,18 @@ const Ideation = ({ activeRole}) => {
       {ideas.length === 0 && !isLoading && (
         <div className="flex flex-col items-center justify-center py-16 px-4">
           <div className="text-center space-y-4">
-            <Lightbulb className="h-16 w-16 text-gray-600 mx-auto" />
+            <Eye className="h-16 w-16 text-gray-600 mx-auto" />
             <h3 className="text-xl font-semibold text-gray-300">
-              No ideas found
+              No visions found
             </h3>
             <p className="text-gray-500 max-w-md">
-              Be the first to share an innovative idea! Try adjusting your
-              filters or create a new idea to get the conversation started.
+              Be the first to share a bold vision! Try adjusting your
+              filters or create a new vision to inspire others.
             </p>
             <button
               onClick={() => setShowNewIdeaForm(true)}
               className="bg-white text-black px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors">
-              Share Your Idea
+              Share Your Vision
             </button>
           </div>
         </div>

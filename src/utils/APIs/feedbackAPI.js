@@ -41,12 +41,8 @@ export const feedbackAPI = {
     return response.data;
   },
 
-  delete: async (userId, accessToken) => {
-    const response = await api.delete(`/feedback/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+  delete: async (userId) => {
+    const response = await api.delete(`/feedback/${userId}`);
     return response.data;
   },
 };

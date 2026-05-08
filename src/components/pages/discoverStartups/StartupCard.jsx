@@ -10,6 +10,16 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import ApplyToStartupModal from "./ApplyToStartupModal";
+const stageColors = [
+  'bg-red-500/20 text-red-300',
+  'bg-orange-500/20 text-orange-300',
+  'bg-yellow-500/20 text-yellow-300',
+  'bg-green-500/20 text-green-300',
+  'bg-blue-500/20 text-blue-300',
+  'bg-purple-500/20 text-purple-300',
+  'bg-pink-500/20 text-pink-300',
+  'bg-indigo-500/20 text-indigo-300',
+];
 
 export default function StartupCard({
   startup,
@@ -41,15 +51,9 @@ export default function StartupCard({
     }
     checkIfBookmarked();
   }, [startup?.id, user?.id]);
-  const getStageBadgeVariant = (stage) => {
-    const variants = {
-      'Pre-seed': 'bg-red-500/20 text-red-300',
-      Seed: 'bg-orange-500/20 text-orange-300',
-      'Series A': 'bg-yellow-500/20 text-yellow-300',
-      'Series B': 'bg-green-500/20 text-green-300',
-      'Series C+': 'bg-blue-500/20 text-blue-300',
-    };
-    return variants[stage] || 'bg-gray-500/20 text-gray-300';
+  const getStageBadgeVariant = (startupId) => {
+    const index = startupId % stageColors.length;
+    return stageColors[index];
   };
   async function bookmarkStartup() {
     try {
@@ -78,6 +82,8 @@ export default function StartupCard({
       return num.toString();
     }
   }
+  
+
   return (
     <>
       <Link to={`/startup-details/${startup.id}`}>
@@ -107,6 +113,7 @@ export default function StartupCard({
                 variant="ghost"
                 className="h-8 w-8 bg-black/40 hover:bg-black/60"
                 onClick={(e) => {
+                  e.preventDefault()
                   e.stopPropagation();
                   bookmarkStartup();
                 }}
@@ -119,8 +126,8 @@ export default function StartupCard({
                 />
               </Button>
 
-              <Badge className={`text-xs ${getStageBadgeVariant(startup.stage)}`}>
-                {startup.stage}
+              <Badge className={`text-xs ${getStageBadgeVariant(startup.id)}`}>
+                {startup.stage[0].toUpperCase() + startup.stage.slice(1)}
               </Badge>
             </div>
           </div>
@@ -202,7 +209,7 @@ export default function StartupCard({
             )}
 
             {/* Other Roles */}
-            {Object.keys(startup.roles).length > 1 && (
+            {Object.keys(startup.roles).length > 0 && (
               <div className="space-y-2">
                 <button
                   onClick={(e) => {

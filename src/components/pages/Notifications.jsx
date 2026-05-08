@@ -43,15 +43,25 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import LoadingSpinner from "../LoadingSpinner";
+// ✅ FIX: import shared context so the page and bell stay in sync
+import { useNotifications as useNotificationsContext } from '../../contexts/NotificationContext';
 
 
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const Notifications = () => {
   const dispatch = useDispatch();
   const { user, access_token } = useSelector((state) => state.auth);
   
+  // ✅ FIX: pull markAllAsRead and unread count from the shared context.
+  // This means when this page opens the bell badge also drops to 0 instantly.
+  const {
+    markAllAsRead: markAllAsReadContext,
+    unreadCount: contextUnreadCount,
+    refresh: refreshContext,
+  } = useNotificationsContext();
+
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -113,6 +123,18 @@ const Notifications = () => {
     fetchNotifications();
   }, [access_token, user]);
 
+  // ✅ FIX: Auto-mark ALL notifications as read the moment this page opens.
+  // markAllAsReadContext() is optimistic — the bell badge drops to 0 immediately.
+  // The backend call and socket emit happen in the background.
+  useEffect(() => {
+    if (access_token) {
+      markAllAsReadContext();
+      // Also update local state so the unread dots disappear in the list
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true, is_read: true })));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [access_token]);
+
   // Real-time updates polling with fetch
   useEffect(() => {
     const interval = setInterval(() => {
@@ -158,7 +180,9 @@ const Notifications = () => {
     return matchesSearch && matchesFilter && matchesTab;
   });
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  // ✅ FIX: use contextUnreadCount from shared context so the page header
+  // badge matches the bell badge exactly, without needing a page refresh.
+  const unreadCount = contextUnreadCount;
   const totalCount = notifications.length;
 
   // Notification actions with fetch
@@ -173,8 +197,9 @@ const Notifications = () => {
       });
 
       if (response.ok) {
+        // ✅ FIX: set both is_read (backend) and isRead (legacy page state)
         setNotifications(prev => prev.map(n => 
-          n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n
+          n.id === id ? { ...n, is_read: true, isRead: true, readAt: new Date().toISOString() } : n
         ));
       } else {
         throw new Error('Failed to mark as read');
@@ -183,7 +208,7 @@ const Notifications = () => {
       console.error("Failed to mark as read:", error);
       // Fallback to local update
       setNotifications(prev => prev.map(n => 
-        n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n
+        n.id === id ? { ...n, is_read: true, isRead: true, readAt: new Date().toISOString() } : n
       ));
     }
   };
@@ -285,11 +310,11 @@ const Notifications = () => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      // Mark each unread notification individually
-      const unreadNotifications = notifications.filter(n => !n.isRead);
-      for (const notification of unreadNotifications) {
-        await handleMarkAsRead(notification.id);
-      }
+      // ✅ FIX: use shared context — single API call, optimistic badge update,
+      // and socket emission to sync the bell badge instantly.
+      await markAllAsReadContext();
+      // Also update the local list so unread dots disappear
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true, is_read: true })));
     } catch (error) {
       console.error("Failed to mark all as read:", error);
     }

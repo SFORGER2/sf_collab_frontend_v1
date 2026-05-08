@@ -1,6 +1,7 @@
-import { CheckCircle, Save, LightbulbIcon, BookOpen, MessageSquareHeart, Rocket, Users, ClipboardList, Calculator, FileTerminal } from 'lucide-react';
+import { CheckCircle, Save, LightbulbIcon, BookOpen, MessageSquareHeart, Rocket, Users, ClipboardList, Calculator, FileTerminal, Hammer } from 'lucide-react';
 
-import { aiTools, dashboardLink, socialSection, toolsSection } from '../sidebarCommons';
+import { aiTools, dashboardLink, ideation, socialSection, toolsSection, wallet } from '../sidebarCommons';
+import { FcInvite } from 'react-icons/fc';
 
 export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
@@ -16,31 +17,22 @@ export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiv
       ]
 
     },
-
-    {
-      id: 4,
-      icon: <LightbulbIcon size={22} />,
-      href: "/ideation",
-      label: "Ideation",
-      subItems: [
-        { id: "Ideation-Board", href: "/ideation", label: "Ideation Board", icon: <LightbulbIcon size={18} /> },
-        { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
-      ]
-    },
+    ideation(3),
     {
       id: 5,
-      icon: <CheckCircle size={22} />,
-      href: "/builder/my-applications",
-      label: "My Applications",
-    },
-    {
-      id: 6,
-      icon: <ClipboardList size={22} />,
-      href: "/builder/my-work",
-      label: "My Work",
+      icon: <Hammer size={22} />,
+      href: "/builder/my-startups",
+      label: "My Startups",
+      subItems: [
+        { id: "my-startups", href: "/builder/my-startups", label: "My Startups", icon: <Hammer size={18} /> },
+        { id: "my-applications", href: "/builder/my-applications", label: "My Applications", icon: <CheckCircle size={18} /> },
+        { id: "my-work", href: "/builder/my-work", label: "My Work", icon: <ClipboardList size={18} /> },
+        { id: "my-invitations", href: "/invitations", label: "My Invitations", icon: <FcInvite size={18} />, }
+      ]
     },
     socialSection(7),
     aiTools(8),
-    toolsSection(9)
+    toolsSection(9),
+    wallet(10)
   ];
 };

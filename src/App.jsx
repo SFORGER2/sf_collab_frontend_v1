@@ -95,6 +95,28 @@ import ToolsDashboard from "./components/pages/dashboards/toolsDashboard/ToolsDa
 import CalculatorPage from "./components/pages/calculatorPage/CalculatorPage.jsx";
 import NotesPage from "./components/pages/notes/NotesPage.jsx";
 import BoardPage from "./components/pages/board/BoardPage.jsx";
+import WalletDashboard from "./components/pages/wallet/WalletDashboard";
+import StorePage from "./components/pages/store/StorePage";
+import LeaderboardPage from './components/pages/leaderboard/LeaderboardPage';
+import CaptionGenerator from "./components/pages/captionGenerator/CaptionGenerator.jsx";
+import VideoGenerator from "./components/pages/videoGenerator/VideoGenerator.jsx";
+import FounderManageApplications from "./components/pages/founder/manageApplications/FounderManageApplications.jsx";
+import FounderManageTeam from "./components/pages/founder/manageTeam/FounderManageTeam.jsx";
+import FounderManageTasks from "./components/pages/founder/manageTasks/FounderManageTasks.jsx";
+import SavedIdeas from "./components/pages/ideation/SavedIdeas.jsx";
+import AIToolsGuard from "./components/ai/AIToolsGuard.jsx";
+import BuilderStartups from "./components/pages/builderStartups/BuilderStartups.jsx";
+import InviteToStartup from "./components/pages/inviteToStartup/InviteToStartup.jsx";
+import MarketplacePage from './components/pages/marketplace/MarketplacePage';
+import MentorshipDiscovery from "./components/pages/Mentorship/MentorDiscoveryPage.jsx";
+import MentorDashboard from './components/pages/Mentorship/MentorDashboard';
+import MyMentorshipRequests from './components/pages/Mentorship/MyMentorshipRequests';
+
+// ── ERP Module ────────────────────────────────────────────────────────────────
+import { MyAttendancePage, WorkspaceAttendancePage } from "./components/pages/erp/AttendancePage.jsx";
+import { AlertsPage } from "./components/pages/erp/AlertsPage.jsx";
+import { AnalyticsDashboard } from "./components/pages/erp/AnalyticsDashboard.jsx";
+import { ActivityMonitorPage } from "./components/pages/erp/ActivityMonitorPage.jsx";
 
 
 
@@ -107,27 +129,27 @@ export default function App() {
     localStorage.setItem('activeRole', activeRole);
   }, [activeRole]);
   if (import.meta.env.PROD) {
-  console.log = () => {}
-  console.warn = () => {}
-}
+    console.log = () => { }
+    console.warn = () => { }
+  }
 
   useEffect(() => {
     async function fetchUserRoles() {
-        try {
-          // console.log(access_token);
-          const response = await usersAPI.getMyRoles();
-          setUserRoles([...response.data.map(role => role.role)]);
-          // setUserRoles(['admin', 'influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
-          // setActiveRole('member');
-        } catch (error) {
-          console.error("Error fetching user roles:", error);
-        }
+      try {
+        // console.log(access_token);
+        const response = await usersAPI.getMyRoles();
+        setUserRoles([...response.data.map(role => role.role)]);
+        // setUserRoles(['admin', 'influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
+        // setActiveRole('member');
+      } catch (error) {
+        console.error("Error fetching user roles:", error);
+      }
     }
     const location = window.location;
     if (!['/login', '/signup', '/verify-email'].includes(location.pathname) || location.pathname !== '/' && access_token)
-    fetchUserRoles();
+      fetchUserRoles();
   }, [access_token]);
-  
+
 
   function ScrollToTop() {
     const { pathname } = useLocation();
@@ -165,13 +187,13 @@ export default function App() {
                 <Route path="/startuppage" element={<StartupPage />} />
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/explore_section" element={<Explore_Section />} />
-      
+
                 {/* Public Authentication Routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 {/* Refer and Waitlist */}
-      
+
                 <Route path='membership-benefits' element={<MembershipBenefits />} />
                 <Route path='implementation-plans' element={<ImplementationPlans />} />
                 <Route path='featured-projects' element={<FeaturedProjects />} />
@@ -194,8 +216,7 @@ export default function App() {
                     path="dashboard"
                     element={
                       (() => {
-                        const props = { activeRole, setActiveRole, userRoles };
-
+                        const props = { activeRole, setActiveRole, userRoles, setUserRoles };
                         if (user && activeRole === 'influencer') {
                           return <InfluencerDashboard {...props} />;
                         } else if (user && activeRole === 'builder') {
@@ -211,17 +232,29 @@ export default function App() {
                     }
                   />
                   {/* <Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} /> */}
-            
+
                   {/* ===== BUILDER DASHBOARD ROUTES ===== */}
-                  <Route path="saved-startups" element={<SavedStartups />} />
                   <Route path="builder/my-applications" element={<MyApplications />} />
                   <Route path="builder/my-work" element={<MyWork />} />
                   <Route path="builder/rewards" element={<Rewards />} />
+                  <Route path="builder/my-startups" element={<BuilderStartups myStartupsOnly={true} />} />
                   <Route path="builder/profile-skills" element={<SkillProfile />} />
                   <Route path="builder/profile" element={<SkillProfile />} />
-                  {/* ===== END BUILDER ROUTES ===== */}
-            
-                  <Route path="ai-dashboard" element={<AIDashboard />} />
+
+                  {/* ===== FOUNDER ROUTES ===== */}
+                  <Route path="founder/my-applications" element={<FounderManageApplications />} />
+                  <Route path="founder/my-team" element={<FounderManageTeam />} />
+                  <Route path="founder/manage-tasks" element={<FounderManageTasks />} />
+
+
+                  <Route
+                    path="ai-dashboard"
+                    element={
+                      <AIToolsGuard>
+                        <AIDashboard />
+                      </AIToolsGuard>
+                    }
+                  />
                   <Route path="tools-dashboard" element={<ToolsDashboard />} />
                   <Route path="waitlist" element={<Waitlist />} />
                   <Route path="waitlist-terms" element={<WaitlistTerms />} />
@@ -238,15 +271,16 @@ export default function App() {
                   <Route path="projects" element={<Project />} />
                   <Route path="project-management" element={<ProjectManagement />} />
                   <Route path="project-details" element={<ProjectDetails />} />
-        
+
                   {/* Ideation */}
                   <Route path="ideation" element={<Ideation activeRole={activeRole} />} />
+                  <Route path="saved-ideas" element={<SavedIdeas />} />
                   <Route path="ideation-details" element={<Ideationdetails />} />
-        
+
                   {/* Knowledge */}
                   <Route path="knowledge" element={<Knowledge />} />
                   <Route path="knowledge-details" element={<Knowledgedetails />} />
-        
+
                   {/* Help */}
                   <Route path="help" element={<Help />} />
                   <Route path="video-tutorials" element={<VideoTutorials />} />
@@ -256,13 +290,13 @@ export default function App() {
                   <Route path="notifications" element={<NotificationPage />} />
                   {/* Posts */}
                   <Route path="posts" element={<Posts />} />
-                
-                
+
+
                   {/* Contribution */}
                   <Route path="contribution" element={<ContributionPage />} />
                   <Route path="contribution-ideas" element={<ContributionIdeasPage />} />
                   <Route path="contribution-polls" element={<ContributionPollsPage />} />
-                
+
                   {/* Crowdfunding */}
                   <Route path="crowdfunding" element={<Crowdfunding />} />
                   <Route path="checkout/:tierId" element={<Checkout />} />
@@ -271,10 +305,10 @@ export default function App() {
                   {/* Quick Guides */}
                   <Route path="getting-started" element={<GettingStarted />} />
                   <Route path="team-collaboration" element={<TeamCollaboration />} />
-                
+
                   {/* Saved Ideas */}
                   {/* <Route path="saved-ideas" element={<SavedList />} /> */}
-                
+
                   {/* Test Page */}
                   <Route path="test" element={<Test />} />
                   {/* Startups */}
@@ -282,13 +316,71 @@ export default function App() {
                   <Route path="discover-startups" element={<DiscoverStartups />} />
                   <Route path="my-startups" element={<DiscoverStartups myStartupsOnly={true} />} />
                   <Route path="startup-details/:id" element={<StartupDetailPage />} />
+                  <Route path="saved-startups" element={<SavedStartups />} />
+                  <Route path="invitations" element={<InviteToStartup />} />
                   {/* <Route path="multi-role-profile-form" element={<MultiRoleProfileForm />} /> */}
                   {/* AI Tools */}
-                  <Route path="business-plan" element={<BusinessIdeaGenerator />} />
-                  <Route path="multimodal-images" element={<ImageGenerator />} />
-                  <Route path="logo-generator" element={<StartupLogoGenerator />} />
-                  <Route path="data-scraper" element={<ScraperForm />} />
-                  <Route path="qwen-chat" element={<QwenChat />} />
+                  <Route
+                    path="business-plan"
+                    element={
+                      <AIToolsGuard>
+                        <BusinessIdeaGenerator />
+                      </AIToolsGuard>
+                    }
+                  />
+                  <Route
+                    path="multimodal-images"
+                    element={
+                      <AIToolsGuard>
+                        <ImageGenerator />
+                      </AIToolsGuard>
+                    }
+                  />
+                  <Route
+                    path="logo-generator"
+                    element={
+                      <AIToolsGuard>
+                        <StartupLogoGenerator />
+                      </AIToolsGuard>
+                    }
+                  />
+                  <Route
+                    path="data-scraper"
+                    element={
+                      <AIToolsGuard>
+                        <ScraperForm />
+                      </AIToolsGuard>
+                    }
+                  />
+                  <Route
+                    path="qwen-chat"
+                    element={
+                      <AIToolsGuard>
+                        <QwenChat />
+                      </AIToolsGuard>
+                    }
+                  />
+                  <Route
+                    path="caption-generator"
+                    element={
+                      <AIToolsGuard>
+                        <CaptionGenerator />
+                      </AIToolsGuard>
+                    }
+                  />
+                  <Route
+                    path="video-generator"
+                    element={
+                      <AIToolsGuard>
+                        <VideoGenerator />
+                      </AIToolsGuard>
+                    }
+                  />
+                  {/*points and payments system */}
+                  <Route path="wallet" element={<WalletDashboard />} />
+                  <Route path="store" element={<StorePage />} />
+                  <Route path="/leaderboard" element={<LeaderboardPage />} />
+
                   {/* Tools */}
                   <Route path="pdf-signing" element={<PDFSigningApp />} />
                   <Route path="calculator" element={<CalculatorPage />} />
@@ -298,6 +390,22 @@ export default function App() {
                   {/* User */}
                   <Route path="discover-users" element={<DiscoverUsers />} />
 
+                  {/* ====== MARKETPLACE ====== */}
+                  <Route path="marketplace" element={<MarketplacePage />} />
+
+                  {/* Mentorship */}
+                  <Route path="mentors" element={<MentorshipDiscovery />} />
+                  <Route path="mentor-dashboard" element={<MentorDashboard />} />
+                  <Route path="my-mentorship-requests" element={<MyMentorshipRequests />} />
+
+
+                  {/* ── ERP Module ────────────────────────────────────── */}
+                  <Route path="erp/attendance" element={<MyAttendancePage />} />
+                  <Route path="erp/attendance/workspace" element={<WorkspaceAttendancePage />} />
+                  <Route path="erp/alerts" element={<AlertsPage />} />
+                  <Route path="erp/analytics" element={<AnalyticsDashboard />} />
+                  <Route path="erp/activity" element={<ActivityMonitorPage />} />
+
                   <Route path="setting" element={<Setting />}>
                     <Route index element={<ProfileSetting />} />
                     <Route path="preferences" element={<Preferences />} />
@@ -306,7 +414,7 @@ export default function App() {
                 </Route>
                 <Route path="*" element={<NotFound />} />
                 {/* Catch all route */}
-      
+
               </Routes>
               <ToastContainer
                 position="bottom-center"
@@ -331,4 +439,3 @@ export default function App() {
     </BrowserRouter>
   );
 };
-

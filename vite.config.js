@@ -4,11 +4,28 @@ import tailwindcss from '@tailwindcss/vite'
 import path from "path";
 
 const __dirname = path.resolve();
-// https://vite.dev/config/
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(),],
+  plugins: [react(), tailwindcss()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/test/setupTests.js',
+    include: ['src/**/*.test.{js,jsx,ts,tsx}'],
+  },
   server: {
-    host: true
+    host: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
+      '/socket.io': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+        ws: true,
+      }
+    }
   },
   resolve: {
     alias: {

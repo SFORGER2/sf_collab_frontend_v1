@@ -20,7 +20,7 @@ const ProfileTabs = ({ tabs, activeTab, onTabChange }) => {
             >
               <Icon className="w-4 h-4 z-10" />
               {/* {tab.label} */}
-              {activeTab === tab.id && (
+              {activeTab === tab?.id && (
                 <motion.div
                   layoutId="activeTab"
                   className="absolute inset-0 bg-blue-600 rounded-xl"

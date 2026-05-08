@@ -30,7 +30,7 @@ const Contact = () => {
     <>
       <NavBar />
       <div ref={main} className="bg-[#0b0b0b] text-white py-20 px-6 lg:px-20">
-        <div className="max-w-6xl mx-auto">
+        <div className="w-full mx-auto">
           {/* Header */}
           <div className="text-center mb-16 contact-animate">
             <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-4 bg-linear-to-r from-gray-400 to-black bg-clip-text text-transparent">

@@ -8,34 +8,41 @@ import {
   Star,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import DashboardChangeSection from "../DashboardChangeSection";
+import DashboardChangeSection from "../dashboardChangeSection";
 import OverviewWebsite from "../dashboard/OverviewWebsite";
 import AnnouncementsSection from "../dashboard/AnnouncementsSection";
 import Calendar from "@/components/sections/Calendar";
 import WorldClock from "@/components/sections/WorldClock";
 
 export default function InvestorDashboard({
-  userRoles, activeRole, setActiveRole
+  userRoles, activeRole, setActiveRole, setUserRoles
 }) {
   return (
-    <div className="relative my-6 space-y-10">
+    <div className="dashboard relative my-6 space-y-10">
       {/* Background texture */}
       <div className="absolute inset-0 pointer-events-none
   bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_1px)]
   bg-[length:20px_20px]" />
       <OverviewWebsite />
-      <DashboardChangeSection sections={userRoles.map(role => ({
-        id: role,
-        label: role.charAt(0).toUpperCase() + role.slice(1)
-      }))} onSectionChange={(sectionId) => {
-        setActiveRole(sectionId);
-        localStorage.setItem('activeRole', sectionId);
-      }} activeRole={activeRole} />
+      <DashboardChangeSection
+        sections={userRoles.map(role => ({
+          id: role,
+          label: role.charAt(0).toUpperCase() + role.slice(1)
+          }))}
+        onSectionChange={(sectionId) => {
+          setActiveRole(sectionId);
+          localStorage.setItem('activeRole', sectionId);
+        }}
+        setUserRoles={setUserRoles}
+        setActiveRole={setActiveRole}
+        userRoles={userRoles}
+        activeRole={activeRole}
+      />
       <AnnouncementsSection userRoles={userRoles} />
       <div className="relative z-10 space-y-8">
       </div>
       <div className="relative w-full mx-auto p-4 overflow-x-hidden">
-      
+
         <Calendar />
         <WorldClock />
       </div>
@@ -123,11 +130,10 @@ function DealCard({ name, tag }) {
 function DocChip({ label, disabled }) {
   return (
     <span
-      className={`px-3 py-1.5 rounded-full border text-xs ${
-        disabled
+      className={`px-3 py-1.5 rounded-full border text-xs ${disabled
           ? "bg-white/5 border-white/10 text-white/40"
           : "bg-purple-500/20 border-purple-400/40 text-white"
-      }`}
+        }`}
     >
       {label}
     </span>

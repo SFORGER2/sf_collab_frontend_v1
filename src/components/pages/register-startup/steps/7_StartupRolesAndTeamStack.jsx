@@ -13,7 +13,7 @@ TooltipContent,
 TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { popularTechnologies } from "../elements";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 // Helper function to shuffle and get random items
 const getRandomTechs = (arr, count) => {
@@ -22,6 +22,7 @@ const getRandomTechs = (arr, count) => {
 };
 
 export default function StartupRolesAndTechStack({
+  formData,
   techStack,
   techInput,
   setTechInput,
@@ -42,7 +43,6 @@ export default function StartupRolesAndTechStack({
       !techStack.includes(tech)
   )
   .slice(0, 8), [techInput, techStack]);
-
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="text-center mb-6">

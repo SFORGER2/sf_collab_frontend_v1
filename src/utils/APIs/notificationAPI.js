@@ -315,23 +315,68 @@ export const notificationAPI = {
     const response = await api.post("/notes", noteData);
     return extractData(response);
   },
-
   getAnnouncements: async () => {
     const response = await api.get("/notifications/broadcasts");
     return extractData(response);
   },
+
   createAnnouncement: async (announcementData) => {
     const response = await api.post("/notifications/broadcasts", announcementData);
     return extractData(response);
   },
+
+  updateAnnouncement: async (announcementId, announcementData) => {
+    try {
+      const response = await api.put(`/notifications/broadcasts/${announcementId}`, announcementData);
+      return extractData(response);
+    } catch {
+      const response = await api.patch(`/notifications/broadcasts/${announcementId}`, announcementData);
+      return extractData(response);
+    }
+  },
+
+  deleteAnnouncement: async (announcementId) => {
+    const response = await api.delete(`/notifications/broadcasts/${announcementId}`);
+    return extractData(response);
+  },
+
+  clearAllAnnouncements: async () => {
+    const response = await api.delete("/notifications/broadcasts");
+    return extractData(response);
+  },
+
+  /**
+   * Newsletter (bulletins)
+   */
   getNewsletter: async () => {
     const response = await api.get("/notifications/bulletins");
     return extractData(response);
   },
+
   createNewsletter: async (newsletterData) => {
     const response = await api.post("/notifications/bulletins", newsletterData);
-    return extractData(response)
-  }
+    return extractData(response);
+  },
+
+  updateNewsletter: async (newsletterId, newsletterData) => {
+    try {
+      const response = await api.put(`/notifications/bulletins/${newsletterId}`, newsletterData);
+      return extractData(response);
+    } catch {
+      const response = await api.patch(`/notifications/bulletins/${newsletterId}`, newsletterData);
+      return extractData(response);
+    }
+  },
+
+  deleteNewsletter: async (newsletterId) => {
+    const response = await api.delete(`/notifications/bulletins/${newsletterId}`);
+    return extractData(response);
+  },
+
+  clearAllNewsletters: async () => {
+    const response = await api.delete("/notifications/bulletins");
+    return extractData(response);
+  },
 };
 
 export default notificationAPI;

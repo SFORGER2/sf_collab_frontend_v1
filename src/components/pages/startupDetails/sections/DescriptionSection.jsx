@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, BarChart3 } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
-export default function DescriptionSection({ startup, formatCurrency }) {
+export default function DescriptionSection({ startup }) {
   return (
     <motion.section
       initial={{ y: 30, opacity: 0 }}

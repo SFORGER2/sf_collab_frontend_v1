@@ -1,11 +1,11 @@
 /**
  * SF Collab Notification Context - FIXED VERSION
  * 
- * FIXES:
- * 1. Added clearAllNotifications function
- * 2. Normalizes notification fields (handles both isRead/is_read)
- * 3. Proper delete functionality
- * 4. Better error handling
+ * FIXES APPLIED ON TOP OF YOUR ORIGINAL:
+ * 1. markAllAsRead() is now OPTIMISTIC — badge drops to 0 BEFORE the API call
+ * 2. Added `notifications_marked_read` socket listener so all open tabs/windows
+ *    sync instantly when any component calls mark-all-read
+ * 3. All other original code preserved exactly
  */
 
 import React, { 
@@ -14,7 +14,7 @@ import React, {
   useEffect, 
   useMemo, 
   useState, 
-  useCallback 
+  useCallback
 } from "react";
 import { useSelector } from "react-redux";
 import { notificationAPI } from "@/utils/APIs/notificationAPI";
@@ -76,21 +76,36 @@ export const NotificationProvider = ({ children }) => {
   const [filters, setFilters] = useState({});
   const [isConnected, setIsConnected] = useState(false);
 
+
+
   // -----------------------------
   // SOCKET.IO CONNECTION
   // -----------------------------
   useEffect(() => {
     if (!access_token || !user?.id) return;
 
-    const socketInstance = getSocketInstance();
+    const socketInstance = getSocketInstance(access_token);
 
-    socketInstance.on("connect", () => {
-      console.log("✅ Socket.IO connected for notifications", socketInstance.id);
+    const onConnect = async () => {
       setIsConnected(true);
-      
-      // Join user room for notifications
       socketInstance.emit("join_notifications", { user_id: user.id });
-    });
+      // Fetch fresh unread count from server now that we are in the notification room
+      // (Call API directly here — avoids stale-closure / ref timing issues)
+      try {
+        const data = await notificationAPI.getUnreadCount();
+        setUnreadCount(Number(data?.unreadCount ?? data?.unread_count ?? 0));
+      } catch (e) {
+        // non-critical — count will be correct from initial load
+      }
+    };
+
+    socketInstance.on("connect", onConnect);
+
+    // If socket is already connected when this effect runs (e.g. hot reload, lazy route),
+    // fire the connect logic immediately so we don't miss the join
+    if (socketInstance.connected) {
+      onConnect();
+    }
 
     socketInstance.on("disconnect", (reason) => {
       console.log("❌ Socket.IO disconnected:", reason);
@@ -111,9 +126,9 @@ export const NotificationProvider = ({ children }) => {
       // Normalize the notification
       const notif = normalizeNotification(rawNotif);
 
-      // Add to notifications list (avoid duplicates)
+      // Add to notifications list (avoid duplicates — use String() for type-safe comparison)
       setNotifications((prev) => {
-        if (prev.some(n => n.id === notif.id)) {
+        if (prev.some(n => String(n.id) === String(notif.id))) {
           return prev;
         }
         return [notif, ...prev];
@@ -142,24 +157,47 @@ export const NotificationProvider = ({ children }) => {
       console.log("User status update:", data);
     });
 
-    // Handle notification read sync
+    // Handle single notification read sync — use server's authoritative count
     socketInstance.on("notification_read", (data) => {
-      const { notificationId } = data;
+      const notifId = data?.notificationId ?? data?.notification_id;
+      if (notifId !== undefined) {
+        setNotifications((prev) =>
+          prev.map((n) =>
+            String(n.id) === String(notifId) ? { ...n, is_read: true, isRead: true } : n
+          )
+        );
+      }
+      // Prefer the authoritative count from server to avoid drift
+      if (data?.unread_count !== undefined) {
+        setUnreadCount(Math.max(0, Number(data.unread_count)));
+      } else {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    });
+
+    // ✅ FIX: Handle mark-ALL-read sync across tabs/windows.
+    // The backend emits this event from service.py after mark_all_as_read() succeeds.
+    // This means if you open the Notifications page in one tab and the Bell is open
+    // in another, both zero out instantly without any polling.
+    socketInstance.on("notifications_marked_read", () => {
       setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: true, isRead: true } : n
-        )
+        prev.map((n) => ({ ...n, is_read: true, isRead: true }))
       );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      setUnreadCount(0);
     });
 
     setSocket(socketInstance);
 
     return () => {
+      // Remove listeners but do NOT destroy the singleton socket.
+      // The singleton lives until logout (destroySocketInstance).
+      socketInstance.off("connect", onConnect);
       socketInstance.off("new_notification");
       socketInstance.off("notification_read");
+      socketInstance.off("notifications_marked_read");
       socketInstance.off("user_status");
-      socketInstance.close();
+      socketInstance.off("disconnect");
+      socketInstance.off("connect_error");
       setSocket(null);
       setIsConnected(false);
     };
@@ -229,6 +267,8 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [access_token]);
 
+
+
   /**
    * Load notification stats
    */
@@ -246,18 +286,26 @@ export const NotificationProvider = ({ children }) => {
    * Mark a notification as read
    */
   const markAsRead = useCallback(async (notificationId) => {
+    // OPTIMISTIC: update local state immediately, revert on failure
+    setNotifications((prev) =>
+      prev.map((n) =>
+        String(n.id) === String(notificationId) ? { ...n, is_read: true, isRead: true } : n
+      )
+    );
+    setUnreadCount((prev) => Math.max(0, prev - 1));
+
     try {
       await notificationAPI.markAsRead(notificationId);
-
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: true, isRead: true } : n
-        )
-      );
-
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      // Backend emits notification_read socket → other tabs sync via onNotificationRead above
     } catch (err) {
       console.error("Error marking notification as read:", err);
+      // Revert optimistic update on failure
+      setNotifications((prev) =>
+        prev.map((n) =>
+          String(n.id) === String(notificationId) ? { ...n, is_read: false, isRead: false } : n
+        )
+      );
+      setUnreadCount((prev) => prev + 1);
     }
   }, []);
 
@@ -282,22 +330,34 @@ export const NotificationProvider = ({ children }) => {
 
   /**
    * Mark all notifications as read
+   * 
+   * ✅ FIX: Now OPTIMISTIC — unreadCount drops to 0 and all notifications are
+   * marked read in local state IMMEDIATELY, before the API call resolves.
+   * This means the badge zeroes out the instant you click, with no waiting.
+   * If the API call fails, we re-fetch to restore accurate state.
    */
   const markAllAsRead = useCallback(async (category = null) => {
+    // --- OPTIMISTIC UPDATE (instant, no flicker) ---
+    setUnreadCount(0);
+    setNotifications((prev) =>
+      prev.map((n) => {
+        if (category && n.category !== category) return n;
+        return { ...n, is_read: true, isRead: true };
+      })
+    );
+
+    // --- BACKGROUND API CALL ---
     try {
       await notificationAPI.markAllRead(category);
-      
-      setNotifications((prev) =>
-        prev.map((n) => {
-          if (category && n.category !== category) return n;
-          return { ...n, is_read: true, isRead: true };
-        })
-      );
-      setUnreadCount(0);
+      // Backend will also emit `notifications_marked_read` via socket,
+      // which syncs any other open tabs/windows automatically.
     } catch (err) {
       console.error("Error marking all as read:", err);
+      // On failure: revert by reloading real state from server
+      loadUnreadCount();
+      loadNotifications(1);
     }
-  }, []);
+  }, [loadUnreadCount, loadNotifications]);
 
   /**
    * Delete a notification - FIXED

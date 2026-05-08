@@ -11,7 +11,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 
 const ChatContactsContext = createContext(null);
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 export function ChatContactsProvider({ token, children }) {
   const [friends, setFriends] = useState([]);

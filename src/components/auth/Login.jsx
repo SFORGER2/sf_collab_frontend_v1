@@ -16,7 +16,7 @@ import { IoLogIn } from "react-icons/io5";
 import { ShineButton } from '../lightswind/shine-button';
 import useScrollHide from "@/utils/hooks/useScrollHide";
 
-const API_URL = import.meta.env.VITE_API_URL_AUTH || 'http://localhost:5001/api/auth';
+const API_URL = import.meta.env.VITE_API_URL_AUTH || '/api/auth';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -63,13 +63,9 @@ export default function Login() {
     const handleOAuthMessage = async (event) => {
       const allowedOrigins = [
         "http://localhost:5001",
-        "http://localhost:5001",
         window.location.origin,
         "http://127.0.0.1:5000",
-        "null",
         "https://sfclb.netlify.app",
-        "https://sfclb.netlify.app/",
-        "https://sf-collab-backend-flask.onrender.com/",
         "https://sf-collab-backend-flask.onrender.com",
         "https://api.sfcollab.com",
       ];

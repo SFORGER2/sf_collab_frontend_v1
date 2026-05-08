@@ -8,6 +8,7 @@ import { use, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { startupsAPI } from "@/utils/APIs/startupsAPI";
 import { motion } from "framer-motion";
+import DeleteConfirmationModal from "@/utils/confirm";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -35,6 +36,7 @@ export default function DocumentsSection({ documents, isAdmin, id, fetchStartupD
     document: null,
     document_type: 'general'
   });
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(null);
   const [view, setView] = useState(localStorage.getItem("documentsView") || "grid");
   useEffect(() => {
     localStorage.setItem("documentsView", view);
@@ -101,6 +103,17 @@ export default function DocumentsSection({ documents, isAdmin, id, fetchStartupD
 
   return (
     <>
+      <DeleteConfirmationModal
+        isOpen={!!isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(null)}
+        onConfirm={() => {
+          handleDocumentDelete(isDeleteConfirmOpen);
+          setIsDeleteConfirmOpen(null);
+        }}
+        title="Confirm Document Deletion"
+        message="Are you sure you want to delete this document?"
+        type="soft"
+      />
       <div className="space-y-6">
         <motion.div
           className="flex flex-wrap items-center justify-between"
@@ -199,7 +212,7 @@ export default function DocumentsSection({ documents, isAdmin, id, fetchStartupD
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleDocumentDelete(doc.id)}
+                          onClick={() => setIsDeleteConfirmOpen(doc.id)}
                           className="border-red-600/50 bg-red-600 text-white hover:bg-white hover:text-red-500 hover:border-red-500 transition-all"
                         >
                           <Trash2 className="w-3 h-3 mr-1" />

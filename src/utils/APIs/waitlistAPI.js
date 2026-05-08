@@ -68,17 +68,12 @@ export const waitlistAPI = {
     );
     return response.data.data;
   },
-  givePoints: async (userId, category, accessToken) => {
+  givePoints: async (userId, category) => {
     const response = await api.post(
       "/waitlist/give-points",
       {
         user_id: userId,
         category, // referral | contribution | activity | new_startup | (small|medium|large)_contribution
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
       }
     );
     return response.data.data;

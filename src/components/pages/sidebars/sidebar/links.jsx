@@ -1,21 +1,9 @@
 import React from "react";
 import {
-  BrainCircuit,
-  BriefcaseBusiness,
-  Lightbulb,
-  PlusSquare,
-  Rocket,
-  FileText,
-  Users,
-  Wand2,
-  Database,
-  BookOpen,
-  Earth,
-  MessageSquareHeart,
-  Building,
-  Building2,
-  Save,
-  Layers,
+  BrainCircuit, BriefcaseBusiness, Lightbulb, PlusSquare, Rocket,
+  FileText, Users, Wand2, Database, BookOpen, Earth, MessageSquareHeart,
+  Building, Building2, Save, Layers, Wallet, ShoppingBag, Coins,
+  Trophy, ShoppingCart, GraduationCap, LayoutDashboard, Search, Star,
 } from "lucide-react";
 import { LuLayoutDashboard, LuEye } from "react-icons/lu";
 import { createInvestorLinks } from "../investorSidebar/InvestorLinks";
@@ -23,46 +11,15 @@ import { createBuilderLinks } from "../builderSidebar/BuilderLinks";
 import { createFounderLinks } from "../founderSidebar/FounderLinks";
 import { createInfluencerLinks } from "../influencerSidebar/influencerLinks";
 import { BsPeople } from "react-icons/bs";
-import { aiTools, dashboardLink, socialSection, toolsSection } from "../sidebarCommons";
+import { aiTools, dashboardLink, ideation, socialSection, toolsSection } from "../sidebarCommons";
 
-// theme must be top-level (NOT inside any function)
 export const CONTEXT_THEME = {
-  1: {
-    pillBg: "bg-blue-600/20",
-    pillText: "text-blue-200",
-    activeBg: "bg-white",
-    activeText: "text-gray-950",
-  },
-  2: {
-    pillBg: "bg-yellow-600/15",
-    pillText: "text-yellow-100",
-    activeBg: "bg-white",
-    activeText: "text-gray-950",
-  },
-  3: {
-    pillBg: "bg-purple-600/15",
-    pillText: "text-purple-100",
-    activeBg: "bg-white",
-    activeText: "text-gray-950",
-  },
-  /*4: {
-    pillBg: "bg-cyan-600/15",
-    pillText: "text-cyan-100",
-    activeBg: "bg-white",
-    activeText: "text-gray-950",
-  },*/
-  5: {
-    pillBg: "bg-emerald-600/15",
-    pillText: "text-emerald-100",
-    activeBg: "bg-white",
-    activeText: "text-gray-950",
-  },
-  6: {
-    pillBg: "bg-indigo-600/15",
-    pillText: "text-white-100",
-    activeBg: "bg-white",
-    activeText: "text-gray-950",
-  },
+  1:  { pillBg: "bg-blue-600/20",    pillText: "text-blue-200",   activeBg: "bg-white", activeText: "text-gray-950" },
+  2:  { pillBg: "bg-yellow-600/15",  pillText: "text-yellow-100", activeBg: "bg-white", activeText: "text-gray-950" },
+  3:  { pillBg: "bg-purple-600/15",  pillText: "text-purple-100", activeBg: "bg-white", activeText: "text-gray-950" },
+  5:  { pillBg: "bg-emerald-600/15", pillText: "text-emerald-100",activeBg: "bg-white", activeText: "text-gray-950" },
+  6:  { pillBg: "bg-indigo-600/15",  pillText: "text-white-100",  activeBg: "bg-white", activeText: "text-gray-950" },
+  10: { pillBg: "bg-amber-600/15",   pillText: "text-amber-100",  activeBg: "bg-white", activeText: "text-gray-950" },
 };
 
 export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
@@ -74,105 +31,79 @@ export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) 
       href: "/discover-startups",
       label: "Startups",
       subItems: [
-        { id: "discover-startups", href: "/discover-startups", label: "Discover", icon: <Rocket size={18} /> },
-        { id: "my-startups", href: "/my-startups", label: "My Startups", icon: <Building2 size={18} /> },
-        { id: "register-startup", href: "/register-startup", label: "Register", icon: <PlusSquare size={18} /> },
-        { id: "saved-startups", href: "/saved-startups", label: "Saved Startups", icon: <Save size={18} /> },
-
-        // { id: "startup-teams", href: "/startup-teams", label: "Teams", icon: <TiSocialAtCircular size={18} /> },
-        // { id: "startup-documents", href: "/startup-documents", label: "Documents", icon: <FileText size={18} /> },
-        // { id: "startup-details", href: "/startup-details", label: "Details", icon: <Database size={18} /> },
+        { id: "discover-startups", href: "/discover-startups", label: "Discover",        icon: <Rocket size={18} /> },
+        { id: "my-startups",       href: "/my-startups",       label: "My Startups",     icon: <Building2 size={18} /> },
+        { id: "register-startup",  href: "/register-startup",  label: "Register",        icon: <PlusSquare size={18} /> },
+        { id: "saved-startups",    href: "/saved-startups",    label: "Saved Startups",  icon: <Save size={18} /> },
       ],
     },
-    {
-      id: 2,
-      icon: <Lightbulb size={22} />,
-      href: "/ideation",
-      label: "Idea Incubator",
-      subItems: [
-        { id: "ideas-feed", href: "/ideation", label: "Ideas Feed", icon: <Lightbulb size={18} /> },
-      ],
-    },
-    
-    // {
-    //   id: 4,
-    //   icon: <IoChatbubbles size={23} />,
-    //   href: "/chat",
-    //   label: "Chat",
-    //   unreadCount: (
-    //     <Badge className="absolute top-1 right-0 h-4.5 min-w-4.5 rounded-full px-1 font-mono tabular-nums bg-blue-800 text-blue-300">
-    //       {unreadMessagesCount > 0 ? unreadMessagesCount : "0"}
-    //     </Badge>
-    //   ),
-    // },
+    ideation(4),
     socialSection(6),
+    // Learning & Mentors — combined under one section
     {
       id: 7,
       icon: <BookOpen size={22} />,
       href: "/knowledge",
       label: "Learning",
       subItems: [
-        { id: "knowledge", href: "/knowledge", label: "Knowledge", icon: <BookOpen size={18} /> },
+        { id: "knowledge",              href: "/knowledge",              label: "Knowledge",        icon: <BookOpen size={18} /> },
+        { id: "mentors",                href: "/mentors",                label: "Find a Mentor",    icon: <Search size={18} /> },
+        { id: "mentor-dashboard",       href: "/mentor-dashboard",       label: "Mentor Dashboard", icon: <GraduationCap size={18} /> },
+        { id: "my-mentorship-requests", href: "/my-mentorship-requests", label: "My Requests",      icon: <Star size={18} /> },
       ],
     },
     aiTools(8),
-    toolsSection(9)
+    toolsSection(9),
+    // Wallet & Store
+    {
+      id: 10,
+      icon: <Wallet size={22} />,
+      href: "/wallet",
+      label: "Wallet & Store",
+      subItems: [
+        { id: "wallet",      href: "/wallet",      label: "My Wallet",   icon: <Coins size={18} /> },
+        { id: "store",       href: "/store",       label: "SF Store",    icon: <ShoppingBag size={18} /> },
+        { id: "leaderboard", href: "/leaderboard", label: "Leaderboard", icon: <Trophy size={18} /> },
+        { id: "marketplace", href: "/marketplace", label: "Marketplace", icon: <ShoppingCart size={18} /> },
+      ],
+    },
   ];
-};
+}
 
 export function getAllRoutes(element) {
   let routes = [];
-
-  if (element.href) {
-    routes.push(element.href);
-  }
-
+  if (element.href) routes.push(element.href);
   if (Array.isArray(element.subItems)) {
     for (const item of element.subItems) {
+      if (routes.includes(item.href)) continue;
       routes = routes.concat(getAllRoutes(item));
     }
   }
-
   return routes;
 }
 
 export function getCurrentContext(pathname) {
-  const links = createLinks(0); // Create links without unreadMessagesCount
+  if (["/wallet", "/store", "/leaderboard", "/marketplace"].some((p) => pathname.startsWith(p))) return 10;
+  const links = createLinks(0);
   for (const link of links) {
     if (pathname.startsWith(link.href)) return link.id;
-
     for (const subItem of link.subItems || []) {
       if (pathname.startsWith(subItem.href)) return link.id;
     }
   }
-  return 1; // Default to the first context if no match is found
+  return 1;
 }
-
 
 export function getTopNavLinks(pathname, unreadMessagesCount = 0, activeMode = 'general') {
   const contextId = getCurrentContext(pathname);
-  let links = []
+  let links = [];
   switch (activeMode) {
-    case 'general':
-      links = createLinks(unreadMessagesCount);
-      break;
-    case 'investor':
-      links = createInvestorLinks(unreadMessagesCount);
-      break;
-    case 'builder':
-      links = createBuilderLinks(unreadMessagesCount);
-      break;
-    case 'founder':
-      links = createFounderLinks(unreadMessagesCount);
-      break;
-    case 'influencer':
-      links = createInfluencerLinks(unreadMessagesCount);
-      break;
-    default:
-      links = createLinks(unreadMessagesCount);
+    case 'investor':   links = createInvestorLinks(unreadMessagesCount); break;
+    case 'builder':    links = createBuilderLinks(unreadMessagesCount); break;
+    case 'founder':    links = createFounderLinks(unreadMessagesCount); break;
+    case 'influencer': links = createInfluencerLinks(unreadMessagesCount); break;
+    default:           links = createLinks(unreadMessagesCount);
   }
   const activeLink = links.find((l) => l.id === contextId);
   return activeLink?.subItems || [];
 }
-
-

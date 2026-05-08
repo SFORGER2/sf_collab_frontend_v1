@@ -50,7 +50,6 @@ const ProfileSettings = ({ back, activeSection: initialActiveSection }) => {
 
 useEffect(() => {
   if (user) {
-    console.log(user);
     setFormData(prev => ({
       ...prev,
       firstName: user.firstName || '',
@@ -225,29 +224,9 @@ useEffect(() => {
       if (!formData.profile.country || !formData.preferences.timezone) {
         throw new Error("Location must be set");
       }
+      let requiresInfluencerApplication = false;
       if (formData.roles.includes('influencer') && !user?.roles?.includes('influencer')) {
-        toast.info(
-          <div className="flex flex-col gap-3 max-w-sm">
-            <p className="text-sm text-white dark:text-gray-300">
-              To complete your Influencer application, please fill out the Influencer
-              Application Form.
-            </p>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  navigate("/apply-influencer");
-                  toast.dismiss();
-                }}
-                className="flex items-center gap-2 rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
-              >
-                Apply now
-                <ExternalLink className="w-4 h-4" />
-              </button>
-
-            </div>
-          </div>
-        );
+        requiresInfluencerApplication = true;
         formData.roles = formData.roles.filter(role => role !== 'influencer');
       }
       if (formData.roles.includes('builder') && !formData.preferences.builderPreferences) {
@@ -258,6 +237,13 @@ useEffect(() => {
       }
       await updateUser(formData, false);
       toast.success("Profile updated");
+
+      if (requiresInfluencerApplication) {
+        toast.info("Please fill out the Influencer Application Form to complete your request.", { autoClose: 6000 });
+        navigate("/apply-influencer");
+        return;
+      }
+
       back();
       window.location.reload();
 

@@ -42,11 +42,12 @@ export const usersAPI = {
   },
 
   updateProfile: async (userId, profileData, accessToken, dType = 'multipart/form-data') => {
+    const headers = {
+      'Content-Type': dType,
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    };
     const response = await api.put(`/users/${userId}`, profileData, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': dType,
-      },
+      headers,
     });
     return response.data;
   },
@@ -77,13 +78,9 @@ export const usersAPI = {
     return response.data.data;
   },
 
-  addRole: async (userId, roles, accessToken) => {
-    const response = await api.put(`/user-roles/${userId}`, { roles }, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    return response.data.data;
+  addRole: async (roles) => {
+    const response = await api.post(`/user-roles`, { roles });
+    return response.data;
   },
 
   getFollowersCount: async (userId, accessToken) => {

@@ -64,7 +64,7 @@ export const startupAPI = {
     return response.data
   },
 
-  getMembers: async (accessToken, args) => {
+  getMembers: async (args) => {
     /*
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
@@ -73,18 +73,15 @@ export const startupAPI = {
     is_active = request.args.get('is_active', type=bool)
     */
     
-    const params = new URLSearchParams()
-    if (args) {
-      if (args.page) params.append('page', args.page)
-      if (args.per_page) params.append('per_page', args.per_page)
-      if (args.startup_id) params.append('startup_id', args.startup_id)
-      if (args.user_id) params.append('user_id', args.user_id)
-      if (args.is_active !== undefined) params.append('is_active', args.is_active)
-    }
-    const response = await api.get(`/startup-members?${params.toString()}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+    const response = await api.get(`/startup-members`, {
+      params: {
+        page: args.page || 1,
+        per_page: args.per_page || 10,
+        startup_id: args.startup_id,
+        user_id: args.user_id,
+        is_active: args.is_active,
+        ...args,
+      }
     })
     return response.data
   },

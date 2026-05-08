@@ -14,7 +14,7 @@
 
 import React, { useState } from "react";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 // Remove /api suffix to get server base URL
 const getServerBaseUrl = () => API_BASE_URL.replace(/\/api\/?$/, '');
@@ -144,7 +144,6 @@ export default function Avatar({
           {initials}
         </div>
       )}
-  {isOnline && <span className={`absolute -bottom-0.5 -right-0.5 ${statusSizes[size]} rounded-full border-zinc-900 ${STATUS_COLORS.online}`} title="Online" />}
       {showStatus && (
         <span
           className={`absolute -bottom-0.5 -right-0.5 ${statusSizes[size]} rounded-full border-zinc-900 ${statusColor}`}

@@ -1,16 +1,10 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import {
-
-  Plus
-
-} from "lucide-react";
+import { Plus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 
 import StoryModal from "../../modal/StoryModal";
 import StoryViewerModal from "../../modal/StoryViewerModal";
-import { userSocialAPI } from "@/utils/APIs/socialAPI";
-
+import { postAPI } from "@/utils/APIs/postAPI";
 
 export default function Stories({ refreshKey }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,16 +17,36 @@ export default function Stories({ refreshKey }) {
   useEffect(() => {
     const fetchStories = async () => {
       try {
-        const response = await userSocialAPI.getStories({ page: 1, limit: 20 });
-        // backend returns { stories, pagination }
-        if (response && response.stories) {
-          setStories(response.stories.map((s) => ({
-            id: s._id || s.id,
-            thumbnail: s.mediaUrl,
-            avatar: s.author?.profilePicture || s.author?.avatar || s.author?.picture,
-            name: s.author?.firstName || s.author?.name || "User",
-            ...s,
-          })));
+        const response = await postAPI.getStories({ page: 1, per_page: 20 });
+        // backend returns { success, message, data: { stories, pagination } }
+        const data = response?.data;
+        if (data && data.stories) {
+          setStories(
+            data.stories.map((s) => {
+              const id = s.id || s._id;
+              const thumbnail = s.media_url || s.mediaUrl;
+              const author = s.author || {};
+              const firstName = author.first_name || author.firstName;
+              const lastName = author.last_name || author.lastName;
+              const name =
+                [firstName, lastName].filter(Boolean).join(" ") ||
+                author.name ||
+                "User";
+              const avatar =
+                author.profile?.picture ||
+                author.profilePicture ||
+                author.avatar ||
+                author.picture;
+
+              return {
+                id,
+                thumbnail,
+                avatar,
+                name,
+                ...s,
+              };
+            })
+          );
         } else {
           setStories([]);
         }
@@ -48,11 +62,13 @@ export default function Stories({ refreshKey }) {
     <div className="bg-zinc-900/50 backdrop-blur-xl rounded-2xl p-4 border border-zinc-800/50 mb-6 mt-10">
       <div className="flex gap-4">
         {/* Add Story Card */}
-        <div className="relative min-w-[120px] h-[120px] rounded-xl overflow-hidden border border-dashed border-zinc-700 bg-cover bg-center">
+        <div
+          onClick={() => setIsOpen(true)}
+          className="relative min-w-[120px] h-[120px] rounded-xl overflow-hidden border border-dashed border-zinc-700 bg-cover bg-center">
           {/* Overlay */}
           <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-zinc-400 hover:text-blue-400 transition">
             <button
-              onClick={() => setIsOpen(true)}
+              
               className="w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center mb-2"
             >
               <Plus size={18} />

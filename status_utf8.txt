@@ -1,0 +1,24 @@
+﻿On branch social-feed-flask-integration
+Your branch and 'origin/social-feed-flask-integration' have diverged,
+and have 2 and 1 different commits each, respectively.
+  (use "git pull" if you want to integrate the remote branch with yours)
+
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+	both modified:   src/App.jsx
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   src/components/pages/Pricing/EquityAccess.jsx
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	pull_output.txt
+	status_utf8.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")

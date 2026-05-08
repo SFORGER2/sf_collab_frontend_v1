@@ -16,11 +16,8 @@ api.interceptors.response.use(
 // Application API
 export const applicationAPI = {
   
-  getAll: async (accessToken, params) => {
+  getAll: async (params) => {
     const response = await api.get("/applications", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,

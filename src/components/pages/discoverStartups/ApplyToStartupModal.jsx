@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "react-toastify";
 import { startupsAPI } from "@/utils/APIs/startupsAPI";
-import { Briefcase, Users, Sparkles, X } from "lucide-react";
+import { Briefcase, Users, Sparkles } from "lucide-react";
 
 
 
@@ -76,6 +76,7 @@ const ApplyToStartupModal = ({ isOpen, onClose, startup, roleSelected }) => {
           p-0
           overflow-hidden
         "
+        showCloseButton={false}
       >
         <div className="grid grid-cols-1 lg:grid-cols-5 h-full z-999">
 
@@ -86,11 +87,9 @@ const ApplyToStartupModal = ({ isOpen, onClose, startup, roleSelected }) => {
             p-5 sm:p-6
             space-y-4
           ">
-            <div className="flex items-start justify-between">
+            <div
+              className="flex items-start justify-between">
               <Badge>{startup.stage}</Badge>
-              <button onClick={onClose} className="lg:hidden text-gray-400 hover:text-white">
-                <X size={18} />
-              </button>
             </div>
 
             <div>

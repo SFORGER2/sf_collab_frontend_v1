@@ -96,7 +96,7 @@ const StartupLogoGenerator = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="flex items-center justify-center gap-3 mb-6 mt-10">
               <div className="p-4 bg-linear-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-2xl backdrop-blur-sm">
                 <Building2 className="h-8 w-8 text-blue-400" />
               </div>

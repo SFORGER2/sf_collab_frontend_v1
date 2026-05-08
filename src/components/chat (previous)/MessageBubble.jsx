@@ -1,19 +1,22 @@
 /**
  * MessageBubble Component - Fixed Version
  * 
- * FIXES:
- * 1. Profile pictures now display correctly using getProfilePicture utility
- * 2. Better sender name extraction
- * 3. Consistent avatar display
+ * FEATURES:
+ * 1. Profile pictures display correctly
+ * 2. Timestamps always visible
+ * 3. Delete for everyone (within 1 hour) / Delete for me (anytime)
+ * 4. No browser alerts - styled modals only
+ * 5. Edit message functionality
  */
 
 import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { X, Download, FileText, ExternalLink, Check, CheckCheck, Eye, MoreVertical, Edit2, Trash2 } from "lucide-react";
+import { useSelector } from "react-redux";
+import { X, Download, FileText, ExternalLink, Check, CheckCheck, MoreVertical, Edit2, Trash2, Star, Pin, ListTodo, BookmarkCheck } from "lucide-react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import { chatAPI } from "@/utils/APIs/chatApi";
+import { resolveUserId } from "@/utils/resolveUserId";
 
 // Helper to reduce text length
 const reduceText = (text, maxLength = 20) => {
@@ -22,12 +25,12 @@ const reduceText = (text, maxLength = 20) => {
   return text.slice(0, maxLength) + '...';
 };
 
-// Files are typically served from the backend host (often NOT /api)
+// Files are typically served from the backend host
 const FILE_BASE_URL =
   import.meta.env.VITE_SOCKET_API_URL ||
   (import.meta.env.VITE_API_URL
     ? String(import.meta.env.VITE_API_URL).replace(/\/api\/?$/, "")
-    : "http://localhost:5001");
+    : "");
 
 const resolveUrl = (url) => {
   if (!url) return null;
@@ -56,17 +59,7 @@ async function fetchBlobWithAuth(url, token) {
   });
 
   if (!res.ok) {
-    let hint = "";
-    try {
-      const ct = res.headers.get("content-type") || "";
-      if (ct.includes("application/json")) {
-        const j = await res.json();
-        hint = j?.message ? ` (${j.message})` : "";
-      }
-    } catch {
-      // ignore
-    }
-    throw new Error(`Download failed (${res.status})${hint}`);
+    throw new Error(`Download failed (${res.status})`);
   }
 
   return await res.blob();
@@ -101,50 +94,184 @@ async function openInNewTab(url, token) {
 
 function hideAutoFileText({ fileUrl, isImage, content, fileName }) {
   if (!fileUrl || !isImage) return false;
-
   const c = String(content || "").trim();
   if (!c) return false;
-
   if (/^\[\s*file\s*:/i.test(c)) return true;
   if (fileName && c === fileName) return true;
   if (/\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(c)) return true;
   if (c === fileUrl) return true;
-
   return false;
 }
 
 function getMsgStatus(msg) {
   const s = String(msg?.status || msg?.delivery_status || "").toLowerCase();
-
-  // opened/read
-  if (s === "read" || s === "seen" || msg?.read_at || msg?.seen_at) return "opened";
-
-  // delivered
+  if (s === "read" || s === "seen" || msg?.read_at || msg?.seen_at) return "read";
   if (s === "delivered" || msg?.delivered_at) return "delivered";
-
-  // default: sent (exists on server)
   return "sent";
 }
 
-export default function MessageBubble({ 
-  message, 
-  isOwn, 
-  showAvatar, 
+// Read receipt tick icon component
+function ReadReceipt({ status, size = 14 }) {
+  if (status === "read") {
+    // Double green tick = read
+    return <CheckCheck size={size} className="text-emerald-400" />;
+  }
+  if (status === "delivered") {
+    // Double grey tick = delivered
+    return <CheckCheck size={size} className="text-zinc-400 opacity-80" />;
+  }
+  // Single grey tick = sent
+  return <Check size={size} className="text-zinc-400 opacity-80" />;
+}
+
+// ─── Feature 3: Task due-date modal ──────────────────────────────────────────
+const TaskModal = ({ isOpen, onClose, onSave }) => {
+  const [dueDate, setDueDate] = useState('');
+  const [note, setNote] = useState('');
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[10001] bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-sm border border-zinc-800 p-5" onClick={e => e.stopPropagation()}>
+        <h3 className="text-base font-semibold text-white mb-3">Save to Task Box</h3>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs text-zinc-400 mb-1 block">Due date (optional)</label>
+            <input
+              type="datetime-local"
+              value={dueDate}
+              onChange={e => setDueDate(e.target.value)}
+              className="w-full px-3 py-2 bg-zinc-800 rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-zinc-400 mb-1 block">Note (optional)</label>
+            <textarea
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              rows={2}
+              placeholder="Add a note..."
+              className="w-full px-3 py-2 bg-zinc-800 rounded-xl text-sm text-white resize-none focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button onClick={onClose} className="flex-1 py-2 rounded-xl bg-zinc-700 hover:bg-zinc-600 text-sm text-zinc-300 transition-colors">Cancel</button>
+            <button onClick={() => onSave(dueDate || null, note || null)} className="flex-1 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-sm text-white transition-colors">Save Task</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default function MessageBubble({
+  message,
+  isOwn,
+  showAvatar,
   showSenderName = false,
   setMessages = null,
   onMessageUpdated = null,
-  conversationId = null 
+  conversationId = null,
+  conversationType = "direct",
+  currentUserId = null,
+  variant = "page" // "page" or "dock"
 }) {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const [viewerOpen, setViewerOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoadingEditing, setIsLoadingEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [deletePopupOpen, setDeletePopupOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
   const menuRef = useRef(null);
+  const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
+  const [reactionLoading, setReactionLoading] = useState(false);
+  const [showReactionBar, setShowReactionBar] = useState(false);
+
+  // Quick reaction emojis shown in the hover bar
+  const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "😡", "👍", "👎", "🔥", "🎉", "💯"];
+  // Full picker for "more" button
+  const FULL_REACTIONS = [
+    "❤️","😂","😮","😢","😡","👍","👎","🔥","🎉","💯",
+    "😀","😍","🥰","🤩","😎","🙂","😊","🥹","😤","🤔",
+    "👏","🙌","🤝","✌️","💪","🙏","👋","✋","🤞","👌",
+    "💕","💔","🧡","💛","💚","💙","💜","⭐","✨","🎁",
+  ];
+
+  // Derive reaction counts from message.reactions array
+  const reactionCounts = useMemo(() => {
+    const reactions = message?.reactions || [];
+    const map = {};
+    reactions.forEach(r => {
+      const emoji = r.emoji || r.reaction;
+      if (!emoji) return;
+      if (!map[emoji]) map[emoji] = { count: 0, users: [], hasReacted: false };
+      map[emoji].count++;
+      map[emoji].users.push(r.user_id || r.userId);
+      if (String(r.user_id || r.userId) === String(currentUserId)) {
+        map[emoji].hasReacted = true;
+      }
+    });
+    return map;
+  }, [message?.reactions, currentUserId]);
+
+  const handleReact = useCallback(async (emoji) => {
+    // Cannot react to your own messages
+    if (isOwn) return;
+    if (!conversationId || !message?.id || reactionLoading) return;
+    setReactionPickerOpen(false);
+    setShowReactionBar(false);
+    setReactionLoading(true);
+    const uid = String(currentUserId);
+
+    // Find if user already reacted with ANY emoji (one reaction per user)
+    const allReactions = message?.reactions || [];
+    const existingReaction = allReactions.find(
+      r => String(r.user_id || r.userId) === uid
+    );
+    const clickedSameEmoji = existingReaction && (existingReaction.emoji || existingReaction.reaction) === emoji;
+
+    // Optimistic update
+    setMessages && setMessages(prev => prev.map(m => {
+      if (String(m.id) !== String(message.id)) return m;
+      const existing = m.reactions || [];
+      let updated;
+      if (clickedSameEmoji) {
+        // Toggle off — remove their reaction
+        updated = existing.filter(r => String(r.user_id || r.userId) !== uid);
+      } else {
+        // Replace existing reaction (or add first one) — only one allowed
+        updated = [
+          ...existing.filter(r => String(r.user_id || r.userId) !== uid),
+          { emoji, user_id: uid, userId: uid },
+        ];
+      }
+      return { ...m, reactions: updated };
+    }));
+    try {
+      await chatAPI.reactToMessage(conversationId, message.id, emoji);
+    } catch (e) {
+      console.error("Reaction failed:", e);
+    } finally {
+      setReactionLoading(false);
+    }
+  }, [isOwn, conversationId, message?.id, message?.reactions, currentUserId, reactionLoading, setMessages]);
+
+  // ─── Feature 3: Star / Pin / Task state ──────────────────────────────────
+  const [isStarred, setIsStarred] = useState(!!message?.is_starred);
+  const [isPinned, setIsPinned] = useState(!!message?.is_pinned);
+  const [isTask, setIsTask] = useState(!!message?.is_task);
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [starLoading, setStarLoading] = useState(false);
+  const [pinLoading, setPinLoading] = useState(false);
+
+  // Keep in sync if message prop changes
+  useEffect(() => {
+    setIsStarred(!!message?.is_starred);
+    setIsPinned(!!message?.is_pinned);
+    setIsTask(!!message?.is_task);
+  }, [message?.is_starred, message?.is_pinned, message?.is_task]);
 
   const { access_token: token } = useSelector((state) => state.auth || {});
 
@@ -176,143 +303,206 @@ export default function MessageBubble({
     (message?.file_type && (String(message.file_type) === "image" || String(message.file_type).startsWith("image/"))) ||
     message?.message_type === "image";
 
+  // Check if message can be deleted for everyone (within 1 hour)
+  const canDeleteForEveryone = useMemo(() => {
+    if (!ts) return true; // If no timestamp, allow it
+    const messageTime = new Date(ts);
+    const now = new Date();
+    const diffHours = (now - messageTime) / (1000 * 60 * 60);
+    return diffHours <= 1;
+  }, [ts]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // Handle edit
   const handleEditClick = useCallback(() => {
-    console.log("[MessageBubble] handleEditClick triggered");
-    console.log("[MessageBubble] message.content:", message.content);
-    console.log("[MessageBubble] message.original_content:", message.original_content);
-    
     const contentToEdit = message.content || message.original_content || "";
-    console.log("[MessageBubble] contentToEdit:", contentToEdit);
-    
     setEditContent(contentToEdit);
     setIsEditing(true);
     setMenuOpen(false);
-    console.log("[MessageBubble] Edit mode enabled");
   }, [message.content, message.original_content]);
 
   const handleSaveEdit = useCallback(async () => {
-    console.log("[MessageBubble] handleSaveEdit triggered");
-    console.log("[MessageBubble] editContent:", editContent);
-    console.log("[MessageBubble] editContent.trim():", editContent.trim());
-    console.log("[MessageBubble] conversationId:", conversationId);
-    console.log("[MessageBubble] message.id:", message.id);
-    
-    if (!editContent.trim() || !conversationId) {
-      console.warn("[MessageBubble] Validation failed - empty content or missing conversationId");
-      return;
-    }
+    if (!editContent.trim() || !conversationId) return;
 
     try {
-      console.log("[MessageBubble] Calling chatAPI.editMessage");
       setIsLoadingEditing(true);
       await chatAPI.editMessage(conversationId, message.id, editContent.trim());
-      console.log("[MessageBubble] Edit API call successful");
-      if (setMessages) {
 
+      if (setMessages) {
         const updatedMessage = {
           ...message,
           original_content: editContent.trim(),
           content: editContent.trim(),
           is_edited: true,
-          edited_at: new Date().toISOString()
         };
-        console.log("[MessageBubble] Calling onMessageUpdated with:", updatedMessage);
-        setMessages((msgs) => msgs.map((m) => (m.id === message.id ? updatedMessage : m)));
+
+        setMessages((prev) =>
+          prev.map((m) =>
+            String(m.id) === String(message.id) ? updatedMessage : m
+          )
+        );
       }
-      
+
+      if (onMessageUpdated) {
+        onMessageUpdated({
+          ...message,
+          original_content: editContent.trim(),
+          content: editContent.trim(),
+          is_edited: true,
+        });
+      }
+
       setIsEditing(false);
-      console.log("[MessageBubble] Edit mode disabled");
     } catch (error) {
-      console.error("[MessageBubble] Failed to edit message:", error);
+      console.error("Edit failed:", error);
+      setDeleteError("Failed to edit message");
     } finally {
       setIsLoadingEditing(false);
     }
-  }, [editContent, conversationId, message, onMessageUpdated]);
+  }, [editContent, conversationId, message, setMessages, onMessageUpdated]);
 
   const handleCancelEdit = useCallback(() => {
     setIsEditing(false);
     setEditContent("");
   }, []);
 
-  // Handle delete
-  const handleDeleteClick = useCallback(async () => {
-    
-    if (!conversationId) return;
+  // Delete handler - supports delete for everyone or just me
+  const handleDelete = useCallback(async (deleteType) => {
+    if (!conversationId || !message.id) return;
 
-    setDeleting(true);
     try {
-      await chatAPI.deleteMessage(conversationId, message.id);
-      
+      setDeleting(true);
+      setDeleteError(null);
+
+      await chatAPI.deleteMessage(conversationId, message.id, deleteType);
+
       if (setMessages) {
-        setMessages((msgs) => msgs.map((m) => 
-          m.id === message.id ? { ...m, is_deleted: true } : m
-        ));
+        if (deleteType === 'everyone') {
+          // Mark as deleted for everyone - show "This message was deleted"
+          setMessages((prev) =>
+            prev.map((m) =>
+              String(m.id) === String(message.id)
+                ? { ...m, is_deleted: true, content: "This message was deleted" }
+                : m
+            )
+          );
+        } else {
+          // Remove from local view only (delete for me)
+          setMessages((prev) => prev.filter((m) => String(m.id) !== String(message.id)));
+        }
       }
-      
+
+      setDeleteModalOpen(false);
       setMenuOpen(false);
     } catch (error) {
-      console.error("Failed to delete message:", error);
+      console.error('Delete failed:', error);
+      const errorMsg = error?.response?.data?.error || "Failed to delete message";
+      setDeleteError(errorMsg);
     } finally {
       setDeleting(false);
     }
-  }, [conversationId, message, onMessageUpdated]);
+  }, [conversationId, message.id, setMessages]);
 
-  // Close menu on click outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setMenuOpen(false);
+  // ─── Feature 3: Star handler ───────────────────────────────────────────────
+  const handleStar = useCallback(async () => {
+    if (!conversationId || starLoading) return;
+    setMenuOpen(false);
+    setStarLoading(true);
+    try {
+      if (isStarred) {
+        await chatAPI.unstarMessage(conversationId, message.id);
+        setIsStarred(false);
+        if (setMessages) setMessages(prev => prev.map(m => String(m.id) === String(message.id) ? { ...m, is_starred: false } : m));
+      } else {
+        await chatAPI.starMessage(conversationId, message.id);
+        setIsStarred(true);
+        if (setMessages) setMessages(prev => prev.map(m => String(m.id) === String(message.id) ? { ...m, is_starred: true } : m));
       }
-    };
+    } catch (e) { console.error('Star failed:', e); }
+    finally { setStarLoading(false); }
+  }, [conversationId, message.id, isStarred, starLoading, setMessages]);
 
-    if (menuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [menuOpen]);
+  // ─── Feature 3: Pin handler ────────────────────────────────────────────────
+  const handlePin = useCallback(async () => {
+    if (!conversationId || pinLoading) return;
+    setMenuOpen(false);
+    setPinLoading(true);
+    try {
+      if (isPinned) {
+        await chatAPI.unpinMessage(conversationId, message.id);
+        setIsPinned(false);
+        if (setMessages) setMessages(prev => prev.map(m => String(m.id) === String(message.id) ? { ...m, is_pinned: false } : m));
+      } else {
+        await chatAPI.pinMessage(conversationId, message.id);
+        setIsPinned(true);
+        if (setMessages) setMessages(prev => prev.map(m => String(m.id) === String(message.id) ? { ...m, is_pinned: true } : m));
+      }
+    } catch (e) { console.error('Pin failed:', e); }
+    finally { setPinLoading(false); }
+  }, [conversationId, message.id, isPinned, pinLoading, setMessages]);
 
-  const onDownload = useCallback(async () => {
+  // ─── Feature 3: Task handler ───────────────────────────────────────────────
+  const handleSaveTask = useCallback(async (dueDate, note) => {
+    if (!conversationId) return;
+    setTaskModalOpen(false);
+    try {
+      if (isTask) {
+        await chatAPI.removeMessageTask(conversationId, message.id);
+        setIsTask(false);
+        if (setMessages) setMessages(prev => prev.map(m => String(m.id) === String(message.id) ? { ...m, is_task: false } : m));
+      } else {
+        await chatAPI.saveMessageAsTask(conversationId, message.id, dueDate, note);
+        setIsTask(true);
+        if (setMessages) setMessages(prev => prev.map(m => String(m.id) === String(message.id) ? { ...m, is_task: true } : m));
+      }
+    } catch (e) { console.error('Task failed:', e); }
+  }, [conversationId, message.id, isTask, setMessages]);
+
+  const onDownload = useCallback(() => {
     if (!fileUrl) return;
-    await forceDownload(fileUrl, message?.file_name || "file", token);
+    forceDownload(fileUrl, message?.file_name || "download", token);
   }, [fileUrl, message?.file_name, token]);
 
-  const onOpen = useCallback(async () => {
+  const onOpen = useCallback(() => {
     if (!fileUrl) return;
-    await openInNewTab(fileUrl, token);
+    openInNewTab(fileUrl, token);
   }, [fileUrl, token]);
 
-  // System message
-  if (message.message_type === "system") {
-    return (
-      <div className="flex justify-center my-3">
-        <div className="px-3 py-1.5 bg-zinc-800/50 rounded-full text-zinc-500 text-xs">
-          {message.content || message.original_content}
-        </div>
-      </div>
-    );
-  }
-    // Early return for deleted messages
+  // If message is deleted, show deleted placeholder
   if (message?.is_deleted) {
     return (
-      <div className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
+      <div
+        className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}
+        onMouseEnter={() => !isOwn && setShowReactionBar(true)}
+        onMouseLeave={() => { if (!reactionPickerOpen) setShowReactionBar(false); }}
+        onTouchStart={() => !isOwn && setShowReactionBar(true)}
+      >
         <div className="w-8 shrink-0" />
         <div className={`flex flex-col max-w-[65%] ${isOwn ? "items-end" : "items-start"}`}>
-          <div className={`px-3 py-2 rounded-2xl text-sm italic ${
-            isOwn 
-              ? "bg-gradient-to-r from-indigo-500/30 to-blue-500/30 text-white/50" 
-              : "bg-zinc-800/50 text-zinc-500"
-          }`}>
+          <div className={`px-3 py-2 rounded-2xl text-sm italic ${isOwn ? "bg-zinc-700/50 text-zinc-400" : "bg-zinc-800/50 text-zinc-500"
+            }`}>
             This message was deleted
           </div>
+          <span className="text-[10px] text-zinc-600 mt-1">{formatTime(ts)}</span>
         </div>
       </div>
     );
   }
+
   return (
     <>
-      {/* Image Viewer Modal */}
-      {viewerOpen && isImage && (
+      {/* Image Viewer Overlay */}
+      {viewerOpen && fileUrl && isImage && (
         <div
           className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center"
           onClick={() => setViewerOpen(false)}
@@ -340,28 +530,36 @@ export default function MessageBubble({
               <X size={18} />
             </button>
 
-            <img
-              src={fileUrl}
-              alt={message?.file_name || "image"}
-              className="max-w-full max-h-full object-contain rounded-xl"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <div className="p-4 max-w-[90vw] max-h-[90vh]">
+              <img
+                src={fileUrl}
+                alt={message?.file_name || "image"}
+                className="max-w-full max-h-full object-contain rounded-xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
           </div>
         </div>
       )}
 
-      <div className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
+      <div
+        className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}
+        onMouseEnter={() => !isOwn && setShowReactionBar(true)}
+        onMouseLeave={() => { if (!reactionPickerOpen) setShowReactionBar(false); }}
+        onTouchStart={() => !isOwn && setShowReactionBar(true)}
+      >
         {/* Avatar column */}
         <div
           onClick={() => {
-                if (!message?.sender?.id) return;
-                navigate(`/user-profile?id=${message.sender.id}`);
-              }}
+            const targetId = resolveUserId(message?.sender);
+            if (!targetId) return;
+            navigate(`/user-profile?userId=${targetId}`);
+          }}
           className="w-8 shrink-0 cursor-pointer">
           {showAvatar && (
             <Avatar
               src={senderAvatar}
-              
+
               name={senderName || " "}
               size="sm"
               showStatus={false}
@@ -378,26 +576,33 @@ export default function MessageBubble({
           <div className={`flex items-end gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
             {/* Message bubble */}
             <div
-              className={`px-3 py-2 rounded-2xl text-sm relative ${
-                isOwn 
-                  ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white" 
+              className={`px-3 py-2 rounded-2xl text-sm relative ${isOwn
+                  ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white"
                   : "bg-zinc-800 text-zinc-100"
-              }`}
+                }`}
             >
+              {/* ─── Feature 3: Pinned / Starred / Task indicators ─────── */}
+              {(isPinned || isStarred || isTask) && (
+                <div className="flex gap-1 mb-1">
+                  {isPinned && <Pin size={10} className="text-amber-400" />}
+                  {isStarred && <Star size={10} className="text-yellow-400 fill-yellow-400" />}
+                  {isTask && <ListTodo size={10} className="text-emerald-400" />}
+                </div>
+              )}
               {/* File/Image attachment */}
               {fileUrl && (
                 <div className="mb-2">
                   {isImage ? (
-                    <button 
-                      type="button" 
-                      className="block" 
-                      onClick={() => setViewerOpen(true)} 
+                    <button
+                      type="button"
+                      className="block"
+                      onClick={() => setViewerOpen(true)}
                       title="View"
                     >
                       <img
                         src={fileUrl}
                         alt={message?.file_name || "image"}
-                        className="max-w-full rounded-lg max-h-48 object-cover hover:opacity-90"
+                        className={`rounded-xl object-cover hover:opacity-90 block ${variant === "dock" ? "max-w-[180px] max-h-[160px]" : "max-w-[280px] max-h-[320px]"}`}
                         loading="lazy"
                       />
                     </button>
@@ -471,100 +676,243 @@ export default function MessageBubble({
               ) : (
                 <>
                   {/* Message content */}
-                            <div className="flex gap-1 justify-center align-bottom">
-                            <div>
-                              {!hideAutoFileText({
-                              fileUrl,
-                              isImage,
-                              content: message.content || message.original_content,
-                              fileName: message?.file_name,
-                              }) && (message.content || message.original_content)}
-                              
-                              {message.is_edited && <span className="text-xs opacity-60 ml-1">(edited)</span>}
-                            </div>
-                            
-                            <span className="text-[0.6rem] text-gray-300 transition-opacity flex justify-end items-end-safe gap-1">
-                              {formatTime(ts)}
+                  <div className="flex gap-1 items-end">
+                    <div>
+                      {!hideAutoFileText({
+                        fileUrl,
+                        isImage,
+                        content: message.content || message.original_content,
+                        fileName: message?.file_name,
+                      }) && (message.content || message.original_content)}
 
-                              {isOwn && (() => {
-                              const st = getMsgStatus(message);
-                              if (st === "opened") return <Eye size={14} className="opacity-80" />;
-                              if (st === "delivered") return <CheckCheck size={14} className="opacity-80" />;
-                              return <Check size={14} className="opacity-80" />;
-                              })()}
-                            </span>
-                            </div>
-                          </>
-                          )}
-                        </div>
+                      {message.is_edited && <span className="text-xs opacity-60 ml-1">(edited)</span>}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
 
-                        {/* Actions menu */}
-            {isOwn && conversationId && !isEditing && (
+            {/* Actions menu — star/pin/task for ALL, edit/delete for own only */}
+            {conversationId && !isEditing && (
               <div className="relative" ref={menuRef}>
                 <button
                   type="button"
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 opacity-0 md:group-hover:opacity-100 transition-opacity"
+                  className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 opacity-0 group-hover:opacity-100 transition-opacity"
                   title="More"
                 >
                   <MoreVertical size={16} />
                 </button>
 
                 {menuOpen && (
-                  <div className="absolute right-0 -top-20 mt-1 w-32 bg-zinc-800 rounded-lg shadow-lg border border-zinc-700 z-50">
+                  <div className={`absolute ${isOwn ? 'right-0' : 'left-0'} -top-2 translate-y-[-100%] mt-1 w-44 bg-zinc-800 rounded-lg shadow-lg border border-zinc-700 z-50`}>
+                    {/* Star */}
                     <button
                       type="button"
-                      onClick={handleEditClick}
-                      disabled={deleting}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-zinc-700 rounded-t-lg disabled:opacity-50"
+                      onClick={handleStar}
+                      disabled={starLoading}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700 disabled:opacity-50"
                     >
-                      <Edit2 size={14} />
-                      Edit
+                      <Star size={14} className={isStarred ? 'text-yellow-400 fill-yellow-400' : ''} />
+                      {isStarred ? 'Unstar' : 'Star'}
                     </button>
+
+                    {/* Pin */}
                     <button
                       type="button"
-                      onClick={() => setDeletePopupOpen(true)}
-                      disabled={deleting}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-red-400 hover:bg-red-500/20 rounded-b-lg disabled:opacity-50"
+                      onClick={handlePin}
+                      disabled={pinLoading}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700 disabled:opacity-50"
                     >
-                      <Trash2 size={14} />
-                      {deleting ? "Deleting..." : "Delete"}
+                      <Pin size={14} className={isPinned ? 'text-amber-400' : ''} />
+                      {isPinned ? 'Unpin' : 'Pin'}
                     </button>
+
+                    {/* Task */}
+                    <button
+                      type="button"
+                      onClick={() => { setMenuOpen(false); isTask ? handleSaveTask(null, null) : setTaskModalOpen(true); }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700"
+                    >
+                      {isTask ? <BookmarkCheck size={14} className="text-emerald-400" /> : <ListTodo size={14} />}
+                      {isTask ? 'Remove Task' : 'Add to Tasks'}
+                    </button>
+
+                    {/* Edit / Delete — own messages only */}
+                    {isOwn && (
+                      <>
+                        <div className="border-t border-zinc-700 my-1" />
+                        <button
+                          type="button"
+                          onClick={handleEditClick}
+                          disabled={deleting}
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700 disabled:opacity-50"
+                        >
+                          <Edit2 size={14} />
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setDeleteModalOpen(true); setMenuOpen(false); }}
+                          disabled={deleting}
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left text-red-400 hover:bg-red-500/20 disabled:opacity-50"
+                        >
+                          <Trash2 size={14} />
+                          Delete
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
             )}
-
           </div>
+
+          {/* Timestamp and status - ALWAYS VISIBLE */}
+          <span className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1">
+            <span>{formatTime(ts)}</span>
+            {isOwn && <ReadReceipt status={getMsgStatus(message)} size={12} />}
+          </span>
+
+          {/* Reactions row — pills always visible, + button on hover/tap */}
+          {(Object.keys(reactionCounts).length > 0 || (!isOwn && showReactionBar)) && (
+            <div className={`flex flex-wrap items-center gap-1 mt-1 ${isOwn ? "justify-end" : "justify-start"}`}>
+              {/* Existing reaction pills */}
+              {Object.entries(reactionCounts).map(([emoji, data]) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => !isOwn && handleReact(emoji)}
+                  title={isOwn ? undefined : (data.hasReacted ? "Remove reaction" : `React with ${emoji}`)}
+                  className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border transition-all ${
+                    data.hasReacted
+                      ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-300"
+                      : "bg-zinc-800 border-zinc-700 text-zinc-300"
+                  } ${!isOwn ? "hover:border-zinc-500 cursor-pointer" : "cursor-default"}`}
+                >
+                  <span>{emoji}</span>
+                  {data.count > 1 && <span className="font-medium ml-0.5">{data.count}</span>}
+                </button>
+              ))}
+
+              {/* Add reaction button — only for OTHER users' messages */}
+              {!isOwn && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setReactionPickerOpen(v => !v)}
+                    className="flex items-center justify-center w-6 h-6 rounded-full bg-zinc-800 border border-zinc-700 hover:border-zinc-500 text-zinc-400 hover:text-white transition-all text-sm"
+                    title="Add reaction"
+                  >
+                    +
+                  </button>
+                  {reactionPickerOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => { setReactionPickerOpen(false); setShowReactionBar(false); }} />
+                      <div
+                        className="absolute bottom-full mb-2 left-0 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl z-50 p-2 w-56"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <div className="grid grid-cols-5 gap-1">
+                          {FULL_REACTIONS.map(emoji => {
+                            const isSelected = reactionCounts[emoji]?.hasReacted;
+                            return (
+                              <button
+                                key={emoji}
+                                type="button"
+                                onClick={() => handleReact(emoji)}
+                                className={`p-1.5 rounded-lg text-lg text-center transition-all hover:scale-110 ${
+                                  isSelected
+                                    ? "bg-indigo-500/30 ring-1 ring-indigo-500/60 hover:bg-indigo-500/40"
+                                    : "hover:bg-zinc-700"
+                                }`}
+                                title={emoji}
+                              >
+                                {emoji}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
-      {/* Delete Confirmation Popup */}
-      {deletePopupOpen && (
-        <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center">
-          <div className="bg-zinc-900 p-6 rounded-lg shadow-lg w-80">
-            <h3 className="text-lg font-semibold mb-4 text-white">Confirm Deletion</h3>
-            <p className="mb-6 text-zinc-300">Are you sure you want to delete this message?</p>
-            <div className="flex justify-end gap-4">
+
+      {/* Delete Confirmation Modal - WhatsApp Style */}
+      {deleteModalOpen && (
+        <div
+          className="fixed inset-0 z-[10000] bg-black/60 flex items-center justify-center p-4"
+          onClick={() => !deleting && setDeleteModalOpen(false)}
+        >
+          <div
+            className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-sm border border-zinc-800 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-5">
+              <h3 className="text-lg font-semibold text-white mb-3">Delete message?</h3>
+
+              {deleteError && (
+                <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                  {deleteError}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                {/* Delete for Everyone - only if within 1 hour */}
+                {canDeleteForEveryone && (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete('everyone')}
+                    disabled={deleting}
+                    className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 rounded-xl text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deleting ? "Deleting..." : "Delete for everyone"}
+                  </button>
+                )}
+
+                {/* Delete Message - always available */}
+                <button
+                  type="button"
+                  onClick={() => handleDelete('me')}
+                  disabled={deleting}
+                  className="w-full px-4 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-zinc-200 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deleting ? "Deleting..." : "Delete Message"}
+                </button>
+
+                {/* Info text if can't delete for everyone */}
+                {!canDeleteForEveryone && (
+                  <p className="text-xs text-zinc-500 text-center mt-2">
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Cancel button */}
+            <div className="border-t border-zinc-800">
               <button
                 type="button"
-                onClick={() => setDeletePopupOpen(false)}
-                className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded text-zinc-200"
+                onClick={() => setDeleteModalOpen(false)}
                 disabled={deleting}
+                className="w-full px-4 py-3 text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800/50 font-medium transition-colors disabled:opacity-50"
               >
                 Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteClick}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-white"
-                disabled={deleting}
-              >
-                {deleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
         </div>
       )}
+      {/* ─── Feature 3: Task modal ───────────────────────────────────── */}
+      <TaskModal
+        isOpen={taskModalOpen}
+        onClose={() => setTaskModalOpen(false)}
+        onSave={handleSaveTask}
+      />
     </>
   );
 }

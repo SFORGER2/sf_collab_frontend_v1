@@ -5,7 +5,7 @@ import ScraperResults from './ScraperResults'
 import LoadingSpinner from './LoadingSpinner'
 import LogoLoop from '../../ui/LogoLoop'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 import { SiReact, SiNextdotjs, SiTypescript, SiTailwindcss } from 'react-icons/si';
 
 const featureItems = [
@@ -95,7 +95,7 @@ function ScraperForm() {
                 
                     {/* Main Title */}
                     <div className="text-center mb-6 animate-slide-up">
-                        <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 animate-slide-up">
+                        <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 mt-4 animate-slide-up">
                             <span className="bg-linear-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent">
                                 Extract Web Data
                             </span>

@@ -15,22 +15,15 @@ api.interceptors.response.use(
 
 // Idea API
 export const ideaAPI = {
-  getAllIdeas: async (accessToken, params) => {
+  getAllIdeas: async (params) => {
     const response = await api.get("/ideas", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
       params: params,
     });
     return response.data;
   },
 
-  getIdeaById: async (ideaId, accessToken) => {
-    const response = await api.get(`/ideas/${ideaId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+  getIdeaById: async (ideaId) => {
+    const response = await api.get(`/ideas/${ideaId}`);
     return response.data;
   },
 
@@ -75,11 +68,8 @@ export const ideaAPI = {
     return response.data;
     },
   // Idea Comments API
-  getIdeaComments: async (accessToken, params) => {
+  getIdeaComments: async (params) => {
     const response = await api.get("/idea-comments", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
       params: params,
     });
     return response.data;
@@ -112,13 +102,12 @@ export const ideaAPI = {
     return response.data;
   },
   // Idea Bookmarks API
-  getIdeaBookmarks: async (accessToken, params) => {
+  getIdeaBookmarks: async (params) => {
     const response = await api.get("/idea-bookmarks", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
       params: params,
     });
+      console.log("Saved ideas:", response.data);
+    
     return response.data;
   },
 
@@ -163,6 +152,20 @@ export const ideaAPI = {
     });
     return response.data;
   },
+  toggleIdeaCommentLike: async (commentId) => {
+    const response = await api.post(`/idea-comments/${commentId}/like`, {});
+    return response.data;
+  },
+  getTopIdeas: async (params = {}) => {
+    const response = await api.get('/ideas/top', {
+      params: {
+        page: params.page || 1,
+        per_page: params.per_page || 10,
+        limit: 10
+      },
+    });
+    return response.data;
+  }
 };
 
 export default api;

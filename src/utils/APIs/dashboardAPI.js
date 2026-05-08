@@ -19,7 +19,6 @@ export const dashboardAPI = {
   // Get founder dashboard
   getFounderDashboard: async () => {
     const response = await api.get('/dashboard/founder')
-    console.log("Response:", response);
     return response.data
   },
 
@@ -34,6 +33,11 @@ export const dashboardAPI = {
     const response = await api.get('/dashboard/overview')
     return response.data
   },
+
+  getUserProfile: async (userId) => {
+    const response = await api.get(`/dashboard/profile/${userId}`)
+    return response.data
+  }
 }
 
 export default api

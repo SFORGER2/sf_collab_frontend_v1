@@ -1,4 +1,4 @@
-import { Brain, Database, FileSignature, ImageIcon, MessageSquare, PenTool } from "lucide-react";
+import { Brain, CaptionsIcon, Database, FileSignature, ImageIcon, MessageSquare, PenTool, VideoIcon } from "lucide-react";
 
 export const tools = [
   {
@@ -37,11 +37,26 @@ export const tools = [
     gradient: "from-orange-600 to-amber-600"
   },
   {
+    name: "Video Generator",
+    description: "Create engaging videos from text, images, and audio automatically.",
+    icon: VideoIcon,
+    path: "/video-generator",
+    gradient: "from-red-600 to-pink-600"
+  },
+  {
+    name: "Caption Generator",
+    description: "Generate compelling captions and descriptions for your content.",
+    icon: CaptionsIcon,
+    path: "/caption-generator",
+    gradient: "from-yellow-600 to-orange-600"
+  },
+  {
     name: "Landing Page Generator",
     description: "Generate responsive and engaging landing pages tailored to your startup.",
     icon: FileSignature,
     path: "/landing-page-generator",
     gradient: "from-slate-600 to-gray-600",
     available: false
-  }
+  },
+
 ];

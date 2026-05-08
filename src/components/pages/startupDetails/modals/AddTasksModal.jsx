@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/select";
 import { API_URL } from "@/utils/config";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import { startupAPI } from "../startUpAPI";
+import { useSelector } from "react-redux";
 
 const emptyTaskForm = {
   title: "",
@@ -43,17 +45,19 @@ const emptyTaskForm = {
 export default function AddTaskModal({
   isOpen,
   onClose,
-  teamMembers = [],
+  teamMembers,
   startupId,
   editMode = false,
   task = null,
   setTasks
 }) {
+  const [team, setTeam] = useState(teamMembers || []);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(localStorage.getItem("taskForm") ? JSON.parse(localStorage.getItem("taskForm")) : emptyTaskForm);
   const [tagInput, setTagInput] = useState("");
   const [labelInput, setLabelInput] = useState("");
   const [labelColor, setLabelColor] = useState("#3B82F6");
+  const { user } = useSelector((state) => state.auth || {});
   useEffect(() => {
     localStorage.setItem("taskForm", JSON.stringify(form));
   }, [form]);
@@ -83,7 +87,27 @@ export default function AddTaskModal({
       });
     }
   }, [editMode, task]);
-
+  useEffect(() => {
+    const getTeamMembers = async () => {
+      try {
+        const args = {
+          page: 1,
+          per_page: 100,
+          startup_id: startupId,
+          user_id: user?.id || null,
+        }
+        const response = await startupAPI.getMembers(args);
+        console.log("Team members response:", response);
+        if (response.success) {
+          // Assuming the API returns an array of members in response.data.members
+          setTeam(response.data.members || []);
+        }
+      } catch (error) {
+        console.error("Error fetching team members:", error);
+      }
+    }
+    getTeamMembers();
+  }, [startupId]);
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
@@ -286,7 +310,7 @@ export default function AddTaskModal({
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-gray-700 text-white overflow-hidden">
                 <SelectItem value="unassigned">Unassigned</SelectItem>
-                {teamMembers.map((member) => (
+                {team.map((member) => (
                   <SelectItem key={member.id} value={member.userId.toString()}>
                     <img loading="lazy" src={
                       getProfilePicture(member)} alt="Profile picture" className="h-3 rounded-full" />

@@ -77,7 +77,7 @@ export default function MembershipBenefits() {
     <>
       <NavBar />
       <div ref={main} className="bg-[#0b0b0b] text-white min-h-screen py-20 px-6 lg:px-20">
-        <div className="max-w-6xl mx-auto">
+        <div className="w-full mx-auto">
           {/* Header */}
           <div className="benefits-header text-center mb-20">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">

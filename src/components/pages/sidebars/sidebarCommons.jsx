@@ -1,4 +1,4 @@
-import { BarChart3, Bot, BrainCircuit, BriefcaseBusiness, Calculator, ClipboardList, Cpu, Database, Earth, FileSignature, FileTerminal, FileText, Images, Lightbulb, MessageSquare, MessageSquareHeart, Rss, StickyNote, UserPlus, Users, Wand2 } from "lucide-react";
+import { BarChart3, Bookmark, BookOpen, Bot, BrainCircuit, BriefcaseBusiness, Calculator, CaptionsIcon, ClipboardList, Cpu, Database, Earth, FileSignature, FileTerminal, FileText, Images, Lightbulb, LightbulbIcon, MessageSquare, MessageSquareHeart, Rss, StickyNote, TrendingUp, UserPlus, Users, VideoIcon, Wallet, Wand2 } from "lucide-react";
 import { BsGear, BsPeople } from "react-icons/bs";
 import { IoChatbubbles } from "react-icons/io5";
 import { LuLayoutDashboard } from "react-icons/lu";
@@ -16,6 +16,8 @@ export function aiTools(id) {
       { id: "qwen-chat", href: "/qwen-chat", label: "Qwen Chat", icon: <Bot size={18} /> },
       { id: "data-scraper", href: "/data-scraper", label: "Data Scraper", icon: <Database size={18} /> },
       { id: "multimodal-images", href: "/multimodal-images", label: "Multimodal Images", icon: <Images size={18} /> },
+      { id: "video-generator", href: "/video-generator", label: "Video Generator", icon: <VideoIcon size={18} /> },
+      { id: "caption-generator", href: "/caption-generator", label: "Caption Generator", icon: <CaptionsIcon size={18} /> },
     ],
   };
 };
@@ -44,7 +46,6 @@ export function dashboardLink(userRoles = [], setActiveRole) {
       id: `${role}-dashboard`,
       onLinkClick: () => {
         setActiveRole(role)
-        
       },
       href: `/dashboard`,
       icon: role === 'founder' 
@@ -66,11 +67,39 @@ export function socialSection(id) {
       id,
       icon: <Rss size={22} />,
       href: "/posts",
-      label: "Social",
+      label: "Social Feed",
       subItems: [
         { id: "posts-feed", href: "/posts", label: "Social Feed", icon: <MessageSquareHeart size={18} /> },
         { id: "connections", href: "/connections", label: "Connections", icon: <UserPlus size={18} /> },
-        // { id: "discover-users", href: "/discover-users", label: "Discover Users", icon: <Users size={18} /> },
+        { id: "discover-users", href: "/discover-users", label: "Discover Users", icon: <Users size={18} /> },
       ],
+    }
+}
+
+export function wallet(id) {
+  return {
+    id,
+    icon: <Wallet size={22} />,
+    href: "/wallet",
+    label: "Wallet & Store",
+    subItems: [
+      { id: "wallet", href: "/wallet", label: "My Wallet", icon: <Wallet size={18} /> },
+      { id: "store", href: "/store", label: "SF Store", icon: <TrendingUp size={18} /> },
+      { id: "leaderboard", href: "/leaderboard", label: "Leaderboard", icon: <TrendingUp size={18} /> },
+    ]
+  }
+}
+
+export function ideation(id) {
+  return {
+      id,
+      icon: <LightbulbIcon size={22} />,
+      href: "/ideation",
+      label: "Vision",
+      subItems: [
+        { id: "vision-board", href: "/ideation", label: "Vision Board", icon: <LightbulbIcon size={18} /> },
+        { id: "saved-visions", href: "/saved-ideas", label: "Saved Visions", icon: <Bookmark size={18} /> },
+        { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
+      ]
     }
 }

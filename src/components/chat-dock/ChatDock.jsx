@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { X, Minus, MessageCircle } from "lucide-react";
+import { X, Minus, MessageCircle, Trash2, Archive, ArchiveRestore, Pin, PinOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Avatar from "@/components/chat (previous)/Avatar";
 import MessageBubble from "@/components/chat (previous)/MessageBubble";
@@ -29,7 +29,34 @@ function shouldShowSenderName(messages, index) {
 
 const LS_WINDOWS_KEY = "chatDock:windows";
 const LS_UNREAD_KEY = "chatDock:unread";
-const LS_PRESENCE_KEY = "chatDock:presence:lastSeen";
+
+// ─── Feature 2: conversation_type → dock tab mapping ─────────────────────
+const TYPE_TO_DOCK_TAB = {
+  direct: 'friends',
+  group: 'groups',
+  team: 'startups',
+  startup: 'startups',  // backend may use 'startup' or 'team' — accept both
+  general: 'general',
+};
+
+function useDockTabUnreadCounts(unread, conversations) {
+  return useMemo(() => {
+    const counts = { all: 0, friends: 0, groups: 0, startups: 0, general: 0 };
+    for (const [cid, count] of Object.entries(unread || {})) {
+      const n = Number(count) || 0;
+      if (n <= 0) continue;
+      counts.all += n;
+      const conv = conversations.find(c => String(c.id) === cid);
+      const tab = TYPE_TO_DOCK_TAB[conv?.conversation_type];
+      if (tab) counts[tab] += n;
+    }
+    return counts;
+  }, [unread, conversations]);
+}
+// ✅ FIX: Use same key as ChatPage so last_seen is shared between both components.
+// Previously ChatDock used "chatDock:presence:lastSeen" and ChatPage used
+// "presence:lastSeenAt" — they never shared data, causing different timestamps.
+const LS_PRESENCE_KEY = "presence:lastSeenAt";
 const LS_UNREAD_USERS_KEY = "chatDock:unreadUsers";
 
 const toMs = (ts) => {
@@ -89,23 +116,19 @@ const getPresenceForDirect = ({ conv, currentUserId, onlineUsers, lastActiveAt, 
 
   const connected = (onlineUsers || []).map(String).includes(otherId);
   const lastActiveTs = toMs(lastActiveAt?.[otherId]);
-  const lastSeenTs = toMs(
-    lastSeenAt?.[otherId] ??
-      other?.last_seen ??
-      other?.lastSeen ??
-      other?.last_login ??
-      other?.lastLogin
-  );
-
-  const diff = lastActiveTs ? Math.max(0, nowTs - lastActiveTs) : null;
+  // Only use real socket-derived last_seen, never stale last_login from DB
+  const lastSeenTs = toMs(lastSeenAt?.[otherId] ?? other?.last_seen ?? other?.lastSeen);
 
   if (connected) {
-    if (diff == null || diff < 5 * 60 * 1000) return { presenceStatus: "online", statusText: "online" };
-    if (diff < 6 * 60 * 1000) return { presenceStatus: "idle", statusText: "idle" };
-    return { presenceStatus: "offline", statusText: formatLastSeen(lastActiveTs, nowTs) };
+    // Connected = NEVER offline. Only Online or Away.
+    const diff = lastActiveTs ? Math.max(0, nowTs - lastActiveTs) : null;
+    if (diff == null || diff < 5 * 60 * 1000) return { presenceStatus: "online", statusText: "Online" };
+    return { presenceStatus: "idle", statusText: "Away" };
   }
 
-  return { presenceStatus: "offline", statusText: formatLastSeen(lastSeenTs || lastActiveTs, nowTs) };
+  // Disconnected - show last seen
+  const seenTs = lastSeenTs || lastActiveTs;
+  return { presenceStatus: "offline", statusText: seenTs ? formatLastSeen(seenTs, nowTs) : "Offline" };
 };
 
 function safeJsonParse(value, fallback) {
@@ -116,9 +139,8 @@ function safeJsonParse(value, fallback) {
   }
 }
 
-const handleFileUpload = async ({ file, conversationId, token }) => {
+const handleFileUpload = async ({ file, conversationId, token, caption = "" }) => {
   if (!token || !file || !conversationId) return null;
-
   try {
     // ✅ USING CENTRALIZED API
     const data = await chatAPI.uploadFile(conversationId, file, file.name);
@@ -129,6 +151,9 @@ const handleFileUpload = async ({ file, conversationId, token }) => {
     if (data?.message?.file_url) {
       return data.message.file_url;
     }
+    // Some backends return differently shaped response
+    if (response?.data?.file_url) return response.data.file_url;
+    if (response?.file_url) return response.file_url;
     return null;
   } catch (e) {
     console.error("ChatDock: file upload failed:", e);
@@ -177,6 +202,11 @@ function normalizeMessage(m) {
           ? m.isImage
           : null,
     message_type: m.message_type || m.messageType || null,
+    // Preserve read receipt fields so ticks survive page reload
+    status: m.status || m.delivery_status || m.deliveryStatus || null,
+    delivery_status: m.status || m.delivery_status || m.deliveryStatus || null,
+    read_at: m.read_at || m.readAt || null,
+    delivered_at: m.delivered_at || m.deliveredAt || null,
   };
 }
 
@@ -210,14 +240,23 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
 
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  // ─── Feature 5: archive panel state ──────────────────────────────────────
+  const [showArchived, setShowArchived] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [consideredActive, setConsideredActive] = useState(true);
   const [isTabVisible, setIsTabVisible] = useState(!document.hidden);
 
   const [conversations, setConversations] = useState([]);
+  // ─── Feature 5: archived conversations ───────────────────────────────────
+  const [archivedConversations, setArchivedConversations] = useState([]);
+  const [pinnedConversations, setPinnedConversations] = useState(new Set());
+  const [conversationToDelete, setConversationToDelete] = useState(null);
+
   const [isLoadingConvos, setIsLoadingConvos] = useState(false);
 
-  const [lastActiveAt, setLastActiveAt] = useState({});
+  const [lastActiveAt, setLastActiveAt] = useState(() =>
+    safeJsonParse(localStorage.getItem("presence:lastActiveAt"), {})
+  );
   const [lastSeenAt, setLastSeenAt] = useState(() => safeJsonParse(localStorage.getItem(LS_PRESENCE_KEY), {}));
   const [nowTs, setNowTs] = useState(Date.now());
 
@@ -241,23 +280,44 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
   const [windows, setWindows] = useState(() => {
     const saved = safeJsonParse(localStorage.getItem(LS_WINDOWS_KEY), []);
     return Array.isArray(saved)
-      ? saved.map((w) => ({
-          conversationId: w.conversationId,
-          title: w.title || "Chat",
-          minimized: !!w.minimized,
-          messages: [],
-          loading: false,
-          draft: "",
-        }))
+      ? saved.map((w) => {
+          // ─── Feature 3: restore draft from localStorage ────────────────
+          let savedDraft = "";
+          try { savedDraft = localStorage.getItem("chatDock:draft:" + w.conversationId) || ""; } catch {}
+          return {
+            conversationId: w.conversationId,
+            title: w.title || "Chat",
+            minimized: !!w.minimized,
+            messages: [],
+            loading: false,
+            draft: savedDraft,
+          };
+        })
       : [];
   });
   const isWindowsOpen = useMemo(() => windows.length > 0, [windows]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(LS_PRESENCE_KEY, JSON.stringify(lastSeenAt || {}));
-    } catch {}
+    try { localStorage.setItem(LS_PRESENCE_KEY, JSON.stringify(lastSeenAt || {})); } catch {}
   }, [lastSeenAt]);
+
+  useEffect(() => {
+    try { localStorage.setItem("presence:lastActiveAt", JSON.stringify(lastActiveAt || {})); } catch {}
+  }, [lastActiveAt]);
+
+  // Sync presence maps from other tabs (ChatPage <-> ChatDock)
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === "presence:lastSeenAt") {
+        setLastSeenAt(safeJsonParse(e.newValue, {}));
+      }
+      if (e.key === "presence:lastActiveAt") {
+        setLastActiveAt(safeJsonParse(e.newValue, {}));
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => setNowTs(Date.now()), 30000);
@@ -279,6 +339,9 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
       localStorage.setItem(LS_UNREAD_USERS_KEY, JSON.stringify(unreadUsers || {}));
     } catch {}
   }, [unreadUsers]);
+
+  // ─── Feature 2: per-tab unread badge counts ───────────────────────────────
+  const dockTabUnreadCounts = useDockTabUnreadCounts(unread, conversations);
 
   const [typingByConversation, setTypingByConversation] = useState({});
   const typingTimeoutsRef = useRef({});
@@ -368,6 +431,12 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
       localStorage.setItem(LS_UNREAD_USERS_KEY, JSON.stringify(next));
       return next;
     });
+
+    // Also zero out the server-provided unread_count on the conversation object
+    // so the badge doesn't re-appear from stale server data
+    setConversations((prev) =>
+      prev.map((c) => String(c.id) === key ? { ...c, unread_count: 0 } : c)
+    );
   }, []);
 
   useEffect(() => {
@@ -400,7 +469,10 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
       const response = await chatAPI.getAllChats();
       if (response?.success) {
         const convos = response.data.conversations || [];
-        setConversations(convos);
+        // ─── Feature 5: split active vs archived ─────────────────────────
+        setConversations(convos.filter(c => !c.is_archived));
+        setArchivedConversations(convos.filter(c => c.is_archived));
+        setPinnedConversations(new Set(convos.filter(c => c.is_pinned).map(c => String(c.id))));
 
         setLastSeenAt((prev) => {
           const next = { ...prev };
@@ -454,7 +526,10 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
 
           setTimeout(() => scrollToBottom(cid), 30);
 
-          if (consideredActive && !isConvMinimized(cid)) {
+          // Always clear unread when messages load. isConvMinimized() reads stale state
+          // due to React batching — openWindow() already zeroed the badge optimistically,
+          // but we still emit mark_read so the backend DB and other participants sync.
+          if (consideredActive) {
             clearUnread(cid);
             socket?.emit?.("mark_read", { conversation_id: cid });
           }
@@ -470,7 +545,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         );
       }
     },
-    [token, scrollToBottom, socket, consideredActive, isConvMinimized, clearUnread]
+    [token, scrollToBottom, socket, consideredActive, clearUnread]
   );
 
   useEffect(() => {
@@ -514,9 +589,13 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
           return next;
         }
 
+        // ─── Feature 3: restore saved draft ───────────────────────────
+        let savedDraft = "";
+        try { savedDraft = localStorage.getItem("chatDock:draft:" + cid) || ""; } catch {}
+
         const next = [
           ...prev,
-          { conversationId: cid, title: title || "Chat", minimized: false, messages: [], loading: false, draft: "" },
+          { conversationId: cid, title: title || "Chat", minimized: false, messages: [], loading: false, draft: savedDraft },
         ];
         if (next.length > maxWindows) next.shift();
 
@@ -524,11 +603,22 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         return next;
       });
 
+      // FIX #3: Optimistically zero out unread locally and tell backend to mark as read
+      // Backend will emit unread_count_update back via socket confirming the reset
       clearUnread(cid);
       socket?.emit?.("join_conversation", { conversation_id: cid });
+      socket?.emit?.("mark_read", { conversation_id: cid });
+      // Also call REST endpoint so DB is updated and socket event fires
+      try {
+        if (token) {
+          await chatAPI.markConversationRead(cid);
+        }
+      } catch (e) {
+        // non-critical — local state already cleared above
+      }
       await fetchMessages(cid);
     },
-    [fetchMessages, maxWindows, persistWindows, clearUnread, socket]
+    [fetchMessages, maxWindows, persistWindows, clearUnread, socket, token]
   );
 
   const closeWindow = useCallback(
@@ -547,6 +637,8 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         delete next[cid];
         return next;
       });
+      // ─── Feature 3: clear draft on close ──────────────────────────────
+      try { localStorage.removeItem("chatDock:draft:" + cid); } catch {}
     },
     [persistWindows, socket]
   );
@@ -564,6 +656,81 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     },
     [persistWindows]
   );
+
+  // ─── Feature 5: Archive / Unarchive ────────────────────────────────────
+  const handleArchiveConv = useCallback(async (conversationId) => {
+    try {
+      await chatAPI.archiveConversation(conversationId);
+      setConversations(prev => {
+        const conv = prev.find(c => String(c.id) === String(conversationId));
+        if (conv) setArchivedConversations(a => [{ ...conv, is_archived: true }, ...a]);
+        return prev.filter(c => String(c.id) !== String(conversationId));
+      });
+      closeWindow(conversationId);
+    } catch (e) { console.error('Archive failed:', e); }
+  }, [closeWindow]);
+
+  const handleUnarchiveConv = useCallback(async (conversationId) => {
+    try {
+      await chatAPI.unarchiveConversation(conversationId);
+      setArchivedConversations(prev => {
+        const conv = prev.find(c => String(c.id) === String(conversationId));
+        if (conv) setConversations(a => [{ ...conv, is_archived: false }, ...a]);
+        return prev.filter(c => String(c.id) !== String(conversationId));
+      });
+    } catch (e) { console.error('Unarchive failed:', e); }
+  }, []);
+
+  const handlePinConv = useCallback(async (conversationId) => {
+    try {
+      await chatAPI.pinConversation(conversationId);
+      setPinnedConversations(prev => new Set([...prev, String(conversationId)]));
+      setConversations(prev => prev.map(c =>
+        String(c.id) === String(conversationId) ? { ...c, is_pinned: true } : c
+      ));
+    } catch (e) { console.error('Pin failed:', e); }
+  }, []);
+
+  const handleUnpinConv = useCallback(async (conversationId) => {
+    try {
+      await chatAPI.unpinConversation(conversationId);
+      setPinnedConversations(prev => { const s = new Set(prev); s.delete(String(conversationId)); return s; });
+      setConversations(prev => prev.map(c =>
+        String(c.id) === String(conversationId) ? { ...c, is_pinned: false } : c
+      ));
+    } catch (e) { console.error('Unpin failed:', e); }
+  }, []);
+
+useEffect(() => {
+  const handleLeaveGroup = async (e) => {
+    const { conversationId } = e.detail || {};
+    if (!conversationId) return;
+
+    try {
+      await chatAPI.leaveConversation(conversationId);
+
+      setConversations((prev) =>
+        prev.filter((c) => String(c.id) !== String(conversationId))
+      );
+
+      closeWindow(conversationId);
+
+      window.dispatchEvent(
+        new CustomEvent("chat:conversationLeft", {
+          detail: { conversationId },
+        })
+      );
+    } catch (error) {
+      console.error("Failed to leave conversation:", error);
+      alert("Failed to leave conversation.");
+    }
+  };
+
+  window.addEventListener("chat:leaveGroup", handleLeaveGroup);
+  return () =>
+    window.removeEventListener("chat:leaveGroup", handleLeaveGroup);
+}, [closeWindow]);
+
 
   useEffect(() => {
     if (!consideredActive) return;
@@ -600,8 +767,21 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
       if (data.status === "online") {
         setLastActiveAt((prev) => ({ ...prev, [id]: now() }));
       }
+      if (data.status === "away") {
+        // Server confirms user is Away — backdate lastActiveAt so idle shows immediately
+        const awayTs = now() - (5 * 60 * 1000 + 1000);
+        setLastActiveAt((prev) => ({ ...prev, [id]: awayTs }));
+      }
       if (data.status === "offline") {
-        setLastSeenAt((prev) => ({ ...prev, [id]: now() }));
+        // Prefer the authoritative timestamp from the backend (added in disconnect handler)
+        // over local Date.now() which can differ by network latency
+        const ts = toMs(data?.last_seen) || now();
+        setLastSeenAt((prev) => {
+          const next = { ...prev, [id]: ts };
+          // Also write to the shared localStorage key so ChatPage picks it up
+          try { localStorage.setItem(LS_PRESENCE_KEY, JSON.stringify(next)); } catch {}
+          return next;
+        });
       }
     };
 
@@ -617,11 +797,15 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
 
     const ping = () => socket.emit("user_activity", { ts: now() });
     window.addEventListener("keydown", ping);
+    window.addEventListener("click", ping);
+    window.addEventListener("scroll", ping, { passive: true });
     const interval = setInterval(ping, 20000);
 
     return () => {
       clearInterval(interval);
       window.removeEventListener("keydown", ping);
+      window.removeEventListener("click", ping);
+      window.removeEventListener("scroll", ping);
       socket.off("user_status", onUserStatus);
       socket.off("user_activity", onUserActivity);
     };
@@ -709,7 +893,30 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         });
       });
 
-      const isOwnMessage = String(messageNorm.sender_id) === String(currentUser?.id);
+      // Bump conversation to top of list by updating last_message_at
+      const msgTime = messageNorm.created_at || new Date().toISOString();
+      setConversations((prev) => {
+        const exists = prev.some((c) => String(c.id) === cid);
+        if (!exists) {
+          // ─── Feature 5: auto-unarchive if message for archived chat ────
+          setArchivedConversations(arPrev => {
+            const archConv = arPrev.find(c => String(c.id) === cid);
+            if (archConv) {
+              setConversations(a => [{ ...archConv, is_archived: false, last_message_at: msgTime, updated_at: msgTime }, ...a]);
+              return arPrev.filter(c => String(c.id) !== cid);
+            }
+            return arPrev;
+          });
+          return prev;
+        }
+        return prev.map((c) =>
+          String(c.id) === cid ? { ...c, last_message_at: msgTime, updated_at: msgTime } : c
+        );
+      });
+
+      // ── Fix: guard against own file-upload messages (sender_id may be int vs str) ──
+      const isOwnMessage = !!messageNorm.sender_id && !!currentUser?.id &&
+        String(messageNorm.sender_id) === String(currentUser?.id);
 
       if (!isOwnMessage) {
         const currentWindows = windowsRef.current;
@@ -745,7 +952,13 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
             setTimeout(() => {
               setIsNotificationOpen(false)
             }, 4000);
-            setUserMessageSent({ title, url, message, id: messageNorm.conversation_id });
+            setUserMessageSent({
+              title,
+              url,
+              message,
+              id: messageNorm.conversation_id,
+              conversationType: data?.conversation?.conversation_type || 'direct',
+            });
 
           }
         } else {
@@ -760,9 +973,92 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     socket.on("new_message", handleIncomingMessage);
     socket.on("conversation_message", handleIncomingMessage);
 
+    // ─── Feature 6: real-time pin sync ────────────────────────────────────
+    const onConvPinned = (data) => {
+      const cid = String(data.conversation_id);
+      const ip = !!data.is_pinned;
+      setPinnedConversations(prev => { const s = new Set(prev); ip ? s.add(cid) : s.delete(cid); return s; });
+      setConversations(prev => prev.map(c => String(c.id) === cid ? { ...c, is_pinned: ip } : c));
+    };
+    socket.on("conversation_pinned", onConvPinned);
+
+    // ── Startup membership: added to a conversation ────────────────────────
+    const onConversationAdded = (data) => {
+      const conv = data?.conversation;
+      if (!conv) return;
+      setConversations((prev) => {
+        if (prev.some((c) => String(c.id) === String(conv.id))) return prev;
+        return [conv, ...prev];
+      });
+    };
+    socket.on("conversation_added", onConversationAdded);
+
+    // ── Startup membership: removed from a conversation ────────────────────
+    const onConversationRemoved = (data) => {
+      const cid = String(data?.conversation_id ?? '');
+      if (!cid) return;
+      setConversations((prev) => prev.filter((c) => String(c.id) !== cid));
+      // Close the dock window if it was open
+      setWindows((prev) => {
+        const hadIt = prev.some((w) => String(w.conversationId) === cid);
+        if (!hadIt) return prev;
+        return prev.filter((w) => String(w.conversationId) !== cid);
+      });
+    };
+    socket.on("conversation_removed", onConversationRemoved);
+
+    // Read receipt status updates - update message status in the correct window
+    const handleStatusUpdate = (data) => {
+      const { message_id, conversation_id, status } = data || {};
+      if (!message_id || !conversation_id) return;
+      const cid = String(conversation_id);
+
+      setWindows((prev) =>
+        prev.map((w) => {
+          if (String(w.conversationId) !== cid) return w;
+          const updatedMessages = (w.messages || []).map((m) =>
+            String(m.id) === String(message_id)
+              ? {
+                  ...m,
+                  status,
+                  delivery_status: status,
+                  ...(status === "read" ? { read_at: data.read_at || new Date().toISOString() } : {}),
+                  ...(status === "delivered" ? { delivered_at: data.delivered_at || new Date().toISOString() } : {}),
+                }
+              : m
+          );
+          return { ...w, messages: updatedMessages };
+        })
+      );
+    };
+
+    socket.on("message_status_update", handleStatusUpdate);
+    socket.on("message_read", handleStatusUpdate);
+    socket.on("message_delivered", handleStatusUpdate);
+
+    // FIX #3b: Listen for backend confirmation that unread count was reset
+    const onUnreadCountUpdate = (data) => {
+      const cid = String(data?.conversation_id);
+      if (!cid) return;
+      // Confirm the zero out from backend
+      setUnread((prev) => {
+        const next = { ...prev, [cid]: 0 };
+        localStorage.setItem(LS_UNREAD_KEY, JSON.stringify(next));
+        return next;
+      });
+    };
+    socket.on("unread_count_update", onUnreadCountUpdate);
+
     return () => {
       socket.off("new_message", handleIncomingMessage);
       socket.off("conversation_message", handleIncomingMessage);
+      socket.off("conversation_pinned", onConvPinned);
+      socket.off("conversation_added", onConversationAdded);
+      socket.off("conversation_removed", onConversationRemoved);
+      socket.off("message_status_update", handleStatusUpdate);
+      socket.off("message_read", handleStatusUpdate);
+      socket.off("message_delivered", handleStatusUpdate);
+      socket.off("unread_count_update", onUnreadCountUpdate);
     };
   }, [
     socket,
@@ -774,25 +1070,42 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
   ]);
 
   const sendMessage = useCallback(
-    (conversationId, content) => {
+    (conversationId, payload) => {
       if (!socket) return;
-      const cid = String(conversationId);
 
-      if (typeof content === "object" && content !== null) {
-        const text = content.content?.trim();
-        if (text) {
-          socket.emit("send_message", { conversation_id: cid, content: text });
-        }
-        return;
+      const cid = String(conversationId);
+      if (!cid || !payload) return;
+
+      // TEXT MESSAGE
+      if (typeof payload === "string") {
+        const text = payload.trim();
+        if (!text) return;
+
+        socket.emit("send_message", {
+          conversation_id: cid,
+          content: text || " ",
+        });
       }
 
-      const text = content?.trim();
-      if (!cid || !text) return;
+      // FILE OR MIXED MESSAGE
+      if (typeof payload === "object") {
+        const text = payload.content?.trim() || "";
 
-      socket.emit("send_message", { conversation_id: cid, content: text });
+        socket.emit("send_message", {
+          conversation_id: cid,
+          content: text,
+          file_url: payload.file_url || null,
+          file_name: payload.file_name || null,
+          file_type: payload.file_type || null,
+          is_image: payload.is_image || false,
+        });
+      }
 
+      // clear draft
       setWindows((prev) =>
-        prev.map((w) => (String(w.conversationId) === cid ? { ...w, draft: "" } : w))
+        prev.map((w) =>
+          String(w.conversationId) === cid ? { ...w, draft: "" } : w
+        )
       );
 
       if (consideredActive && !isConvMinimized(cid)) {
@@ -802,6 +1115,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     },
     [socket, consideredActive, isConvMinimized, clearUnread]
   );
+
 
   const filteredConversations = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -813,7 +1127,10 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
       return (onlineUsers || []).some((id) => String(id) === String(other.id));
     };
 
-    return (conversations || []).filter((c) => {
+    // ─── Feature 5: switch source based on showArchived ─────────────────
+    const source = showArchived ? archivedConversations : (conversations || []);
+
+    return source.filter((c) => {
       if (term) {
         const display =
           c.name ||
@@ -822,16 +1139,24 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         if (!String(display).toLowerCase().includes(term)) return false;
       }
 
-      if (activeTab === "online") {
-        return isDirectOnline(c);
+      // ─── Feature 2: per-tab filtering ─────────────────────────────────
+      if (!showArchived) {
+        if (activeTab === "online") return isDirectOnline(c);
+        if (activeTab === "friends") return c.conversation_type === "direct";
+        if (activeTab === "groups") return c.conversation_type === "group";
+        if (activeTab === "startups") return c.conversation_type === "team" || c.conversation_type === "startup";
+        if (activeTab === "general") return c.conversation_type === "general";
       }
       return true;
     }).sort((a, b) => {
-      const aLast = a.messages?.[a.messages.length - 1]?.created_at || a.created_at || 0;
-      const bLast = b.messages?.[b.messages.length - 1]?.created_at || b.created_at || 0;
+      // Feature 6: pinned first
+      if (a.is_pinned && !b.is_pinned) return -1;
+      if (!a.is_pinned && b.is_pinned) return 1;
+      const aLast = a.last_message_at || a.updated_at || a.created_at || 0;
+      const bLast = b.last_message_at || b.updated_at || b.created_at || 0;
       return new Date(bLast).getTime() - new Date(aLast).getTime();
     })
-  }, [conversations, searchTerm, activeTab, onlineUsers, currentUser?.id]);
+  }, [conversations, archivedConversations, searchTerm, activeTab, showArchived, onlineUsers, currentUser?.id, pinnedConversations]);
 
   const totalUnread = useMemo(() => {
     return Object.values(unread || {}).reduce((sum, v) => sum + (Number(v) || 0), 0);
@@ -883,7 +1208,13 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         onClick={() => {
           openWindow({ conversationId: userMessageSent?.id, title: userMessageSent?.title});
         }}
-        isOpen={isNotificationOpen} setIsOpen={setIsNotificationOpen} title={userMessageSent.title} url={userMessageSent.url} message={userMessageSent.message} />
+        isOpen={isNotificationOpen}
+        setIsOpen={setIsNotificationOpen}
+        title={userMessageSent.title}
+        url={userMessageSent.url}
+        message={userMessageSent.message}
+        conversationType={userMessageSent.conversationType || "direct"}
+      />
 
       {/* Launcher Button */}
       {(!isPanelOpen && !isWindowsOpen && !isMobile) && (
@@ -921,7 +1252,9 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                 {/* Header */}
                 <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800 flex-shrink-0">
                   <div className="flex items-center gap-2">
-                    <div className="text-sm font-semibold text-white">Chats</div>
+                    <div className="text-sm font-semibold text-white">
+                      {showArchived ? "Archived Chats" : "Chats"}
+                    </div>
                     <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-red-500"}`} />
                   </div>
                   <button
@@ -943,27 +1276,47 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                     placeholder="Search chats..."
                     className="w-full px-3 py-2 bg-zinc-800 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
                   />
-                  <div className="flex gap-2 mt-2">
-                    {["all", "online"].map((id) => (
-                      <button
-                        key={id}
-                        onClick={() => setActiveTab(id)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                          activeTab === id ? "bg-amber-500 text-zinc-900 shadow-md" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-                        }`}
-                      >
-                        {id.charAt(0).toUpperCase() + id.slice(1)}
-                      </button>
-                    ))}
-                  </div>
+                  {/* ─── Feature 1+2: Tabs with unread badges ─────────── */}
+                  {!showArchived && (
+                    <div className="flex gap-1.5 mt-2 flex-wrap">
+                      {[
+                        { id: "all", label: "All" },
+                        { id: "friends", label: "Friends" },
+                        { id: "groups", label: "Groups" },
+                        { id: "startups", label: "Startups" },
+                        { id: "general", label: "General" },
+                        { id: "online", label: "Online" },
+                      ].map(({ id, label }) => {
+                        const count = dockTabUnreadCounts[id] || 0;
+                        return (
+                          <button
+                            key={id}
+                            onClick={() => setActiveTab(id)}
+                            className={`relative px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                              activeTab === id ? "bg-amber-500 text-zinc-900 shadow-md" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                            }`}
+                          >
+                            {label}
+                            {count > 0 && (
+                              <span className="absolute -top-1.5 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center">
+                                {count > 99 ? '99+' : count}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Conversations List */}
-                <div className="overflow-y-auto p-2 flex-1">
+                <div className="overflow-y-auto p-2 flex-1" style={{scrollbarWidth:"none",msOverflowStyle:"none"}}>
                   {isLoadingConvos ? (
                     <div className="p-4 text-zinc-500 text-sm">Loading…</div>
                   ) : filteredConversations.length === 0 ? (
-                    <div className="p-4 text-zinc-500 text-sm text-center">No conversations</div>
+                    <div className="p-4 text-zinc-500 text-sm text-center">
+                      {showArchived ? "No archived chats" : "No conversations"}
+                    </div>
                   ) : (
                     filteredConversations.map((conv) => {
                       const otherParticipant = conv.participants?.find(
@@ -971,11 +1324,19 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                       );
                       const isDirect = conv.conversation_type === "direct";
                       const title = conv.name || otherParticipant?.firstName || "Chat";
-                      const unreadCount = unread?.[String(conv.id)] || conv.unread_count || 0;
+                      // Use local unread state as source of truth; fallback to server count only if not yet tracked
+                      const localUnread = unread?.[String(conv.id)];
+                      const unreadCount = localUnread != null ? Number(localUnread) : (Number(conv.unread_count) || 0);
                       let lastMsg = conv.last_message || conv.lastMessage;
 
+                      // ─── Feature 3: draft preview ──────────────────────
+                      let dockDraftText = "";
+                      try { dockDraftText = localStorage.getItem("chatDock:draft:" + String(conv.id)) || ""; } catch {}
+
                       let lastMessagePreview = "No messages yet";
-                      if (lastMsg) {
+                      if (dockDraftText.trim()) {
+                        lastMessagePreview = dockDraftText.trim();
+                      } else if (lastMsg) {
                         let content = lastMsg.content || lastMsg.original_content || "";
                         if (lastMsg.is_deleted) content = "This message was deleted.";
                         const senderId = lastMsg.sender_id || lastMsg.sender?.id;
@@ -1002,8 +1363,9 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                         : { presenceStatus: "offline", statusText: "" };
 
                       return (
+                        <div key={conv.id} className="relative group">
+
                         <motion.button
-                          key={conv.id}
                           whileHover={{ x: 4 }}
                           onClick={() => {
                             
@@ -1014,6 +1376,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                             unreadCount > 0 ? "bg-zinc-800/70 border-l-2 border-amber-500" : "hover:border-l-2 hover:border-zinc-700"
                           }`}
                         >
+                        
                           <div className="flex-shrink-0">
                             <Avatar
                               src={isDirect ? getProfilePicture(otherParticipant) : null}
@@ -1027,11 +1390,13 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                               {title}
                             </div>
                             <div className={`text-xs truncate transition-colors ${unreadCount > 0 ? "text-zinc-300" : "text-zinc-500"}`}>
-                              {lastMessagePreview}
+                              {dockDraftText.trim() ? (
+                                <><span className="text-amber-400 font-medium">Draft: </span><span>{lastMessagePreview.length > 25 ? lastMessagePreview.slice(0, 25) + "..." : lastMessagePreview}</span></>
+                              ) : lastMessagePreview}
                             </div>
                           </div>
                           <div className="flex flex-col gap-2">
-                          <span className="text-[0.6rem] text-gray-600">{formatFriendlyDate(lastMsg?.created_at)}</span>
+                          <span className="text-[0.6rem] text-gray-600 group-hover:opacity-0 transition-opacity">{formatFriendlyDate(lastMsg?.created_at)}</span>
                           {unreadCount > 0 && (
                             <motion.div 
                               initial={{ scale: 0.8 }}
@@ -1043,8 +1408,83 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                             )}
                           </div>
                         </motion.button>
+                        {/* ─── Feature 5: Archive/Unarchive + Delete buttons ─── */}
+                        <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all pointer-events-none group-hover:pointer-events-auto">
+                          {showArchived ? (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleUnarchiveConv(conv.id); }}
+                              className="p-1.5 rounded-lg hover:bg-blue-500/20 text-zinc-600 hover:text-blue-400 transition-all"
+                              title="Unarchive"
+                            >
+                              <ArchiveRestore size={14} />
+                            </button>
+                          ) : (
+                            <>
+                              {/* Pin / Unpin */}
+                              {conv.is_pinned ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); handleUnpinConv(conv.id); }}
+                                  className="p-1.5 rounded-lg hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 transition-all"
+                                  title="Unpin"
+                                >
+                                  <PinOff size={14} />
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); handlePinConv(conv.id); }}
+                                  className="p-1.5 rounded-lg hover:bg-indigo-500/20 text-zinc-600 hover:text-indigo-400 transition-all"
+                                  title="Pin"
+                                >
+                                  <Pin size={14} />
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); handleArchiveConv(conv.id); }}
+                                className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-600 hover:text-zinc-300 transition-all"
+                                title="Archive"
+                              >
+                                <Archive size={14} />
+                              </button>
+                              {isDirect && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setConversationToDelete({ id: conv.id, title }); }}
+                                  className="p-1.5 rounded-lg hover:bg-red-500/20 text-zinc-600 hover:text-red-400 transition-all"
+                                  title="Delete conversation"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
+
+                        </div>
                       );
                     })
+                  )}
+
+                  {/* ─── Feature 5: Archive toggle at bottom of list ───── */}
+                  {!showArchived && archivedConversations.length > 0 && (
+                    <button
+                      onClick={() => setShowArchived(true)}
+                      className="w-full flex items-center gap-2 px-3 py-2 mt-1 rounded-xl text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 text-xs transition-colors"
+                    >
+                      <Archive size={13} />
+                      <span>Archived ({archivedConversations.length})</span>
+                    </button>
+                  )}
+                  {showArchived && (
+                    <button
+                      onClick={() => setShowArchived(false)}
+                      className="w-full flex items-center gap-2 px-3 py-2 mt-1 rounded-xl text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 text-xs transition-colors"
+                    >
+                      <span>← Back to Chats</span>
+                    </button>
                   )}
                 </div>
               </motion.div>
@@ -1155,7 +1595,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                   {!w.minimized && (
                     <>
                       {/* Messages */}
-                      <div className={`${isMobile ? "flex-1" : "h-[60vh]"} overflow-y-auto p-3 bg-zinc-950 space-y-0`}>
+                      <div className={`${isMobile ? "flex-1" : "h-[440px]"} overflow-y-auto p-3 bg-zinc-950 space-y-0 scrollbar-none`} style={{scrollbarWidth:"none",msOverflowStyle:"none"}}>
                         {w.loading ? (
                           <div className="text-sm text-zinc-500">Loading…</div>
                         ) : (
@@ -1166,13 +1606,33 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                               <MessageBubble
                                 key={m.id || `${cid}-${i}`}
                                 message={m}
-                                
                                 isOwn={isOwn}
                                 showAvatar={showAvatar}
-                                showSenderName={conv?.conversation_type !== "direct" && shouldShowSenderName(w.messages, i)}
-                                conversationType={conv?.conversation_type}
+                                currentUserId={currentUser?.id}
                                 variant="dock"
+                                showSenderName={
+                                  conv?.conversation_type !== "direct" &&
+                                  shouldShowSenderName(w.messages, i)
+                                }
+                                conversationType={conv?.conversation_type}
+                                conversationId={cid}
+                                setMessages={(updater) => {
+                                  setWindows((prev) =>
+                                    prev.map((win) => {
+                                      if (String(win.conversationId) === cid) {
+                                        const newMessages =
+                                          typeof updater === "function"
+                                            ? updater(win.messages)
+                                            : updater;
+
+                                        return { ...win, messages: newMessages };
+                                      }
+                                      return win;
+                                    })
+                                  );
+                                }}
                               />
+
                             );
                           })
                         )}
@@ -1197,6 +1657,11 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                             setWindows((prev) =>
                               prev.map((x) => (String(x.conversationId) === cid ? { ...x, draft: val } : x))
                             );
+                            // ─── Feature 3: persist draft ────────────────
+                            try {
+                              if (val && val.trim()) localStorage.setItem("chatDock:draft:" + cid, val);
+                              else localStorage.removeItem("chatDock:draft:" + cid);
+                            } catch {}
                             if (socket) {
                               socket.emit("typing_start", { conversation_id: cid });
                               if (typingTimeoutsRef.current[cid]) clearTimeout(typingTimeoutsRef.current[cid]);
@@ -1209,10 +1674,12 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                           onSend={(payload) => {
                             if (socket) socket.emit("typing_stop", { conversation_id: cid });
                             sendMessage(cid, payload);
+                            // ─── Feature 3: clear draft on send ──────────
+                            try { localStorage.removeItem("chatDock:draft:" + cid); } catch {}
                           }}
                           socket={socket}
                           conversationId={cid}
-                          onFileUpload={(file) => handleFileUpload({ file, conversationId: cid, token })}
+                          onFileUpload={(file, caption) => handleFileUpload({ file, conversationId: cid, token, caption })}
                         />
                       </div>
                     </>
@@ -1223,6 +1690,62 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
           </AnimatePresence>
         </div>
       </div>
+      {conversationToDelete && (
+      <div
+        className="fixed inset-0 z-[10000] bg-black/60 flex items-center justify-center p-4"
+        onClick={() => setConversationToDelete(null)}
+      >
+        <div
+          className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-sm border border-zinc-800"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-5">
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Delete Conversation
+            </h3>
+
+            <p className="text-zinc-400 text-sm mb-5">
+              Are you sure you want to delete "{conversationToDelete.title}"?
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConversationToDelete(null)}
+                className="flex-1 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-200"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={async () => {
+                  try {
+                    await chatAPI.deleteConversation(conversationToDelete.id);
+
+                    setConversations((prev) =>
+                      prev.filter(
+                        (c) =>
+                          String(c.id) !==
+                          String(conversationToDelete.id)
+                      )
+                    );
+
+                    closeWindow(conversationToDelete.id);
+                    setConversationToDelete(null);
+                  } catch (error) {
+                    console.error("Delete failed:", error);
+                    alert("Delete failed.");
+                  }
+                }}
+                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-xl text-white"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
     </>
   );
 }

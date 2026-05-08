@@ -78,7 +78,7 @@ export default function SignUp() {
     const handleOAuthMessage = (event) => {
       const allowedOrigins = [
         window.location.origin ,
-        "http://localhost:5001",
+        "",
         "null",
         "https://sfclb.netlify.app",
         "https://sfclb.netlify.app/",
@@ -211,25 +211,37 @@ export default function SignUp() {
         email: formData.email,
         password: formData.password,
         referralCode: referralCode
-      })
+      });
       console.log(response);
-        // Store tokens and user data
-        localStorage.setItem('access_token', response.data.access_token);
-        localStorage.setItem('refreshToken', response.data.refreshToken);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        
-        dispatch(setToken(response.data.access_token));
-        dispatch(setUser(response.data.user));
-        
+
+      if (response.data.success) {
+        // Registration succeeded — now log in automatically to get tokens
+        const loginResponse = await authAPI.loginRequest({
+          email: formData.email,
+          password: formData.password
+        });
+
+        const { access_token, refresh_token, user } = loginResponse;
+        localStorage.setItem('access_token', access_token);
+        localStorage.setItem('refreshToken', refresh_token);
+
+        localStorage.setItem('access_token', access_token);
+        localStorage.setItem('refreshToken', refresh_token);
+        localStorage.setItem('user', JSON.stringify(user));
+
+        dispatch(setToken(access_token));
+        dispatch(setUser(user));
+
         setLoaderState(false);
 
-        if (!response.data.user.isEmailVerified) {
-          const verificationResponse = await authAPI.sendVerificationCodeRequest(response.data.access_token);
-            navigate(`/verify-email?token=${verificationResponse.data.verification_token}`);
-            toast.info("Verification code sent to your email, continue to verify.");
-      }else {
-        setLoaderState(false);
-      
+        if (!user.isEmailVerified) {
+          const verificationResponse = await authAPI.sendVerificationCodeRequest(access_token);
+          navigate(`/verify-email?token=${verificationResponse.data.verification_token}`);
+          toast.info("Verification code sent to your email, continue to verify.");
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
         setErrors(prev => ({
           ...prev,
           submit: response?.data?.error || 'Signup failed'
@@ -239,7 +251,7 @@ export default function SignUp() {
       console.error('Signup unexpected error:', error);
       setErrors(prev => ({
         ...prev,
-        submit: error?.error || 'An unexpected error occurred'
+        submit: error?.response?.data?.error || 'An unexpected error occurred'
       }));
     } finally {
       setIsLoading(false);

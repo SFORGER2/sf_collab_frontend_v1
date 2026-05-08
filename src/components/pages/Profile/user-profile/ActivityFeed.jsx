@@ -10,8 +10,12 @@ const ActivityFeed = ({ activities }) => {
         return Target;
       case 'achievement_unlocked':
         return Zap;
-      case 'startup_created':
+      case 'idea_created':
         return Rocket;
+      case 'knowledge_posted':
+        return MessageCircle;
+      case 'post_created':
+        return MessageCircle;
       default:
         return MessageCircle;
     }
@@ -23,12 +27,29 @@ const ActivityFeed = ({ activities }) => {
         return 'text-green-400';
       case 'achievement_unlocked':
         return 'text-yellow-400';
-      case 'startup_created':
+      case 'idea_created':
         return 'text-blue-400';
+      case 'knowledge_posted':
+        return 'text-indigo-400';
+      case 'post_created':
+        return 'text-pink-400';
       default:
         return 'text-purple-400';
     }
   };
+
+  if (!activities || activities.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-6"
+      >
+        <h3 className="text-xl font-semibold mb-6">Recent Activity</h3>
+        <p className="text-center text-gray-500 py-8">No recent activity</p>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -46,7 +67,7 @@ const ActivityFeed = ({ activities }) => {
               key={index}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: index * 0.05 }}
               className="flex items-center gap-4 p-4 bg-gray-700/30 rounded-xl"
             >
               <div className={`p-2 rounded-lg bg-gray-600 ${getActivityColor(activity.type)}`}>
@@ -56,12 +77,12 @@ const ActivityFeed = ({ activities }) => {
               <div className="flex-1">
                 <p className="font-medium">{activity.title}</p>
                 <p className="text-sm text-gray-400">
-                  {new Date(activity.timestamp).toLocaleTimeString()} • {activity.data.points && `${activity.data.points} XP`}
+                  {activity.timestamp ? new Date(activity.timestamp).toLocaleTimeString() : ''}
                 </p>
               </div>
               
               <div className="text-xs text-gray-500">
-                {new Date(activity.timestamp).toLocaleDateString()}
+                {activity.timestamp ? new Date(activity.timestamp).toLocaleDateString() : ''}
               </div>
             </motion.div>
           );

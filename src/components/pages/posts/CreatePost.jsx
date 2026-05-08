@@ -93,7 +93,7 @@ export default function CreatePost({ currentUser, onPost }) {
 if (!currentUser) return null; // or skeleton
 
   return (
-    <Card className="bg-zinc-900/50 backdrop-blur-xl border-zinc-800/50 shadow-xl overflow-hidden">
+    <Card className="create-post bg-zinc-900/50 backdrop-blur-xl border-zinc-800/50 shadow-xl overflow-hidden">
       <CardHeader>
         <h2 className="text-lg font-bold">
           <ShinyText>Create Post</ShinyText>

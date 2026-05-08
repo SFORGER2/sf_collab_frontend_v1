@@ -21,7 +21,8 @@ import {
   Copy,
   FileText
 } from 'lucide-react';
-import useNotifications from '../../contexts/useNotifications';
+// ✅ FIX: use shared NotificationContext so markAsRead updates the bell badge instantly
+import { useNotifications } from '../../contexts/NotificationContext';
 
 
 // Get icon based on notification type/category
@@ -179,7 +180,7 @@ const formatRelativeTime = (dateString) => {
 
 const NotificationItem = ({ notification, onDelete }) => {
   const navigate = useNavigate();
-  const { markAsRead, markAsUnread, copyToNotes, refresh } = useNotifications();
+  const { markAsRead, markAsUnread, copyToNotes } = useNotifications();
   const itemRef = useRef(null);
   const menuRef = useRef(null);
   const markedRef = useRef(false);
@@ -221,14 +222,12 @@ const NotificationItem = ({ notification, onDelete }) => {
     // Don't navigate if clicking menu or buttons
     if (e.target.closest('.menu-btn') || e.target.closest('.menu-dropdown')) return;
     
-    // Mark as read immediately when clicked
+    // Mark as read immediately when clicked (optimistic — no refresh needed)
     if (!is_read && !markedRef.current) {
       markedRef.current = true;
-      await markAsRead(id);
-      await refresh();
+      markAsRead(id); // fire-and-forget; context updates state instantly
     }
 
-    
     // Navigate to the appropriate page
     if (linkUrl) {
       navigate(linkUrl);
@@ -253,13 +252,12 @@ const NotificationItem = ({ notification, onDelete }) => {
   const handleToggleRead = async (e) => {
     stop(e);
     setShowMenu(false);
-
+    // Context is optimistic — no refresh() needed
     if (is_read) {
       await markAsUnread(id);
     } else {
       await markAsRead(id);
     }
-    await refresh();
   };
 
   
@@ -288,8 +286,7 @@ const NotificationItem = ({ notification, onDelete }) => {
 
     try {
       if (onDelete) {
-        await onDelete(id);
-        await refresh();
+        await onDelete(id); // Context removeNotification handles state update
       }
     } catch (err) {
       console.error("Delete failed:", err);
@@ -320,10 +317,12 @@ const NotificationItem = ({ notification, onDelete }) => {
       ref={itemRef}
       onClick={handleClick}
       className={`
-        relative p-4 rounded-lg border transition-all duration-200
-        ${!is_read ? 'bg-slate-800/80 border-l-4 border-l-blue-500' : 'bg-slate-800/40'}
-        ${colors.border}
-        cursor-pointer hover:bg-slate-700/60
+        relative p-4 rounded-xl border transition-all duration-200
+        ${!is_read
+          ? 'bg-gradient-to-r from-blue-950/60 to-slate-800/80 border-l-[3px] border-l-blue-400 border-t border-r border-b border-blue-500/25 shadow-sm shadow-blue-900/20'
+          : 'bg-slate-800/40 border-slate-700/40 opacity-80'
+        }
+        cursor-pointer hover:bg-slate-700/60 hover:opacity-100
         group
         ${isDeleting ? 'opacity-50 pointer-events-none' : ''}
       `}
@@ -364,9 +363,15 @@ const NotificationItem = ({ notification, onDelete }) => {
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h4 className={`font-medium ${colors.text} truncate`}>
-              {title}
-            </h4>
+            <h4 className={`truncate ${colors.text} ${!is_read ? 'font-semibold' : 'font-medium'}`}>
+                {!is_read && (
+                  <span className="relative inline-flex mr-1.5 align-middle">
+                    <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-blue-400 opacity-60" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+                  </span>
+                )}
+                {title}
+              </h4>
             <span className="text-xs text-slate-500 whitespace-nowrap">
               {timeAgo}
             </span>

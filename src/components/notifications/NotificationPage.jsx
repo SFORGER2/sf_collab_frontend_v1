@@ -41,8 +41,7 @@ export default function NotificationPage() {
   const [activeFilter, setActiveFilter] = useState("general");
   const [isClearing, setIsClearing] = useState(false);
   const [confirmModal, setConfirmModal] = useState(null);
-  const observerRef = useRef(null);
-  const notificationRefsRef = useRef({});
+  // (Refs removed — no IntersectionObserver needed; unmount handles mark-all-read)
 
   // Filter definitions
   const filters = useMemo(
@@ -93,48 +92,10 @@ export default function NotificationPage() {
     return filtered;
   }, [notifications, activeFilter]);
 
-  // Intersection Observer for marking notifications as read
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleUnread = entries
-          .filter((entry) => entry.isIntersecting)
-          .map((entry) => entry.target.getAttribute("data-notification-id"))
-          .filter((id) => {
-            const notif = notifications.find((n) => n.id === id);
-            return notif && !notif.is_read;
-          })
-          .slice(0, 5); // Mark max 5 at a time
-
-        visibleUnread.forEach((id) => {
-          markAsRead(id).catch((err) =>
-            console.error(`Failed to mark ${id} as read:`, err)
-          );
-        });
-      },
-      { threshold: 0.5 }
-    );
-
-    observerRef.current = observer;
-
-    return () => observer.disconnect();
-  }, [notifications, markAsRead]);
-
-  // Observe notification elements
-  useEffect(() => {
-    filteredNotifications.forEach((n) => {
-      const element = notificationRefsRef.current[n.id];
-      if (element && observerRef.current) {
-        observerRef.current.observe(element);
-      }
-    });
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [filteredNotifications]);
+  // We intentionally do NOT auto-mark-as-read via IntersectionObserver here.
+  // Notifications show their unread highlight while the user is on this page.
+  // On unmount (navigate away), markAllAsRead() is called (see effect above).
+  // Individual notifications can be marked read/unread via their context menu.
 
   // Handle filter change
   const handleFilterChange = useCallback(
@@ -157,14 +118,14 @@ export default function NotificationPage() {
   // Handle mark all as read
   const handleMarkAllRead = useCallback(async () => {
     await markAllAsRead();
-    refresh();
-  }, [markAllAsRead, refresh]);
+    // No refresh() — markAllAsRead is optimistic, refresh would race and revert
+  }, [markAllAsRead]);
 
   // Handle delete all read
   const handleDeleteAllRead = useCallback(async () => {
     await deleteAllRead();
-    refresh();
-  }, [deleteAllRead, refresh]);
+    // No refresh() — local state is already updated optimistically
+  }, [deleteAllRead]);
 
   // Handle clear all with custom modal
   const handleClearAll = useCallback(async () => {
@@ -195,10 +156,20 @@ export default function NotificationPage() {
     }
   }, [deleteNotification]);
 
-  // Default filter on mount
+  // Set default filter on mount
   useEffect(() => {
     const f = filters.find((x) => x.id === "general") || filters[0];
     handleFilterChange(f);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Mark all notifications as read when the user LEAVES the page (unmount).
+  // This keeps the unread highlights visible while they are on the page,
+  // then clears the bell badge the moment they navigate away.
+  useEffect(() => {
+    return () => {
+      markAllAsRead().catch(() => {});
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -358,10 +329,6 @@ export default function NotificationPage() {
           {filteredNotifications.map((n) => (
             <motion.div
               key={n.id}
-              ref={(el) => {
-                if (el) notificationRefsRef.current[n.id] = el;
-              }}
-              data-notification-id={n.id}
               layout
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}

@@ -204,7 +204,8 @@ export default function Knowledgedetails() {
       try {
         const raw = localStorage.getItem("user");
         return raw ? JSON.parse(raw) : null;
-      } catch {
+      } 
+      catch {
         return null;
       }
     })();

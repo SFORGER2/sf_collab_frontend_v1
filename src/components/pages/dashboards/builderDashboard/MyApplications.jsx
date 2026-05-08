@@ -9,18 +9,21 @@ import {
   Briefcase,
   TrendingUp,
   Calendar,
+  Mail,
 } from "lucide-react";
 import { builderApplicationsAPI } from "@/services/builderAPI";
 import { startupsAPI } from "@/utils/APIs/startupsAPI";
 import usePaginatedFetch from "@/utils/hooks/usePaginated";
 import InfiniteList from "@/components/InfiniteList";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 
 const MyApplications = () => {
   const { user, access_token } = useSelector((state) => state.auth);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   const {
     items: applications,
@@ -46,6 +49,8 @@ const MyApplications = () => {
       const res = await startupsAPI.deleteJoinRequest(appId);
       if (res.success) {
         setApplications((prev) => prev.filter((a) => a.id !== appId));
+        setSuccess("Application withdrawn successfully");
+        setTimeout(() => setSuccess(null), 2000);
       } else {
         setError("Failed to withdraw application");
       }
@@ -59,25 +64,21 @@ const MyApplications = () => {
       label: "Pending",
       class: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
       icon: <Clock className="w-4 h-4" />,
-      bgGradient: "from-yellow-900/20 to-slate-900/20",
     },
     under_review: {
       label: "Under Review",
       class: "bg-blue-500/20 text-blue-300 border-blue-500/30",
       icon: <AlertCircle className="w-4 h-4" />,
-      bgGradient: "from-blue-900/20 to-slate-900/20",
     },
     approved: {
       label: "Accepted",
       class: "bg-green-500/20 text-green-300 border-green-500/30",
       icon: <CheckCircle className="w-4 h-4" />,
-      bgGradient: "from-green-900/20 to-slate-900/20",
     },
     rejected: {
       label: "Rejected",
       class: "bg-red-500/20 text-red-300 border-red-500/30",
       icon: <X className="w-4 h-4" />,
-      bgGradient: "from-red-900/20 to-slate-900/20",
     },
   };
 
@@ -116,8 +117,15 @@ const MyApplications = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white px-2 md:px-4 py-8">
-      <div className="w-full mx-auto space-y-8">
+    <div className="min-h-screen bg-black text-white px-2 md:px-4 py-8">
+      {/* Animated Background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
+        <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full mx-auto space-y-8 w-full relative">
         
         {/* Header */}
         <motion.div 
@@ -125,18 +133,15 @@ const MyApplications = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="flex items-center gap-3">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            >
-              <Briefcase className="w-8 h-8 text-blue-400" />
-            </motion.div>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl">
+              <Mail className="w-8 h-8 text-white" />
+            </div>
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
                 My Applications
               </h1>
-              <p className="text-gray-400 text-lg mt-1">
+              <p className="text-gray-400 text-lg mt-2">
                 Track your startup applications and decisions
               </p>
             </div>
@@ -156,17 +161,19 @@ const MyApplications = () => {
               <motion.div
                 key={idx}
                 variants={itemVariants}
-                whileHover={{ y: -4 }}
-                className={`bg-gradient-to-br ${stat.color} p-0.5 rounded-xl`}
+                whileHover={{ y: -4, scale: 1.02 }}
+                className="group relative overflow-hidden rounded-2xl"
               >
-                <div className="bg-slate-900 rounded-xl p-6 space-y-3">
+                <div className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                <div className="relative bg-slate-900/90 backdrop-blur border border-white/10 group-hover:border-white/30 rounded-2xl p-6 space-y-3 transition-all">
                   <div className="flex items-center justify-between">
-                    <Icon className="w-5 h-5 text-white/60" />
-                    <span className="text-xs text-gray-400">Updates</span>
+                    <div className="p-2 bg-white/5 rounded-lg">
+                      <Icon className="w-5 h-5 text-white/60" />
+                    </div>
                   </div>
                   <div>
                     <p className="text-xs text-gray-400 uppercase tracking-wide">{stat.label}</p>
-                    <p className="text-3xl font-bold text-white mt-1">{stat.value}</p>
+                    <p className="text-3xl font-bold text-white mt-2">{stat.value}</p>
                   </div>
                 </div>
               </motion.div>
@@ -176,36 +183,46 @@ const MyApplications = () => {
 
         {/* Search + Filter */}
         <motion.div 
-          className="space-y-3"
+          className="space-y-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 z-10" />
-              <input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by startup or role..."
-                className="w-full pl-12 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              />
-            </div>
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 z-10" />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by startup or role..."
+              className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-white/20"
+            />
+          </div>
 
-            <select
-              value={filterStatus}
-              onChange={(e) => {
-                setFilterStatus(e.target.value);
-                refetch();
-              }}
-              className="px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-            >
-              <option value="all" className="bg-slate-900">All Status</option>
-              <option value="pending" className="bg-slate-900">Pending</option>
-              <option value="under_review" className="bg-slate-900">Under Review</option>
-              <option value="approved" className="bg-slate-900">Approved</option>
-              <option value="rejected" className="bg-slate-900">Rejected</option>
-            </select>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { value: "all", label: "All Status" },
+              { value: "pending", label: "Pending" },
+              { value: "under_review", label: "Under Review" },
+              { value: "approved", label: "Approved" },
+              { value: "rejected", label: "Rejected" },
+            ].map((filter) => (
+              <motion.button
+                key={filter.value}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setFilterStatus(filter.value);
+                  refetch();
+                }}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  filterStatus === filter.value
+                    ? "bg-blue-600 text-white border border-blue-400 shadow-lg shadow-blue-500/20"
+                    : "bg-white/5 border border-white/10 text-gray-300 hover:border-white/20 hover:bg-white/10"
+                }`}
+              >
+                {filter.label}
+              </motion.button>
+            ))}
           </div>
 
           {(searchQuery || filterStatus !== "all") && (
@@ -215,19 +232,31 @@ const MyApplications = () => {
                 setFilterStatus("all");
                 refetch();
               }}
-              className="text-sm text-blue-400 hover:text-blue-300 transition"
+              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
               ✕ Clear Filters
             </button>
           )}
         </motion.div>
 
-        {/* Error */}
+        {/* Messages */}
+        {success && (
+          <motion.div 
+            className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex items-center gap-3 text-green-300 backdrop-blur"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+          >
+            <CheckCircle className="w-5 h-5 flex-shrink-0" />
+            <span>{success}</span>
+          </motion.div>
+        )}
+
         {error && (
           <motion.div 
-            className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3 text-red-300"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3 text-red-300 backdrop-blur"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
           >
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <span>{error}</span>
@@ -239,23 +268,28 @@ const MyApplications = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
+          className="space-y-4"
         >
           {loading && applications.length === 0 ? (
             <div className="flex justify-center py-12">
               <motion.div
                 animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                 className="rounded-full h-12 w-12 border-3 border-blue-500/20 border-t-blue-500"
               />
             </div>
           ) : applications.length === 0 ? (
             <motion.div 
-              className="text-center py-16 bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-xl"
+              className="text-center py-20 bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-2xl backdrop-blur"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              <Briefcase className="w-16 h-16 text-gray-600 mx-auto mb-4 opacity-50" />
-              <p className="text-gray-400 text-lg font-medium">No applications found</p>
+              <div className="flex justify-center mb-4">
+                <div className="p-4 bg-blue-500/20 rounded-full">
+                  <Briefcase className="w-12 h-12 text-blue-400" />
+                </div>
+              </div>
+              <p className="text-gray-300 text-lg font-semibold">No applications found</p>
               <p className="text-gray-500 text-sm mt-2">Start exploring startups to submit applications</p>
             </motion.div>
           ) : (
@@ -273,17 +307,19 @@ const MyApplications = () => {
                       initial="hidden"
                       animate="visible"
                       transition={{ delay: index * 0.05 }}
-                      whileHover={{ y: -4, borderColor: "rgba(59, 130, 246, 0.5)" }}
-                      className={`group relative rounded-xl bg-gradient-to-br ${status.bgGradient || 'from-slate-900/40 to-slate-800/40'} border border-white/10 p-6 hover:border-blue-500/30 transition-all`}
+                      whileHover={{ y: -2, scale: 1.01 }}
+                      className="group relative overflow-hidden rounded-xl bg-slate-900/50 border border-white/10 hover:border-blue-500/30 transition-all backdrop-blur p-6"
                     >
-                      <div className="flex flex-col md:flex-row justify-between gap-6">
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:via-blue-500/5 group-hover:to-transparent transition-all duration-300" />
+                      
+                      <div className="relative flex flex-col md:flex-row justify-between gap-6 items-start md:items-center">
                         <div className="space-y-3 flex-1 min-w-0">
-                          <h3 className="text-xl font-semibold text-white truncate">
+                          <h3 className="text-xl font-semibold text-white group-hover:text-blue-300 transition-colors truncate">
                             {app.startup?.name || "Startup"}
                           </h3>
-                          <p className="text-blue-400 text-sm font-medium">
+                          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs w-fit">
                             {app.role || "Role not specified"}
-                          </p>
+                          </Badge>
                           {app.message && (
                             <p className="text-gray-400 text-sm italic">
                               "{app.message}"
@@ -295,21 +331,22 @@ const MyApplications = () => {
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-3 flex-shrink-0">
-                          <span
-                            className={`px-4 py-2 rounded-lg text-sm font-medium border flex items-center gap-2 whitespace-nowrap ${status.class}`}
+                        <div className="flex items-center gap-3 flex-shrink-0 w-full md:w-auto">
+                          <Badge
+                            className={`flex items-center gap-2 whitespace-nowrap border ${status.class}`}
                           >
                             {status.icon}
                             {status.label}
-                          </span>
+                          </Badge>
 
                           {(app.status === "pending" || app.status === "under_review") && (
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => handleWithdraw(app.id)}
-                              className="px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30 transition font-medium text-sm"
+                              className="px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30 hover:border-red-500/50 transition-all font-medium text-sm flex items-center gap-2 whitespace-nowrap"
                             >
+                              <X className="w-4 h-4" />
                               Withdraw
                             </motion.button>
                           )}

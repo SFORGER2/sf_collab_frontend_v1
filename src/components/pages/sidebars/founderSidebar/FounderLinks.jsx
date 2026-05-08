@@ -1,7 +1,8 @@
-import { Building2, LightbulbIcon, Save } from 'lucide-react';
+import { Building2, LightbulbIcon, Save, UserCog } from 'lucide-react';
 import { Rocket, PlusSquare, BookOpen, MessageSquareHeart, Users } from 'lucide-react';
 import { Lightbulb } from 'lucide-react';
-import { aiTools, dashboardLink, socialSection, toolsSection } from '../sidebarCommons';
+import { aiTools, dashboardLink, ideation, socialSection, toolsSection, wallet } from '../sidebarCommons';
+import { GiChecklist } from 'react-icons/gi';
 
 /**
  * Creates navigation links for the Founder sidebar
@@ -25,19 +26,21 @@ export function createFounderLinks(unreadMessagesCount = 0, userRoles = [], setA
 
       ]
     },
+    ideation(3),
     {
-      id: 3,
-      icon: <LightbulbIcon size={22} />,
-      href: "/ideation",
-      label: "Ideation",
+      id: 4,
+      icon: <UserCog size={22} />,
+      href: "/founder/my-applications",
+      label: "Manage",
       subItems: [
-        { id: "Ideation-Board", href: "/ideation", label: "Ideation Board", icon: <LightbulbIcon size={18} /> },
-        { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
+        { id: "manage-applications", href: "/founder/my-applications", label: "Applications", icon: <GiChecklist size={18} /> },
+        { id: "manage-team", href: "/founder/my-team", label: "Team", icon: <Users size={18} /> },
+        { id: "manage-tasks", href: "/founder/manage-tasks", label: "Tasks", icon: <LightbulbIcon size={18} /> },
       ]
     },
-    socialSection(4),
-    
-    aiTools(5),
-    toolsSection(6)
+    socialSection(5),
+    aiTools(6),
+    toolsSection(7),
+    wallet(10)
   ];
 }

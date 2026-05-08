@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, X, ExternalLink, CheckCheck, Loader2 } from 'lucide-react';
-import { useNotifications } from '../../contexts/useNotifications';
+// ✅ FIX: import from the shared context so Bell and Notifications page share state
+import { useNotifications } from '../../contexts/NotificationContext';
+// ✅ FIX: corrected import path — ChatNotificationProvider lives in pages/chat, not context/
+import { useChatNotifications } from '@/components/pages/chat/Chatnotificationprovider';
 
 const NotificationBell = () => {
   const navigate = useNavigate();
@@ -11,11 +14,17 @@ const NotificationBell = () => {
   const { 
     notifications, 
     unreadCount, 
-    Loading,
+    loading,
     markAsRead,
     markAllAsRead,
     refresh
   } = useNotifications();
+
+  // ─── Feature 4: Chat unread count from ChatNotificationProvider ──────────
+  const { chatUnreadCount = 0, resetChatUnreadCount } = useChatNotifications();
+
+  // Combined badge = REST notifications unread + chat messages unread
+  const totalUnread = unreadCount + chatUnreadCount;
   
   // Get only the 5 most recent notifications for dropdown
   const recentNotifications = notifications.slice(0, 5);
@@ -84,6 +93,19 @@ const NotificationBell = () => {
       if (template_key.includes('contribution') || template_key.includes('poll')) {
         return '/contribution';
       }
+
+      // Mentorship -> /mentors/dashboard or /mentors/my-requests
+      if (template_key.includes('mentorship') || template_key.includes('mentor')) {
+        if (template_key.includes('received') || template_key.includes('rated')) {
+          return '/mentors/dashboard';
+        }
+        return '/mentors/my-requests';
+      }
+
+      // Marketplace -> /marketplace
+      if (template_key.includes('marketplace') || template_key.includes('purchase') || template_key.includes('listing')) {
+        return '/marketplace';
+      }
     }
     
     // Category-based fallback
@@ -94,20 +116,19 @@ const NotificationBell = () => {
       case 'team': return '/discover-startups';
       case 'financial': return '/crowdfunding';
       case 'account': return '/setting';
+      case 'mentorship': return '/mentors/my-requests';
+      case 'marketplace': return '/marketplace';
+      case 'payment': return '/wallet';
       default: return '/dashboard';
     }
   };
   
   // Handle notification click
   const handleNotificationClick = async (notification) => {
-    // Mark as read
+    // Mark as read — optimistic, no refresh() needed (avoids race with DB write)
     if (!notification.is_read) {
-      await markAsRead(notification.id);
-      await refresh();
+      markAsRead(notification.id); // fire-and-forget; state updates instantly
     }
-
-    
-    // Navigate to the link
     const link = getNotificationLink(notification);
     setIsOpen(false);
     navigate(link);
@@ -159,7 +180,12 @@ const NotificationBell = () => {
           setIsOpen((prev) => {
             const next = !prev;
             if (!prev && next) {
-              refresh();
+              // ─── Feature 4: reset chat badge on open ──────────────────
+              if (resetChatUnreadCount) resetChatUnreadCount();
+              // NOTE: We do NOT call markAllAsRead() here.
+              // Individual notifications are marked read when clicked.
+              // The notification page marks all read when you navigate away.
+              // This preserves the unread highlights so users can see what's new.
             }
             return next;
           });
@@ -169,10 +195,10 @@ const NotificationBell = () => {
       >
         <Bell className="w-6 h-6" />
         
-        {/* Unread badge */}
-        {unreadCount > 0 && (
+        {/* Unread badge — combined REST + chat */}
+        {totalUnread > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs font-bold bg-red-500 text-white rounded-full">
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {totalUnread > 99 ? '99+' : totalUnread}
           </span>
         )}
       </button>
@@ -204,7 +230,7 @@ const NotificationBell = () => {
           
           {/* Notifications List */}
           <div className="max-h-80 overflow-y-auto">
-            {Loading && recentNotifications.length === 0 ? (
+            {loading && recentNotifications.length === 0 ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
               </div>
@@ -221,7 +247,10 @@ const NotificationBell = () => {
                   className={`
                     p-4 border-b border-slate-700/50 cursor-pointer transition-colors
                     hover:bg-slate-700/50
-                    ${!notification.is_read ? 'bg-slate-700/30' : ''}
+                    ${!notification.is_read
+                      ? 'bg-blue-900/30 border-l-2 border-l-blue-500'
+                      : 'opacity-75'
+                    }
                   `}
                 >
                   <div className="flex items-start gap-3">
@@ -233,7 +262,10 @@ const NotificationBell = () => {
                     {/* Content */}
                     <div className={`flex-1 min-w-0 ${notification.is_read ? 'ml-5' : ''}`}>
                       <div className="flex items-start justify-between gap-2">
-                        <h4 className={`font-medium text-sm truncate ${getTypeColor(notification.type)}`}>
+                        <h4 className={`text-sm truncate ${getTypeColor(notification.type)} ${!notification.is_read ? 'font-semibold' : 'font-medium opacity-75'}`}>
+                          {!notification.is_read && (
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-400 mr-1.5 mb-0.5 align-middle" />
+                          )}
                           {notification.title}
                         </h4>
                         <span className="text-xs text-slate-500 whitespace-nowrap">

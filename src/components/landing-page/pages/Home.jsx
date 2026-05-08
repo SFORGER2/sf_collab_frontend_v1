@@ -14,6 +14,9 @@ const Contact = lazy(() => import('./Contact'))
 const Footer = lazy(() => import('../Footer'))
 
 import 'lenis/dist/lenis.css'
+import TopUsers from './TopUsers'
+import TopIdeas from './TopIdeas'
+import TopStartups from './TopStartups'
 
 const Home = () => {
   const navigate = useNavigate()
@@ -74,19 +77,25 @@ const Home = () => {
 
       {/* Below the fold */}
       <section className="flex flex-col overflow-x-hidden">
-
+        <Suspense fallback={null}>
+          <TopStartups />
+        </Suspense>
         <Suspense fallback={null}>
           <AboutSection />
         </Suspense>
-
+        <Suspense fallback={null}>
+          <TopIdeas />
+        </Suspense>
         <Suspense fallback={null}>
           <Explore />
         </Suspense>
-
-        <Suspense fallback={null}>
+        
+        {/* <Suspense fallback={null}>
           <Products />
+        </Suspense> */}
+        <Suspense fallback={null}>
+          <TopUsers />
         </Suspense>
-
         <Suspense fallback={null}>
           <Roadmap />
         </Suspense>

@@ -256,7 +256,7 @@ const Hero = () => {
         {/* Layer 3 — Proof-Driven Subline */}
         <div className="relative z-10 mt-4 md:mt-6 max-w-xl md:max-w-2xl px-4 md:text-auto text- text-center">
           <p className="text-base md:text-lg lg:text-xl text-white/85 font-light tracking-wide leading-relaxed">
-            The real-time canvas where distributed teams build, think, and create in sync.
+            The real-time canvas where distributed teams build, think, and create in syncing.
             <span className="block mt-2 text-sm md:text-base text-white/50 md:pt-0 pt-6 font-normal">
               Sub-50ms sync • Infinite workspace • Enterprise-grade
             </span>
@@ -319,7 +319,7 @@ const Hero = () => {
         style={{ display: isPopupOpen ? 'flex' : 'none' }}
         className="fixed inset-0 items-center justify-center bg-black/90 backdrop-blur-sm z-50 p-4 hidden"
       >
-        <div className="relative w-full max-w-4xl lg:max-w-6xl aspect-video rounded-lg md:rounded-xl overflow-hidden bg-black shadow-2xl">
+        <div className="relative w-full max-w-4xl lg:w-full aspect-video rounded-lg md:rounded-xl overflow-hidden bg-black shadow-2xl">
           <video
             ref={videoRef}
             src={heroAssest.herovideoOne}

@@ -3,7 +3,7 @@ import { SimpleOAuthService } from "../services/simpleOAuthService";
 import { useSocket } from "./SocketContext";
 import axios from "axios";
 
-const API_URL_AUTH = import.meta.env.VITE_API_URL_AUTH || 'http://localhost:5001/api/auth';
+const API_URL_AUTH = import.meta.env.VITE_API_URL_AUTH || '/api/auth';
 
 const AuthContext = createContext();
 

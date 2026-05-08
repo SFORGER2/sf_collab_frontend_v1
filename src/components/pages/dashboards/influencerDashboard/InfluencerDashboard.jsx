@@ -11,7 +11,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import DashboardChangeSection from "../DashboardChangeSection";
+import DashboardChangeSection from "../dashboardChangeSection";
 import KnowledgeResources from "@/components/pages/dashboards/influencerDashboard/components/KnowledgeResources";
 import DashboardTopNav from "@/components/common/DashboardTopNav";
 import { useDashboardNavHide } from "@/components/common/DashboardTopNav";
@@ -24,6 +24,7 @@ export default function InfluencerDashboard({
   userRoles,
   activeRole,
   setActiveRole,
+  setUserRoles
 }) {
   // Sticky navigation visibility
   const isNavHidden = useDashboardNavHide();
@@ -38,7 +39,9 @@ export default function InfluencerDashboard({
   return (
     <>
 
-      <div className="relative space-y-6 sm:space-y-8 lg:space-y-10 px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+      <div
+        
+        className="relative space-y-6 sm:space-y-8 lg:space-y-10 px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
         {/* Background texture */}
         <div className="absolute inset-0 pointer-events-none
   bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_1px)]
@@ -54,13 +57,18 @@ export default function InfluencerDashboard({
             setActiveRole(sectionId);
             localStorage.setItem("activeRole", sectionId);
           }}
+          setActiveRole={setActiveRole}
+          setUserRoles={setUserRoles}
+          userRoles={userRoles}
           activeRole={activeRole}
         />
         <AnnouncementsSection userRoles={userRoles} />
         <div className="relative z-10 space-y-6 sm:space-y-8 lg:space-y-10">
 
           {/* ================= HEADER ================= */}
-          <div className="flex flex-col gap-3 sm:gap-4">
+          <div
+            id="dashboard"
+            className="flex flex-col gap-3 sm:gap-4">
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white flex items-center gap-2">
               <Layers className="w-5 sm:w-6 h-5 sm:h-6 text-pink-400 flex-shrink-0" />
               <span>Influencer Dashboard</span>
@@ -73,11 +81,11 @@ export default function InfluencerDashboard({
 
           </div>
 
-      
+
 
         </div>
         <div className="relative w-full mx-auto p-4 overflow-x-hidden">
-        
+
           <Calendar />
           <WorldClock />
         </div>

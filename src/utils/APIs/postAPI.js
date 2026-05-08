@@ -3,10 +3,16 @@ import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorI
 
 const api = axios.create(API_CONFIG)
 
-api.interceptors.request.use(
-  requestInterceptor,
-  requestErrorInterceptor
-);
+api.interceptors.request.use((config) => {
+  // Let axios set Content-Type automatically for FormData (multipart/form-data + boundary).
+  // For plain objects, default to application/json.
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  } else if (!config.headers['Content-Type']) {
+    config.headers['Content-Type'] = 'application/json';
+  }
+  return requestInterceptor(config);
+}, requestErrorInterceptor);
 
 api.interceptors.response.use(
   responseInterceptor,
@@ -15,154 +21,147 @@ api.interceptors.response.use(
 
 // Posts API
 export const postAPI = {
-  getAll: async (accessToken, params) => {
+  getAll: async (params) => {
     const response = await api.get('/posts', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
         search: params.search,
       },
     })
-    return response.data.data
+    return response.data
   },
 
-  getById: async (postId, accessToken) => {
-    const response = await api.get(`/posts/${postId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-    return response.data.data
+  getById: async (postId) => {
+    const response = await api.get(`/posts/${postId}`)
+    return response.data
   },
 
-  create: async (postData, accessToken) => {
-    const response = await api.post('/posts', postData, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-    return response.data.data
+  create: async (postData) => {
+    const response = await api.post('/posts', postData)
+    return response.data
   },
 
-  update: async (postId, postData, accessToken) => {
-    const response = await api.put(`/posts/${postId}`, postData, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-    return response.data.data
+  update: async (postId, postData) => {
+    const response = await api.put(`/posts/${postId}`, postData)
+    return response.data
   },
 
-  delete: async (postId, accessToken) => {
-    const response = await api.delete(`/posts/${postId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
+  delete: async (postId) => {
+    const response = await api.delete(`/posts/${postId}`)
+    return response.data
+  },
+
+  like: async (postId) => {
+    const response = await api.post(`/posts/${postId}/like`, {})
+    return response.data
+  },
+
+  unlike: async (postId) => {
+    const response = await api.post(`/posts/${postId}/unlike`, {})
+    return response.data
+  },
+
+  getTags: async (postId) => {
+    const response = await api.get(`/posts/${postId}/tags`)
+    return response.data
+  },
+
+  // Comments API (backend uses /api/post-comments)
+  getComments: async (postId, params) => {
+    const response = await api.get('/post-comments', {
+      params: {
+        post_id: postId,
+        page: params?.page || 1,
+        per_page: params?.per_page || 10,
       },
     })
     return response.data
   },
 
-  like: async (postId, accessToken) => {
-    const response = await api.post(`/posts/${postId}/like`, {}, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-    return response.data.data
+  addComment: async (postId, content, author) => {
+    const payload = {
+      post_id: postId,
+      content,
+      author_id: author?.author_id,
+      author_first_name: author?.author_first_name,
+      author_last_name: author?.author_last_name,
+    }
+    const response = await api.post('/post-comments', payload)
+    return response.data
   },
 
-  unlike: async (postId, accessToken) => {
-    const response = await api.post(`/posts/${postId}/unlike`, {}, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-    return response.data.data
+  deleteComment: async (_postId, commentId) => {
+    const response = await api.delete(`/post-comments/${commentId}`)
+    return response.data
   },
 
-  getTags: async (postId, accessToken) => {
-    const response = await api.get(`/posts/${postId}/tags`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-    return response.data.data
+  getLikes: async (postId) => {
+    const response = await api.get(`/posts/${postId}/likes`)
+    return response.data
   },
 
-  getComments: async (postId, accessToken, params) => {
-    const response = await api.get(`/post-comments`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+  getMedia: async (postId) => {
+    const response = await api.get(`/posts/${postId}`)
+    return response.data
+  },
+
+  addMedia: async (postId, mediaData) => {
+    const response = await api.post(`/posts/${postId}`, mediaData)
+    return response.data
+  },
+
+  deleteMedia: async (postId, mediaId) => {
+    const response = await api.delete(`/posts/${postId}`)
+    return response.data
+  },
+
+  // Stories API (backend uses /api/stories)
+  getStories: async (params) => {
+    const response = await api.get('/stories', {
       params: {
-        post_id: postId,
-        page: params.page || 1,
-        per_page: params.per_page || 10,
-      },
-    })
-    return response.data.data
-  },
-
-  addComment: async (postId, content, accessToken) => {
-    const response = await api.post('/post-comments', { post_id: postId, content }, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-    return response.data.data
-  },
-
-  deleteComment: async (commentId, accessToken) => {
-    const response = await api.delete(`/post-comments/${commentId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
+        page: params?.page || 1,
+        per_page: params?.per_page || 20,
       },
     })
     return response.data
   },
 
-  getLikes: async (postId, accessToken) => {
-    const response = await api.get(`/post-likes/post/${postId}/count`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-    return response.data.data
+  getStoryById: async (storyId, params) => {
+    const response = await api.get(`/stories/${storyId}`)
+    return response.data
   },
 
-  getMedia: async (postId, accessToken) => {
-    const response = await api.get(`/post-media`, {
+  createStory: async (storyData) => {
+    // storyData should be FormData with a "media" file and related fields.
+    // Let axios set the correct multipart headers automatically.
+    const response = await api.post('/stories', storyData, {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      params: {
-        post_id: postId,
-      },
+        "Content-Type": undefined
+      }
     })
-    return response.data.data
+    return response.data
   },
 
-  addMedia: async (postId, mediaData, accessToken) => {
-    const response = await api.post('/post-media', { post_id: postId, ...mediaData }, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-    return response.data.data
+  updateStory: async (storyId, storyData) => {
+    const response = await api.put(`/stories/${storyId}`, storyData)
+    return response.data
   },
 
-  deleteMedia: async (mediaId, accessToken) => {
-    const response = await api.delete(`/post-media/${mediaId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+  viewStory: async (storyId, userId) => {
+    const response = await api.post(`/stories/${storyId}/view`, { user_id: userId })
+    return response.data
+  },
+
+  getActiveStories: async (userIds, currentUserId) => {
+    const response = await api.get('/stories', {
+      params: { page: 1, limit: 50 },
     })
+    return response.data
+  },
+
+  deleteStory: async (storyId) => {
+    const response = await api.delete(`/stories/${storyId}`)
     return response.data
   },
 }

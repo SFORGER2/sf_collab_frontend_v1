@@ -4,7 +4,6 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import NavBar from "../components/sections/NavBar";
-import Options from "../components/sections/Options";
 import { motion } from "framer-motion";
 import UserSidebar from "@/components/pages/sidebars/sidebar/GeneralSidebar";
 import FounderSidebar from "@/components/pages/sidebars/founderSidebar/FounderSidebar";
@@ -17,7 +16,6 @@ import { hasPermission } from "../utils/permissionCheck";
 import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
 
 import ChatDock from "@/components/chat-dock/ChatDock";
-import { useAppSocket } from "@/context/SocketProvider";
 import { useChatContacts } from "@/context/ChatContactsProvider";
 
 import useSocket from "@/components/pages/chat/useSocket";
@@ -32,6 +30,7 @@ import { isUserProfileComplete } from "@/utils/getUserComplete";
 import EmailVerifyPopUp from "./emailVerifyPopUp";
 import CompleteProfilePopUp from "./CompleteEmailPopUp";
 import AIAssistant from "./AIAssistant";
+import Tutorial from "./DashboardTutorial";
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const location = useLocation();
@@ -237,6 +236,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
   return (
     <>
+      {location.pathname === "/dashboard" && <Tutorial activeRole={activeRole} />}
       <div className="relative min-h-screen w-screen flex flex-col">
         {/* Background */}
         <div
@@ -279,11 +279,13 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           {/* Main content area */}
           <div className="text-white relative flex flex-col items-center w-full overflow-hidden lg:ml-0">
             {/* Options bar: never show on chat or connections */}
-            {!isRootPath && !isChatRoute && !isConnectionsRoute && (
+            {/* {!isRootPath && !isChatRoute && !isConnectionsRoute && (
               <div
                 ref={optionsRef}
-                className={`transition-all pointer-events-auto duration-300 px-4 absolute m-auto flex justify-center top-2 ${isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"}`}
+                className={`transition-all mb-4 pointer-events-auto duration-300 px-4 absolute m-auto flex justify-center top-2 ${isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"}`}
                 style={{ zIndex: 10 }}
+                onMouseEnter={() => setIsOptionsVisible(true)}
+                onMouseLeave={() => setIsOptionsVisible(false)}
               >
                 <Options
                   isHidden={isNavHidden}
@@ -291,10 +293,10 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
                   isAdmin={isAdmin}
                 />
               </div>
-            )}
+            )} */}
 
             <div
-              className={`relative w-full h-full ${!isRootPath ? "pt-3.5" : ""} overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
+              className={`relative w-full h-full overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
               onScroll={isRootPath ? undefined : onScroll}
             >
               <Outlet />

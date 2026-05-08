@@ -19,7 +19,7 @@ import { getProfilePicture } from '@/utils/getProfilePicture';
 import usePaginatedFetch from '@/utils/hooks/usePaginated';
 import InfiniteList from '@/components/InfiniteList';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 const getAvatarUrl = (u) => {
   if (!u) return null;
@@ -382,7 +382,7 @@ const DiscoverUsers = () => {
 
             {selectedUser && (
               <div className="space-y-4 flex flex-col items-center justify-center">
-                <Link to={`/users/${selectedUser.id}`} className="w-full">
+                <Link to={`/user-profile?id=${selectedUser.id}`} className="w-full">
                   <div className="flex justify-center">
                     <img
                       src={getProfilePicture(selectedUser)}

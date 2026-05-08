@@ -12,7 +12,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { usersAPI } from '@/utils/APIs/userApi';
+import { usersAPI } from "@/utils/APIs/userAPI";
 import { waitlistAPI } from '@/utils/APIs/waitlistAPI';
 import { toast } from 'react-toastify';
 import { applicationAPI } from '@/utils/APIs/applicationAPI';
@@ -26,6 +26,11 @@ import StartupAdminItems from './StartupAdminItems';
 import UserAdminItems from './UserAdminItems';
 import { paymentAPI } from '@/utils/APIs/paymentAPI';
 import AdminSendAnnouncementSection from './SendAnnouncementsSection';
+import AdminApplicationsSection from './ApplicationsAdminSection';
+import AdminFeedbackSection from './FeedbackAdminSection';
+import { errorAPI } from '@/utils/APIs/errorAPI';
+import { Trash2, Search, Users as UsersIcon, Rocket, AlertCircle, TrendingUp } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // Register chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
@@ -64,7 +69,7 @@ const AdminDashboard = () => {
     objectKey: 'startups',
     enabled: !!access_token,
   });
-    const [feedbackFilter, setFeedbackFilter] = useState('');
+  const [feedbackFilter, setFeedbackFilter] = useState('');
   const {
     items: feedback,
     setItems: setFeedback,
@@ -115,9 +120,23 @@ const AdminDashboard = () => {
     objectKey: 'crowdfunding_transactions',
     enabled: !!access_token,
   })
+  const {
+    items: errors,
+    setItems: setErrors,
+    total: totalErrors,
+    loading: loadingErrors,
+    targetRef: errorsRef,
+  } = usePaginatedFetch({
+    fetchFn: ({ page }) =>
+      errorAPI.getAllErrors({
+        page,
+        per_page: 10,
+      }, access_token),
+    objectKey: 'errors',
+    enabled: !!access_token,
+  })
 
-  const totalRevenue = useMemo(() => { 
-
+  const totalRevenue = useMemo(() => {
     return (totalDonationsAmount + totalCrowdAmount) / 100;
   }, [totalCrowdAmount, totalDonationsAmount])
 
@@ -126,6 +145,7 @@ const AdminDashboard = () => {
   const [pointsCategory, setPointsCategory] = useState('small_contribution');
   const [showPointsModal, setShowPointsModal] = useState(false);
   const [loadingPoints, setLoadingPoints] = useState(false);
+
   const handleGivePoints = async () => {
     if (!selectedUser) return;
     try {
@@ -133,18 +153,15 @@ const AdminDashboard = () => {
 
       const response = await waitlistAPI.givePoints(
         selectedUser.id,
-        pointsCategory,
-        access_token
+        pointsCategory
       );
       if (response.points) {
         setShowPointsModal(false);
-        // Remove the feedback item from the list after giving points
-        await feedbackAPI.delete(selectedUser.id, access_token);
+        await feedbackAPI.delete(selectedUser.id);
         setFeedback((prevFeedback) =>
           prevFeedback.filter((item) => item.userId !== selectedUser.id)
         );
         toast.success(`Points added to ${selectedUser.fullName}`);
-
       }
 
     } catch (err) {
@@ -162,131 +179,185 @@ const AdminDashboard = () => {
       {
         label: 'Counts',
         data: [totalUsers, totalStartups, totalFeedback],
-        backgroundColor: ['#4ade80', '#60a5fa', '#facc15'],
+        backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899'],
+        borderColor: ['#1e40af', '#6d28d9', '#be123c'],
+        borderWidth: 2,
       },
     ],
   };
 
   const pieData = {
-    labels: [`Revenue $${totalRevenue}`, `Goal $${100000 - totalRevenue}`],
+    labels: [`Revenue $${totalRevenue.toFixed(2)}`, `Goal $${(100000 - totalRevenue).toFixed(2)}`],
     datasets: [
       {
         label: 'Revenue',
         data: [totalRevenue, 100000 - totalRevenue],
-        backgroundColor: ['green', 'red'],
+        backgroundColor: ['#10b981', '#ef4444'],
+        borderColor: ['#059669', '#dc2626'],
+        borderWidth: 2,
       },
     ],
   };
-  const [allApplications, setAllApplications] = useState([]);
-  useEffect(() => {
-    async function fetchApplications() {
-      const response = await applicationAPI.getAll(access_token, { page: 1, per_page: 1000 });
-      setAllApplications(response.data.applications || []);
-    }
-    fetchApplications();
-  }, [access_token]);
+
   const handleGivePointsPopup = async (feedbackItem) => {
     let user = users.find(u => u.id === feedbackItem.userId);
     if (!user) {
       const response = await usersAPI.getById(feedbackItem.userId, access_token);
       if (!response.data) return;
-      console.log("User response",response);
       user = response.data.user;
     }
     setSelectedUser(user);
     setShowPointsModal(true);
   };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  };
+
   return (
     <>
       {activeUser && <UserPopUp user={activeUser} onClose={() => setActiveUser(null)} />}
-      <div className="p-8 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 min-h-screen text-white">
-        <div className="w-full mx-auto">
-          <div className="mb-12">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Admin Dashboard
-            </h1>
-            <div className="h-1 w-24 bg-gradient-to-r from-green-400 to-blue-400 rounded-full mt-4"></div>
-          </div>
+      <div className="min-h-screen bg-black text-white px-2 md:px-4 py-8">
+        {/* Animated Background */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
+          <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" style={{ animationDelay: '2s' }} />
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="w-full mx-auto space-y-8 relative">
+          {/* Header */}
+          <motion.div
+            className="space-y-4"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl">
+                <TrendingUp className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                  Admin Dashboard
+                </h1>
+                <p className="text-gray-400 text-lg mt-2">
+                  Monitor and manage platform metrics
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* KPI Stats */}
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {[
-              { label: 'Total Users', value: totalUsers, icon: '👥', color: 'from-green-500 to-green-600', accent: 'green' },
-              { label: 'Total Startups', value: totalStartups, icon: '🚀', color: 'from-blue-500 to-blue-600', accent: 'blue' },
-              { label: 'Total Feedback', value: totalFeedback, icon: '💬', color: 'from-yellow-500 to-yellow-600', accent: 'yellow' },
-              { label: 'Revenue', value: `$${totalRevenue || 0}`, icon: '💰', color: 'from-purple-500 to-purple-600', accent: 'purple' },
-            ].map((stat, idx) => (
-              <div
-                key={idx}
-                className="bg-gradient-to-br from-gray-800/50 to-gray-700/30 p-6 rounded-xl shadow-xl border border-gray-700/50 hover:border-gray-600 transition-all duration-300 hover:shadow-2xl hover:shadow-gray-900/50 group"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="font-semibold text-gray-400 text-sm uppercase tracking-wide">{stat.label}</h2>
-                    <p className={`text-4xl font-bold mt-3 bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
-                      {stat.value}
-                    </p>
+              { label: 'Total Users', value: totalUsers, icon: UsersIcon, color: 'from-blue-500 to-cyan-500', accent: 'blue' },
+              { label: 'Total Startups', value: totalStartups, icon: Rocket, color: 'from-purple-500 to-pink-500', accent: 'purple' },
+              { label: 'Total Feedback', value: totalFeedback, icon: AlertCircle, color: 'from-yellow-500 to-orange-500', accent: 'yellow' },
+              { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)}`, icon: TrendingUp, color: 'from-green-500 to-emerald-500', accent: 'green' },
+            ].map((stat, idx) => {
+              const IconComponent = stat.icon;
+              return (
+                <motion.div
+                  key={idx}
+                  variants={itemVariants}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  className="group relative overflow-hidden rounded-2xl"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                  <div className="relative bg-slate-900/90 backdrop-blur border border-white/10 group-hover:border-blue-500/50 rounded-2xl p-6 space-y-3 transition-all">
+                    <div className="flex items-center justify-between">
+                      <div className={`p-2 bg-${stat.accent}-500/20 rounded-lg`}>
+                        <IconComponent className={`w-5 h-5 text-${stat.accent}-400`} />
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 uppercase tracking-wide">
+                        {stat.label}
+                      </p>
+                      <p className="text-3xl font-bold text-white mt-2">
+                        {stat.value}
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-4xl opacity-20 group-hover:opacity-40 transition">{stat.icon}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50">
-              <h2 className="text-xl font-semibold mb-4 text-gray-100">Overview Chart</h2>
-              <div className="bg-gray-900/50 p-4 rounded-lg">
-                <Bar data={barData} options={{ maintainAspectRatio: true }} />
+          {/* Charts */}
+          <motion.div
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="bg-slate-900/50 backdrop-blur border border-white/10 rounded-2xl p-6 shadow-xl">
+              <h2 className="text-xl font-semibold mb-4 text-white">Overview Chart</h2>
+              <div className="bg-gray-900/30 p-4 rounded-lg">
+                <Bar data={barData} options={{ maintainAspectRatio: true, plugins: { legend: { labels: { color: '#fff' } } } }} />
               </div>
             </div>
-            <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50">
-              <h2 className="text-xl font-semibold mb-4 text-gray-100">Revenue Distribution</h2>
-              <div className="bg-gray-900/50 p-4 rounded-lg">
-                <Pie data={pieData} options={{ maintainAspectRatio: true }} />
+            <div className="bg-slate-900/50 backdrop-blur border border-white/10 rounded-2xl p-6 shadow-xl">
+              <h2 className="text-xl font-semibold mb-4 text-white">Revenue Distribution</h2>
+              <div className="bg-gray-900/30 p-4 rounded-lg">
+                <Pie data={pieData} options={{ maintainAspectRatio: true, plugins: { legend: { labels: { color: '#fff' } } } }} />
               </div>
             </div>
-          </div>
-          <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50 mb-8">
-            <h2 className="text-xl font-semibold mb-4 text-gray-100">Donations & Crowdfunding</h2>
+          </motion.div>
+
+          {/* Donations & Crowdfunding */}
+          <div className="bg-slate-900/50 backdrop-blur border border-white/10 rounded-2xl p-6 shadow-xl">
+            <h2 className="text-xl font-semibold mb-6 text-white">Donations & Crowdfunding</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="flex flex-col w-full">
-                <h3 className="text-lg font-semibold mb-3 text-green-300">
-                  Donations (Total: {totalDonations}, ${(totalDonationsAmount / 100).toFixed(2)})
-                </h3>
-
-                <div className="max-h-80 w-full overflow-y-auto">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-green-300">Donations</h3>
+                  <span className="text-sm text-gray-400">Total: {totalDonations} • ${(totalDonationsAmount / 100).toFixed(2)}</span>
+                </div>
+                <div className="max-h-80 space-y-2 overflow-y-auto pr-2">
                   <InfiniteList
                     items={donations}
                     renderItem={(item) => (
-                      <div
+                      <motion.div
                         key={item.id}
-                        className="w-full my-2 p-3 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:border-gray-500/50 transition"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="p-4 bg-white/5 border border-white/10 hover:border-green-500/30 rounded-lg transition-all"
                       >
                         <div className="flex justify-between items-start mb-2">
-                          <p className="text-sm font-medium text-green-300">
+                          <p className="font-medium text-green-300">
                             ${(item.amount / 100).toFixed(2)} {item.currency}
                           </p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </p>
                         </div>
-
                         {item.user && (
-                          <div className="text-xs text-gray-400 mb-1">
-                            <p className="text-gray-300">
-                              {item.user.firstName} {item.user.lastName}
-                            </p>
+                          <div className="text-xs text-gray-400">
+                            <p className="text-gray-300">{item.user.firstName} {item.user.lastName}</p>
                             <p className="text-gray-500">{item.user.email}</p>
                           </div>
                         )}
-
                         {item.message && (
-                          <p className="text-xs text-gray-400 italic mb-1">
+                          <p className="text-xs text-gray-400 italic mt-2">
                             "{item.message}"
                           </p>
                         )}
-
-                        <p className="text-xs text-gray-400">
-                          {new Date(item.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
+                      </motion.div>
                     )}
                     sentinelRef={donationsRef}
                     loading={loadingDonations}
@@ -294,181 +365,195 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-
-              <div className="flex flex-col w-full">
-                <h3 className="text-lg font-semibold mb-3 text-purple-300">
-                  Crowdfunding (Total: {totalCrowdfunding}, ${(totalCrowdAmount / 100).toFixed(2)})
-                </h3>
-
-                <div className="max-h-80 w-full overflow-y-auto">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-purple-300">Crowdfunding</h3>
+                  <span className="text-sm text-gray-400">Total: {totalCrowdfunding} • ${(totalCrowdAmount / 100).toFixed(2)}</span>
+                </div>
+                <div className="max-h-80 space-y-2 overflow-y-auto pr-2">
                   <InfiniteList
                     items={crowdfunding}
                     renderItem={(item) => (
-                      <div
+                      <motion.div
                         key={item.id}
-                        className="w-full my-2 p-3 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:border-gray-500/50 transition"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="p-4 bg-white/5 border border-white/10 hover:border-purple-500/30 rounded-lg transition-all"
                       >
                         <div className="flex justify-between items-start mb-2">
-                          <p className="text-sm font-medium text-purple-300">
+                          <p className="font-medium text-purple-300">
                             ${(item.amount / 100).toFixed(2)} {item.currency}
                           </p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </p>
                         </div>
-
                         {item.user && (
-                          <div className="text-xs text-gray-400 mb-1">
-                            <p className="text-gray-300">
-                              {item.user.firstName} {item.user.lastName}
-                            </p>
+                          <div className="text-xs text-gray-400">
+                            <p className="text-gray-300">{item.user.firstName} {item.user.lastName}</p>
                             <p className="text-gray-500">{item.user.email}</p>
                           </div>
                         )}
-
                         {item.planId && (
-                          <p className="text-xs text-gray-400 italic mb-1">
+                          <p className="text-xs text-gray-400 italic mt-2">
                             Plan ID: {item.planId}
                           </p>
                         )}
-
-                        <p className="text-xs text-gray-400">
-                          {new Date(item.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
+                      </motion.div>
                     )}
                     sentinelRef={crowdfundingRef}
                     loading={loadingCrowdfunding}
                   />
                 </div>
               </div>
-
             </div>
           </div>
-          <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50 mb-8">
-            <h2 className="text-xl font-semibold mb-4 text-gray-100">📋 Applications</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Job Applications */}
-              <div>
-                <h3 className="text-lg font-semibold mb-3 text-blue-300">💼 Job Applications</h3>
-                <ul className="space-y-3 max-h-96 overflow-y-auto">
-                  {allApplications
-                    .filter(item => item.application_type === 'job')
-                    .map((app) => (
-                      <li key={app.id} className="p-4 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:border-gray-500/50 transition">
-                        <div className="font-medium text-blue-300">{app.name}</div>
-                        <p className="text-xs text-gray-400 mt-1">📧 {app.email}</p>
-                        <p className="text-xs text-gray-400">🌍 {app.country}</p>
-                        <div className="text-xs text-gray-300 mt-2">
-                          <p><strong>Area:</strong> {app.data?.area}</p>
-                          <p><strong>Skills:</strong> {app.data?.skills}</p>
-                          <p><strong>Availability:</strong> {app.data?.availability} hours/week</p>
-                          <p><strong>Early CoBuilder:</strong> {app.data?.earlyCoBuilder}</p>
-                        </div>
-                        <p className="text-xs text-gray-400 mt-2">{new Date(app.created_at).toLocaleDateString()}</p>
-                      </li>
-                    ))}
-                </ul>
-              </div>
 
-              {/* Influencer Applications */}
-              <div>
-                <h3 className="text-lg font-semibold mb-3 text-purple-300">⭐ Influencer Applications</h3>
-                <ul className="space-y-3 max-h-96 overflow-y-auto">
-                  {allApplications
-                    .filter(item => item.application_type === 'influencer')
-                    .map((app) => (
-                      <li key={app.id} className="p-4 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:border-gray-500/50 transition">
-                        <div className="font-medium text-purple-300">{app.name}</div>
-                        <p className="text-xs text-gray-400 mt-1">📧 {app.email}</p>
-                        <p className="text-xs text-gray-400">🌍 {app.country}</p>
-                        <div className="text-xs text-gray-300 mt-2">
-                          <p><strong>Niche:</strong> {app.data?.niche}</p>
-                          <p><strong>Followers:</strong> {app.data?.followers}</p>
-                          <p><strong>Audience Fit:</strong> {app.data?.audienceFit}</p>
-                          <p><strong>Early Partner:</strong> {app.data?.earlyPartner}</p>
-                        </div>
-                        <p className="text-xs text-gray-400 mt-2">{new Date(app.created_at).toLocaleDateString()}</p>
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50 mb-8">
-            <h2 className="text-xl font-semibold mb-4 text-gray-100">💬 Feedback</h2>
-            <input
-              type="text"
-              placeholder="Filter feedback..."
-              value={feedbackFilter}
-              onChange={(e) => setFeedbackFilter(e.target.value)}
-              className="w-full p-3 mb-4 rounded-lg bg-gray-700/50 text-white placeholder-gray-500 border border-gray-600/50 focus:border-blue-500 focus:outline-none transition"
-            />
-            <ul className="space-y-3 max-h-80 overflow-y-auto">
-              <InfiniteList items={feedback} renderItem={(item) => (
-                <li
-                  key={item.id}
-                  className="p-4 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:border-gray-500/50 transition backdrop-blur"
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="font-medium text-blue-300">
-                      User ID: {item.userId}
-                    </div>
-                  
-    
-                    <button
-                      onClick={() => {
-                        handleGivePointsPopup(item);
-                      }}
-                      className="px-3 py-1 text-sm bg-green-600 hover:bg-green-500 rounded"
-                    >
-                      + Give Points 
-                    </button>
-                  </div>
-
-                  <p className="text-gray-100">User: {users.find(u => u.id === item.userId)?.fullName}</p>
-                  <p className="text-gray-100 whitespace-pre-wrap break-words">{item.content}</p>
-                  <p className="text-xs text-gray-400 mt-2">
-                    {new Date(item.createdAt).toLocaleDateString()} •{' '}
-                    {new Date(item.createdAt).toLocaleTimeString()}
-                  </p>
-                </li>
-
-              )} sentinelRef={feedbackRef} loading={loadingFeedback} />
-            </ul>
-          </div>
+          {/* Admin Sections */}
+          <AdminApplicationsSection />
+          <AdminFeedbackSection
+            feedback={feedback}
+            feedbackFilter={feedbackFilter}
+            setFeedbackFilter={setFeedbackFilter}
+            feedbackRef={feedbackRef}
+            loadingFeedback={loadingFeedback}
+            users={users}
+            handleGivePointsPopup={handleGivePointsPopup}
+          />
           <AdminIdeasReviewSection />
           <AdminSendAnnouncementSection />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50">
-              <h2 className="text-xl font-semibold mb-4 text-gray-100">👥 Users List</h2>
-              <input
-                type="text"
-                placeholder="Filter users by name or email..."
-                value={usersFilter}
-                onChange={(e) => setUsersFilter(e.target.value)}
-                className="w-full p-3 mb-4 rounded-lg bg-gray-700/50 text-white placeholder-gray-500 border border-gray-600/50 focus:border-blue-500 focus:outline-none transition"
-              />
-              <ul className="max-h-80 overflow-y-auto space-y-2">
-                <InfiniteList items={users} renderItem={(u) => <UserAdminItems user={u} setActiveUser={setActiveUser} />} sentinelRef={usersRef} loading={loadingUsers} />
+
+          {/* Users & Startups List */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="bg-slate-900/50 backdrop-blur border border-white/10 rounded-2xl p-6 shadow-xl"
+            >
+              <h2 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
+                <UsersIcon className="w-5 h-5 text-blue-400" />
+                Users List
+              </h2>
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search users..."
+                  value={usersFilter}
+                  onChange={(e) => setUsersFilter(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-white/20"
+                />
+              </div>
+              <ul className="max-h-80 overflow-y-auto space-y-2 pr-2">
+                <InfiniteList
+                  items={users}
+                  renderItem={(u) => <UserAdminItems user={u} setActiveUser={setActiveUser} />}
+                  sentinelRef={usersRef}
+                  loading={loadingUsers}
+                />
               </ul>
-              
-            </div>
-            <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50">
-              <h2 className="text-xl font-semibold mb-4 text-gray-100">🚀 Startups List</h2>
-              <input
-                type="text"
-                placeholder="Filter startups by name..."
-                value={startupsFilter}
-                onChange={(e) => setStartupsFilter(e.target.value)}
-                className="w-full p-3 mb-4 rounded-lg bg-gray-700/50 text-white placeholder-gray-500 border border-gray-600/50 focus:border-blue-500 focus:outline-none transition"
-              />
-              <ul className="max-h-80 overflow-y-auto space-y-2">
-                <InfiniteList items={startups} renderItem={(s) => <StartupAdminItems startup={s} />} loading={loadingStartups} sentinelRef={startupsRef} />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="bg-slate-900/50 backdrop-blur border border-white/10 rounded-2xl p-6 shadow-xl"
+            >
+              <h2 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
+                <Rocket className="w-5 h-5 text-purple-400" />
+                Startups List
+              </h2>
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search startups..."
+                  value={startupsFilter}
+                  onChange={(e) => setStartupsFilter(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-white/20"
+                />
+              </div>
+              <ul className="max-h-80 overflow-y-auto space-y-2 pr-2">
+                <InfiniteList
+                  items={startups}
+                  renderItem={(s) => <StartupAdminItems startup={s} />}
+                  loading={loadingStartups}
+                  sentinelRef={startupsRef}
+                />
               </ul>
-            </div>
+            </motion.div>
           </div>
 
+          {/* Error Logs */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="bg-slate-900/50 backdrop-blur border border-white/10 rounded-2xl p-6 shadow-xl"
+          >
+            <h2 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-red-400" />
+              Error Logs ({totalErrors})
+            </h2>
+            <div className="max-h-96 space-y-3 overflow-y-auto pr-2">
+              <InfiniteList
+                items={errors}
+                renderItem={(error) => (
+                  <motion.div
+                    key={error.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="p-4 bg-red-500/10 border border-red-500/30 hover:border-red-500/50 rounded-lg transition-all"
+                  >
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <p className="font-semibold text-red-300 text-sm mb-2">
+                          {error.errorFromBackend || error.errorMessage}
+                        </p>
+                        {error.stack && (
+                          <p className="text-xs text-gray-400 bg-gray-900/40 p-2 rounded mb-2 font-mono overflow-x-auto">
+                            {error.stack}
+                          </p>
+                        )}
+                        <div className="flex gap-4 text-xs text-gray-500">
+                          {error.page && <span>Page: {error.page}</span>}
+                          {error.component && <span>Component: {error.component}</span>}
+                          <span>{new Date(error.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          errorAPI.deleteError(error.id)
+                            .then(() => setErrors((prev) => prev.filter((e) => e.id !== error.id)))
+                        }}
+                        className="text-gray-400 hover:text-red-400 transition flex-shrink-0"
+                        title="Delete error"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+                sentinelRef={errorsRef}
+                loading={loadingErrors}
+              />
+            </div>
+          </motion.div>
+
+          {/* Points Modal */}
           {showPointsModal && selectedUser && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-xl w-full max-w-md border border-gray-700/50 shadow-2xl">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-gradient-to-br from-slate-900 to-slate-800 p-8 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl"
+              >
                 <h2 className="text-2xl font-semibold mb-2 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
                   ⭐ Give Contribution Points
                 </h2>
@@ -479,7 +564,7 @@ const AdminDashboard = () => {
                 <select
                   value={pointsCategory}
                   onChange={(e) => setPointsCategory(e.target.value)}
-                  className="w-full mb-6 p-3 rounded-lg bg-gray-700/50 border border-gray-600/50 text-white focus:outline-none focus:border-blue-500 transition"
+                  className="w-full mb-6 p-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 >
                   <option value="small_contribution">Small Contribution</option>
                   <option value="medium_contribution">Medium Contribution</option>
@@ -487,65 +572,28 @@ const AdminDashboard = () => {
                 </select>
 
                 <div className="flex justify-end gap-3">
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setShowPointsModal(false)}
-                    className="px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 rounded-lg transition"
+                    className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition font-medium text-gray-300"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={handleGivePoints}
                     disabled={loadingPoints}
-                    className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 rounded-lg disabled:opacity-50 transition font-medium"
+                    className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 rounded-lg disabled:opacity-50 transition font-medium text-white"
                   >
                     {loadingPoints ? 'Adding...' : 'Confirm'}
-                  </button>
+                  </motion.button>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
         </div>
-        {/* <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50 mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-gray-100">🔄 Reset Options</h2>
-          <ul className="space-y-3">
-            <li className="flex justify-between items-center">
-              <span className="text-gray-300">Reset Users</span>
-              <button
-          onClick={() => setFeedback([])}
-          className="px-3 py-1 text-sm bg-red-600 hover:bg-red-500 rounded"
-              >
-          Reset
-              </button>
-            </li>
-            <li className="flex justify-between items-center">
-              <span className="text-gray-300">Reset Points</span>
-              <button
-          onClick={() => ([])}
-          className="px-3 py-1 text-sm bg-red-600 hover:bg-red-500 rounded"
-              >
-          Reset
-              </button>
-            </li>
-            <li className="flex justify-between items-center">
-              <span className="text-gray-300">Reset Crowdfunding</span>
-              <button
-          onClick={() => ([])}
-          className="px-3 py-1 text-sm bg-red-600 hover:bg-red-500 rounded"
-              >
-          Reset
-              </button>
-            </li>
-            <li className="flex justify-between items-center">
-              <span className="text-gray-300">Reset Applications</span>
-              <button
-          onClick={() => setAllApplications([])}
-          className="px-3 py-1 text-sm bg-red-600 hover:bg-red-500 rounded"
-              >
-          Reset
-              </button>
-            </li>
-          </ul>
-        </div> */}
       </div>
     </>
   );

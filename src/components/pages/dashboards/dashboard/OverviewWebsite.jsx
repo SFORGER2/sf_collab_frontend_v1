@@ -20,7 +20,7 @@ export default function OverviewWebsite() {
 
   useEffect(() => {
     const calculateCountdown = () => {
-      const targetDate = new Date("2026-02-21").getTime();
+      const targetDate = new Date("2026-03-02").getTime();
       const now = new Date().getTime();
       const difference = targetDate - now;
 
@@ -41,43 +41,33 @@ export default function OverviewWebsite() {
 
   return (
     <>
-
-      <div className="w-full mb-4 text-center">
-  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-600 to-emerald-700 border border-white/20 backdrop-blur-sm p-6">
+      {
+        countdown.days > 0 && (
+        
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-600 to-emerald-700 border border-white/20 backdrop-blur-sm p-2">
     
-    <h2 className="text-2xl font-bold text-white mb-4">
-      MVP LAUNCH COUNTDOWN
-    </h2>
+            <h2 className="text-2xl font-bold text-white mb-1">
+              MVP LAUNCH COUNTDOWN
+            </h2>
 
-    <p className="text-lg text-white font-semibold mb-4">
-      {countdown.days}d {countdown.hours}h {countdown.minutes}m {countdown.seconds}s
-    </p>
+            <p className="text-lg text-white font-semibold mb-1">
+              {countdown.days}d {countdown.hours}h {countdown.minutes}m {countdown.seconds}s
+            </p>
 
 
-    <p className="text-sm text-white/70 leading-relaxed mb-6">
-      Secure your spot now! We're limiting the initial launch to 
-      <span className="font-semibold"> 5-10k users</span>, 
-      with gradual acceptance for the rest. 
-      Use the contribution system to guarantee your access.
-    </p>
-
-    <button
-      onClick={() => window.location.href = "/crowdfunding"}
-      className="inline-flex items-center gap-2 px-8 py-3 rounded-xl 
-                 bg-white text-emerald-700 font-bold text-lg 
-                 shadow-lg hover:shadow-2xl 
-                 hover:scale-105 active:scale-95
-                 transition-all duration-300 ease-out"
-    >
-      Secure Early Access
-    </button>
-
-  </div>
-</div>
-
+            <p className="text-sm text-white/70 leading-relaxed mb-2">
+              Secure your spot now! We're limiting the initial launch to
+              <span className="font-semibold"> 5-10k users</span>,
+              with gradual acceptance for the rest.
+              Use the contribution system to guarantee your access.
+            </p>
+          </div>
+        )
+      }
+        
       
       {!accepted &&
-        <div className="w-full flex flex-col items-center justify-center mb-4">
+        <div className="w-full flex flex-col items-center justify-center mb-1">
           <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl bg-blue-900/30 border border-blue-500/50 backdrop-blur-sm py-3 px-6 w-full">
             <div className="rounded-lg text-center">
               <p className="text-sm bg-gradient-to-r from-blue-200 via-blue-100 to-blue-200 bg-clip-text text-transparent leading-relaxed">
@@ -93,7 +83,7 @@ export default function OverviewWebsite() {
         </div>
       }
       {!acceptedTempAccess &&
-        <div className="w-full mb-4 text-center">
+        <div className="w-full mb-1 text-center">
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/80 to-orange-500/80 border border-white/20 backdrop-blur-sm p-6">
             <h2 className="text-2xl font-bold text-white mb-2">TEMPORARY EARLY ACCESS</h2>
             <p className="text-white/70 mb-3">Everyone has free access to Founder (Explorer) & Builder (Supporter) Pro features</p>

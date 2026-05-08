@@ -7,7 +7,7 @@ import DashboardSection from "../../../sections/DashboardSection";
 import TaskProgress from "../../../sections/TaskProgress";
 import { GrOverview } from "react-icons/gr";
 import ShinyText from "../../../ui/ShinyText";
-import { useDispatch ,useSelector} from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   DndContext,
   PointerSensor,
@@ -25,28 +25,19 @@ import OverviewWebsite from "./OverviewWebsite";
 import DashboardSummaryCard from "./DashboardSummarySection";
 
 import Loader from "@/components/loader/loader";
-import DashboardChangeSection from "../DashboardChangeSection";
+import DashboardChangeSection from "../dashboardChangeSection";
 import AnnouncementsSection from "./AnnouncementsSection";
 const Dashboard = ({
-  activeRole, setActiveRole, userRoles
+  activeRole, setActiveRole, userRoles, setUserRoles
 }) => {
   const [query, setQuery] = useState("");
   const [userData, setUserData] = useState(null);
   // State for search functionality
-  const [searchValue, setSearchValue] = useState('');
-  
 
-  const dispatch = useDispatch();
-  const { user, access_token, refreshToken, loading,error } = useSelector((state) => state.auth);
-  
-  
-  // Search handler function
-  const handleSearch = (event) => {
-    setSearchValue(event.target.value);
-    // Add your search logic here
-    console.log('Searching for:', event.target.value);
-  };
-  
+
+  const { user, loading } = useSelector((state) => state.auth);
+
+
   useEffect(() => {
     // Only run this when the user changes
     if (user) {
@@ -104,22 +95,29 @@ const Dashboard = ({
 
 
   return (
-    <div className="relative min-h-screen  text-white w-full overflow-x-hidden md:p-4 text-center">
+    <div
+      id="dashboard"
+      className="relative min-h-screen  text-white w-full overflow-x-hidden md:p-4 text-center">
       {loading && (<Loader />)}
       <DashboardHeader searchQuery={query} onSearchChange={setQuery} />
-      
 
-      
+
+
       <div className="relative w-full mx-auto p-4 overflow-x-hidden">
         <OverviewWebsite />
-        <DashboardChangeSection sections={userRoles.map(role => ({
-          id: role,
-          label: role.charAt(0).toUpperCase() + role.slice(1)
-        }))} onSectionChange={(sectionId) => {
-          setActiveRole(sectionId);
-          localStorage.setItem('activeRole', sectionId);
+        <DashboardChangeSection
+          sections={userRoles.map(role => ({
+            id: role,
+            label: role.charAt(0).toUpperCase() + role.slice(1)
+            }))}
+          onSectionChange={(sectionId) => {
+            setActiveRole(sectionId);
+            localStorage.setItem('activeRole', sectionId);
           }}
-        activeRole={activeRole}
+          setUserRoles={setUserRoles}
+          setActiveRole={setActiveRole}
+          userRoles={userRoles}
+          activeRole={activeRole}
         />
         <AnnouncementsSection userRoles={userRoles} />
         {/* {
@@ -128,22 +126,22 @@ const Dashboard = ({
           )
         } */}
         <DashboardSummaryCard userData={userData} />
-  
+
         {/* Original Dashboard Header */}
         <div className='w-full  p-4'>
           <div className='flex flex-col sm:flex-row w-full justify-between items-start sm:items-center gap-4 sm:gap-0 h-full'>
             <div className="flex items-center gap-3 mb-3">
               <GrOverview className="h-8 w-8" />
-              
+
               <h1 className="relative text-2xl font-semibold text-white"><ShinyText
                 text="Dashboard Overview"
-              
+
                 disabled={false}
                 speed={3}
                 className='custom-class'
               /></h1>
             </div>
-  
+
           </div>
         </div>
         <DndContext

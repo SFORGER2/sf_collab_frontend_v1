@@ -1,16 +1,10 @@
-import { useContext } from "react";
+// useChatNotiffications.js
+// Backwards-compatibility re-export for components that import from this file.
+// The real hook and context live in ChatNotificationProvider (Chatnotificationprovider.jsx).
+//
+// FIX: The original file had a syntax error — an orphaned 'e' character before the
+// block comment on line 3 ("e/*xport...") which caused the module to fail silently
+// in some bundlers, meaning ChatNotificationBadge and useShowNotification got
+// undefined instead of the real hook.
 
-e/*xport default function useChatNotifications({ ChatNotificationContext}) {
-
-  const context = useContext(ChatNotificationContext);
-  if (!context) {
-    throw new Error('useChatNotifications must be used within ChatNotificationProvider');
-  }
-  return context;
-};*/
-
-// useChatNotifications.js
-// Use the hook exported from ChatNotificationProvider instead
-
-// Re-export from the provider for backwards compatibility
 export { useChatNotifications as default } from "@/components/pages/chat/Chatnotificationprovider";

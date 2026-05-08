@@ -21,7 +21,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../../ui/sheet";
-import Stories from "./stories";
+import Stories from "./Stories";
 import LeftSidebar from "./LeftSidebar";
 import CreatePost from "./CreatePost";
 import PostCard from "./PostCard";
@@ -29,8 +29,9 @@ import RightSidebar from "./RightSiderbar";
 import { useSelector } from "react-redux";
 import { postAPI } from "@/utils/APIs/postAPI";
 import { userSocialAPI } from "@/utils/APIs/socialAPI";
+import useSocket from "../chat/useSocket";
+import PostsTutorial from "./PostsTutorial";
 
-// ShinyText Component
 const ShinyText = ({ children, className = "" }) => {
   return (
     <span
@@ -151,9 +152,9 @@ const SettingsModal = ({ isOpen, onClose }) => {
   );
 };
 
-// Main Posts Component
 const Posts = () => {
   const { user: currentUser, access_token } = useSelector((state) => state.auth);
+  const { socket, isConnected } = useSocket();
   const [socialProfile, setSocialProfile] = useState(null);
   const [activeTab, setActiveTab] = useState("feed");
   const [posts, setPosts] = useState([]);
@@ -163,46 +164,31 @@ const Posts = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Socket.IO: listen for new posts/stories and prepend to feed
-    let socket;
-    if (access_token) {
-      socket = io(SOCKET_API_URL, { auth: { token: access_token } });
-
-      socket.on("connect", () => {
-        console.log("Socket connected", socket.id);
-      });
-
+    if (socket && isConnected) {
       socket.on("new_post", (payload) => {
-        // only add to feed when on feed tab
-        if (payload && payload.content) {
-          setPosts((prev) => [
-            {
-              _id: payload.id,
-              author: payload.author,
-              content: payload.content,
-              type: payload.type,
-              createdAt: payload.createdAt,
-            },
-            ...prev,
-          ]);
+        if (payload && (payload.content !== undefined || payload.mediaUrl)) {
+          const normalized = {
+            ...payload,
+            _id: payload._id || payload.id,
+            id: payload.id || payload._id,
+            author: payload.author || {},
+          };
+          setPosts((prev) => [normalized, ...prev]);
         }
       });
 
       socket.on("new_content", (payload) => {
-        // stories or mixed content
         if (payload && payload.contentType === "story") {
-          // trigger stories component to refresh
           setStoriesRefreshKey((k) => k + 1);
         }
       });
     }
 
     return () => {
-      if (socket) {
-        socket.disconnect();
-      }
+      socket?.off("new_post");
+      socket?.off("new_content");
     };
-  }, [access_token]);
+  }, [socket, isConnected]);
 
   useEffect(() => {
     const fetchSocialProfile = async () => {
@@ -210,7 +196,22 @@ const Posts = () => {
         const response = await userSocialAPI.getSocialProfile(currentUser.id);
         setSocialProfile(response.social);
       } catch (error) {
-        console.error("Failed to fetch social profile:", error);
+        const isNotFound =
+          error?.message === "User social profile not found" ||
+          error?.error === "User social profile not found" ||
+          error?.response?.status === 404 ||
+          error?.response?.data?.message === "User social profile not found";
+        if (isNotFound) {
+          try {
+            await userSocialAPI.createSocialProfile();
+            const retry = await userSocialAPI.getSocialProfile(currentUser.id);
+            setSocialProfile(retry.social);
+          } catch (createErr) {
+            console.error("Failed to create/fetch social profile:", createErr);
+          }
+        } else {
+          console.error("Failed to fetch social profile:", error);
+        }
       }
     };
     if (currentUser) {
@@ -222,19 +223,14 @@ const Posts = () => {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        let response;
-        if (activeTab === "feed") {
-          response = await userSocialAPI.getFeedPosts({
-            page: 1,
-            limit: 10,
-          });
-        } else if (activeTab === "explore") {
-          response = await userSocialAPI.getExplorePosts({
-            page: 1,
-            limit: 10,
-          });
-        }
-        setPosts(response.posts || []);
+        const response = await postAPI.getAll({
+          page: 1,
+          per_page: 10,
+          current_user_id: currentUser?.id,
+        });
+        // Flask backend returns: { success, message, data: { posts, pagination } }
+        const data = response?.data;
+        setPosts(data?.posts || []);
       } catch (error) {
         console.error("Failed to fetch posts:", error);
         setPosts([]);
@@ -242,8 +238,10 @@ const Posts = () => {
         setLoading(false);
       }
     };
-    fetchPosts();
-  }, [activeTab, access_token]);
+    if (currentUser) {
+      fetchPosts();
+    }
+  }, [currentUser, access_token]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -256,39 +254,68 @@ const Posts = () => {
   const handleCreatePost = async (postData) => {
     try {
       if (postData.destination === "story") {
-        // create story endpoint expects mediaUrl and caption; use first file preview url if available
-        const mediaUrl = postData.files?.[0]?.url || null;
-        const payload = {
-          mediaUrl,
-          caption: postData.caption,
-          type: postData.type || "image",
-        };
-        await userSocialAPI.createStory(payload);
-        // stories are ephemeral; reload stories if needed
-      } else {
-        // destination === feed
-        // build FormData to send file(s) as multipart/form-data
-        const formData = new FormData();
-        if (postData.caption) formData.append("content", postData.caption);
-        formData.append("type", postData.type || "text");
-        // attach first file as 'media' (backend expects single file)
-        if (postData.files && postData.files.length > 0) {
-          const fileObj = postData.files[0];
-          if (fileObj.file) formData.append("media", fileObj.file);
+        const firstFile = postData.files?.[0]?.file;
+        if (!firstFile) {
+          console.error("No media file selected for story.");
+          return;
         }
-        const response = await postAPI.create(formData, access_token);
-        // postAPI.create returns response.data.data shape; normalize
-        const created = response?.post || response?.data?.post || response;
-        setPosts((prev) => [created, ...prev]);
+
+        const formData = new FormData();
+        formData.append("media", firstFile);
+        formData.append("type", firstFile.type.startsWith("video/") ? "video" : "image");
+        formData.append("user_id", currentUser.id);
+        formData.append("author_id", currentUser.id);
+        formData.append(
+          "author_first_name",
+          currentUser.firstName || currentUser.first_name
+        );
+        formData.append(
+          "author_last_name",
+          currentUser.lastName || currentUser.last_name
+        );
+        formData.append("caption", postData.caption);
+        formData.append(
+          "expires_at",
+          new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        );
+
+        await postAPI.createStory(formData);
+        setStoriesRefreshKey((k) => k + 1);
+      } else {
+        // Build FormData so media files are included as multipart/form-data
+        const postType = postData.type === "text" ? "professional" : (postData.type || "professional");
+        const formData = new FormData();
+        formData.append("user_id", currentUser.id);
+        formData.append("author_id", currentUser.id);
+        formData.append("author_first_name", currentUser.firstName || currentUser.first_name);
+        formData.append("author_last_name", currentUser.lastName || currentUser.last_name);
+        formData.append("content", postData.caption);
+        formData.append("type", postType);
+        if (postData.tags?.length) {
+          formData.append("tags", JSON.stringify(postData.tags));
+        }
+        // Append each selected media file
+        postData.files?.forEach(({ file }) => {
+          formData.append("media", file);
+        });
+
+        const response = await postAPI.create(formData);
+        const created = response?.data?.post;
+        if (created) {
+          const normalized = { ...created, id: created._id || created.id };
+          setPosts((prev) => [normalized, ...prev]);
+        }
       }
     } catch (error) {
       console.error("Failed to create post:", error);
     }
   };
 
+
   return (
     <div className="min-h-screen text-white w-full">
       {/* Animated Background */}
+      <PostsTutorial />
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-size-[64px_64px] mask-[radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
         <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-float" />
@@ -303,7 +330,7 @@ const Posts = () => {
       {/* Main 3-Cell Grid Layout */}
       <div className="relative w-full mx-auto px-3 py-6">
         <div className="grid grid-cols-12 gap-4">
-          {/* ---- LEFT SIDEBAR (hidden on mobile, sticky on lg) ---- */}
+          {/* ---- LEFT SIDEBAR ---- */}
           <div className="hidden lg:block lg:col-span-3">
             <div className="sticky top-0 space-y-2">
               <LeftSidebar
@@ -314,28 +341,26 @@ const Posts = () => {
             </div>
           </div>
 
-          {/* ---- CENTER FEED (full width on mobile, 6 cols on lg) ---- */}
+          {/* ---- CENTER FEED ---- */}
           <div className="col-span-12 lg:col-span-6">
             <div className="space-y-6">
               {/* Tab Headers */}
-              <div className="flex gap-4 border-b border-zinc-800">
+              <div className="feed flex gap-4 border-b border-zinc-800">
                 <button
                   onClick={() => setActiveTab("feed")}
-                  className={`py-2 px-4 font-semibold transition-all ${
-                    activeTab === "feed"
+                  className={`py-2 px-4 font-semibold transition-all ${activeTab === "feed"
                       ? "text-blue-400 border-b-2 border-blue-400"
                       : "text-zinc-400 hover:text-white"
-                  }`}
+                    }`}
                 >
                   Feed
                 </button>
                 <button
                   onClick={() => setActiveTab("explore")}
-                  className={`py-2 px-4 font-semibold transition-all ${
-                    activeTab === "explore"
+                  className={`py-2 px-4 font-semibold transition-all ${activeTab === "explore"
                       ? "text-blue-400 border-b-2 border-blue-400"
                       : "text-zinc-400 hover:text-white"
-                  }`}
+                    }`}
                 >
                   Explore
                 </button>
@@ -358,15 +383,19 @@ const Posts = () => {
                 ) : posts.length > 0 ? (
                   posts.map((post, index) => (
                     <motion.div
-                      key={post._id || index}
+                      key={post._id || post.id || index}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
                     >
-                      <PostCard 
-                        post={post} 
+                      <PostCard
+                        post={post}
                         onPostDeleted={(postId) => {
-                          setPosts(posts.filter(p => (p._id || p.id) !== postId))
+                          setPosts((prev) =>
+                            prev.filter(
+                              (p) => p.id !== postId && p._id !== postId
+                            )
+                          );
                         }}
                       />
                     </motion.div>
@@ -375,8 +404,8 @@ const Posts = () => {
                   <div className="text-center py-12">
                     <p className="text-zinc-400 text-lg">
                       {activeTab === "feed"
-                        ? "No posts from people you follow yet. Follow more users!"
-                        : "No posts available. Be the first to post!"}
+                        ? "No posts yet. Be the first to post!"
+                        : "No posts available."}
                     </p>
                   </div>
                 )}
@@ -384,7 +413,7 @@ const Posts = () => {
             </div>
           </div>
 
-          {/* ---- RIGHT SIDEBAR (hidden on mobile, sticky on lg) ---- */}
+          {/* ---- RIGHT SIDEBAR ---- */}
           <div className="hidden lg:block lg:col-span-3">
             <div className="sticky top-0 space-y-2">
               <RightSidebar socialProfile={socialProfile} />
@@ -396,34 +425,19 @@ const Posts = () => {
       {/* Bottom Navigation for Mobile */}
       <div className="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800/50 md:hidden">
         <div className="flex justify-around items-center p-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className={activeTab === "feed" ? "text-blue-400" : "text-zinc-400"}
-            onClick={() => setActiveTab("feed")}
-          >
+          <Button variant="ghost" size="icon" onClick={() => setActiveTab("feed")}>
             <Home size={24} />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className={activeTab === "explore" ? "text-blue-400" : "text-zinc-400"}
-            onClick={() => setActiveTab("explore")}
-          >
+          <Button variant="ghost" size="icon" onClick={() => setActiveTab("explore")}>
             <Search size={24} />
           </Button>
-          <Button variant="ghost" size="icon" className="text-zinc-400">
+          <Button variant="ghost" size="icon">
             <Plus size={24} />
           </Button>
-          <Button variant="ghost" size="icon" className="text-zinc-400">
+          <Button variant="ghost" size="icon">
             <Bell size={24} />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-zinc-400"
-            onClick={() => setIsSettingsOpen(true)}
-          >
+          <Button variant="ghost" size="icon" onClick={() => setIsSettingsOpen(true)}>
             <User size={24} />
           </Button>
         </div>

@@ -104,7 +104,7 @@ const Products = () => {
         </p>
       </div>
 
-      <div className="products-grid grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+      <div className="products-grid grid grid-cols-1 md:grid-cols-2 gap-8 w-full mx-auto">
         {projects.map((project) => (
           <div key={project.id} className="product-card group rounded-xl overflow-hidden bg-[#111] shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-2">
             <div className="relative h-64 lg:h-80 overflow-hidden bg-gradient-to-br from-purple-900/20 to-indigo-900/20">

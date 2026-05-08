@@ -11,7 +11,7 @@ export function isUserProfileComplete(user) {
             'roles',
             'timezone'
         ];
-      
+        console.log("Checking user profile completeness for user:", user);
         for (const field of requiredFields) {
             const value = user[field];
             if (!value || (typeof value === 'string' && value.trim() === '') || (Array.isArray(value) && value.length === 0)) {

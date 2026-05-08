@@ -11,12 +11,14 @@ import CreateGoalDialog from "../modals/CreateGoalDialog";
 import { projectGoalsAPI } from "@/utils/APIs/startupsAPI";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import DeleteConfirmationModal from "@/utils/confirm";
 
 // Project Goals Section
 export default function ProjectGoalsSection({ goals, isAdmin, startupId, setGoals, teamMembers = [] }) {
   const [openCreate, setOpenCreate] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState(null);
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
   const [view, setView] = useState(localStorage.getItem("projectGoalsView") || "list"); // New state for view
   useEffect(() => {
     localStorage.setItem("projectGoalsView", view);
@@ -210,7 +212,7 @@ export default function ProjectGoalsSection({ goals, isAdmin, startupId, setGoal
             <Button
               size="sm"
               variant="outline"
-              onClick={() => handleDeleteGoal(goal?.id)}
+              onClick={() => setIsConfirmDeleteOpen(goal?.id)}
               className="border-red-600/50 bg-red-600 text-white hover:bg-white hover:text-red-500 hover:border-red-500 transition-all"
             >
               <Trash2 className="w-3 h-3 mr-1" />
@@ -231,6 +233,17 @@ export default function ProjectGoalsSection({ goals, isAdmin, startupId, setGoal
       startupId={startupId}
       setGoals={setGoals}
       teamMembers={teamMembers}
+      />
+      <DeleteConfirmationModal
+        isOpen={!!isConfirmDeleteOpen}
+        onClose={() => setIsConfirmDeleteOpen(null)}
+        onConfirm={() => {
+          handleDeleteGoal(isConfirmDeleteOpen);
+          setIsConfirmDeleteOpen(null);
+        }}
+        title="Confirm Goal Deletion"
+        message="Are you sure you want to delete this goal?"
+        type="soft"
       />
     </div>
     );

@@ -51,7 +51,7 @@ export default function DashboardTopNav({
           : "translate-y-0 opacity-100"
       } ${className}`}
     >
-      <div className="mx-auto max-w-6xl px-3 py-3 sm:px-4">
+      <div className="mx-auto w-full px-3 py-3 sm:px-4">
         <nav
           className="flex items-center gap-2 rounded-full border border-white/10 bg-linear-to-r from-white/10 to-white/5 px-1 py-1 text-xs sm:text-sm shadow-2xl backdrop-blur"
           aria-label="dashboard navigation"

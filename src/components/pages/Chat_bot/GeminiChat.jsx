@@ -217,7 +217,7 @@ const GeminiChat = () => {
           <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-collapsible-down" style={{ animationDelay: '10s' }}/>
           <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-bounce" style={{ animationDelay: '10s' }} />
         </div>
-        <div className="max-w-6xl mx-auto">
+        <div className="w-full mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-3 mb-4">

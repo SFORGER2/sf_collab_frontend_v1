@@ -1,5 +1,6 @@
-import { BriefcaseBusiness, Share2, TrendingUp, Wallet } from "lucide-react";
-import { aiTools, toolsSection, dashboardLink, socialSection } from "../sidebarCommons";
+import { BookOpen, BriefcaseBusiness, LightbulbIcon, Rocket, Save, Share2, TrendingUp, Wallet } from "lucide-react";
+import { aiTools, toolsSection, dashboardLink, socialSection, wallet, ideation } from "../sidebarCommons";
+import { FcInvite } from "react-icons/fc";
 
 export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
@@ -12,19 +13,12 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
           subItems: [
             { id: "discover-startups", href: "/discover-startups", label: "Discover Startups", icon: <Rocket size={18} /> },
             { id: "saved-startups", href: "/saved-startups", label: "Saved Startups", icon: <Save size={18} /> },
+            { id: "my-invitations", href: "/invitations", label: "My Invitations", icon: <FcInvite size={18} />, }
+            
           ]
     
     },
-    {
-          id: 3,
-          icon: <LightbulbIcon size={22} />,
-          href: "/ideation",
-          label: "Ideation",
-          subItems: [
-            { id: "Ideation-Board", href: "/ideation", label: "Ideation Board", icon: <LightbulbIcon size={18} /> },
-            { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
-          ]
-    },
+    ideation(3),
     
     socialSection(4),
     
@@ -63,18 +57,7 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
         { id: "assets", href: "/links-assets/assets", label: "Assets" },
       ]
     },
-    {
-      id: 8,
-      icon: <Wallet size={22} />,
-      href: "/payouts",
-      label: "Payouts",
-      isUpcoming: true,
-
-      subItems: [
-        { id: "payout-history", href: "/payouts", label: "Payout History" },
-        { id: "bank-details", href: "/payouts/bank-details", label: "Bank Details" },
-      ]
-    },
+    // wallet(8),
     aiTools(9),
     toolsSection(10)
   ];
@@ -94,7 +77,7 @@ export function getCurrentContext(pathname) {
   if (["/links-assets"].some(path => pathname.startsWith(path))) {
     return 4;
   }
-  if (["/payouts"].some(path => pathname.startsWith(path))) {
+  if (["/wallet"].some(path => pathname.startsWith(path))) {
     return 5;
   }
   if (["/chat"].some(path => pathname.startsWith(path))) {

@@ -13,7 +13,7 @@ import { toast } from 'react-toastify';
 import useGetCredits from '@/utils/hooks/useGetCredits';
 import { motion } from 'framer-motion';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const ImageGenerator = () => {
   const [activeTab, setActiveTab] = useState('text-to-text');
@@ -202,7 +202,7 @@ const ImageGenerator = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4 flex-wrap">
+            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4 mt-6 flex-wrap">
               <div className="p-3 bg-linear-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-2xl backdrop-blur-sm">
                 <Sparkles className="h-8 w-8 text-blue-400 animate-pulse" />
               </div>

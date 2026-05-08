@@ -33,8 +33,6 @@ const IdeationHeader = ({
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Use refs instead of controlled state to prevent focus loss
-
   const searchTimeoutRef = useRef(null);
   
 
@@ -151,40 +149,16 @@ const IdeationHeader = ({
             <div className="w-full flex justify-center items-center flex-col mb-2">
               <h1 className="text-5xl  sm:text-6xl lg:text-7xl font-bold mb-8 animate-slide-up text-center w-full">
                 <span className="bg-linear-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent text-center w-full">
-                  SF Idea Incubator
+                  SF Vision Board
                 </span>
                 <br />
                 
         </h1>
       <div className=" relative inline-block w-full">
-                  {/* Animated underline */}
                   <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-90 h-px bg-linear-to-r from-transparent via-blue-500 to-transparent animate-shimmer" />
-                  {/* <span className='absolute z-10 top-16 right-1 w-full flex justify-center mt-2'>
-                    <svg aria-hidden="true" viewBox="0 0 418 42" className=" h-[0.70em] w-96 fill-blue-400/50" preserveAspectRatio="none"><path d="M203.371.916c-26.013-2.078-76.686 1.963-124.73 9.946L67.3 12.749C35.421 18.062 18.2 21.766 6.004 25.934 1.244 27.561.828 27.778.874 28.61c.07 1.214.828 1.121 9.595-1.176 9.072-2.377 17.15-3.92 39.246-7.496C123.565 7.986 157.869 4.492 195.942 5.046c7.461.108 19.25 1.696 19.17 2.582-.107 1.183-7.874 4.31-25.75 10.366-21.992 7.45-35.43 12.534-36.701 13.884-2.173 2.308-.202 4.407 4.442 4.734 2.654.187 3.263.157 15.593-.78 35.401-2.686 57.944-3.488 88.365-3.143 46.327.526 75.721 2.23 130.788 7.584 19.787 1.924 20.814 1.98 24.557 1.332l.066-.011c1.201-.203 1.53-1.825.399-2.335-2.911-1.31-4.893-1.604-22.048-3.261-57.509-5.556-87.871-7.36-132.059-7.842-23.239-.254-33.617-.116-50.627.674-11.629.54-42.371 2.494-46.696 2.967-2.359.259 8.133-3.625 26.504-9.81 23.239-7.825 27.934-10.149 28.304-14.005.417-4.348-3.529-6-16.878-7.066Z"></path></svg>
-                  </span> */}
                 </div>
       </div>
         
-        {/* <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">SF Idea Incubator</h1>
-            <p className="text-xs text-gray-400">
-          Share, discover, and collaborate on innovative ideas
-            </p>
-          </div>
-
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="sm:hidden p-2 hover:bg-white/10 rounded-xl transition-colors"
-          >
-            {isMobileMenuOpen ? (
-          <X className="h-6 w-6" />
-            ) : (
-          <IoOptionsOutline className="h-6 w-6" />
-            )}
-          </button>
-        </div> */}
-
         {/* Controls Section */}
       <div
         className={`${
@@ -221,10 +195,10 @@ const IdeationHeader = ({
           />
           <button
             onClick={() => setShowNewIdeaForm(true)}
-            className="flex items-center justify-center gap-2 rounded-lg transition-all duration-200 w-full px-4 py-2.5  sm:w-auto font-medium shadow-lg bg-gray-200 text-black text-sm border border-white/20"
+            className="create-idea flex items-center justify-center gap-2 rounded-lg transition-all duration-200 w-full px-4 py-2.5  sm:w-auto font-medium shadow-lg bg-gray-200 text-black text-sm border border-white/20"
           >
             <Plus className="h-4 w-4" />
-            <span>Share Idea</span>
+            <span>Add Vision</span>
           </button>
         </div>
       </div>

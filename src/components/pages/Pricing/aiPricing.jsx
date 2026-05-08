@@ -62,7 +62,7 @@ const ExtrasSection = ({ aiTools }) => (
 
 const CreditPacks = ({ credits }) => (
   <section className="mt-24">
-    <h3 className="text-3xl font-bold mb-6 text-center">Credits</h3>
+    <h3 className="text-3xl font-bold mb-6 text-center">SF Coins</h3>
 
     <p className="text-neutral-400 text-center mb-8">
       {credits.description_details || "Used for AI, automation, heavy processing & external APIs."}
@@ -72,7 +72,7 @@ const CreditPacks = ({ credits }) => (
       {credits.credit_packs.map((pack) => (
         <div key={pack.id} className="bg-neutral-900 border border-neutral-700 rounded-xl p-4 text-center">
           <p className="text-xl font-bold text-purple-400">{pack.credits.toLocaleString()}</p>
-          <p className="text-sm text-neutral-400 mb-2">credits / month</p>
+          <p className="text-sm text-neutral-400 mb-2">coins / month</p>
           <p className="font-semibold">${(pack.price / 100).toFixed(2)}</p>
         </div>
       ))}
@@ -122,7 +122,7 @@ export default function AIPricing() {
   return (
     <div className="w-full mx-auto px-6 lg:px-40 py-16">
       <h1 className="text-5xl font-extrabold text-center mb-6 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-        AI & Credits Pricing
+        AI & SF Coins Pricing
       </h1>
       <p className="text-center text-neutral-400 max-w-3xl mx-auto">
         Flexible AI-powered features and credit packs to supercharge your collaboration experience. Choose what fits your needs and scale as you grow.

@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const BrowseStartups = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 text-white p-6">
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="w-full mx-auto space-y-8">
         {/* Header */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">

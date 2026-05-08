@@ -18,7 +18,10 @@ import {
   Percent,
   Clock,
   ArrowLeft,
-  Sparkles
+  Sparkles,
+  Zap,
+  Flame,
+  TrendingDown
 } from 'lucide-react';
 import 'katex/dist/katex.min.css';
 import NormalCalculator from './NormalCalculatorSection';
@@ -35,25 +38,31 @@ const CalculatorPage = () => {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.1 }
+      transition: { staggerChildren: 0.1, delayChildren: 0.1 }
     }
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
   };
 
+  const upcomingCalculators = [
+    { icon: Flame, label: 'Burn Rate', color: 'from-orange-500 to-red-500' },
+    { icon: Clock, label: 'Runway', color: 'from-blue-500 to-cyan-500' },
+    { icon: TrendingUp, label: 'Valuation', color: 'from-green-500 to-emerald-500' },
+    { icon: Percent, label: 'Equity Dilution', color: 'from-purple-500 to-pink-500' },
+    { icon: Users, label: 'CAC/LTV', color: 'from-yellow-500 to-orange-500' },
+    { icon: Target, label: 'Break Even', color: 'from-indigo-500 to-blue-500' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 relative overflow-hidden">
-      {/* Animated Background Blobs */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-80 h-80 bg-gradient-to-r from-purple-600/10 to-blue-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/3 w-96 h-96 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
-        
-        {/* Grid Background */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.02)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
+        <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" style={{ animationDelay: '2s' }} />
       </div>
 
       {/* Navigation */}
@@ -122,23 +131,48 @@ const CalculatorPage = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Future Calculators Info Card */}
+        {/* Upcoming Calculators Grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="mt-12 p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20 backdrop-blur-sm"
+          className="mt-12 space-y-6"
         >
-          <div className="flex items-start gap-4">
-            <div className="p-2.5 bg-blue-500/20 rounded-lg border border-blue-400/30 flex-shrink-0">
-              <TrendingUp className="w-5 h-5 text-blue-300" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-white mb-2">More Tools Coming Soon</h3>
-              <p className="text-sm text-white/70">
-                Burn Rate, Runway, Valuation, Equity Dilution, CAC/LTV, Break Even, ROI, and MRR/ARR calculators will be available soon.
-              </p>
-            </div>
+          <div className="space-y-3">
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Zap className="w-6 h-6 text-yellow-400" />
+              Coming Soon
+            </h2>
+            <p className="text-gray-400">More powerful calculators launching soon</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {upcomingCalculators.map((calc, idx) => {
+              const Icon = calc.icon;
+              return (
+                <motion.div
+                  key={idx}
+                  variants={itemVariants}
+                  initial="hidden"
+                  animate="visible"
+                  transition={{ delay: 0.35 + idx * 0.05 }}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  className="group relative overflow-hidden rounded-xl"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-r ${calc.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                  <div className="relative bg-slate-900/50 backdrop-blur border border-white/10 group-hover:border-white/20 rounded-xl p-4 transition-all">
+                    <div className={`inline-flex p-2.5 rounded-lg bg-gradient-to-br ${calc.color} mb-3`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="text-white font-semibold text-sm">{calc.label}</h3>
+                    <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
+                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+                      Coming Soon
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
       </div>

@@ -342,7 +342,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
               placeholder={platform}
               value={formData.profile.socialLinks?.[platform] || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, socialLinks: { ...(prev.profile.socialLinks || {}), [platform]: e.target.value } } }))}
-              className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-pink-500 focus:outline-none transition-colors capitalize text-sm"
+              className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-pink-500 focus:outline-none transition-colors text-sm"
             />
           ))}
         </div>

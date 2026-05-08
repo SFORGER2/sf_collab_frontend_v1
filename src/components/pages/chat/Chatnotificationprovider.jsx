@@ -1,3 +1,11 @@
+/**
+ * ChatNotificationProvider - Fixed Version
+ * 
+ * FIXES:
+ * 1. Better profile picture handling in notifications
+ * 2. MUTED NOTIFICATION SOUND FOR GENERAL CHAT (NEW)
+ */
+
 import React, {
   createContext,
   useContext,
@@ -16,15 +24,18 @@ import Avatar from "@/components/chat (previous)/Avatar";
 // ============================================
 // CONFIGURATION
 // ============================================
-const SOCKET_URL = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_API_URL || '';
 const NOTIFICATION_DURATION = 60000; 
 const MAX_NOTIFICATIONS = 2;
 const AUTO_POPUP_ENABLED = true; // Set to false to disable auto-popup
 const FLASH_DURATION = 60000;
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+// NEW: Mute notification sounds for these conversation types
+const MUTED_CONVERSATION_TYPES = ['general'];
 
-// turn "/uploads/..." into "http://localhost:5001/uploads/..."
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
+
+// turn "/uploads/..." into "/uploads/..."
 const resolveAvatarUrl = (src) => {
   if (!src) return null;
   if (typeof src !== "string") return null;
@@ -257,49 +268,28 @@ const ChatToast = ({
 // NOTIFICATION CONTAINER
 // ============================================
 const NotificationContainer = ({ notifications, onClose, onNavigate }) => {
-  const [expanded, setExpanded] = useState(false);
-
-  const visible = expanded ? notifications : notifications.slice(0, MAX_NOTIFICATIONS);
-  const overflowCount = Math.max(0, notifications.length - MAX_NOTIFICATIONS);
-
+  const visibleNotifications = notifications.slice(0, MAX_NOTIFICATIONS);
+  
   return (
-
-    <div className="fixed bottom-24 right-6 z-[9999] flex flex-col gap-3">
-      <div className={expanded ? "max-h-[70vh] overflow-y-auto pr-1 flex flex-col gap-3" : "flex flex-col gap-3"}>
-        {visible.map((notification, index) => (
+    <div className="fixed bottom-4 right-4 z-[10000] flex flex-col-reverse gap-3 pointer-events-none">
+      {visibleNotifications.map((notification, index) => (
+        <div key={notification.id} className="pointer-events-auto">
           <ChatToast
-            key={notification.id}
             notification={notification}
-            index={index}
             onClose={onClose}
             onNavigate={onNavigate}
+            index={index}
           />
-        ))}
-      </div>
-
+        </div>
+      ))}
       
       {/* Overflow indicator */}
-      {overflowCount > 0 && !expanded && (
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          className="text-center text-zinc-200 text-sm py-2 bg-zinc-900/80 backdrop-blur-sm rounded-xl border border-zinc-700/50 hover:border-amber-500/40 transition"
-        >
-          +{overflowCount} more messages (tap to view)
-        </button>
+      {notifications.length > MAX_NOTIFICATIONS && (
+        <div className="text-xs text-zinc-500 text-center pointer-events-auto">
+          +{notifications.length - MAX_NOTIFICATIONS} more notifications
+        </div>
       )}
-
-      {expanded && notifications.length > MAX_NOTIFICATIONS && (
-        <button
-          type="button"
-          onClick={() => setExpanded(false)}
-          className="text-center text-zinc-400 text-xs py-2 bg-zinc-900/60 backdrop-blur-sm rounded-xl border border-zinc-800 hover:text-white transition"
-        >
-          Collapse
-        </button>
-      )}
-
-
+      
       {/* CSS Animations */}
       <style>{`
         @keyframes slideIn {
@@ -313,41 +303,33 @@ const NotificationContainer = ({ notifications, onClose, onNavigate }) => {
           }
         }
         
-        @keyframes pulse-border {
-          0%, 100% {
-            border-color: rgba(113, 113, 122, 0.5);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-          }
-          50% {
-            border-color: rgba(59, 130, 246, 0.7);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(59, 130, 246, 0.3);
-          }
+        @keyframes progress {
+          from { width: 100%; }
+          to { width: 0%; }
         }
         
         @keyframes glow {
-          0%, 100% {
-            opacity: 0.3;
-          }
-          50% {
-            opacity: 0.6;
-          }
-        }
-        
-        @keyframes progress {
-          from {
-            width: 100%;
-          }
-          to {
-            width: 0%;
-          }
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.6; }
         }
         
         .animate-pulse-border {
-          animation: pulse-border 1.5s ease-in-out infinite;
+          animation: pulse-border 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-border {
+          0%, 100% { 
+            border-color: rgba(113, 113, 122, 0.5);
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+          }
+          50% { 
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 20px 0 rgba(59, 130, 246, 0.3);
+          }
         }
         
         .animate-glow {
-          animation: glow 1.5s ease-in-out infinite;
+          animation: glow 2s ease-in-out infinite;
         }
       `}</style>
     </div>
@@ -355,60 +337,51 @@ const NotificationContainer = ({ notifications, onClose, onNavigate }) => {
 };
 
 // ============================================
-// PROVIDER COMPONENT (ENHANCED)
+// PROVIDER
 // ============================================
 export const ChatNotificationProvider = ({ children }) => {
-  const { socket, isConnected } = useAppSocket();
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  
-  // NEW: Flashing tabs state for Facebook-style notifications
-  const [flashingTabs, setFlashingTabs] = useState({});
-  const flashingIntervalsRef = useRef({});
-
   const navigate = useNavigate();
   const location = useLocation();
+  const { socket, isConnected } = useAppSocket();
+  
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [flashingTabs, setFlashingTabs] = useState({});
 
-  const [currentUserId, setCurrentUserId] = useState(() => {
+  // ─── Feature 4: Bell sync — chat unread count exposed to NotificationBell ─
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
+  
+  const flashingIntervalsRef = useRef({});
+  const isOnChatPageRef = useRef(false);
+
+  // Get current user ID
+  const currentUserId = useMemo(() => {
     try {
-      return JSON.parse(localStorage.getItem("user") || "null")?.id ?? null;
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      return user?.id;
     } catch {
       return null;
     }
-  });
-
-  useEffect(() => {
-    const syncUser = () => {
-      try {
-        setCurrentUserId(
-          JSON.parse(localStorage.getItem("user") || "null")?.id ?? null
-        );
-      } catch {
-        setCurrentUserId(null);
-      }
-    };
-
-    window.addEventListener("storage", syncUser);
-    syncUser();
-
-    return () => window.removeEventListener("storage", syncUser);
   }, []);
 
-  const isOnChatPageRef = useRef(false);
-
+  // Track if user is on chat page
   useEffect(() => {
-    isOnChatPageRef.current = location.pathname === "/chat";
-  }, [location.pathname]);
-
-  useEffect(() => {
-    if (location.pathname === "/chat") setUnreadCount(0);
+    isOnChatPageRef.current = location.pathname.startsWith('/chat');
+    // Reset badge when user opens chat
+    if (location.pathname.startsWith('/chat')) {
+      setUnreadCount(0);
+      setChatUnreadCount(0);
+    }
   }, [location.pathname]);
 
   // NEW: Start flashing a conversation tab
   const startFlashing = useCallback((conversationId) => {
     const cid = String(conversationId);
     
-    setFlashingTabs(prev => ({ ...prev, [cid]: true }));
+    setFlashingTabs(prev => ({
+      ...prev,
+      [cid]: true
+    }));
 
     // Stop flashing after 60 seconds
     if (flashingIntervalsRef.current[cid]) {
@@ -527,22 +500,27 @@ export const ChatNotificationProvider = ({ children }) => {
       const { message, conversation_id } = data || {};
       if (!message) return;
 
-      const isOwnMessage = message.sender_id === currentUserId;
+      // Guard: skip own messages (fix for file uploads which also trigger new_message)
+      // sender_id may be int while currentUserId is string — use String() for safe compare
+      const sId = message?.sender_id;
+      const isOwnMessage = sId != null && currentUserId != null && String(sId) === String(currentUserId);
       if (isOwnMessage) return;
+
+      // Get conversation type — now reliably included in socket payload
+      const conversationType = data.conversation?.conversation_type || 'direct';
+      const isMuted = MUTED_CONVERSATION_TYPES.includes(conversationType);
+
+      // Never show toast or popup for general chat — it's too noisy
+      if (isMuted) return;
 
       // Only show toast when not on chat page
       if (!isOnChatPageRef.current) {
-        // Add toast notification
-        addNotification({
-          id: `notif-${message.id}-${Date.now()}`,
-          message,
-          conversation: data.conversation || { id: conversation_id },
-          sender: message.sender,
-          timestamp: new Date(),
-        });
+        // Badge count only — no popup toast
+        setUnreadCount((prev) => prev + 1);
+        // ─── Feature 4: also increment bell chat badge ─────────────────
+        setChatUnreadCount((prev) => prev + 1);
 
         playNotificationSound();
-        setUnreadCount((prev) => prev + 1);
 
         // Auto-popup ChatDock (like Facebook Messenger)
         autoPopupChatDock(data);
@@ -588,6 +566,11 @@ export const ChatNotificationProvider = ({ children }) => {
     setUnreadCount(0);
   }, []);
 
+  // ─── Feature 4: called by NotificationBell when opened ───────────────────
+  const resetChatUnreadCount = useCallback(() => {
+    setChatUnreadCount(0);
+  }, []);
+
   const joinConversation = useCallback(
     (conversationId) => {
       if (socket) socket.emit("join_conversation", { conversation_id: conversationId });
@@ -607,6 +590,7 @@ export const ChatNotificationProvider = ({ children }) => {
     isConnected,
     notifications,
     unreadCount,
+    chatUnreadCount,          // ─── Feature 4
     flashingTabs, // NEW: Export flashing tabs state
     addNotification,
     removeNotification,
@@ -614,6 +598,7 @@ export const ChatNotificationProvider = ({ children }) => {
     navigateToConversation,
     sendQuickReply,
     resetUnreadCount,
+    resetChatUnreadCount,     // ─── Feature 4
     joinConversation,
     leaveConversation,
     startFlashing, // NEW: Export flashing controls
@@ -623,12 +608,7 @@ export const ChatNotificationProvider = ({ children }) => {
   return (
     <ChatNotificationContext.Provider value={value}>
       {children}
-      {/* Render notification toasts */}
-      <NotificationContainer
-        notifications={notifications}
-        onClose={removeNotification}
-        onNavigate={navigateToConversation}
-      />
+      {/* Popup toasts removed — unread badge on chat icon is used instead */}
     </ChatNotificationContext.Provider>
   );
 };

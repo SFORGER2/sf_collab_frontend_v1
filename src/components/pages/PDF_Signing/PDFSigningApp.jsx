@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Upload, Download, Trash2, MousePointer, Save, 
   FileText, Check, X, RefreshCw,
-  Move, Maximize2, ChevronLeft, ChevronRight
+  Move, Maximize2, ChevronLeft, ChevronRight, AlertCircle
 } from 'lucide-react';
 import { FaFilePdf } from "react-icons/fa6";
+import { motion } from 'framer-motion';
 import { Button } from '../../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
 import { Alert, AlertDescription } from '../../ui/alert';
@@ -41,8 +42,6 @@ const PDFSigningApp = () => {
   const iframeRef = useRef(null);
   const dragStartPos = useRef({ x: 0, y: 0 });
   const sigStartPos = useRef({ x: 0, y: 0 });
-
-
 
   useEffect(() => {
     if (showSignaturePad && canvasRef.current) {
@@ -174,6 +173,7 @@ const PDFSigningApp = () => {
   useEffect(() => {
     loadSignedDocumentsCallback();
   }, [loadSignedDocumentsCallback]);
+
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
@@ -493,6 +493,7 @@ const PDFSigningApp = () => {
       iframeRef.current.style.transformOrigin = 'top left';
     }
   };
+
   const previewText = (text, maxLength) => {
     if (text.length <= maxLength) return text;
     const extIndex = text.lastIndexOf('.');
@@ -502,305 +503,357 @@ const PDFSigningApp = () => {
       ? namePart.substring(0, maxLength - extension.length - 3) + '...'
       : namePart;
     return truncatedName + extension;
-  }
+  };
+
   const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  };
+
   return (
-    <div className="min-h-screen w-full bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 py-4 px-3 sm:py-8 sm:px-6">
+    <div className="min-h-screen w-full bg-black text-white px-3 sm:px-6 py-4 sm:py-8">
       {/* Animated Background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-pulse" />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
+        <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="w-full mx-auto max-w-7xl">
+      <motion.div 
+        className="w-full mx-auto max-w-7xl space-y-8"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         {/* Header */}
-        <div className="text-center mb-6 sm:mb-12">
-          <div className="flex flex-col items-center justify-center gap-2 sm:gap-4 mb-3 sm:mb-6">
-            <div className="p-2.5 sm:p-4 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-2xl shadow-2xl">
-              <FaFilePdf className="h-6 w-6 sm:h-10 sm:w-10 text-white" />
+        <motion.div className="text-center mb-8">
+          <div className="flex flex-col items-center justify-center gap-4 mb-6">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl shadow-2xl">
+              <FaFilePdf className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
             </div>
-            <div className="text-center">
-              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold bg-linear-to-r from-blue-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent px-2">
+            <div className="text-center space-y-2">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent">
                 PDF Signing Tool
               </h1>
-              <p className="text-gray-400 mt-1 sm:mt-2 text-xs sm:text-lg">
-                Professional document signing
+              <p className="text-gray-400 text-sm sm:text-lg">
+                Professional document signing made simple
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="grid gap-4 sm:gap-6 lg:gap-8 w-full lg:grid-cols-3 auto-rows-max lg:auto-rows-min">
+        <motion.div 
+          className="grid gap-6 w-full lg:grid-cols-3"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {/* Left Panel - Controls */}
-          <div className="w-full lg:col-span-1">
-            <Card className="bg-linear-to-b from-slate-800/80 to-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl lg:sticky lg:top-6">
-              <CardHeader className="pb-3 sm:pb-4 border-b border-slate-700/30 px-3 sm:px-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-xl text-white">
-                  <FaFilePdf className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400 shrink-0" />
-                  <span className="truncate text-sm sm:text-base">Signing</span>
-                </CardTitle>
-                <CardDescription className="text-gray-400 mt-1 text-xs">
-                  Upload PDF and sign
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 px-3 sm:px-6">
-                {/* File Upload */}
-                <div className="space-y-2">
-                  <Label className="text-xs sm:text-sm font-semibold text-white">
-                    Upload PDF
-                  </Label>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    accept="application/pdf"
-                    className="hidden"
-                    disabled={isUploading}
-                  />
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="w-full bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-blue-500/50 transition-all text-xs sm:text-base py-2 h-auto"
-                  >
-                    {isUploading ? (
-                      <>
-                        <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-spin shrink-0" />
-                        <span className="text-xs">Uploading...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-3 w-3 sm:h-4 sm:w-4 mr-2 shrink-0" />
-                        <span className="text-xs">Upload PDF</span>
-                      </>
-                    )}
-                  </Button>
-                  
-                  {selectedFile && (
-                    <div className="mt-2 p-2 sm:p-3 bg-linear-to-r from-blue-500/10 to-cyan-500/10 rounded-lg border border-blue-500/30">
-                      <p className="text-xs text-white font-medium truncate">{previewText(selectedFile.name, 20)}</p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {formatFileSize(selectedFile.size)}
-                        {uploadedFileData && ` • ${uploadedFileData.num_pages || 1} pages`}
-                      </p>
+          <motion.div variants={itemVariants} className="w-full lg:col-span-1">
+            <div className="sticky top-6">
+              <Card className="bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 shadow-2xl overflow-hidden">
+                <CardHeader className="pb-4 border-b border-slate-700/30 bg-gradient-to-r from-blue-500/10 to-cyan-500/10">
+                  <CardTitle className="flex items-center gap-3 text-white">
+                    <div className="p-2 bg-blue-500/20 rounded-lg">
+                      <FaFilePdf className="h-5 w-5 text-blue-400" />
                     </div>
-                  )}
-                </div>
+                    <span>Signing</span>
+                  </CardTitle>
+                  <CardDescription className="text-gray-400 mt-1">
+                    Upload PDF and add signature
+                  </CardDescription>
+                </CardHeader>
 
-                {/* Progress Bar */}
-                {(isUploading || isProcessing) && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-300">
-                        {isUploading ? 'Uploading...' : 'Processing...'}
-                      </span>
-                      <span className="text-blue-400 font-semibold text-xs">{progress}%</span>
-                    </div>
-                    <Progress value={progress} className="h-2 bg-slate-700" />
-                  </div>
-                )}
-
-                {/* Signature Creation */}
-                <div className="space-y-2 border-t border-slate-700/30 pt-4">
-                  <Label className="text-xs sm:text-sm font-semibold text-white">
-                    Create Signature
-                  </Label>
-                  <Button
-                    onClick={() => setShowSignaturePad(!showSignaturePad)}
-                    variant="outline"
-                    className="w-full border-slate-600 bg-slate-700/30 text-white hover:bg-slate-600/50 transition-all text-xs py-2 h-auto"
-                  >
-                    <MousePointer className="h-3 w-3 sm:h-4 sm:w-4 mr-2 shrink-0" />
-                    {showSignaturePad ? 'Hide' : 'Draw Sign'}
-                  </Button>
-
-                  {showSignaturePad && (
-                    <div className="mt-3 space-y-3">
-                      <div className="border-2 border-slate-600 rounded-lg bg-white/95 overflow-hidden shadow-lg">
-                        <canvas
-                          ref={canvasRef}
-                          width={280}
-                          height={120}
-                          onMouseDown={startDrawing}
-                          onMouseMove={draw}
-                          onMouseUp={stopDrawing}
-                          onMouseLeave={stopDrawing}
-                          onTouchStart={startDrawing}
-                          onTouchMove={draw}
-                          onTouchEnd={stopDrawing}
-                          className="w-full h-auto cursor-crosshair touch-none"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={clearSignature}
-                          variant="outline"
-                          className="flex-1 border-slate-600 bg-slate-700/30 text-white hover:bg-slate-600/50 text-xs py-1.5 h-auto"
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Clear
-                        </Button>
-                        <Button
-                          onClick={saveSignature}
-                          className="flex-1 bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-lg hover:shadow-emerald-500/50 text-xs py-1.5 h-auto"
-                        >
-                          <Save className="h-3 w-3 mr-1" />
-                          Save
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {signatureData && !showSignaturePad && (
-                    <div className="mt-3 p-2 bg-linear-to-r from-emerald-500/10 to-teal-500/10 rounded-lg border border-emerald-400/50">
-                      <div className="bg-white/95 rounded p-1.5">
-                        <img loading="lazy" 
-                          src={signatureData} 
-                          alt="Signature" 
-                          className="w-full h-auto border border-slate-300 rounded" 
-                        />
-                      </div>
-                      <p className="text-xs text-emerald-400 mt-1.5 text-center font-medium">
-                        ✓ Ready - Drag to position
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Auto-position Toggle */}
-                <div className="space-y-2 border-t border-slate-700/30 pt-4">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="auto-position" className="text-xs font-semibold text-white">
-                      Auto-position
-                    </Label>
-                    <Switch
-                      id="auto-position"
-                      checked={autoPosition}
-                      onCheckedChange={setAutoPosition}
+                <CardContent className="space-y-6 pt-6">
+                  {/* File Upload */}
+                  <motion.div className="space-y-3" variants={itemVariants}>
+                    <Label className="text-sm font-semibold text-white">Upload PDF</Label>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      accept="application/pdf"
+                      className="hidden"
+                      disabled={isUploading}
                     />
-                  </div>
-                  <p className="text-xs text-gray-400">
-                    Auto-position on last page
-                  </p>
-                </div>
-
-                {/* Sign Document Button */}
-                {selectedFile && signatureData && signaturePosition && (
-                  <Button
-                    onClick={signDocument}
-                    disabled={isProcessing}
-                    className="w-full bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-blue-500/50 transition-all mt-4 py-2 h-auto text-xs"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <RefreshCw className="h-3 w-3 mr-2 animate-spin shrink-0" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <Check className="h-3 w-3 mr-2 shrink-0" />
-                        Sign Document
-                      </>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-blue-500/50 disabled:to-blue-600/50 text-white px-4 py-3 rounded-xl font-medium shadow-lg hover:shadow-blue-500/50 transition-all flex items-center justify-center gap-2"
+                    >
+                      {isUploading ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          <span>Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4" />
+                          <span>Upload PDF</span>
+                        </>
+                      )}
+                    </motion.button>
+                    
+                    {selectedFile && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-3 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg border border-blue-500/30"
+                      >
+                        <p className="text-xs text-white font-medium truncate">{previewText(selectedFile.name, 20)}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {formatFileSize(selectedFile.size)}
+                          {uploadedFileData && ` • ${uploadedFileData.num_pages || 1} pages`}
+                        </p>
+                      </motion.div>
                     )}
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                  </motion.div>
+
+                  {/* Progress Bar */}
+                  {(isUploading || isProcessing) && (
+                    <motion.div variants={itemVariants} className="space-y-2">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-300">
+                          {isUploading ? 'Uploading...' : 'Processing...'}
+                        </span>
+                        <span className="text-blue-400 font-semibold">{progress}%</span>
+                      </div>
+                      <Progress value={progress} className="h-2 bg-slate-700" />
+                    </motion.div>
+                  )}
+
+                  {/* Signature Creation */}
+                  <motion.div className="space-y-3 border-t border-slate-700/30 pt-4" variants={itemVariants}>
+                    <Label className="text-sm font-semibold text-white">Create Signature</Label>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setShowSignaturePad(!showSignaturePad)}
+                      className="w-full border border-slate-600 bg-slate-700/30 hover:bg-slate-600/50 text-white px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+                    >
+                      <MousePointer className="h-4 w-4" />
+                      {showSignaturePad ? 'Hide Pad' : 'Draw Signature'}
+                    </motion.button>
+
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: showSignaturePad ? 1 : 0, height: showSignaturePad ? 'auto' : 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden space-y-3"
+                    >
+                      {showSignaturePad && (
+                        <>
+                          <div className="border-2 border-slate-600 rounded-lg bg-white/95 overflow-hidden shadow-lg">
+                            <canvas
+                              ref={canvasRef}
+                              width={280}
+                              height={120}
+                              onMouseDown={startDrawing}
+                              onMouseMove={draw}
+                              onMouseUp={stopDrawing}
+                              onMouseLeave={stopDrawing}
+                              onTouchStart={startDrawing}
+                              onTouchMove={draw}
+                              onTouchEnd={stopDrawing}
+                              className="w-full h-auto cursor-crosshair touch-none"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={clearSignature}
+                              className="flex-1 border border-slate-600 bg-slate-700/30 hover:bg-slate-600/50 text-white px-3 py-2 rounded-lg transition-all flex items-center justify-center gap-1 text-sm"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              Clear
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={saveSignature}
+                              className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3 py-2 rounded-lg shadow-lg hover:shadow-emerald-500/50 transition-all flex items-center justify-center gap-1 text-sm font-medium"
+                            >
+                              <Save className="h-3 w-3" />
+                              Save
+                            </motion.button>
+                          </div>
+                        </>
+                      )}
+                    </motion.div>
+
+                    {signatureData && !showSignaturePad && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-lg border border-emerald-400/50 space-y-2"
+                      >
+                        <div className="bg-white/95 rounded p-2">
+                          <img loading="lazy" 
+                            src={signatureData} 
+                            alt="Signature" 
+                            className="w-full h-auto border border-slate-300 rounded" 
+                          />
+                        </div>
+                        <p className="text-xs text-emerald-400 text-center font-medium">
+                          ✓ Ready to position
+                        </p>
+                      </motion.div>
+                    )}
+                  </motion.div>
+
+                  {/* Auto-position Toggle */}
+                  <motion.div className="space-y-2 border-t border-slate-700/30 pt-4" variants={itemVariants}>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-semibold text-white">Auto-position</Label>
+                      <Switch
+                        checked={autoPosition}
+                        onCheckedChange={setAutoPosition}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-400">Auto-place on bottom-right</p>
+                  </motion.div>
+
+                  {/* Sign Document Button */}
+                  {selectedFile && signatureData && signaturePosition && (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={signDocument}
+                      disabled={isProcessing}
+                      className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-blue-500/50 disabled:to-blue-600/50 text-white px-4 py-3 rounded-xl font-medium shadow-lg hover:shadow-blue-500/50 transition-all flex items-center justify-center gap-2 mt-4"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Check className="h-4 w-4" />
+                          Sign Document
+                        </>
+                      )}
+                    </motion.button>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </motion.div>
 
           {/* Main Content Area */}
-          <div className="w-full lg:col-span-2">
+          <motion.div variants={itemVariants} className="w-full lg:col-span-2 space-y-6">
             <Tabs defaultValue={isMobile ? "documents" : "preview"} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-slate-800/50 border border-slate-700/30 p-1 rounded-lg mb-4 sm:mb-6">
-                <TabsTrigger value="preview" className="text-xs sm:text-sm text-white data-[state=active]:bg-linear-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600">
+              <TabsList className="grid w-full grid-cols-2 bg-slate-800/50 border border-slate-700/30 p-1 rounded-xl mb-6">
+                <TabsTrigger value="preview" className="text-sm text-gray-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white rounded-lg transition-all">
                   Preview
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="text-xs sm:text-sm text-white data-[state=active]:bg-linear-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600">
-                  Docs ({signedDocuments.length})
+                <TabsTrigger value="documents" className="text-sm text-gray-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white rounded-lg transition-all">
+                  Documents ({signedDocuments.length})
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="preview" className="space-y-3 sm:space-y-4">
-                <Card className="bg-linear-to-b from-slate-800/80 to-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl">
-                  <CardContent className="pt-3 sm:pt-6 px-3 sm:px-6">
-                    {alert.message && (
-                      <Alert className={`mb-3 border-l-4 text-xs sm:text-sm ${
-                        alert.type === 'success' 
-                          ? 'bg-emerald-500/10 border-emerald-400/50 text-emerald-300'
-                          : 'bg-red-500/10 border-red-400/50 text-red-300'
-                      }`}>
-                        <AlertDescription className="flex items-center gap-2">
-                          {alert.type === 'success' ? 
-                            <Check className="h-4 w-4 shrink-0" /> : 
-                            <X className="h-4 w-4 shrink-0" />
-                          }
-                          <span className="text-xs">{alert.message}</span>
-                        </AlertDescription>
-                      </Alert>
-                    )}
+              <TabsContent value="preview" className="space-y-4">
+                {alert.message && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className={`rounded-xl p-4 flex items-center gap-3 backdrop-blur border ${
+                      alert.type === 'success' 
+                        ? 'bg-emerald-500/10 border-emerald-400/50 text-emerald-300'
+                        : 'bg-red-500/10 border-red-400/50 text-red-300'
+                    }`}
+                  >
+                    {alert.type === 'success' ? 
+                      <Check className="h-5 w-5 flex-shrink-0" /> : 
+                      <X className="h-5 w-5 flex-shrink-0" />
+                    }
+                    <span className="text-sm">{alert.message}</span>
+                  </motion.div>
+                )}
 
+                <Card className="bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 shadow-2xl overflow-hidden">
+                  <CardContent className="pt-6">
                     {!isMobile ? (
                       <>
                         {uploadedFileData && (
-                          <div className="flex flex-col sm:flex-row items-center justify-between mb-3 sm:mb-4 bg-slate-700/30 rounded-lg p-2 sm:p-3 gap-2 border border-slate-700/50 overflow-x-auto">
-                            <div className="flex items-center gap-1 whitespace-nowrap">
-                              <Button
+                          <motion.div 
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex flex-col sm:flex-row items-center justify-between mb-4 bg-slate-700/30 rounded-xl p-3 gap-3 border border-slate-700/50"
+                          >
+                            <div className="flex items-center gap-2">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={goToPrevPage}
                                 disabled={currentPage === 1}
-                                variant="outline"
-                                size="sm"
-                                className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600 h-7 sm:h-9 px-1.5 sm:px-2"
+                                className="p-2 border border-slate-600 bg-slate-700/50 hover:bg-slate-600 disabled:opacity-50 text-white rounded-lg transition-all"
                               >
-                                <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
-                              </Button>
-                              <span className="text-xs sm:text-sm text-white font-medium">
+                                <ChevronLeft className="h-4 w-4" />
+                              </motion.button>
+                              <span className="text-sm text-white font-medium min-w-16 text-center">
                                 {currentPage} / {totalPages}
                               </span>
-                              <Button
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={goToNextPage}
                                 disabled={currentPage === totalPages}
-                                variant="outline"
-                                size="sm"
-                                className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600 h-7 sm:h-9 px-1.5 sm:px-2"
+                                className="p-2 border border-slate-600 bg-slate-700/50 hover:bg-slate-600 disabled:opacity-50 text-white rounded-lg transition-all"
                               >
-                                <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
-                              </Button>
+                                <ChevronRight className="h-4 w-4" />
+                              </motion.button>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <Button
+                            <div className="flex items-center gap-2">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={zoomOut}
-                                variant="outline"
-                                size="sm"
-                                className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600 h-7 sm:h-9 px-1.5 sm:px-2 text-xs"
+                                className="p-2 border border-slate-600 bg-slate-700/50 hover:bg-slate-600 text-white rounded-lg transition-all"
                               >
                                 −
-                              </Button>
-                              <span className="text-xs sm:text-sm text-white font-medium min-w-8 text-center">{Math.round(scale * 100)}%</span>
-                              <Button
+                              </motion.button>
+                              <span className="text-sm text-white font-medium min-w-12 text-center">{Math.round(scale * 100)}%</span>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={zoomIn}
-                                variant="outline"
-                                size="sm"
-                                className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600 h-7 sm:h-9 px-1.5 sm:px-2 text-xs"
+                                className="p-2 border border-slate-600 bg-slate-700/50 hover:bg-slate-600 text-white rounded-lg transition-all"
                               >
                                 +
-                              </Button>
-                              <Button
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={fitToWidth}
-                                variant="outline"
-                                size="sm"
-                                className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600 h-7 sm:h-9 px-1.5 sm:px-2"
+                                className="p-2 border border-slate-600 bg-slate-700/50 hover:bg-slate-600 text-white rounded-lg transition-all"
                               >
-                                <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                              </Button>
+                                <Maximize2 className="h-4 w-4" />
+                              </motion.button>
                             </div>
-                          </div>
+                          </motion.div>
                         )}
-                        <div className="bg-linear-to-b from-slate-700/20 to-slate-800/20 rounded-lg sm:rounded-xl shadow-inner min-h-64 sm:min-h-96 flex items-center justify-center relative overflow-auto border border-slate-700/50">
+
+                        <div className="bg-gradient-to-b from-slate-700/20 to-slate-800/20 rounded-xl shadow-inner min-h-96 flex items-center justify-center relative overflow-auto border border-slate-700/50">
                           {uploadedFileData && pdfUrl ? (
-                            <div className="relative w-full h-full p-2 sm:p-4 overflow-hidden">
+                            <div className="relative w-full h-full p-4 overflow-hidden">
                               <div 
                                 ref={pdfContainerRef}
-                                className="w-full h-full min-h-60 sm:min-h-96 border-2 border-slate-600/50 rounded-lg bg-white/5 flex items-center justify-center overflow-auto relative shadow-inner"
-                                style={{ position: 'relative', overflow: 'auto' }}
+                                className="w-full h-full min-h-96 border-2 border-slate-600/50 rounded-lg bg-white/5 flex items-center justify-center overflow-auto relative shadow-inner"
                               >
                                 <iframe
                                   ref={iframeRef}
@@ -819,9 +872,13 @@ const PDFSigningApp = () => {
                                 />
                                 
                                 {signatureData && signaturePosition && signaturePosition.page === currentPage && (
-                                  <div
+                                  <motion.div
                                     ref={signatureRef}
-                                    className="absolute border-2 border-dashed border-blue-400/60 bg-blue-500/5 cursor-move transition-all duration-150 ease-out hover:border-blue-300 hover:bg-blue-500/15 active:border-blue-400 active:bg-blue-500/25 shadow-lg shrink-0 rounded-lg"
+                                    drag
+                                    dragElastic={0.1}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="absolute border-2 border-dashed border-blue-400/60 bg-blue-500/5 cursor-move hover:border-blue-300 hover:bg-blue-500/15 active:border-blue-400 active:bg-blue-500/25 shadow-lg shrink-0 rounded-lg group"
                                     style={{
                                       left: `${signaturePosition.x}px`,
                                       top: `${signaturePosition.y}px`,
@@ -841,110 +898,142 @@ const PDFSigningApp = () => {
                                         className="w-full h-full object-contain pointer-events-none shrink-0"
                                         draggable="false"
                                       />
-                                      <div className="absolute -top-2 -right-2 bg-linear-to-br from-blue-500 to-blue-600 text-white rounded-full p-0.5 shadow-lg">
-                                        <Move className="h-2.5 w-2.5" />
+                                      <div className="absolute -top-2 -right-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full p-1 shadow-lg group-hover:scale-110 transition-transform">
+                                        <Move className="h-3 w-3" />
                                       </div>
                                     </div>
-                                  </div>
+                                  </motion.div>
                                 )}
                               </div>
-                              <p className="text-xs sm:text-sm text-gray-400 mt-2 sm:mt-3 text-center">
+                              <p className="text-sm text-gray-400 mt-3 text-center">
                                 {signatureData && signaturePosition ? 
-                                  "Drag signature to position" : 
-                                  "Draw a signature to place it"}
+                                  "Drag signature to reposition" : 
+                                  "Draw a signature to place it on the PDF"}
                               </p>
                             </div>
                           ) : (
-                            <div className="text-center text-gray-400 p-4 sm:p-8">
-                              <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-full bg-linear-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center mb-3 sm:mb-4 mx-auto">
-                                <Upload className="h-6 w-6 sm:h-10 sm:w-10 text-blue-400/80" />
+                            <motion.div 
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="text-center text-gray-400 p-8 space-y-4"
+                            >
+                              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center mx-auto">
+                                <Upload className="h-10 w-10 text-blue-400/80" />
                               </div>
-                              <h3 className="text-sm sm:text-lg font-semibold text-white mb-2">
-                                No Document
-                              </h3>
-                              <p className="text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4">
-                                Upload a PDF document to add your signature.
-                              </p>
-                              <Button
+                              <div>
+                                <h3 className="text-lg font-semibold text-white">No Document</h3>
+                                <p className="text-gray-400 text-sm mt-1">
+                                  Upload a PDF to start signing
+                                </p>
+                              </div>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => fileInputRef.current?.click()}
-                                className="bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-blue-500/50 text-xs py-1.5 h-auto"
+                                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg hover:shadow-blue-500/50 transition-all inline-flex items-center gap-2"
                               >
-                                <Upload className="h-3 w-3 mr-2" />
+                                <Upload className="h-4 w-4" />
                                 Upload PDF
-                              </Button>
-                            </div>
+                              </motion.button>
+                            </motion.div>
                           )}
                         </div>
                       </>
                     ) : (
-                      <div className="text-center text-gray-400 p-4 sm:p-8">
-                        <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center mb-3 mx-auto">
-                          <Maximize2 className="h-6 w-6 text-blue-400/80" />
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center text-gray-400 p-8 space-y-4"
+                      >
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center mx-auto">
+                          <Maximize2 className="h-10 w-10 text-blue-400/80" />
                         </div>
-                        <p className="text-sm font-semibold text-white mb-1">Switch to Desktop</p>
-                        <p className="text-xs text-gray-400">
-                          PDF preview is better on larger screens
-                        </p>
-                      </div>
+                        <div>
+                          <p className="text-sm font-semibold text-white">Desktop Only</p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            PDF preview works better on larger screens
+                          </p>
+                        </div>
+                      </motion.div>
                     )}
                   </CardContent>
                 </Card>
               </TabsContent>
 
-              <TabsContent value="documents">
+              <TabsContent value="documents" className="space-y-4">
+                <Card className="bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 shadow-2xl overflow-hidden">
+                  <CardContent className="pt-6">
                     {signedDocuments.length === 0 ? (
-                      <div className="text-center py-8 sm:py-12 text-gray-400">
-                        <FileText className="w-10 h-10 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-3 opacity-40" />
-                        <p className="text-sm sm:text-lg text-white font-medium">No signed documents</p>
-                        <p className="text-xs sm:text-sm text-gray-400 mt-1">Sign your first document</p>
-                      </div>
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center py-12 text-gray-400 space-y-4"
+                      >
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center mx-auto">
+                          <FileText className="w-8 h-8 text-blue-400/80" />
+                        </div>
+                        <div>
+                          <p className="text-lg font-semibold text-white">No Signed Documents</p>
+                          <p className="text-sm text-gray-400 mt-1">Sign your first document to see it here</p>
+                        </div>
+                      </motion.div>
                     ) : (
-                      <div className="space-y-2 sm:space-y-3 max-h-96 sm:max-h-150 overflow-y-auto pr-2">
-                        {signedDocuments.map((doc) => (
-                          <div
+                      <motion.div 
+                        layout
+                        className="space-y-3 max-h-96 overflow-y-auto pr-2"
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                      >
+                        {signedDocuments.map((doc, idx) => (
+                          <motion.div
                             key={doc.id}
-                            className="bg-linear-to-r from-slate-700/30 to-slate-800/30 backdrop-blur rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:from-slate-700/50 hover:to-slate-800/50 transition-all border border-slate-600/30 hover:border-slate-600/60 gap-2 sm:gap-3"
+                            variants={itemVariants}
+                            whileHover={{ scale: 1.02 }}
+                            className="bg-gradient-to-r from-slate-700/30 to-slate-800/30 backdrop-blur rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:from-slate-700/50 hover:to-slate-800/50 transition-all border border-slate-600/30 hover:border-slate-600/60 gap-3"
                           >
-                            <div className="flex items-start sm:items-center gap-2 flex-1 min-w-0 w-full">
-                              <div className="p-2 bg-linear-to-br from-blue-500/20 to-cyan-500/20 rounded shrink-0 mt-0.5 sm:mt-0">
-                                <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
+                            <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0 w-full">
+                              <div className="p-2 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg shrink-0 mt-0.5 sm:mt-0">
+                                <FileText className="w-5 h-5 text-blue-400" />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <p className="font-semibold text-white text-xs sm:text-sm truncate">{previewText(doc.name, 20)}</p>
+                                <p className="font-semibold text-white text-sm truncate">{previewText(doc.name, 20)}</p>
                                 <p className="text-xs text-gray-400 truncate">
                                   {doc.date} • {doc.size}
                                 </p>
                               </div>
                             </div>
                             <div className="flex gap-2 shrink-0 w-full sm:w-auto">
-                              <Button
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => downloadSignedDoc(doc)}
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 sm:flex-none border-emerald-500/50 text-white bg-emerald-600 hover:text-emerald-500 hover:bg-white transition-all text-xs py-1.5 h-auto"
+                                className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/50 text-emerald-300 hover:from-emerald-500/30 hover:to-teal-500/30 transition-all text-xs font-medium flex items-center justify-center gap-2"
                               >
-                                <Download className="h-3 w-3 mr-1 shrink-0" />
+                                <Download className="h-3 w-3" />
                                 <span>Download</span>
-                              </Button>
-                              <Button
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => deleteSignedDoc(doc)}
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 sm:flex-none border-red-500/50 text-white bg-red-600 hover:text-red-500 hover:bg-white transition-all text-xs py-1.5 h-auto"
+                                className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/50 text-red-300 hover:from-red-500/30 hover:to-pink-500/30 transition-all text-xs font-medium flex items-center justify-center gap-2"
                               >
-                                <Trash2 className="h-3 w-3 mr-1 shrink-0" />
+                                <Trash2 className="h-3 w-3" />
                                 <span>Delete</span>
-                              </Button>
+                              </motion.button>
                             </div>
-                          </div>
+                          </motion.div>
                         ))}
-                      </div>
+                      </motion.div>
                     )}
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };

@@ -3,12 +3,26 @@ import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Copy, Trophy, TrendingUp, Users, Zap, Target, Share2, Award, Heart, Sparkles } from "lucide-react";
+import { Copy, Trophy, TrendingUp, Users, Zap, Target, Share2, Award, Heart, Sparkles, Mail, AlertCircle, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import ReferralTutorial from "./referralTutorial";
 
 const card = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
+};
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
 const RANK_REWARDS = [
@@ -62,7 +76,6 @@ const RANK_REWARDS = [
   },
 ];
 
-
 const RANK_DISCOUNTS = [
   { rank: "Top 1–500", discount: "25% lifetime" },
   { rank: "501–1000", discount: "20% lifetime" },
@@ -80,8 +93,8 @@ const CONTRIBUTION_SYSTEM = [
       "Help shape SFCollab's future",
       "Unlock bonus points and benefits",
       "Support fellow founders and builders",
-      "Get cheaper future workspace access"
-    ]
+      "Get cheaper future workspace access",
+    ],
   },
   {
     type: "Ideas & Innovation",
@@ -91,8 +104,8 @@ const CONTRIBUTION_SYSTEM = [
       "Daily idea incubator submissions",
       "Refine ideas with community feedback",
       "Suggest workflow optimizations",
-      "Contribute strategic insights"
-    ]
+      "Contribute strategic insights",
+    ],
   },
   {
     type: "Community Engagement",
@@ -102,8 +115,8 @@ const CONTRIBUTION_SYSTEM = [
       "Participate in product decisions",
       "Influence feature prioritization",
       "Share your perspective",
-      "Build the SFCollab community"
-    ]
+      "Build the SFCollab community",
+    ],
   },
   {
     type: "Startup Registration",
@@ -112,7 +125,7 @@ const CONTRIBUTION_SYSTEM = [
       "Join the vibrant community",
       "Showcase your startup",
       "Participate in SF Idea Incubator",
-    ]
+    ],
   },
   {
     type: "Quality Assurance & Feedback",
@@ -122,8 +135,8 @@ const CONTRIBUTION_SYSTEM = [
       "Test features thoroughly",
       "Identify edge cases",
       "Report security vulnerabilities",
-      "Suggest performance improvements"
-    ]
+      "Suggest performance improvements",
+    ],
   },
   {
     type: "Continuous Contribution",
@@ -133,9 +146,9 @@ const CONTRIBUTION_SYSTEM = [
       "Ongoing feedback and suggestions",
       "Consistent bug reporting",
       "Active community engagement",
-      "Sustained impact over time"
-    ]
-  }
+      "Sustained impact over time",
+    ],
+  },
 ];
 
 const ReferPage = () => {
@@ -152,7 +165,7 @@ const ReferPage = () => {
   );
   const [leaderboard, setLeaderboard] = useState([]);
   const [mvpDeadline] = useState(new Date("2026-01-20"));
-  
+
   // Fetch waitlist status
   useEffect(() => {
     const checkWaitlistStatus = async () => {
@@ -217,23 +230,32 @@ const ReferPage = () => {
   // Not on waitlist - show redirect prompt
   if (!isOnWaitlist) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-neutral-950 via-neutral-900 to-neutral-950 text-white md:px-4">
+      <div className="min-h-screen flex items-center justify-center bg-black text-white md:px-4">
+        {/* Animated Background */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
+          <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" style={{ animationDelay: '2s' }} />
+        </div>
+
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="max-w-md w-full"
+          className="max-w-md w-full relative"
         >
-          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center shadow-xl">
+          <div className="bg-slate-900/90 backdrop-blur border border-white/10 rounded-2xl p-8 text-center shadow-xl">
             <div className="mb-4 flex justify-center">
-              <Trophy className="h-12 w-12 text-yellow-400" />
+              <div className="p-3 bg-yellow-500/20 rounded-full">
+                <Trophy className="h-12 w-12 text-yellow-400" />
+              </div>
             </div>
-            <h2 className="text-2xl font-bold mb-3">Join the Competition</h2>
-            <p className="text-neutral-400 text-sm mb-6">
+            <h2 className="text-2xl font-bold mb-3 text-white">Join the Competition</h2>
+            <p className="text-gray-400 text-sm mb-6">
               You need to join the waitlist first to see rankings and compete for exclusive rewards.
             </p>
-            <Link to="/waitlist" className="w-full">
-              <button className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:shadow-lg transition-all duration-300 hover:scale-105">
+            <Link to="/waitlist" className="w-full block">
+              <button className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300 hover:scale-105">
                 Join Waitlist Now
               </button>
             </Link>
@@ -246,139 +268,185 @@ const ReferPage = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-950 text-white">
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
         <motion.div
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <p className="text-lg">Loading your ranking...</p>
-        </motion.div>
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="rounded-full h-12 w-12 border-3 border-blue-500/20 border-t-blue-500"
+        />
       </div>
     );
   }
-const currentTier = RANK_REWARDS.find(
-  (tier) => userRankInfo.position > 0 && userRankInfo.position <= tier.maxPosition
-);
+
+  const currentTier = RANK_REWARDS.find(
+    (tier) => userRankInfo.position > 0 && userRankInfo.position <= tier.maxPosition
+  );
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-neutral-950 via-neutral-900 to-neutral-950 text-white p-2 md:p-6">
-      <div className="w-full mx-auto">
+    <div className="min-h-screen bg-black text-white px-2 md:px-4 py-8">
+      {/* Animated Background */}
+      <ReferralTutorial />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
+        <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" style={{ animationDelay: '2s' }} />
+      </div>
 
+      <div className="w-full mx-auto max-w-7xl space-y-8 relative">
         {/* HEADER SECTION */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-16"
         >
-          <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="flex items-center justify-center gap-3 mb-4">
             <Zap className="h-6 w-6 text-yellow-400" />
-            <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Ranking & Competition
             </h1>
             <Zap className="h-6 w-6 text-yellow-400" />
           </div>
-          <p className="text-xl text-neutral-300 max-w-2xl mx-auto">
-            {/* MVP launches in{" "} */}
-            {/* <span className="font-bold text-yellow-400">{daysRemaining} days</span> */}
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
             Climb the ranks to earn exclusive rewards!
           </p>
         </motion.div>
 
         {/* STATS CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <motion.div
+          className="stats grid grid-cols-1 md:grid-cols-3 gap-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {/* Rank Card */}
           <motion.div
-            variants={card}
-            initial="hidden"
-            animate="visible"
-            className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-blue-500/30 rounded-2xl p-8 hover:border-blue-500/60 transition-all duration-300"
+            variants={itemVariants}
+            whileHover={{ y: -4, scale: 1.02 }}
+            className="group relative overflow-hidden rounded-2xl"
           >
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-neutral-400 text-sm font-medium">Your Rank</p>
-              <Trophy className="h-5 w-5 text-yellow-400" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative bg-slate-900/90 backdrop-blur border border-white/10 group-hover:border-blue-500/50 rounded-2xl p-6 space-y-3 transition-all">
+              <div className="flex items-center justify-between">
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <Trophy className="w-5 h-5 text-blue-400" />
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wide">
+                  Your Rank
+                </p>
+                <p className="text-5xl font-bold text-blue-400 mt-2">
+                  #{userRankInfo.position}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  out of {leaderboard.length} competitors
+                </p>
+              </div>
             </div>
-            <h2 className="text-5xl md:text-6xl font-bold text-blue-400 mb-2">
-              #{userRankInfo.position}
-            </h2>
-            <p className="text-xs text-neutral-500">
-              out of {leaderboard.length} competitors
-            </p>
           </motion.div>
 
           {/* Points Card */}
           <motion.div
-            variants={card}
-            initial="hidden"
-            animate="visible"
-            transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-purple-500/30 rounded-2xl p-8 hover:border-purple-500/60 transition-all duration-300"
+            variants={itemVariants}
+            whileHover={{ y: -4, scale: 1.02 }}
+            className="group relative overflow-hidden rounded-2xl"
           >
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-neutral-400 text-sm font-medium">Total Points</p>
-              <TrendingUp className="h-5 w-5 text-purple-400" />
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative bg-slate-900/90 backdrop-blur border border-white/10 group-hover:border-purple-500/50 rounded-2xl p-6 space-y-3 transition-all">
+              <div className="flex items-center justify-between">
+                <div className="p-2 bg-purple-500/20 rounded-lg">
+                  <TrendingUp className="w-5 h-5 text-purple-400" />
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wide">
+                  Total Points
+                </p>
+                <p className="text-5xl font-bold text-purple-400 mt-2">
+                  {userRankInfo.points.total}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  {leaderboard[0]?.points?.total
+                    ? `${userRankInfo.points.total} of ${leaderboard[0].points.total} (leader)`
+                    : "accumulating"}
+                </p>
+              </div>
             </div>
-            <h2 className="text-5xl md:text-6xl font-bold text-purple-400 mb-2">
-              {userRankInfo.points.total}
-            </h2>
-            <p className="text-xs text-neutral-500">
-              {leaderboard[0]?.points?.total
-                ? `${userRankInfo.points.total} of ${leaderboard[0].points.total} (leader)`
-                : "accumulating"}
-            </p>
           </motion.div>
 
           {/* Referral Card */}
           <motion.div
-            variants={card}
-            initial="hidden"
-            animate="visible"
-            transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-green-500/30 rounded-2xl p-8 hover:border-green-500/60 transition-all duration-300"
+            variants={itemVariants}
+            whileHover={{ y: -4, scale: 1.02 }}
+            className="group relative overflow-hidden rounded-2xl"
           >
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-neutral-400 text-sm font-medium">Share & Earn</p>
-              <Users className="h-5 w-5 text-green-400" />
-            </div>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(referralLink);
-                toast.success("Referral link copied! 🎉");
-              }}
-              className="w-full px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 rounded-lg text-green-400 text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              <Copy className="h-4 w-4" />
-              Copy Link
-            </button>
-            <div className="mt-4 pt-4 border-t border-neutral-700">
-              <p className="text-xs text-neutral-400 mb-3">Referral Points: {userRankInfo.points.referral}</p>
-              <button
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({
-                      title: "Join SFCollab Waitlist",
-                      text: "Join me on the SFCollab waitlist!",
-                      url: referralLink,
-                    });
-                  } else {
-                    navigator.clipboard.writeText(referralLink);
-                    toast.info("Link copied to clipboard!");
-                  }
-                }}
-                className="w-full px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 rounded-lg text-green-400 text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2"
-              >
-                <Share2 className="h-4 w-4" />
-                Share Referral
-              </button>
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative bg-slate-900/90 backdrop-blur border border-white/10 group-hover:border-green-500/50 rounded-2xl p-6 space-y-3 transition-all">
+              <div className="flex items-center justify-between">
+                <div className="p-2 bg-green-500/20 rounded-lg">
+                  <Users className="w-5 h-5 text-green-400" />
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wide">
+                  Share & Earn
+                </p>
+                <p className="text-3xl font-bold text-green-400 mt-2">
+                  {userRankInfo.points.referral}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">Referral Points</p>
+              </div>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
+
+        {/* REFERRAL BUTTONS */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="share grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              navigator.clipboard.writeText(referralLink);
+              toast.success("Referral link copied! 🎉");
+            }}
+            className="px-6 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30 border border-green-500/50 hover:border-green-500/70 rounded-xl text-green-300 font-semibold transition-all duration-300 flex items-center justify-center gap-2"
+          >
+            <Copy className="h-5 w-5" />
+            Copy Referral Link
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({
+                  title: "Join SFCollab Waitlist",
+                  text: "Join me on the SFCollab waitlist!",
+                  url: referralLink,
+                });
+              } else {
+                navigator.clipboard.writeText(referralLink);
+                toast.info("Link copied to clipboard!");
+              }
+            }}
+            className="px-6 py-3 bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 border border-blue-500/50 hover:border-blue-500/70 rounded-xl text-blue-300 font-semibold transition-all duration-300 flex items-center justify-center gap-2"
+          >
+            <Share2 className="h-5 w-5" />
+            Share Referral
+          </motion.button>
+        </motion.div>
 
         {/* POINTS BREAKDOWN */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
+          className="bg-gradient-to-br from-slate-900/90 to-slate-900/50 border border-white/10 backdrop-blur rounded-2xl p-8"
         >
           <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Target className="h-6 w-6 text-orange-400" />
@@ -403,62 +471,76 @@ const currentTier = RANK_REWARDS.find(
                 value: userRankInfo.points.activity,
                 color: "from-purple-500 to-purple-600",
                 icon: TrendingUp,
-              }
+              },
             ].map(({ label, value, color, icon: Icon }, idx) => (
-              <div key={idx} className="bg-neutral-900 rounded-xl p-4 border border-neutral-700">
-                <div className="flex items-center justify-between mb-2">
-                  <Icon className="h-6 w-6 text-neutral-400" />
-                  <p className="text-neutral-400 text-xs font-medium">{label}</p>
+              <motion.div
+                key={idx}
+                variants={itemVariants}
+                className="bg-slate-900/90 border border-white/10 rounded-xl p-4 hover:border-white/20 transition-all"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <Icon className="h-5 w-5 text-gray-400" />
+                  <p className="text-gray-400 text-xs font-medium">{label}</p>
                 </div>
-                <p className={`text-3xl font-bold bg-linear-to-r ${color} bg-clip-text text-transparent`}>
+                <p className={`text-3xl font-bold bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
                   {value}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </motion.div>
-        {/* LEADERBOARD – TOP 50 */}
+
+        {/* LEADERBOARD */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
-          className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
+          transition={{ delay: 0.4 }}
+          className="ranking bg-gradient-to-br from-slate-900/90 to-slate-900/50 border border-white/10 backdrop-blur rounded-2xl p-8"
         >
-          <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
+          <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
             <Trophy className="h-6 w-6 text-yellow-400" />
             Top 50 Contributors
           </h3>
 
           {currentTier && (
-            <p className="text-sm text-neutral-400 mb-6">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-sm text-gray-400 mb-6"
+            >
               Your current tier:{" "}
               <span className="font-semibold text-blue-400">
                 {currentTier.badge} {currentTier.rank}
               </span>
-            </p>
+            </motion.p>
           )}
 
-          <div className="space-y-3">
-            {leaderboard.slice(0, 50).map((leaderUser) => {
+          <div className="space-y-3 max-h-[600px] overflow-y-auto">
+            {leaderboard.slice(0, 50).map((leaderUser, idx) => {
               const tier = RANK_REWARDS.find(
                 (t) => leaderUser.position <= t.maxPosition
               );
 
               return (
-                <div
+                <motion.div
                   key={leaderUser.id}
-                  className={`flex items-center justify-between p-4 rounded-xl border transition-all ${leaderUser.isYou
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.02 }}
+                  whileHover={{ x: 4 }}
+                  className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
+                    leaderUser.isYou
                       ? "bg-blue-500/20 border-blue-500/50"
-                      : "bg-neutral-900 border-neutral-700 hover:border-neutral-600"
-                    }`}
+                      : "bg-slate-900/50 border-white/10 hover:border-white/20"
+                  }`}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 text-center font-bold text-neutral-300">
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="w-10 text-center font-bold text-gray-300">
                       #{leaderUser.position}
                     </div>
 
-                    <div>
-                      <p className="font-semibold text-white">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-white truncate">
                         {leaderUser.name || leaderUser.email}
                         {leaderUser.isYou && (
                           <span className="ml-2 text-xs bg-blue-500/30 text-blue-300 px-2 py-1 rounded-full">
@@ -477,13 +559,13 @@ const currentTier = RANK_REWARDS.find(
                     </div>
                   </div>
 
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0">
                     <p className="font-bold text-purple-400">
                       {leaderUser.points.total}
                     </p>
-                    <p className="text-xs text-neutral-400">points</p>
+                    <p className="text-xs text-gray-500">pts</p>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -494,14 +576,14 @@ const currentTier = RANK_REWARDS.find(
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
+          className="bg-gradient-to-br from-slate-900/90 to-slate-900/50 border border-white/10 backdrop-blur rounded-2xl p-8"
         >
           <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Zap className="h-6 w-6 text-yellow-400" />
             How to Earn Points
           </h3>
-          <p className="text-neutral-400 text-sm mb-6">Multiple ways to climb the ranks. Choose your path:</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <p className="text-gray-400 text-sm mb-6">Multiple ways to climb the ranks. Choose your path:</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {[
               { action: "Crowdfunding Access", reward: "Early access + bonuses", highlight: true },
               { action: "Submit Ideas", reward: "10–50 points", highlight: false },
@@ -509,26 +591,36 @@ const currentTier = RANK_REWARDS.find(
               { action: "Vote in Polls", reward: "1–10 points per vote", highlight: false },
               { action: "Register Startup", reward: "15 points/day", highlight: false },
               { action: "Idea Incubator", reward: "10 points/day", highlight: false },
-              { action: "Report Bugs and Feedback", reward: "10–50 points", highlight: false },
+              { action: "Report Bugs & Feedback", reward: "10–50 points", highlight: false },
             ].map((item, idx) => (
-              <div
+              <motion.div
                 key={idx}
-                className={`rounded-lg p-4 border transition-all ${item.highlight
+                variants={itemVariants}
+                className={`rounded-lg p-4 border transition-all ${
+                  item.highlight
                     ? "bg-green-500/10 border-green-500/50 md:col-span-2"
-                    : "bg-neutral-900 border-neutral-700"
-                  }`}
+                    : "bg-slate-900/50 border-white/10 hover:border-white/20"
+                }`}
               >
                 <p className="font-semibold text-white text-sm">{item.action}</p>
-                <p className={`text-xs mt-1 ${item.highlight ? "text-green-300 " : "text-neutral-400"}`}>
+                <p
+                  className={`text-xs mt-1 ${
+                    item.highlight ? "text-green-300" : "text-gray-400"
+                  }`}
+                >
                   {item.reward}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
-          <Link to="/contribution" className="w-full mx-auto">
-            <button className="mt-6 px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white font-semibold hover:shadow-lg transition-all duration-300 hover:scale-105">
+          <Link to="/contribution" className="w-full">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white font-semibold hover:shadow-lg hover:shadow-green-500/20 transition-all duration-300"
+            >
               Go to Contribution Page
-            </button>
+            </motion.button>
           </Link>
         </motion.div>
 
@@ -536,26 +628,35 @@ const currentTier = RANK_REWARDS.find(
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
+          transition={{ delay: 0.37 }}
+          className="bg-gradient-to-br from-slate-900/90 to-slate-900/50 border border-white/10 backdrop-blur rounded-2xl p-8"
         >
           <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-blue-400" />
             Contribution Points System
           </h3>
-          <p className="text-neutral-400 text-sm mb-6">Contributions are the most valuable path. They reward builders and serious users.</p>
+          <p className="text-gray-400 text-sm mb-6">
+            Contributions are the most valuable path. They reward builders and serious users.
+          </p>
           <div className="grid md:grid-cols-3 gap-4 mb-6">
             {CONTRIBUTION_SYSTEM.map((contrib, idx) => (
-              <div key={idx} className="w-full bg-neutral-900 rounded-lg p-4 border border-neutral-700">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-white text-sm">{contrib.type}</h4>
-                </div>
-                <ul className="text-xs text-neutral-400 space-y-1">
+              <motion.div
+                key={idx}
+                variants={itemVariants}
+                className="bg-slate-900/90 border border-white/10 rounded-lg p-4 hover:border-white/20 transition-all"
+              >
+                <h4 className="font-semibold text-white text-sm mb-3">
+                  {contrib.type}
+                </h4>
+                <ul className="text-xs text-gray-400 space-y-1.5">
                   {contrib.examples.map((ex, i) => (
-                    <li key={i}>• {ex}</li>
+                    <li key={i} className="flex gap-2">
+                      <span className="text-blue-400 flex-shrink-0">•</span>
+                      <span>{ex}</span>
+                    </li>
                   ))}
                 </ul>
-              </div>
+              </motion.div>
             ))}
           </div>
           <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
@@ -564,62 +665,81 @@ const currentTier = RANK_REWARDS.find(
             </p>
           </div>
         </motion.div>
-        <h2>
-          <Award className="h-6 w-6 text-yellow-400 inline-block mr-2" />
-          Rank Rewards & Prestige
-        </h2>
-        {RANK_REWARDS.map((tier, idx) => {
-          const isUserTier =
-            currentTier && currentTier.rank === tier.rank;
 
-          return (
-            <div
-              key={idx}
-              className={`rounded-2xl p-6 my-6 border transition-all ${isUserTier
-                  ? "border-blue-500 bg-blue-500/10"
-                  : "border-neutral-700 bg-neutral-900"
-                }`}
-            >
-              <div className="text-2xl mb-2">{tier.badge}</div>
-              <div className="text-sm text-neutral-400 mb-1">{tier.rank}</div>
-              <div className="font-semibold text-white mb-2">{tier.reward}</div>
-
-              {isUserTier && (
-                <div className="text-xs text-blue-300 font-semibold">
-                  ← You are here
-                </div>
-              )}
-            </div>
-          );
-        })}
-
+        {/* RANK REWARDS */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
+          transition={{ delay: 0.42 }}
+          className="space-y-4"
+        >
+          <h2 className="text-3xl font-bold flex items-center gap-3 mb-6">
+            <Award className="h-8 w-8 text-yellow-400" />
+            Rank Rewards & Prestige
+          </h2>
+          {RANK_REWARDS.map((tier, idx) => {
+            const isUserTier = currentTier && currentTier.rank === tier.rank;
+
+            return (
+              <motion.div
+                key={idx}
+                variants={itemVariants}
+                whileHover={{ scale: 1.02 }}
+                className={`rounded-xl p-6 border transition-all ${
+                  isUserTier
+                    ? "border-blue-500/50 bg-blue-500/10"
+                    : "border-white/10 bg-slate-900/50 hover:border-white/20"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-2xl mb-2">{tier.badge}</div>
+                    <div className="text-xs text-gray-400 mb-2 font-medium">
+                      {tier.rank}
+                    </div>
+                    <div className="font-semibold text-white text-sm">
+                      {tier.reward}
+                    </div>
+                  </div>
+                  {isUserTier && (
+                    <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold flex-shrink-0">
+                      Current
+                    </span>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+
+        {/* ANIMATED PROFILES */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="bg-gradient-to-br from-slate-900/90 to-slate-900/50 border border-white/10 backdrop-blur rounded-2xl p-8"
         >
           <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-pink-400" />
             Animated Profiles & Visual Prestige
           </h3>
-          <p className="text-neutral-400 text-sm mb-6">
-            Top-ranked contributors unlock exclusive animated profile enhancements that visually distinguish them across SFCollab. These signal credibility, status, and early impact.
+          <p className="text-gray-400 text-sm mb-6">
+            Top-ranked contributors unlock exclusive animated profile enhancements that visually distinguish them across SFCollab.
           </p>
 
-          <div className="mb-6 bg-neutral-900 rounded-lg p-4 border border-neutral-700">
-            <p className="text-sm text-neutral-300 mb-4 font-semibold">Where Animations Appear:</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="mb-6 bg-slate-900/90 rounded-lg p-4 border border-white/10">
+            <p className="text-sm text-gray-300 mb-3 font-semibold">Where Animations Appear:</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {["Leaderboards", "Profiles", "Comments & Discussions", "Startup Pages", "Community Interactions"].map((location, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-sm text-neutral-400">
-                  <span className="h-1.5 w-1.5 bg-pink-400 rounded-full"></span>
+                <div key={idx} className="flex items-center gap-2 text-sm text-gray-400">
+                  <span className="h-1.5 w-1.5 bg-pink-400 rounded-full" />
                   {location}
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
               {
                 title: "Profile Backgrounds",
@@ -642,16 +762,19 @@ const currentTier = RANK_REWARDS.find(
                 icon: "🏆",
               },
             ].map((item, idx) => (
-              <div key={idx} className="bg-neutral-900 rounded-lg p-4 border border-neutral-700">
+              <motion.div
+                key={idx}
+                variants={itemVariants}
+                className="bg-slate-900/90 border border-white/10 rounded-lg p-4 hover:border-white/20 transition-all"
+              >
                 <p className="text-2xl mb-2">{item.icon}</p>
                 <p className="font-semibold text-white text-sm mb-2">{item.title}</p>
-                <p className="text-xs text-neutral-400">{item.desc}</p>
-              </div>
+                <p className="text-xs text-gray-400">{item.desc}</p>
+              </motion.div>
             ))}
           </div>
 
-
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+          <div className="mt-6 bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
             <p className="font-semibold text-blue-300 text-sm mb-3">💎 Cosmetic-Only Customization (Future)</p>
             <p className="text-xs text-blue-200 mb-3">Some non-prestige animated cosmetics may be available separately:</p>
             <ul className="text-xs text-blue-200 space-y-1 mb-3 ml-3">
@@ -659,10 +782,14 @@ const currentTier = RANK_REWARDS.find(
               <li>✓ Themed animated borders</li>
               <li>✓ Supporter-exclusive visual styles</li>
             </ul>
-            <div className="bg-neutral-900 rounded p-2 border border-blue-500/20">
-              <p className="text-xs text-blue-300"><strong>Rules:</strong></p>
-              <p className="text-xs text-blue-200">❌ No ranking advantage  |  ❌ No leaderboard impact  |  ❌ No prestige titles</p>
-              <p className="text-xs text-blue-300 mt-1"><strong>Prestige is earned. Style can be customized.</strong></p>
+            <div className="bg-slate-900 rounded p-3 border border-blue-500/20">
+              <p className="text-xs text-blue-300 font-semibold mb-1">Rules:</p>
+              <p className="text-xs text-blue-200">
+                ❌ No ranking advantage  |  ❌ No leaderboard impact  |  ❌ No prestige titles
+              </p>
+              <p className="text-xs text-blue-300 mt-2">
+                <strong>Prestige is earned. Style can be customized.</strong>
+              </p>
             </div>
           </div>
         </motion.div>
@@ -671,114 +798,64 @@ const currentTier = RANK_REWARDS.find(
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.55 }}
-          className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
+          transition={{ delay: 0.5 }}
+          className="bg-gradient-to-br from-slate-900/90 to-slate-900/50 border border-white/10 backdrop-blur rounded-2xl p-8"
         >
           <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <TrendingUp className="h-6 w-6 text-purple-400" />
             Lifetime Discount Tiers
           </h3>
-          <p className="text-neutral-400 text-sm mb-6">Beyond free access, all ranked users receive permanent discounts on SF-developed features.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+          <p className="text-gray-400 text-sm mb-6">
+            Beyond free access, all ranked users receive permanent discounts on SF-developed features.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-6">
             {RANK_DISCOUNTS.map((tier, idx) => (
-              <div key={idx} className="bg-neutral-900 rounded-lg p-4 border border-neutral-700 text-center">
-                <p className="text-xs text-neutral-400 mb-2">{tier.rank}</p>
-                <p className="text-lg font-bold text-purple-400">{tier.discount}</p>
-                <p className="text-xs text-neutral-500 mt-2">Lifetime</p>
-              </div>
+              <motion.div
+                key={idx}
+                variants={itemVariants}
+                whileHover={{ y: -2 }}
+                className="bg-slate-900/90 border border-white/10 rounded-lg p-4 text-center hover:border-white/20 transition-all"
+              >
+                <p className="text-xs text-gray-400 mb-2">{tier.rank}</p>
+                <p className="text-2xl font-bold text-purple-400">{tier.discount}</p>
+                <p className="text-xs text-gray-500 mt-2">Lifetime</p>
+              </motion.div>
             ))}
           </div>
-          <div className="mt-6 bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+          <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
             <p className="text-sm text-purple-300">
               <strong>Note:</strong> Discounts apply only to SF-developed features. API overages and third-party tools follow their own limits.
             </p>
           </div>
         </motion.div>
-        {/* LIFETIME DISCOUNT CLARIFICATION */}
+
+        {/* SNAPSHOT & LOCKING */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.57 }}
-          className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
-        >
-          <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Award className="h-6 w-6 text-purple-400" />
-            Lifetime Discount Tiers - What's Included
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-              <p className="text-sm font-semibold text-green-300 mb-3">✓ Included in Discounts</p>
-              <ul className="text-sm text-green-200 space-y-2">
-                <li>• All SF-developed features</li>
-                <li>• Core platform functionality</li>
-                <li>• SF premium tools & integrations</li>
-                <li>• Future SF product releases</li>
-              </ul>
-            </div>
-            <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">
-              <p className="text-sm font-semibold text-orange-300 mb-3">✗ Excluded from Discounts</p>
-              <ul className="text-sm text-orange-200 space-y-2">
-                <li>• Third-party tool subscriptions</li>
-                <li>• API overages & usage limits</li>
-                <li>• Non-SF partnerships</li>
-                <li>• External service fees</li>
-              </ul>
-            </div>
-          </div>
-          <div className="bg-neutral-900 rounded-lg p-4 border border-neutral-700">
-            <p className="text-sm text-neutral-300">
-              <strong>Remember:</strong> Your lifetime discount applies exclusively to features built and maintained by SForger. External services and third-party integrations follow their own pricing and discount policies.
-            </p>
-          </div>
-        </motion.div>
-        {/* WAITLIST SCARCITY EXPLANATION */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.75 }}
-          className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
-        >
-          <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Zap className="h-6 w-6 text-yellow-400" />
-            Waitlist Access
-          </h3>
-          <div className="space-y-4">
-            <div className="bg-neutral-900 rounded-lg p-4 border border-neutral-700">
-              <p className="font-semibold text-white mb-3">How Remaining Waitlist Users Get Access</p>
-              <ul className="text-sm text-neutral-300 space-y-2 list-disc list-inside">
-                <li>After V1 launch, remaining users are added in stages</li>
-                <li>Rollout is gradual based on infrastructure capacity</li>
-                <li>Without participation or investment, you may wait months for access</li>
-              </ul>
-            </div>
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-              <p className="text-sm text-yellow-300 mb-3">
-                <strong>Speed Up Your Access</strong>
-              </p>
-              <p className="text-sm text-yellow-200">
-                Participate in rankings, contribute to the community, or consider investing in SForger's crowdfunding round to secure earlier priority access.
-              </p>
-            </div>
-          </div>
-        </motion.div>
-        {/* SNAPSHOT & LOCKING RULES */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
+          transition={{ delay: 0.52 }}
+          className="bg-gradient-to-br from-slate-900/90 to-slate-900/50 border border-white/10 backdrop-blur rounded-2xl p-8"
         >
           <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Heart className="h-6 w-6 text-red-400" />
             Snapshot & Rewards Locking
           </h3>
           <div className="space-y-4">
-            <div className="bg-neutral-900 rounded-lg p-4 border border-neutral-700">
-              <p className="font-semibold text-white mb-2">How It Works</p>
-              <ol className="text-sm text-neutral-300 space-y-2 list-decimal list-inside">
-                <li>Snapshot dates are announced in advance</li>
-                <li>Your rank at snapshot time determines your rewards</li>
-                <li>Rewards are locked and cannot be changed retroactively</li>
+            <div className="bg-slate-900/90 border border-white/10 rounded-lg p-4">
+              <p className="font-semibold text-white mb-3">How It Works</p>
+              <ol className="text-sm text-gray-300 space-y-2">
+                <li className="flex gap-3">
+                  <span className="text-blue-400 font-bold flex-shrink-0">1.</span>
+                  <span>Snapshot dates are announced in advance</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-blue-400 font-bold flex-shrink-0">2.</span>
+                  <span>Your rank at snapshot time determines your rewards</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-blue-400 font-bold flex-shrink-0">3.</span>
+                  <span>Rewards are locked and cannot be changed retroactively</span>
+                </li>
               </ol>
             </div>
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
@@ -789,75 +866,12 @@ const currentTier = RANK_REWARDS.find(
           </div>
         </motion.div>
 
-        {/* HOW IT WORKS */}
-        <motion.section
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="mb-12"
-        >
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
-              How the Ranking System Works
-            </h2>
-            <p className="text-neutral-300 max-w-2xl mx-auto text-lg">
-              Your rank is earned through contribution, consistency, and impact — not just referrals. Multiple paths exist for builders, introverts, and community members.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                icon: Target,
-                title: "Rank Score",
-                desc: "Transparent scoring combining referrals, contributions, engagement & commitment.",
-                color: "border-blue-500/30",
-              },
-              {
-                icon: Zap,
-                title: "Contributions Win",
-                desc: "Feedback, testing, ideas & improvements earn the highest value points. No gatekeeping.",
-                color: "border-purple-500/30",
-              },
-              {
-                icon: Users,
-                title: "Referrals Optional",
-                desc: "+5 points each. They accelerate progress but don't guarantee rewards. Verify only. For every 5 successful referrals, a bonus of 25 points is awarded.",
-                color: "border-green-500/30",
-              },
-              {
-                icon: TrendingUp,
-                title: "Snapshots Lock Rewards",
-                desc: "At MVP & V1, rankings freeze. Rewards assigned based on your rank then. Fair for all.",
-                color: "border-yellow-500/30",
-              },
-            ].map(({ icon: Icon, title, desc, color }, idx) => (
-              <motion.div
-                key={idx}
-                whileHover={{ y: -6 }}
-                className={`bg-neutral-900 border ${color} rounded-xl p-6 hover:shadow-lg transition-all duration-300`}
-              >
-                <Icon className="h-8 w-8 mb-3 text-neutral-400" />
-                <h4 className="text-lg font-bold mb-2">{title}</h4>
-                <p className="text-sm text-neutral-400">{desc}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="mt-12 bg-linear-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-6 text-center">
-            <p className="text-neutral-300 text-lg">
-              ⭐ <strong>Multiple paths to the top.</strong> You don't need referrals to succeed — consistent contribution, engagement, and impact always win.
-            </p>
-          </div>
-        </motion.section>
-
         {/* CORE PRINCIPLES */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.65 }}
-          className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
+          transition={{ delay: 0.54 }}
+          className="bg-gradient-to-br from-slate-900/90 to-slate-900/50 border border-white/10 backdrop-blur rounded-2xl p-8"
         >
           <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Heart className="h-6 w-6 text-red-400" />
@@ -870,72 +884,21 @@ const currentTier = RANK_REWARDS.find(
               "Early users are co-builders, not customers",
               "Rank snapshots lock rewards fairly",
               "No fake urgency or empty promises",
-              "Quality over speed — measure twice, launch once"
+              "Quality over speed — measure twice, launch once",
             ].map((principle, idx) => (
               <motion.div
                 key={idx}
-                variants={card}
-                className="flex items-start gap-3 bg-neutral-900 rounded-lg p-4 border border-neutral-700"
+                variants={itemVariants}
+                className="flex items-start gap-3 bg-slate-900/90 border border-white/10 rounded-lg p-4 hover:border-white/20 transition-all"
               >
-                <span className="text-green-400 font-bold text-lg mt-0">✓</span>
-                <span className="text-white/80">{principle}</span>
+                <span className="text-green-400 font-bold text-lg mt-0 flex-shrink-0">
+                  ✓
+                </span>
+                <span className="text-gray-300">{principle}</span>
               </motion.div>
             ))}
           </div>
         </motion.div>
-
-        {/* RELEASE TIMELINE */}
-        {/* <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
-        >
-          <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Users className="h-6 w-6 text-blue-400" />
-            Release Timeline
-          </h3>
-          <p className="text-neutral-400 text-sm mb-6">Quality over speed. Your early actions determine your access.</p>
-
-          <div className="space-y-4">
-            <motion.div
-              variants={card}
-              className="flex gap-4 items-start bg-neutral-900 rounded-lg p-4 border border-blue-500/30"
-            >
-              <div className="text-2xl font-bold text-blue-400 w-12 text-center">1.</div>
-              <div>
-                <p className="font-semibold text-blue-300 text-lg">MVP (Jan/Feb)
-                </p>
-                <p className="text-sm text-neutral-300">1,000 ranked users + manually selected contributors</p>
-                <p className="text-xs text-neutral-400 mt-1">Get: "Founding Member" badge, direct feedback channel, feature voting rights</p>
-              </div>
-            </motion.div>
-
-            <motion.div
-              variants={card}
-              className="flex gap-4 items-start bg-neutral-900 rounded-lg p-4 border border-purple-500/30"
-            >
-              <div className="text-2xl font-bold text-purple-400 w-12 text-center">2.</div>
-              <div>
-                <p className="font-semibold text-purple-300 text-lg">V1 (Feb/Mar)</p>
-                <p className="text-sm text-neutral-300">2,500-10,000 users (MVP users + top referrers + active contributors + remaining waitlist)</p>
-                <p className="text-xs text-neutral-400 mt-1">Get: Extended free access, permanent "Early 2.5k" or "Early 10k" badge</p>
-              </div>
-            </motion.div>
-
-            {/* <motion.div
-              variants={card}
-              className="flex gap-4 items-start bg-neutral-900 rounded-lg p-4 border border-pink-500/30"
-            >
-              <div className="text-2xl font-bold text-pink-400 w-12 text-center">3.</div>
-              <div>
-                <p className="font-semibold text-pink-300 text-lg">Permanent Status Labels</p>
-                <p className="text-sm text-neutral-300">Founding 1K & Early 2.5k badges persist across all SF products</p>
-                <p className="text-xs text-neutral-400 mt-1">Badge visibility, lifetime priority, future access consideration</p>
-              </div>
-            </motion.div> 
-          </div>
-        </motion.div> */}
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ConnectionButton } from '@/components/connection/ConnectionButton';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const UserCard = ({ user, onOpen }) => {
   const fullName = user.fullName || 

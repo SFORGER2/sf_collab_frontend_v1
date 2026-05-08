@@ -15,7 +15,6 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
     () => getCurrentContext(location.pathname),
     [location.pathname]
   );
-  const CHAT_CONTEXT_ID = 4;
 
   // Auto-expand active context
   useEffect(() => {
@@ -32,8 +31,7 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
 
   const hasSubItems = (link) => {
     return Array.isArray(link.subItems) && 
-           link.subItems.length > 0 && 
-           link.id !== CHAT_CONTEXT_ID;
+           link.subItems.length > 0
   };
 
   const shouldShowSubItems = (link) => {
@@ -45,27 +43,17 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
   return (
     <>
       {/* Desktop Sidebar - BELOW navbar (top-16), lower z-index (30) */}
-      <div
-        className="hidden lg:flex fixed left-0 top-16 h-[calc(100vh-64px)] w-15 text-white"
-        style={{ zIndex: 30 }}
-      >
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
-            zIndex: -1,
-          }}
-        />
+      
         <DesktopSidebarContent
           links={links}
           currentContextId={currentContextId}
+          expandedItems={expandedItems}
           toggleExpand={toggleExpand}
           hasSubItems={hasSubItems}
           shouldShowSubItems={shouldShowSubItems}
           isAdmin={isAdmin}
         />
-      </div>
+
 
       {/* Mobile Sidebar */}
       <div
@@ -94,13 +82,14 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
             </button>
           </div>
 
-          <div className="h-[calc(100vh-65px)] overflow-y-auto">
+          <div className="sidebar h-[calc(100vh-65px)] overflow-y-auto">
             <MobileSidebarContent
               onLinkClick={handleMobileLinkClick}
               links={links}
               currentContextId={currentContextId}
-              isAdmin={isAdmin}
+              expandedItems={expandedItems}
               toggleExpand={toggleExpand}
+              isAdmin={isAdmin}
               hasSubItems={hasSubItems}
               shouldShowSubItems={shouldShowSubItems}  
               callback={() => setIsOpen(false)}

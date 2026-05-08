@@ -1,20 +1,20 @@
 import { motion } from "framer-motion";
 import { Loader2, Sparkles } from "lucide-react";
 import InfluencerApplicationForm from "./InfluencerApplicationForm";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { applicationAPI } from "@/utils/APIs/applicationAPI";
 import { useSelector } from "react-redux";
 
 export default function InfluencerApplication() {
   const [allApplications, setAllApplications] = useState([]);
-  const { access_token, user } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
   useEffect(() => {
     async function fetchApplications() {
-      const response = await applicationAPI.getAll(access_token, { page: 1, per_page: 1000 });
+      const response = await applicationAPI.getAll({ page: 1, per_page: 1000 });
       setAllApplications(response.data.applications || []);
     }
     fetchApplications();
-  }, [access_token]);
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden py-12 px-4 sm:px-6 lg:px-8">

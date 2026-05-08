@@ -188,7 +188,7 @@ const RightSidebarContent = ({
                     key={idx} 
                     className="aspect-square rounded-lg overflow-hidden bg-gray-900 hover:opacity-80 transition-all duration-200 cursor-pointer group relative"
                   >
-                    <img loading="lazy" 
+                    <img 
                       src={imageUrl} 
                       alt={file.file_name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"

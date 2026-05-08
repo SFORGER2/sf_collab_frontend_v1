@@ -14,7 +14,7 @@ import InputArea from './InputArea';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { aiAPI } from '@/utils/APIs/aiAPI';
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const QwenChat = () => {
   const [messages, setMessages] = useState([
@@ -237,7 +237,7 @@ const QwenChat = () => {
               <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
             </div>
             
-            <div className="relative z-10 flex flex-col items-center gap-4 mb-6">
+            <div className="relative z-10 flex flex-col items-center gap-4 mb-6 mt-10">
               <div className="p-4 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl border border-blue-400/30 backdrop-blur-sm">
                 <Brain className="h-10 w-10 text-blue-400" />
               </div>

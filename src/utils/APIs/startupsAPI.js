@@ -25,10 +25,23 @@ export const startupsAPI = {
     })
     return response.data
   },
-
+  getTopStartups: async (params = {}) => {
+    const response = await api.get('/startups/top', {
+      params: {
+        page: params.page || 1,
+        per_page: params.per_page || 3,
+        ...params,
+      },
+    })
+    return response.data
+  },
   // Get single startup
-  getById: async (startupId) => {
-    const response = await api.get(`/startups/${startupId}`)
+  getById: async (startupId, userId = null) => {
+    const response = await api.get(`/startups/${startupId}`, {
+      params: {
+        user_id: userId,
+      },
+    })
     return response.data
   },
 
@@ -43,12 +56,8 @@ export const startupsAPI = {
   },
 
   // Update startup
-  update: async (startupId, data, accessToken) => {
-    const response = await api.put(`/startups/${startupId}`, data, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    })
+  update: async (startupId, data) => {
+    const response = await api.put(`/startups/${startupId}`, data)
     return response.data
   },
 
@@ -68,15 +77,10 @@ export const startupsAPI = {
   },
 
   // Add member to startup
-  addMember: async (startupId, memberData, accessToken) => {
+  addMember: async (startupId, memberData) => {
     const response = await api.post(
       `/startups/${startupId}/members`,
-      memberData,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      }
+      memberData
     )
     return response.data
   },
@@ -88,6 +92,14 @@ export const startupsAPI = {
     )
     return response.data
   },
+
+
+
+
+
+
+
+
 
   // Get startup documents
   getDocuments: async (startupId) => {
@@ -204,8 +216,56 @@ export const startupsAPI = {
     const response = await api.post(
       `/startups/${startupId}/join-requests/${requestId}/reject`
     )
-    return response.data.data
+    return response.data
   },
+
+// Startup Invitations (NEW)
+
+
+inviteMember: async (startupId, payload) => {
+  const response = await api.post(
+    `/startups/${startupId}/invitations`,
+    payload
+  )
+  return response.data
+},
+
+getMyInvitation: async (startupId) => {
+  // Fetches only the current user's own pending invitation — no manager role needed
+  const response = await api.get(
+    `/startups/${startupId}/invitations/mine`
+  )
+  return response.data
+},
+
+getInvitations: async (startupId, params = {}) => {
+  const response = await api.get(
+    `/startups/${startupId}/invitations`,
+    {
+      params: {
+        status: params.status || 'pending',
+        ...params,
+      },
+    }
+  )
+  return response.data
+},
+
+acceptInvitation: async (startupId, invitationId) => {
+  const response = await api.post(
+    `/startups/${startupId}/invitations/${invitationId}/accept`
+  )
+  return response.data
+},
+
+declineInvitation: async (startupId, invitationId) => {
+  // Backend route is /reject, not /decline
+  const response = await api.post(
+    `/startups/${startupId}/invitations/${invitationId}/reject`
+  )
+  return response.data
+},
+
 
   // Cancel own join request
   cancelJoinRequest: async (requestId) => {
@@ -264,20 +324,25 @@ export const startupsAPI = {
   demoteMemberAdmin: async (startupId, memberId) => {
     const response = await api.post(`/startups/${startupId}/members/${memberId}/demote`, {})
     return response.data
+  },
+  changeMemberRole: async (startupId, memberId, newRole) => {
+    const response = await api.post(`/startups/${startupId}/members/${memberId}/change-role`, { role: newRole })
+    return response.data
+  },
+  getIdeaLaunchData: async (ideaId) => {
+    const response = await api.get(`/startups/${ideaId}/launch-data`)
+    return response.data
   }
 }
 // Project Goals API
 export const projectGoalsAPI = {
   // Get all project goals with filters
-  getAll: async (params = {}, accessToken) => {
+  getAll: async (params = {}) => {
     const response = await api.get('/project-goals', {
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
         ...params,
-      },
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
       },
     })
     return response.data
