@@ -96,7 +96,8 @@ export default function PayoutPage() {
         api.get("/erp/payouts/history"),
       ]);
       setCurrent(curRes.data);
-      setHistory(histRes.data || []);
+      const rawHistory = histRes.data;
+      setHistory(Array.isArray(rawHistory) ? rawHistory : rawHistory?.history || rawHistory?.data || []);
     } catch {
       // Fallback to mock data while API is being built
       setCurrent(MOCK_CURRENT);
@@ -108,7 +109,9 @@ export default function PayoutPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const totalEarned = history
+  const safeHistory = Array.isArray(history) ? history : [];
+
+  const totalEarned = safeHistory
     .filter((h) => h.status === "paid")
     .reduce((sum, h) => sum + (h.amount || 0), 0);
 
@@ -151,7 +154,7 @@ export default function PayoutPage() {
               <SummaryChip
                 icon={TrendingUp}
                 label="Payouts Received"
-                value={history.filter((h) => h.status === "paid").length}
+                value={safeHistory.filter((h) => h.status === "paid").length}
                 accent="#6366f1"
               />
               <SummaryChip
@@ -243,11 +246,11 @@ export default function PayoutPage() {
                 Payout History
               </h2>
 
-              {history.length === 0 ? (
+              {safeHistory.length === 0 ? (
                 <p className="text-zinc-500 text-sm text-center py-8">No payout history yet.</p>
               ) : (
                 <div className="space-y-3">
-                  {history.map((item, i) => {
+                  {safeHistory.map((item, i) => {
                     const m = STATUS_META[item.status] || STATUS_META.pending;
                     const Icon = m.icon;
                     return (

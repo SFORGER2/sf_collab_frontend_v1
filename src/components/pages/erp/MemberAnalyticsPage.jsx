@@ -105,8 +105,9 @@ export default function MemberAnalyticsPage() {
         api.get("/erp/analytics/member/tasks"),
       ]);
       setOverview(ovRes.data);
-      setTrend(trendRes.data || []);
-      setTasks(taskRes.data || []);
+      setTrend(Array.isArray(trendRes.data) ? trendRes.data : trendRes.data?.trend || []);
+      const rawTasks = taskRes.data;
+      setTasks(Array.isArray(rawTasks) ? rawTasks : rawTasks?.tasks || rawTasks?.data || []);
     } catch {
       // Fallback to mock data while API is being built
       setOverview(MOCK_OVERVIEW);
@@ -119,11 +120,13 @@ export default function MemberAnalyticsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const filteredTasks = filter === "all"
-    ? tasks
-    : tasks.filter((t) => t.status === filter);
+  const safeTasks = Array.isArray(tasks) ? tasks : [];
 
-  const totalPoints = tasks
+  const filteredTasks = filter === "all"
+    ? safeTasks
+    : safeTasks.filter((t) => t.status === filter);
+
+  const totalPoints = safeTasks
     .filter((t) => t.status === "completed")
     .reduce((sum, t) => sum + (t.points || 0), 0);
 

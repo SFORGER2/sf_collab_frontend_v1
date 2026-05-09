@@ -1,19 +1,20 @@
 /**
- * PayoutPage.jsx — SFCollab ERP
- * Member payout view: payout history, current payout, status
+ * AdminAnalyticsPage.jsx — SFCollab ERP
+ * Admin-only analytics: task completion rate, warning trends, contributor rankings
  *
- * API wiring (expected routes in payouts.py):
- *   GET /erp/payouts/current        → { amount, status, period_start, period_end, breakdown }
- *   GET /erp/payouts/history        → [{ id, amount, status, paid_at, period_label }]
+ * API wiring (expected routes in analytics.py):
+ *   GET /erp/analytics/admin/overview      → { task_completion_rate, task_completion_change, warning_count, warning_change }
+ *   GET /erp/analytics/admin/warnings      → [{ week_label, count }]
+ *   GET /erp/analytics/admin/contributors  → [{ user_id, name, score, tasks_done, streak, rank }]
  *
- * Route to add in App.jsx:
- *   import PayoutPage from "./components/pages/erp/PayoutPage.jsx";
- *   <Route path="erp/payouts" element={<PayoutPage />} />
+ * Route in App.jsx:
+ *   import AdminAnalyticsPage from "./components/pages/erp/AdminAnalyticsPage.jsx";
+ *   <Route path="erp/admin-analytics" element={<AdminAnalyticsPage />} />
  */
 
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import axios from "axios";
 import {
   requestInterceptor,
@@ -21,16 +22,15 @@ import {
   responseErrorInterceptor,
 } from "../../../utils/APIs/interceptors";
 import {
-  DollarSign,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  ChevronDown,
-  ChevronUp,
+  CheckSquare,
+  AlertTriangle,
+  Trophy,
   TrendingUp,
-  Calendar,
-  Zap,
+  TrendingDown,
+  Minus,
+  Crown,
+  Medal,
+  Award,
 } from "lucide-react";
 
 const api = axios.create({ baseURL: "" });
@@ -38,96 +38,120 @@ api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const fmt = (v) =>
-  v != null
-    ? `$${Number(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-    : "—";
-
-const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
-
-const STATUS_META = {
-  paid:       { label: "Paid",       color: "#22c55e", bg: "rgba(34,197,94,0.12)",   icon: CheckCircle },
-  pending:    { label: "Pending",    color: "#f59e0b", bg: "rgba(245,158,11,0.12)",  icon: Clock },
-  processing: { label: "Processing", color: "#6366f1", bg: "rgba(99,102,241,0.12)",  icon: Zap },
-  failed:     { label: "Failed",     color: "#ef4444", bg: "rgba(239,68,68,0.12)",   icon: XCircle },
-  on_hold:    { label: "On Hold",    color: "#9ca3af", bg: "rgba(156,163,175,0.12)", icon: AlertCircle },
+const pct = (v) => (v != null ? `${Math.round(v)}%` : "—");
+const toArr = (v, ...keys) => {
+  if (Array.isArray(v)) return v;
+  for (const k of keys) if (Array.isArray(v?.[k])) return v[k];
+  return [];
 };
 
-// ── Mock data (remove when API is ready) ─────────────────────────────────────
-const MOCK_CURRENT = {
-  amount: 1240.0,
-  status: "pending",
-  period_start: "2025-05-01",
-  period_end: "2025-05-31",
-  breakdown: [
-    { label: "Base contribution", amount: 800 },
-    { label: "Task completion bonus", amount: 250 },
-    { label: "Streak bonus", amount: 120 },
-    { label: "Referral credit", amount: 70 },
-  ],
-};
-
-const MOCK_HISTORY = [
-  { id: 1, amount: 1100,  status: "paid",       paid_at: "2025-04-30", period_label: "April 2025" },
-  { id: 2, amount: 980,   status: "paid",       paid_at: "2025-03-31", period_label: "March 2025" },
-  { id: 3, amount: 1350,  status: "paid",       paid_at: "2025-02-28", period_label: "February 2025" },
-  { id: 4, amount: 760,   status: "paid",       paid_at: "2025-01-31", period_label: "January 2025" },
-  { id: 5, amount: 890,   status: "failed",     paid_at: null,         period_label: "December 2024" },
-  { id: 6, amount: 1020,  status: "paid",       paid_at: "2024-11-30", period_label: "November 2024" },
+const PERIODS = [
+  { value: "weekly",  label: "This Week" },
+  { value: "monthly", label: "This Month" },
+  { value: "all",     label: "All Time" },
 ];
 
+// ── Mock data ─────────────────────────────────────────────────────────────────
+const MOCK_OVERVIEW = {
+  task_completion_rate: 74,
+  task_completion_change: 6.2,
+  warning_count: 11,
+  warning_change: -3,
+};
+
+const MOCK_WARNINGS = [
+  { week_label: "Mar 10", count: 8  },
+  { week_label: "Mar 17", count: 14 },
+  { week_label: "Mar 24", count: 11 },
+  { week_label: "Mar 31", count: 9  },
+  { week_label: "Apr 7",  count: 16 },
+  { week_label: "Apr 14", count: 13 },
+  { week_label: "Apr 21", count: 10 },
+  { week_label: "Apr 28", count: 11 },
+];
+
+const MOCK_CONTRIBUTORS = [
+  { user_id: 1, name: "Sarah Chen",   score: 98, tasks_done: 42, streak: 21, rank: 1 },
+  { user_id: 2, name: "Alex Morales", score: 91, tasks_done: 38, streak: 14, rank: 2 },
+  { user_id: 3, name: "Priya Sharma", score: 87, tasks_done: 35, streak: 10, rank: 3 },
+  { user_id: 4, name: "James Okoro",  score: 82, tasks_done: 31, streak: 7,  rank: 4 },
+  { user_id: 5, name: "Mia Tanaka",   score: 78, tasks_done: 28, streak: 5,  rank: 5 },
+  { user_id: 6, name: "Carlos Vega",  score: 71, tasks_done: 24, streak: 3,  rank: 6 },
+];
+
+const RANK_ICONS  = [Crown, Medal, Award];
+const RANK_COLORS = ["#f59e0b", "#9ca3af", "#b45309"];
+
 // ═════════════════════════════════════════════════════════════════════════════
-export default function PayoutPage() {
+export default function AdminAnalyticsPage() {
   const { user } = useSelector((s) => s.auth);
 
-  const [current, setCurrent]   = useState(null);
-  const [history, setHistory]   = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
-  const [expanded, setExpanded] = useState(false);
+  const [period, setPeriod]             = useState("weekly");
+  const [overview, setOverview]         = useState(null);
+  const [warnings, setWarnings]         = useState([]);
+  const [contributors, setContributors] = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [curRes, histRes] = await Promise.all([
-        api.get("/erp/payouts/current"),
-        api.get("/erp/payouts/history"),
+      const params = { period };
+      const [ovRes, warnRes, contribRes] = await Promise.all([
+        api.get("/erp/analytics/admin/overview",     { params }),
+        api.get("/erp/analytics/admin/warnings",     { params }),
+        api.get("/erp/analytics/admin/contributors", { params }),
       ]);
-      setCurrent(curRes.data);
-      setHistory(histRes.data || []);
+      setOverview(ovRes.data);
+      setWarnings(toArr(warnRes.data, "warnings", "data"));
+      setContributors(toArr(contribRes.data, "contributors", "data"));
     } catch {
-      // Fallback to mock data while API is being built
-      setCurrent(MOCK_CURRENT);
-      setHistory(MOCK_HISTORY);
+      setOverview(MOCK_OVERVIEW);
+      setWarnings(MOCK_WARNINGS);
+      setContributors(MOCK_CONTRIBUTORS);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [period]);
 
   useEffect(() => { load(); }, [load]);
 
-  const totalEarned = history
-    .filter((h) => h.status === "paid")
-    .reduce((sum, h) => sum + (h.amount || 0), 0);
-
-  const meta = current ? (STATUS_META[current.status] || STATUS_META.pending) : null;
+  const safeWarnings     = Array.isArray(warnings)     ? warnings     : [];
+  const safeContributors = Array.isArray(contributors) ? contributors : [];
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white py-8 px-4 md:px-8 font-sans overflow-auto">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
 
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-10"
+          className="flex flex-wrap items-start justify-between gap-4 mb-10"
         >
-          <h1 className="text-4xl font-semibold tracking-tight bg-gradient-to-br from-white to-gray-500 bg-clip-text text-transparent">
-            Payouts
-          </h1>
-          <p className="text-zinc-400 mt-1">Your earnings and payout history</p>
+          <div>
+            <h1 className="text-4xl font-semibold tracking-tight bg-gradient-to-br from-white to-gray-500 bg-clip-text text-transparent">
+              Admin Analytics
+            </h1>
+            <p className="text-zinc-400 mt-1">Workspace performance &amp; contributor insights</p>
+          </div>
+
+          <div className="flex gap-2 bg-zinc-900 border border-zinc-800 rounded-2xl p-1">
+            {PERIODS.map((p) => (
+              <button
+                key={p.value}
+                onClick={() => setPeriod(p.value)}
+                className="px-4 py-2 text-sm rounded-xl transition-all font-medium"
+                style={
+                  period === p.value
+                    ? { background: "#1e1b4b", color: "#a5b4fc", border: "1px solid #4338ca" }
+                    : { color: "#6b7280" }
+                }
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
         </motion.div>
 
         {loading ? (
@@ -136,155 +160,63 @@ export default function PayoutPage() {
           <Banner type="error">{error}</Banner>
         ) : (
           <>
-            {/* ── Summary strip ── */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6"
-            >
-              <SummaryChip
-                icon={DollarSign}
-                label="Total Earned"
-                value={fmt(totalEarned)}
-                accent="#22c55e"
-              />
-              <SummaryChip
-                icon={TrendingUp}
-                label="Payouts Received"
-                value={history.filter((h) => h.status === "paid").length}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              <KPICard
+                icon={CheckSquare}
+                label="Task Completion Rate"
+                value={pct(overview?.task_completion_rate)}
+                change={overview?.task_completion_change}
                 accent="#6366f1"
+                description="Tasks completed vs assigned"
               />
-              <SummaryChip
-                icon={Calendar}
-                label="Current Period"
-                value={current ? `${fmtDate(current.period_start)} – ${fmtDate(current.period_end)}` : "—"}
-                accent="#f59e0b"
-                small
+              <KPICard
+                icon={AlertTriangle}
+                label="Active Warnings"
+                value={overview?.warning_count ?? "—"}
+                change={overview?.warning_change}
+                accent="#ef4444"
+                invertChange
+                description="Members flagged this period"
               />
-            </motion.div>
+            </div>
 
-            {/* ── Current Payout Card ── */}
-            {current && (
+            {safeWarnings.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
+                transition={{ delay: 0.15 }}
                 className="bg-[#121215] border border-zinc-800/80 rounded-3xl p-8 mb-6"
               >
-                <div className="flex items-start justify-between flex-wrap gap-4 mb-6">
-                  <div>
-                    <p className="text-xs uppercase tracking-widest text-zinc-500 mb-1">Current Payout</p>
-                    <p className="text-5xl font-semibold tracking-tighter bg-gradient-to-br from-white to-gray-500 bg-clip-text text-transparent">
-                      {fmt(current.amount)}
-                    </p>
-                  </div>
-
-                  <StatusBadge status={current.status} />
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent">
+                    Warning Trends
+                  </h2>
+                  <span className="text-xs text-zinc-500 uppercase tracking-widest">Last 8 Weeks</span>
                 </div>
-
-                {/* Progress bar — visual fill based on status */}
-                <div className="w-full h-1.5 bg-zinc-800 rounded-full mb-6 overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: current.status === "paid" ? "100%" : current.status === "processing" ? "60%" : "30%" }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                    className="h-full rounded-full"
-                    style={{ background: meta?.color }}
-                  />
-                </div>
-
-                {/* Breakdown toggle */}
-                {current.breakdown?.length > 0 && (
-                  <>
-                    <button
-                      onClick={() => setExpanded(!expanded)}
-                      className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors mb-4"
-                    >
-                      {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      {expanded ? "Hide" : "Show"} breakdown
-                    </button>
-
-                    <AnimatePresence>
-                      {expanded && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="space-y-2 border-t border-zinc-800 pt-4">
-                            {current.breakdown.map((b, i) => (
-                              <div key={i} className="flex items-center justify-between py-2">
-                                <span className="text-sm text-zinc-400">{b.label}</span>
-                                <span className="text-sm font-medium text-white">{fmt(b.amount)}</span>
-                              </div>
-                            ))}
-                            <div className="flex items-center justify-between py-2 border-t border-zinc-800 mt-2">
-                              <span className="text-sm font-semibold text-white">Total</span>
-                              <span className="text-sm font-semibold text-white">{fmt(current.amount)}</span>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </>
-                )}
+                <WarningBarChart data={safeWarnings} />
               </motion.div>
             )}
 
-            {/* ── History ── */}
             <motion.div
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.25 }}
               className="bg-[#121215] border border-zinc-800/80 rounded-3xl p-8"
             >
-              <h2 className="text-xl font-semibold bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent mb-6">
-                Payout History
-              </h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent">
+                  Contributor Rankings
+                </h2>
+                <Trophy className="w-5 h-5 text-yellow-500" />
+              </div>
 
-              {history.length === 0 ? (
-                <p className="text-zinc-500 text-sm text-center py-8">No payout history yet.</p>
+              {safeContributors.length === 0 ? (
+                <p className="text-zinc-500 text-sm text-center py-8">No contributor data yet.</p>
               ) : (
                 <div className="space-y-3">
-                  {history.map((item, i) => {
-                    const m = STATUS_META[item.status] || STATUS_META.pending;
-                    const Icon = m.icon;
-                    return (
-                      <motion.div
-                        key={item.id}
-                        initial={{ opacity: 0, x: -12 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.05 * i }}
-                        className="flex items-center justify-between p-5 bg-zinc-900/60 border border-zinc-800 rounded-2xl hover:border-zinc-600 transition-colors"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div
-                            className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
-                            style={{ background: m.bg }}
-                          >
-                            <Icon className="w-5 h-5" style={{ color: m.color }} />
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm text-white">{item.period_label}</p>
-                            <p className="text-xs text-zinc-500 mt-0.5">
-                              {item.paid_at ? `Paid ${fmtDate(item.paid_at)}` : "Not yet paid"}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                          <span className="text-base font-semibold text-white">{fmt(item.amount)}</span>
-                          <span
-                            className="text-xs font-semibold px-3 py-1 rounded-full"
-                            style={{ color: m.color, background: m.bg }}
-                          >
-                            {m.label}
-                          </span>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+                  {safeContributors.map((c, i) => (
+                    <ContributorRow key={c.user_id} contributor={c} index={i} />
+                  ))}
                 </div>
               )}
             </motion.div>
@@ -295,57 +227,130 @@ export default function PayoutPage() {
   );
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
-function SummaryChip({ icon: Icon, label, value, accent, small }) {
+function KPICard({ icon: Icon, label, value, change, accent, description, invertChange }) {
+  const isPositive = invertChange ? change < 0 : change > 0;
+  const isNegative = invertChange ? change > 0 : change < 0;
+  const TrendIcon  = change > 0 ? TrendingUp : change < 0 ? TrendingDown : Minus;
+  const trendColor = isPositive ? "#22c55e" : isNegative ? "#ef4444" : "#6b7280";
+
   return (
-    <div className="bg-[#121215] border border-zinc-800/80 rounded-2xl p-5 flex items-center gap-4">
-      <div className="p-2.5 rounded-xl" style={{ background: `${accent}18` }}>
-        <Icon className="w-5 h-5" style={{ color: accent }} />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-[#121215] border border-zinc-800/80 rounded-3xl p-8"
+      style={{ borderTop: `3px solid ${accent}` }}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="p-2.5 rounded-xl" style={{ background: `${accent}18` }}>
+          <Icon className="w-5 h-5" style={{ color: accent }} />
+        </div>
+        {change != null && (
+          <div className="flex items-center gap-1.5" style={{ color: trendColor }}>
+            <TrendIcon className="w-4 h-4" />
+            <span className="text-sm font-semibold">{Math.abs(change)}%</span>
+          </div>
+        )}
       </div>
-      <div>
-        <p className="text-xs uppercase tracking-widest text-zinc-500">{label}</p>
-        <p className={`font-semibold text-white mt-0.5 ${small ? "text-sm" : "text-lg"}`}>{value}</p>
+      <p className="text-xs uppercase tracking-widest text-zinc-500 mb-2">{label}</p>
+      <p className="text-5xl font-semibold tracking-tighter bg-gradient-to-br from-white to-gray-500 bg-clip-text text-transparent mb-2">
+        {value}
+      </p>
+      <p className="text-xs text-zinc-500">{description}</p>
+    </motion.div>
+  );
+}
+
+function WarningBarChart({ data }) {
+  const maxVal = Math.max(...data.map((d) => d.count), 1);
+  const BAR_H  = 120;
+
+  return (
+    <div className="overflow-x-auto">
+      <div style={{ minWidth: 400 }}>
+        <svg viewBox={`0 0 ${data.length * 60} ${BAR_H + 32}`} style={{ width: "100%", overflow: "visible" }}>
+          {[0, 0.25, 0.5, 0.75, 1].map((f) => {
+            const y = BAR_H * (1 - f);
+            return <line key={f} x1={0} y1={y} x2={data.length * 60} y2={y} stroke="#1f2937" strokeWidth={1} />;
+          })}
+          {data.map((d, i) => {
+            const barH   = (d.count / maxVal) * (BAR_H - 8);
+            const x      = i * 60 + 12;
+            const y      = BAR_H - barH;
+            const isHigh = d.count === maxVal;
+            return (
+              <g key={i}>
+                <rect x={x} y={y} width={36} height={barH} rx={6} fill={isHigh ? "#ef4444" : "#27272a"} />
+                <text x={x + 18} y={y - 6} textAnchor="middle" fontSize={10}
+                  fill={isHigh ? "#fca5a5" : "#6b7280"} fontWeight={isHigh ? "700" : "400"}>
+                  {d.count}
+                </text>
+                <text x={x + 18} y={BAR_H + 18} textAnchor="middle" fontSize={9} fill="#6b7280">
+                  {d.week_label}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
       </div>
     </div>
   );
 }
 
-function StatusBadge({ status }) {
-  const m = STATUS_META[status] || STATUS_META.pending;
-  const Icon = m.icon;
+function ContributorRow({ contributor: c, index }) {
+  const RankIcon  = index < 3 ? RANK_ICONS[index]  : null;
+  const rankColor = index < 3 ? RANK_COLORS[index] : "#6b7280";
+
   return (
-    <div
-      className="flex items-center gap-2 px-4 py-2 rounded-2xl border"
-      style={{ color: m.color, background: m.bg, borderColor: `${m.color}40` }}
+    <motion.div
+      initial={{ opacity: 0, x: -12 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.04 * index }}
+      className="flex items-center gap-4 p-5 bg-zinc-900/60 border border-zinc-800 rounded-2xl hover:border-zinc-600 transition-colors"
     >
-      <Icon className="w-4 h-4" />
-      <span className="text-sm font-semibold">{m.label}</span>
-    </div>
+      <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 rounded-xl text-xs font-bold"
+        style={{ color: rankColor, background: `${rankColor}18` }}>
+        {RankIcon ? <RankIcon className="w-4 h-4" /> : `#${c.rank || index + 1}`}
+      </div>
+      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-zinc-700 to-zinc-600 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+        {c.name?.charAt(0) ?? "?"}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-sm text-white truncate">{c.name}</p>
+        <p className="text-xs text-zinc-500 mt-0.5">{c.tasks_done} tasks · {c.streak}d streak</p>
+      </div>
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="w-24 h-1.5 bg-zinc-800 rounded-full overflow-hidden hidden sm:block">
+          <div className="h-full rounded-full"
+            style={{
+              width: `${c.score}%`,
+              background: index === 0
+                ? "linear-gradient(90deg,#f59e0b,#fbbf24)"
+                : index === 1
+                ? "linear-gradient(90deg,#6b7280,#9ca3af)"
+                : "linear-gradient(90deg,#6366f1,#818cf8)",
+            }}
+          />
+        </div>
+        <span className="text-sm font-semibold text-white w-8 text-right">{c.score}</span>
+      </div>
+    </motion.div>
   );
 }
 
 function Spinner() {
   return (
     <div className="flex items-center justify-center py-16">
-      <div
-        className="w-8 h-8 rounded-full border-2 border-zinc-800"
-        style={{ borderTopColor: "#6366f1", animation: "spin 0.8s linear infinite" }}
-      />
+      <div className="w-8 h-8 rounded-full border-2 border-zinc-800"
+        style={{ borderTopColor: "#6366f1", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
 
 function Banner({ type, children }) {
-  const styles = {
-    error:   { background: "#450a0a", border: "1px solid #991b1b" },
-    success: { background: "#052e16", border: "1px solid #166534" },
-  };
   return (
-    <div
-      className="rounded-2xl p-4 text-sm text-white mb-4"
-      style={styles[type] || styles.error}
-    >
+    <div className="rounded-2xl p-4 text-sm text-white mb-4"
+      style={{ background: "#450a0a", border: "1px solid #991b1b" }}>
       {children}
     </div>
   );
