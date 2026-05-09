@@ -43,7 +43,9 @@ const statusLabel = {
 // ═════════════════════════════════════════════════════════════════════════════
 export function MyAttendancePage() {
   const { user } = useSelector((s) => s.auth);
-  const workspaceId = user?.workspace_id;
+
+  // Use user.id as the workspace scope — backend defaults workspace_id to user_id
+  const workspaceId = user?.id;
 
   const [today, setToday] = useState(null);       // GET /api/attendance/today-status
   const [history, setHistory] = useState([]);     // GET /api/attendance/history
@@ -186,7 +188,9 @@ export function MyAttendancePage() {
 // ═════════════════════════════════════════════════════════════════════════════
 export function WorkspaceAttendancePage() {
   const { user } = useSelector((s) => s.auth);
-  const workspaceId = user?.workspace_id;
+
+  // Use user.id as the workspace scope — backend defaults workspace_id to user_id
+  const workspaceId = user?.id;
 
   const [records, setRecords] = useState([]);
   const [summary, setSummary] = useState(null);

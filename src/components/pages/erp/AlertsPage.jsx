@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
 
-const api = axios.create({ baseURL: "/api" });
+const api = axios.create({ baseURL: "/api/erp-alerts" });
 api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
@@ -52,19 +52,21 @@ const fmtTime = (iso) =>
 // ═════════════════════════════════════════════════════════════════════════════
 export function AlertsPage() {
   const { user } = useSelector((s) => s.auth);
-  const workspaceId = user?.workspace_id;
   const isAdmin = ["admin", "team_lead"].includes(user?.role);
   const navigate = useNavigate();
 
-  const [alerts, setAlerts]       = useState([]);
-  const [digest, setDigest]       = useState(null);
-  const [typeFilter, setTypeFilter] = useState("");
+  // Use user.id as the workspace scope — backend defaults workspace_id to user_id
+  const workspaceId = user?.id;
+
+  const [alerts, setAlerts]             = useState([]);
+  const [digest, setDigest]             = useState(null);
+  const [typeFilter, setTypeFilter]     = useState("");
   const [showResolved, setShowResolved] = useState(false);
-  const [loading, setLoading]     = useState(true);
-  const [resolving, setResolving] = useState(null); // alert id being resolved
-  const [modal, setModal]         = useState(null);  // { alert } — resolve modal
-  const [notice, setNotice]       = useState(null);
-  const [error, setError]         = useState(null);
+  const [loading, setLoading]           = useState(false);
+  const [resolving, setResolving]       = useState(null);
+  const [modal, setModal]               = useState(null);
+  const [notice, setNotice]             = useState(null);
+  const [error, setError]               = useState(null);
 
   const flash = (msg, isError = false) => {
     if (isError) setError(msg); else setNotice(msg);
@@ -80,8 +82,8 @@ export function AlertsPage() {
       if (showResolved) params.resolved = true;
 
       const [alertsRes, digestRes] = await Promise.all([
-        api.get("/alerts", { params }),
-        isAdmin ? api.get("/alerts/digest", { params: { workspace_id: workspaceId } }) : Promise.resolve({ data: null }),
+        api.get("", { params }),
+        isAdmin ? api.get("/digest", { params: { workspace_id: workspaceId } }) : Promise.resolve({ data: null }),
       ]);
       setAlerts(alertsRes.data.alerts || alertsRes.data || []);
       setDigest(digestRes.data);
@@ -97,7 +99,7 @@ export function AlertsPage() {
   const resolveAlert = async (alertId, note = "") => {
     setResolving(alertId);
     try {
-      await api.post(`/alerts/${alertId}/resolve`, {
+      await api.post(`/${alertId}/resolve`, {
         workspace_id: workspaceId,
         resolution_note: note,
       });
