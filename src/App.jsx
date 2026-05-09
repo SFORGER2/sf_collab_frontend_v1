@@ -130,6 +130,7 @@ import FileDetailPage from "./components/pages/drive/fileDetails";
 
 import MeetingsTab from "./components/pages/meet/MeetingsTab.jsx";
 import PostMeetingSummaryPage from "./components/pages/meet/PostMeetingSummaryPage.jsx";
+import MilestonePage from "./components/pages/milestones/MilestonePage.jsx";
 
 
 
@@ -513,8 +514,7 @@ export default function App() {
                   <Route path="erp/payouts" element={<PayoutPage />} />
                   <Route path="erp/admin-analytics" element={<AdminAnalyticsPage />} />
 
-                  {/* SF Drive Route */}
-                  <Route path="/drive/file-details" element={<FileDetailPage />} />
+                  <Route path="milestones" element={<MilestonePage />} />
 
                   {/* SF Drive Route */}
                   <Route path="/drive/file-details" element={<FileDetailPage />} />

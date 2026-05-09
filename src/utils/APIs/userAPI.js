@@ -1,15 +1,9 @@
-import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
 import { userSocialAPI } from './socialAPI'
 
-import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
+import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+const api = axios.create(API_CONFIG)
 
 api.interceptors.request.use(
   requestInterceptor,
@@ -161,14 +155,15 @@ export const usersAPI = {
     });
     return response.data;
   },
-  getTopUsers: async () => {
-    const response = await api.get('/users/top', {
-      params: {
-        limit: 20
+
+  completeProfile: async (profileData, accessToken) => {
+    const response = await api.post('/users/complete-profile', profileData, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
       },
     });
     return response.data;
-  }
+  },
 };
 
 export default api;

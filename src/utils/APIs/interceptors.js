@@ -89,24 +89,10 @@ export const responseErrorInterceptor = (error) => {
 
   return Promise.reject(error);
 };
-
-const logErrorToBackend = (error) => {
-  try {
-    console.log("Logging error to backend:", {
-      errorFromBackend: error.response?.data?.error,
-      errorMessage: error.message,
-      stack: error.stack,
-      page: window.location.pathname,
-      component: error.component || "Unknown Component",
-    });
-    axios.post(`${API_BASE_URL}/log-client-error`, {
-      errorFromBackend: error?.response?.data?.error || error?.error || false,
-      errorMessage: error.message,
-      stack: error.stack,
-      page: window.location.pathname,
-      component: error.component || "Unknown Component",
-    });
-  } catch (logError) {
-    console.error('Failed to log error to backend:', logError);
-  }
+export const API_CONFIG = {
+  baseURL: API_BASE_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 }
