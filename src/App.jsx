@@ -121,6 +121,8 @@ import { ActivityMonitorPage } from "./components/pages/erp/ActivityMonitorPage.
 import ERPDashboard from "./components/pages/erp/erp-dashboard";
 import ERPUpdates from "./components/pages/erp/erp-updates";
 import DocumentsPage from "./components/pages/erp/erp-document-page";
+import TaskBoard from "./components/pages/erp/TaskBoard";
+import AdminSettings from "./components/pages/erp/AdminSettings";
 import FileDetailPage from "./components/pages/drive/fileDetails";
 
 import MilestonePage from "./components/pages/milestones/MilestonePage.jsx";
@@ -501,6 +503,8 @@ export default function App() {
                   <Route path="erp-dashboard" element={<ERPDashboard />} />
                   <Route path="/erp/updates" element={<ERPUpdates />} />
                   <Route path="/erp/documents" element={<DocumentsPage />} />
+                  <Route path="/erp/tasks" element={<TaskBoard />} />
+                  <Route path="/erp/admin-settings" element={<AdminSettings />} />
 
                   <Route path="milestones" element={<MilestonePage />} />
 

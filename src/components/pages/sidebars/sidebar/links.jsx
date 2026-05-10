@@ -11,7 +11,7 @@ import { createBuilderLinks } from "../builderSidebar/BuilderLinks";
 import { createFounderLinks } from "../founderSidebar/FounderLinks";
 import { createInfluencerLinks } from "../influencerSidebar/influencerLinks";
 import { BsPeople } from "react-icons/bs";
-import { aiTools, dashboardLink, ideation, socialSection, toolsSection } from "../sidebarCommons";
+import { aiTools, dashboardLink, erpSection, ideation, socialSection, toolsSection } from "../sidebarCommons";
 
 export const CONTEXT_THEME = {
   1:  { pillBg: "bg-blue-600/20",    pillText: "text-blue-200",   activeBg: "bg-white", activeText: "text-gray-950" },
@@ -38,6 +38,7 @@ export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) 
       ],
     },
     ideation(4),
+    erpSection(5),
     socialSection(6),
     // Learning & Mentors — combined under one section
     {

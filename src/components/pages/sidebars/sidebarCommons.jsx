@@ -76,6 +76,19 @@ export function socialSection(id) {
     }
 }
 
+export function erpSection(id) {
+  return {
+    id,
+    icon: <BriefcaseBusiness size={22} />,
+    href: "/erp/tasks",
+    label: "ERP",
+    subItems: [
+      { id: "erp-tasks", href: "/erp/tasks", label: "Task Board", icon: <ClipboardList size={18} /> },
+      { id: "erp-admin-settings", href: "/erp/admin-settings", label: "Admin Settings", icon: <BsGear size={18} /> },
+    ]
+  }
+}
+
 export function wallet(id) {
   return {
     id,
