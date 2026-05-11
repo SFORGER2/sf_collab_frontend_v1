@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Upload,
   Folder,
@@ -9,10 +9,25 @@ import {
   ArrowLeft,
   X,
   Archive,
+  Trash2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import {
+  requestInterceptor,
+  responseInterceptor,
+  responseErrorInterceptor,
+} from "../../../utils/APIs/interceptors";
+
+const api = axios.create({ baseURL: "" });
+api.interceptors.request.use(requestInterceptor);
+api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 const DocumentsPage = () => {
+  const { user } = useSelector((s) => s.auth);
+  const workspaceId = user?.id;
+
   const [activeRole, setActiveRole] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -21,135 +36,81 @@ const DocumentsPage = () => {
   const [modalItems, setModalItems] = useState([]);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadType, setUploadType] = useState("file");
+  const [uploading, setUploading] = useState(false);
+  const [uploadFolder, setUploadFolder] = useState("general");
+  const [notice, setNotice] = useState(null);
 
-  // hard coded data
-  const [rootFiles, setRootFiles] = useState([
-    {
-      id: 1,
-      type: "folder",
-      name: "Pitch Decks",
-      modified: "2h ago",
-      items: 8,
-      children: [
-        {
-          id: 101,
-          type: "file",
-          name: "Investor_Pitch_v1.pdf",
-          modified: "3d ago",
-          size: "3.1 MB",
-        },
-        {
-          id: 102,
-          type: "file",
-          name: "Investor_Pitch_v2_final.pdf",
-          modified: "1h ago",
-          size: "2.8 MB",
-        },
-        {
-          id: 103,
-          type: "folder",
-          name: "Feedback",
-          modified: "1d ago",
-          items: 4,
-          children: [
-            {
-              id: 301,
-              type: "file",
-              name: "Sarah_Feedback.pdf",
-              modified: "just now",
-              size: "680 KB",
-            },
-            {
-              id: 302,
-              type: "file",
-              name: "Mike_Notes.txt",
-              modified: "2h ago",
-              size: "12 KB",
-            },
-            {
-              id: 303,
-              type: "file",
-              name: "Team_Comments.xlsx",
-              modified: "5h ago",
-              size: "945 KB",
-            },
-          ],
-        },
-        {
-          id: 104,
-          type: "zip",
-          name: "Pitch_Backup.zip",
-          modified: "1w ago",
-          size: "9.4 MB",
-        },
-      ],
-    },
-    {
-      id: 2,
-      type: "folder",
-      name: "Contracts",
-      modified: "Yesterday",
-      items: 12,
-      children: [
-        {
-          id: 201,
-          type: "file",
-          name: "NDA_Sarah.pdf",
-          modified: "2d ago",
-          size: "450 KB",
-        },
-        {
-          id: 202,
-          type: "file",
-          name: "Contract_Mike.docx",
-          modified: "4d ago",
-          size: "1.2 MB",
-        },
-        {
-          id: 203,
-          type: "zip",
-          name: "Legal_Archive.zip",
-          modified: "3w ago",
-          size: "15 MB",
-        },
-      ],
-    },
-    {
-      id: 3,
-      type: "file",
-      name: "Investor_Pitch_v2.pdf",
-      modified: "4h ago",
-      size: "2.4 MB",
-    },
-    {
-      id: 4,
-      type: "file",
-      name: "Q2_Financials.xlsx",
-      modified: "1d ago",
-      size: "1.8 MB",
-    },
-    {
-      id: 5,
-      type: "file",
-      name: "Team_Onboarding_Guide.docx",
-      modified: "3d ago",
-      size: "856 KB",
-    },
-    {
-      id: 6,
-      type: "file",
-      name: "Brand_Guidelines_v3.png",
-      modified: "5d ago",
-      size: "4.2 MB",
-    },
-    {
-      id: 7,
-      type: "zip",
-      name: "Project_Archive.zip",
-      modified: "1w ago",
-      size: "18.4 MB",
-    },
-  ]);
+  // Real data from API — shaped to match original UI expectations
+  const [rootFiles, setRootFiles] = useState([]);
+  const [stats, setStats] = useState({ totalFiles: 0, folders: 0 });
+  const [loading, setLoading] = useState(true);
+
+  const flash = (msg, isError = false) => {
+    setNotice({ msg, isError });
+    setTimeout(() => setNotice(null), 3000);
+  };
+
+  // Load documents from API and reshape into folder/file tree for the grid
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/api/documents/list", {
+        params: { workspace_id: workspaceId },
+      });
+      const raw = res.data?.documents || res.data || [];
+      const docs = Array.isArray(raw) ? raw : [];
+
+      // Group flat list by folder — each folder becomes a card, loose files sit at root
+      const folderMap = {};
+      const looseFiles = [];
+
+      docs.forEach((doc) => {
+        const folder = doc.folder || "general";
+        const fileItem = {
+          id:       doc.id,
+          type:     "file",
+          name:     doc.file_name,
+          modified: doc.created_at
+            ? new Date(doc.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+            : "—",
+          size: doc.file_size
+            ? doc.file_size > 1024 ** 2
+              ? `${(doc.file_size / 1024 ** 2).toFixed(1)} MB`
+              : `${Math.round(doc.file_size / 1024)} KB`
+            : null,
+          _docId: doc.id,
+        };
+
+        if (folder === "general") {
+          looseFiles.push(fileItem);
+        } else {
+          if (!folderMap[folder]) {
+            folderMap[folder] = {
+              id:       `folder-${folder}`,
+              type:     "folder",
+              name:     folder.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+              modified: "—",
+              items:    0,
+              children: [],
+              _folder:  folder,
+            };
+          }
+          folderMap[folder].children.push(fileItem);
+          folderMap[folder].items += 1;
+        }
+      });
+
+      const tree = [...Object.values(folderMap), ...looseFiles];
+      setRootFiles(tree);
+      setStats({ totalFiles: docs.length, folders: Object.keys(folderMap).length });
+    } catch {
+      setRootFiles([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [workspaceId]);
+
+  useEffect(() => { load(); }, [load]);
 
   //  fetches role from local storage
   useEffect(() => {
@@ -265,35 +226,57 @@ const DocumentsPage = () => {
   };
 
   const closePreview = () => setSelectedFile(null);
-  // This is for the download
-  const handleDownload = (file) => {
-    const link = document.createElement("a");
-    link.download = file.name;
-    link.href = "#";
-    link.click();
+  // Real download from backend
+  const handleDownload = async (file) => {
+    if (!file._docId) return;
+    try {
+      const res = await api.get(`/api/documents/${file._docId}/download`, {
+        responseType: "blob",
+      });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      flash("Download failed", true);
+    }
   };
 
-  // Upload
-  const handleRealUpload = () => {
+  // Real upload to backend
+  const handleRealUpload = async () => {
     const input = document.createElement("input");
     input.type = "file";
-    input.multiple = true;
-
+    input.multiple = uploadType !== "folder";
     if (uploadType === "folder") {
       input.setAttribute("webkitdirectory", "true");
       input.setAttribute("directory", "true");
     }
 
-    input.onchange = (e) => {
-      if (e.target.files?.length > 0) {
-        // You can handle files here later (upload logic)
-        console.log(
-          `Selected ${e.target.files.length} ${
-            uploadType === "folder" ? "files from folder" : "files"
-          }`,
-        );
+    input.onchange = async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
 
-        setIsUploadModalOpen(false);
+      setUploading(true);
+      setIsUploadModalOpen(false);
+
+      try {
+        await Promise.all(
+          files.map((file) => {
+            const fd = new FormData();
+            fd.append("file", file);
+            fd.append("workspace_id", String(workspaceId));
+            fd.append("folder", uploadFolder);
+            return api.post("/api/documents/upload", fd);
+          })
+        );
+        flash(`${files.length} file${files.length > 1 ? "s" : ""} uploaded successfully`);
+        load();
+      } catch {
+        flash("Upload failed — please try again", true);
+      } finally {
+        setUploading(false);
       }
     };
 
@@ -385,6 +368,20 @@ const DocumentsPage = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8 font-sans">
+      {/* Notice toast */}
+      {notice && (
+        <div className={`fixed bottom-6 right-6 z-[99999] px-6 py-4 rounded-3xl text-white font-semibold shadow-2xl ${notice.isError ? "bg-red-600" : "bg-violet-600"}`}>
+          {notice.msg}
+        </div>
+      )}
+      {/* Uploading indicator */}
+      {uploading && (
+        <div className="fixed bottom-6 right-6 z-[99999] px-6 py-4 rounded-3xl text-white font-semibold shadow-2xl bg-zinc-800 flex items-center gap-3">
+          <div className="w-4 h-4 rounded-full border-2 border-zinc-600" style={{ borderTopColor: "#7c3aed", animation: "spin 0.8s linear infinite" }} />
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+          Uploading...
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between mb-10">
         <div>
@@ -407,9 +404,9 @@ const DocumentsPage = () => {
                 <Folder className="w-5 h-5" />
                 TOTAL FILES
               </div>
-              <div className="text-5xl font-semibold mt-3">248</div>
+              <div className="text-5xl font-semibold mt-3">{stats.totalFiles}</div>
               <div className="text-emerald-400 text-sm mt-1">
-                ↑ 14 this week
+                {stats.totalFiles} total
               </div>
             </div>
             <div className="w-16 h-16 bg-gradient-to-br from-violet-500/10 to-transparent rounded-2xl flex items-center justify-center">
@@ -429,8 +426,8 @@ const DocumentsPage = () => {
                 <Folder className="w-5 h-5" />
                 FOLDERS
               </div>
-              <div className="text-5xl font-semibold mt-3">19</div>
-              <div className="text-amber-400 text-sm mt-1">4 shared</div>
+              <div className="text-5xl font-semibold mt-3">{stats.folders}</div>
+              <div className="text-amber-400 text-sm mt-1">{stats.folders} folders</div>
             </div>
             <div className="w-16 h-16 bg-gradient-to-br from-amber-500/10 to-transparent rounded-2xl flex items-center justify-center">
               <Folder className="w-9 h-9 text-amber-400" />
@@ -438,7 +435,7 @@ const DocumentsPage = () => {
           </div>
         </motion.div>
 
-        {/* Storage Card */}
+        {/* Storage Card — not tracked server-side yet */}
         <motion.div
           whileHover={{ scale: 1.02 }}
           className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden"
@@ -448,46 +445,20 @@ const DocumentsPage = () => {
               <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium">
                 STORAGE
               </div>
-              <div className="text-5xl font-semibold mt-3">64%</div>
+              <div className="text-5xl font-semibold mt-3">—</div>
               <div className="text-zinc-400 text-sm mt-1">
-                47.3 GB of 75 GB used
+                Not tracked yet
               </div>
             </div>
-            <div className="relative w-20 h-20">
-              <svg
-                width="80"
-                height="80"
-                viewBox="0 0 42 42"
-                className="transform -rotate-90"
-              >
-                <circle
-                  cx="21"
-                  cy="21"
-                  r="15"
-                  fill="transparent"
-                  stroke="#27272a"
-                  strokeWidth="7"
-                />
-                <circle
-                  cx="21"
-                  cy="21"
-                  r="15"
-                  fill="transparent"
-                  stroke="#a78bfa"
-                  strokeWidth="7"
-                  strokeDasharray="94.2 94.2"
-                  strokeDashoffset="33.9"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center text-3xl font-semibold text-white">
-                64
+            <div className="relative w-20 h-20 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full border-4 border-zinc-700 flex items-center justify-center text-zinc-600 text-lg font-semibold">
+                ?
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Collaborating Card */}
+        {/* Collaborating Card — real active users */}
         <motion.div
           whileHover={{ scale: 1.02 }}
           className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden"
@@ -498,21 +469,19 @@ const DocumentsPage = () => {
                 <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse" />
                 COLLABORATING
               </div>
-              <div className="text-5xl font-semibold mt-3">7</div>
+              <div className="text-5xl font-semibold mt-3">
+                {loading ? "—" : stats.totalFiles > 0 ? 1 : 0}
+              </div>
               <div className="text-zinc-400 text-sm mt-1">
-                currently editing
+                {stats.totalFiles > 0 ? "currently editing" : "no active editors"}
               </div>
             </div>
             <div className="flex -space-x-4">
-              <div className="w-9 h-9 bg-violet-400 rounded-2xl flex items-center justify-center text-xs font-bold ring-2 ring-zinc-900">
-                JD
-              </div>
-              <div className="w-9 h-9 bg-emerald-400 rounded-2xl flex items-center justify-center text-xs font-bold ring-2 ring-zinc-900">
-                SM
-              </div>
-              <div className="w-9 h-9 bg-amber-400 rounded-2xl flex items-center justify-center text-xs font-bold ring-2 ring-zinc-900">
-                PR
-              </div>
+              {stats.totalFiles > 0 && (
+                <div className="w-9 h-9 bg-violet-500 rounded-2xl flex items-center justify-center text-xs font-bold ring-2 ring-zinc-900">
+                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
@@ -545,13 +514,23 @@ const DocumentsPage = () => {
           </motion.button>
         </div>
 
-        {renderGrid(filteredRootFiles, false)}
-
-        {filteredRootFiles.length === 0 && (
+        {loading ? (
           <div className="py-20 text-center">
-            <FileText className="w-12 h-12 mx-auto text-zinc-600 mb-4" />
-            <p className="text-zinc-400">No documents match your search</p>
+            <div className="w-8 h-8 rounded-full border-2 border-zinc-800 mx-auto mb-4" style={{ borderTopColor: "#7c3aed", animation: "spin 0.8s linear infinite" }} />
+            <p className="text-zinc-500 text-sm">Loading documents...</p>
           </div>
+        ) : (
+          <>
+            {renderGrid(filteredRootFiles, false)}
+            {filteredRootFiles.length === 0 && (
+              <div className="py-20 text-center">
+                <FileText className="w-12 h-12 mx-auto text-zinc-600 mb-4" />
+                <p className="text-zinc-400">
+                  {rootFiles.length === 0 ? "No documents yet — upload your first file" : "No documents match your search"}
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -607,11 +586,23 @@ const DocumentsPage = () => {
                 <p className="text-lg font-medium">
                   Click below to browse your computer
                 </p>
+                <div className="mt-6 mb-2 text-left px-4">
+                  <label className="text-xs uppercase tracking-widest text-zinc-500 mb-1 block">Save to folder</label>
+                  <select
+                    value={uploadFolder}
+                    onChange={(e) => setUploadFolder(e.target.value)}
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500"
+                  >
+                    {["general","contracts","pitch-decks","financials","legal","hr"].map((f) => (
+                      <option key={f} value={f}>{f.replace(/-/g," ").replace(/\b\w/g,(c)=>c.toUpperCase())}</option>
+                    ))}
+                  </select>
+                </div>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleRealUpload}
-                  className="mt-8 px-10 py-4 bg-white/10 hover:bg-white/20 text-white rounded-3xl text-sm font-medium"
+                  className="mt-6 px-10 py-4 bg-white/10 hover:bg-white/20 text-white rounded-3xl text-sm font-medium"
                 >
                   Browse {uploadType === "folder" ? "Folder" : "Files"}
                 </motion.button>
