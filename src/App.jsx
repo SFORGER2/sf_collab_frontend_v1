@@ -13,6 +13,8 @@ import SignUp from "./components/auth/SignUp.jsx";
 import RegisterStartUp from "./components/pages/register-startup/RegisterStartUp.jsx";
 import HomedetailsPage from "./components/detailspage (previous)/HomedetailsPage.jsx";
 import Ideationdetails from "./components/pages/ideation/Ideationdetails.jsx";
+import MeetingRoom from "./components/ui/meeting-room.jsx";
+import MeetingDetailPage from "./components/pages/meet/MeetingDetailPage.jsx";
 import Knowledgedetails from "./components/detailspage (previous)/Knowledgedetails.jsx";
 import ProjectDetails from "./components/detailspage (previous)/ProjectDetails.jsx";
 import Posts from "./components/pages/posts/Posts.jsx";
@@ -121,8 +123,13 @@ import { ActivityMonitorPage } from "./components/pages/erp/ActivityMonitorPage.
 import ERPDashboard from "./components/pages/erp/erp-dashboard";
 import ERPUpdates from "./components/pages/erp/erp-updates";
 import DocumentsPage from "./components/pages/erp/erp-document-page";
+import MemberAnalyticsPage from "./components/pages/erp/MemberAnalyticsPage.jsx";
+import PayoutPage from "./components/pages/erp/PayoutPage.jsx";
+import AdminAnalyticsPage from "./components/pages/erp/AdminAnalyticsPage.jsx";
 import FileDetailPage from "./components/pages/drive/fileDetails";
 
+import MeetingsTab from "./components/pages/meet/MeetingsTab.jsx";
+import PostMeetingSummaryPage from "./components/pages/meet/PostMeetingSummaryPage.jsx";
 import MilestonePage from "./components/pages/milestones/MilestonePage.jsx";
 
 
@@ -473,6 +480,8 @@ export default function App() {
                   <Route path="pdf-signing" element={<PDFSigningApp />} />
                   <Route path="calculator" element={<CalculatorPage />} />
                   <Route path="notes" element={<NotesPage />} />
+                  <Route path="meet/:id" element={<MeetingDetailPage />} />
+                  <Route path="meet/room/:id" element={<MeetingRoom />} />
                   {/* <Route path="board" element={<BoardPage />} /> */}
 
                   {/* User */}
@@ -501,13 +510,21 @@ export default function App() {
                   <Route path="erp-dashboard" element={<ERPDashboard />} />
                   <Route path="/erp/updates" element={<ERPUpdates />} />
                   <Route path="/erp/documents" element={<DocumentsPage />} />
+                  <Route path="erp/my-analytics" element={<MemberAnalyticsPage />} />
+                  <Route path="erp/payouts" element={<PayoutPage />} />
+                  <Route path="erp/admin-analytics" element={<AdminAnalyticsPage />} />
 
                   <Route path="milestones" element={<MilestonePage />} />
 
                   {/* SF Drive Route */}
                   <Route path="/drive/file-details" element={<FileDetailPage />} />
                   <Route path="/sf-drive" element={<FolderExplorerUI />} />
+
+                  {/* SF Meet Route */}
+                  <Route path="meet"             element={<MeetingsTab />} />
+                  <Route path="meet/:id/summary" element={<PostMeetingSummaryPage />} />
                     
+
                   <Route path="setting" element={<Setting />}>
                     <Route index element={<ProfileSetting />} />
                     <Route path="preferences" element={<Preferences />} />

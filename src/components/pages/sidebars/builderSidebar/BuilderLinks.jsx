@@ -10,9 +10,21 @@ import {
   TrendingUp,
   Settings,
   BarChart3,
+  BarChart2,
   FolderOpen,
   Bell,
-  HardDrive,
+  DollarSign,
+  ShoppingCart,
+  ShoppingBag,
+  Coins,
+  Trophy,
+  Wallet,
+  GraduationCap,
+  Search,
+  Star,
+  Building2,
+  CalendarClock,
+  FileStack,
 } from "lucide-react";
 import {
   aiTools,
@@ -20,7 +32,6 @@ import {
   ideation,
   socialSection,
   toolsSection,
-  wallet,
 } from "../sidebarCommons";
 import { FcInvite } from "react-icons/fc";
 
@@ -84,64 +95,51 @@ export function createBuilderLinks(
         },
       ],
     },
+    // Mentorship
+    {
+      id: 6,
+      icon: <GraduationCap size={22} />,
+      href: "/mentors",
+      label: "Mentorship",
+      subItems: [
+        { id: "mentors",                href: "/mentors",                label: "Find a Mentor",    icon: <Search size={18} /> },
+        { id: "mentor-dashboard",       href: "/mentor-dashboard",       label: "Mentor Dashboard", icon: <GraduationCap size={18} /> },
+        { id: "my-mentorship-requests", href: "/my-mentorship-requests", label: "My Requests",      icon: <Star size={18} /> },
+      ],
+    },
     socialSection(7),
     aiTools(8),
     toolsSection(9),
-    wallet(10),
+    // Wallet & Store — marketplace lives here
+    {
+      id: 10,
+      icon: <Wallet size={22} />,
+      href: "/wallet",
+      label: "Wallet & Store",
+      subItems: [
+        { id: "wallet",      href: "/wallet",      label: "My Wallet",   icon: <Coins size={18} /> },
+        { id: "store",       href: "/store",       label: "SF Store",    icon: <ShoppingBag size={18} /> },
+        { id: "leaderboard", href: "/leaderboard", label: "Leaderboard", icon: <Trophy size={18} /> },
+        { id: "marketplace", href: "/marketplace", label: "Marketplace", icon: <ShoppingCart size={18} /> },
+      ],
+    },
+    // ERP
     {
       id: 11,
-      icon: <TrendingUp size={22} />,
+      icon: <Building2 size={22} />,
       href: "/erp-dashboard",
       label: "ERP",
       subItems: [
-        {
-          id: "erp-dashboard",
-          href: "/erp-dashboard",
-          label: "Dashboard",
-          icon: <TrendingUp size={18} />,
-        },
-        {
-          id: "erp-attendance",
-          href: "/erp/attendance",
-          label: "Attendance",
-          icon: <Users size={18} />,
-        },
-        {
-          id: "erp-tasks",
-          href: "/erp/tasks",
-          label: "Tasks",
-          icon: <ClipboardList size={18} />,
-        },
-        {
-          id: "erp-updates",
-          href: "/erp/updates",
-          label: "Updates",
-          icon: <MessageSquareHeart size={18} />,
-        },
-        {
-          id: "erp-documents",
-          href: "/erp/documents",
-          label: "Documents",
-          icon: <FileTerminal size={18} />,
-        },
-        {
-          id: "erp-alerts",
-          href: "/erp/alerts",
-          label: "Alerts",
-          icon: <Bell size={18} />,
-        },
-        {
-          id: "erp-analytics",
-          href: "/erp/analytics",
-          label: "Analytics",
-          icon: <BarChart3 size={18} />,
-        },
-        {
-          id: "erp-settings",
-          href: "/erp/settings",
-          label: "Settings",
-          icon: <Settings size={18} />,
-        },
+        { id: "erp-dashboard",    href: "/erp-dashboard",    label: "Dashboard",    icon: <Building2 size={18} /> },
+        { id: "erp-attendance",   href: "/erp/attendance",   label: "Attendance",   icon: <CalendarClock size={18} /> },
+        { id: "erp-tasks",        href: "/erp/tasks",        label: "Tasks",        icon: <ClipboardList size={18} /> },
+        { id: "erp-updates",      href: "/erp/updates",      label: "Updates",      icon: <FileStack size={18} /> },
+        { id: "erp-documents",    href: "/erp/documents",    label: "Documents",    icon: <FileTerminal size={18} /> },
+        { id: "erp-alerts",       href: "/erp/alerts",       label: "Alerts",       icon: <Bell size={18} /> },
+        { id: "erp-analytics",    href: "/erp/analytics",    label: "Analytics",    icon: <BarChart3 size={18} /> },
+        { id: "erp-payouts",      href: "/erp/payouts",      label: "Payouts",      icon: <DollarSign size={18} /> },
+        { id: "erp-my-analytics", href: "/erp/my-analytics", label: "My Analytics", icon: <BarChart2 size={18} /> },
+        { id: "erp-settings",     href: "/erp/settings",     label: "Settings",     icon: <Settings size={18} /> },
       ],
     },
     {
