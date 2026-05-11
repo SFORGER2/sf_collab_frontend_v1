@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   CheckCircle,
   ArrowRight,
@@ -13,179 +13,117 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import {
+  requestInterceptor,
+  responseInterceptor,
+  responseErrorInterceptor,
+} from "../../../utils/APIs/interceptors";
+
+const api = axios.create({ baseURL: "/api/daily-updates" });
+api.interceptors.request.use(requestInterceptor);
+api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 export default function ERPUpdates() {
+  const { user } = useSelector((s) => s.auth);
+  const workspaceId = user?.id;
+
   const [role, setRole] = useState("builder");
   const [currentPage, setCurrentPage] = useState(1);
   const updatesPerPage = 5;
-
-  // Hardcoded user data
-  const [updates, setUpdates] = useState([
-    {
-      id: 1,
-      user: "Sarah Chen",
-      avatarColor: "bg-violet-600",
-      date: "Apr 17, 2026",
-      time: "4:05 PM",
-      today:
-        "Finalized investor pitch deck v2. Incorporated feedback from last review round and added competitive analysis section.",
-      next: "Schedule investor sync for next Tuesday and prepare live demo of the new CI/CD pipeline.",
-      blockers: "Legal review of term sheet is still pending (estimated 48h).",
-      progress: 4,
-    },
-    {
-      id: 2,
-      user: "Mike Rivera",
-      avatarColor: "bg-emerald-600",
-      date: "Apr 16, 2026",
-      time: "3:45 PM",
-      today:
-        "Completed full deployment of the new CI/CD pipeline across staging and production environments.",
-      next: "Monitor system health for 24 hours and run load tests with the new autoscaling rules.",
-      blockers: "None",
-      progress: 5,
-    },
-    {
-      id: 3,
-      user: "Priya Patel",
-      avatarColor: "bg-amber-600",
-      date: "Apr 15, 2026",
-      time: "11:20 AM",
-      today:
-        "Conducted Q2 budget deep-dive and aligned forecasts with updated revenue pipeline.",
-      next: "Update executive dashboard with revised projections and flag any risk areas.",
-      blockers: "Sales data from Q1 close is delayed by finance team.",
-      progress: 3,
-    },
-    {
-      id: 4,
-      user: "Alex Rivera",
-      avatarColor: "bg-indigo-600",
-      date: "Apr 14, 2026",
-      time: "9:30 AM",
-      today:
-        "Led product strategy meeting with the engineering and sales teams. Finalized roadmap for Q3.",
-      next: "Review wireframes for the new dashboard and provide feedback by end of day.",
-      blockers: "Waiting on API documentation from external vendor.",
-      progress: 4,
-    },
-    {
-      id: 5,
-      user: "Sarah Chen",
-      avatarColor: "bg-violet-600",
-      date: "Apr 13, 2026",
-      time: "2:15 PM",
-      today:
-        "Implemented user authentication improvements and fixed login flow bugs reported by QA.",
-      next: "Start working on role-based access control for different user types.",
-      blockers: "None",
-      progress: 5,
-    },
-    {
-      id: 6,
-      user: "Jordan Kim",
-      avatarColor: "bg-rose-600",
-      date: "Apr 12, 2026",
-      time: "10:50 AM",
-      today:
-        "Designed new marketing landing page and conducted A/B testing on headline variations.",
-      next: "Analyze test results and prepare final version for development handoff.",
-      blockers: "Design team is short on resources this sprint.",
-      progress: 3,
-    },
-    {
-      id: 7,
-      user: "Priya Patel",
-      avatarColor: "bg-amber-600",
-      date: "Apr 11, 2026",
-      time: "1:40 PM",
-      today:
-        "Completed financial reconciliation for March and prepared monthly performance report.",
-      next: "Meet with CFO to discuss budget adjustments for upcoming product launch.",
-      blockers: "None",
-      progress: 4,
-    },
-    {
-      id: 8,
-      user: "Mike Rivera",
-      avatarColor: "bg-emerald-600",
-      date: "Apr 10, 2026",
-      time: "5:20 PM",
-      today:
-        "Optimized database queries which improved API response time by 40%.",
-      next: "Implement caching layer for frequently accessed endpoints.",
-      blockers: "None",
-      progress: 5,
-    },
-  ]);
-
+  const [updates, setUpdates] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
-    today: "",
-    next: "",
-    blockers: "",
-    progress: "",
+    today: "", next: "", blockers: "", progress: "",
   });
 
-  // Fetches activeRole from localstorage
   useEffect(() => {
     const storedRole = localStorage.getItem("activeRole");
-    setRole(storedRole);
+    if (storedRole) setRole(storedRole);
   }, []);
 
   const isAdmin = role === "founder";
 
-  // Fetches all data for the founder, but filters Sarah's data for builder
-  // TODO: Fetch and filter data for each roles properly
-  let filteredUpdates = isAdmin
-    ? updates
-    : updates.filter((update) => update.user === "Sarah Chen");
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const endpoint = isAdmin ? "" : "/mine";
+      const res = await api.get(endpoint, {
+        params: { workspace_id: workspaceId, limit: 50 },
+      });
+      const raw = res.data?.updates || res.data || [];
+      // Normalise to match the original UI shape
+      const normalised = (Array.isArray(raw) ? raw : []).map((u) => {
+        const dt = u.created_at ? new Date(u.created_at) : new Date();
+        return {
+          id:          u.id,
+          user:        u.user?.name || user?.fullName || "You",
+          avatarColor: "bg-violet-600",
+          date:        dt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+          time:        dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+          today:       u.did_today   || "",
+          next:        u.will_do_next|| "",
+          blockers:    u.blockers    || "",
+          progress:    u.progress_rating || 0,
+        };
+      });
+      setUpdates(normalised);
+    } catch {
+      setUpdates([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [workspaceId, isAdmin]);
 
-  // Sort from newest to oldest
-  filteredUpdates = [...filteredUpdates].sort((a, b) => {
-    const dateA = new Date(`${a.date} ${a.time}`);
-    const dateB = new Date(`${b.date} ${b.time}`);
-    return dateB.getTime() - dateA.getTime();
-  });
+  useEffect(() => { load(); }, [load]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredUpdates.length / updatesPerPage);
-  const startIndex = (currentPage - 1) * updatesPerPage;
-  const currentUpdates = filteredUpdates.slice(
-    startIndex,
-    startIndex + updatesPerPage,
+  // Sort newest first
+  const filteredUpdates = [...updates].sort((a, b) =>
+    new Date(`${b.date} ${b.time}`) - new Date(`${a.date} ${a.time}`)
   );
 
-  const handleSubmit = (e) => {
+  // Pagination logic
+  const totalPages  = Math.ceil(filteredUpdates.length / updatesPerPage);
+  const startIndex  = (currentPage - 1) * updatesPerPage;
+  const currentUpdates = filteredUpdates.slice(startIndex, startIndex + updatesPerPage);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.today.trim()) return;
+    try {
+      await api.post("", {
+        did_today:       formData.today,
+        will_do_next:    formData.next,
+        blockers:        formData.blockers,
+        progress_rating: formData.progress ? Number(formData.progress) : null,
+        workspace_id:    workspaceId,
+      });
+      setFormData({ today: "", next: "", blockers: "", progress: "" });
+      setIsModalOpen(false);
+      setCurrentPage(1);
+      load();
 
-    // populates the updates but is stored in-memory
-    const newUpdate = {
-      id: Date.now(),
-      user: "Sarah Chen",
-      avatarColor: "bg-violet-600",
-      date: "Apr 17, 2026",
-      time: "4:05 PM",
-      today: formData.today,
-      next: formData.next || "No plans recorded yet",
-      blockers: formData.blockers || "None reported",
-      progress: formData.progress,
-    };
-
-    setUpdates((prev) => [newUpdate, ...prev]);
-    setFormData({ today: "", next: "", blockers: "", progress: 3 });
-    setIsModalOpen(false);
-    setCurrentPage(1);
-
-    // Toast
-    const toast = document.createElement("div");
-    toast.className =
-      "fixed bottom-6 right-6 bg-violet-600 text-white px-6 py-4 rounded-3xl shadow-2xl shadow-violet-500/30 flex items-center gap-3 z-[99999]";
-    toast.innerHTML = `<span class="font-semibold">Daily update submitted successfully</span>`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2800);
+      // Toast — same as original
+      const toast = document.createElement("div");
+      toast.className =
+        "fixed bottom-6 right-6 bg-violet-600 text-white px-6 py-4 rounded-3xl shadow-2xl shadow-violet-500/30 flex items-center gap-3 z-[99999]";
+      toast.innerHTML = `<span class="font-semibold">Daily update submitted successfully</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2800);
+    } catch {
+      // silent — toast error
+      const toast = document.createElement("div");
+      toast.className =
+        "fixed bottom-6 right-6 bg-red-600 text-white px-6 py-4 rounded-3xl shadow-2xl z-[99999]";
+      toast.innerHTML = `<span class="font-semibold">Failed to submit update</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2800);
+    }
   };
+
+  // ── UI starts here ────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] p-8 text-white">

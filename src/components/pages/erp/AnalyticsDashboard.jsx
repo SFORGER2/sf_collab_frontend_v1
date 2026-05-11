@@ -34,23 +34,25 @@ const PERIODS = [
 // ═════════════════════════════════════════════════════════════════════════════
 export function AnalyticsDashboard() {
   const { user } = useSelector((s) => s.auth);
-  const workspaceId = user?.workspace_id;
-  const isAdmin = user?.role === "admin";
+  const isAdmin = ["admin", "team_lead"].includes(user?.role);
 
-  const [period, setPeriod]     = useState("weekly");
-  const [data, setData]         = useState(null);
-  const [trends, setTrends]     = useState(null);
+  // Use user.id as the workspace scope — backend defaults workspace_id to user_id
+  const workspaceId = user?.id;
+
+  const [period, setPeriod]       = useState("weekly");
+  const [data, setData]           = useState(null);
+  const [trends, setTrends]       = useState(null);
   const [anomalies, setAnomalies] = useState([]);
-  const [history, setHistory]   = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
+  const [history, setHistory]     = useState([]);
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState(null);
 
   const load = useCallback(async () => {
     if (!workspaceId) return;
     setLoading(true);
     setError(null);
     try {
-      const params = { period };
+      const params = { period, workspace_id: workspaceId };
       const calls = [
         api.get("/analytics/workspace", { params }),
       ];
