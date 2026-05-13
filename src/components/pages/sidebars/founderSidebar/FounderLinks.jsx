@@ -28,6 +28,7 @@ import {
   FileStack,
   Activity,
   ShieldCheck,
+  Video,
 } from "lucide-react";
 
 import { Lightbulb } from "lucide-react";
@@ -160,6 +161,15 @@ export function createFounderLinks(
         { id: "erp-attendance-ws",      href: "/erp/attendance/workspace", label: "Workspace Attendance", icon: <Users size={18} /> },
         { id: "erp-activity",           href: "/erp/activity",             label: "Activity Monitor",     icon: <Activity size={18} /> },
         { id: "erp-settings",           href: "/erp/settings",             label: "Settings",             icon: <Settings size={18} /> },
+      ],
+    },
+    {
+      id: 13,
+      icon: <Video size={22} />,
+      href: "/meet",
+      label: "SF Meet",
+      subItems: [
+        { id: "meet",         href: "/meet",         label: "All Meetings",    icon: <Video size={18} /> },
       ],
     },
     {

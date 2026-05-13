@@ -1,31 +1,100 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import {
+  requestInterceptor,
+  responseInterceptor,
+  responseErrorInterceptor,
+} from "../../../utils/APIs/interceptors";
 import { 
   Plus, Search, LayoutGrid, List, Filter, 
   MoreVertical, Calendar, User, CheckCircle2, 
   Clock, AlertCircle 
 } from "lucide-react";
 
-// Mock data for workspace users
-const MOCK_USERS = [
-  { id: 1, name: "Alex Rivera", avatar: "AR", role: "Developer" },
-  { id: 2, name: "Sarah Chen", avatar: "SC", role: "Designer" },
-  { id: 3, name: "Marcus Smith", avatar: "MS", role: "Product Manager" },
-  { id: 4, name: "Elena Vogt", avatar: "EV", role: "DevOps" },
-];
-
-// Mock data for tasks
-const INITIAL_TASKS = [
-  { id: "1", title: "Implement ERP Auth Flow", description: "Set up multi-tenant workspace isolation for the ERP module.", status: "todo", priority: "high", assignee: MOCK_USERS[0], deadline: "2024-05-15" },
-  { id: "2", title: "Design System Update", description: "Update the component library to include new ERP UI elements.", status: "in_progress", priority: "medium", assignee: MOCK_USERS[1], deadline: "2024-05-12" },
-  { id: "3", title: "Analytics Dashboard UI", description: "Create the layout for the workspace analytics engine.", status: "todo", priority: "low", assignee: MOCK_USERS[2], deadline: "2024-05-20" },
-  { id: "4", title: "Backend Schema Design", description: "Define models for Attendance, Holidays, and Daily Updates.", status: "done", priority: "high", assignee: MOCK_USERS[3], deadline: "2024-05-10" },
-];
+const api = axios.create({ baseURL: "/api" });
+api.interceptors.request.use(requestInterceptor);
+api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 const TaskBoard = () => {
-  const [view, setView] = useState("kanban"); // 'kanban' or 'list'
-  const [tasks, setTasks] = useState(INITIAL_TASKS);
+  const { user } = useSelector((s) => s.auth);
+
+  const [view, setView]             = useState("kanban");
+  const [tasks, setTasks]           = useState([]);
+  const [loading, setLoading]       = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/tasks", { params: { per_page: 100 } });
+      const raw = res.data?.data?.tasks || res.data?.data || res.data?.tasks || res.data || [];
+      const normalised = (Array.isArray(raw) ? raw : []).flatMap((t) => {
+        try {
+          return [{
+            id:          String(t.id),
+            title:       t.title || t.name || "Untitled",
+            description: t.description || "",
+            status:      t.status === "completed" || t.status === "done" ? "done"
+                       : t.status === "in_progress" ? "in_progress"
+                       : "todo",
+            priority:    t.priority || "medium",
+            deadline:    t.due_date ? new Date(t.due_date).toLocaleDateString() : "—",
+            assignee: t.assignee
+              ? { name: `${t.assignee.firstName || t.assignee.first_name || ""} ${t.assignee.lastName || t.assignee.last_name || ""}`.trim() || `User #${t.assigned_to}`,
+                  avatar: ((t.assignee.firstName || t.assignee.first_name || "?")[0] + (t.assignee.lastName || t.assignee.last_name || "?")[0]).toUpperCase() }
+              : { name: user?.firstName ? `${user.firstName} ${user.lastName || ""}` : "You", avatar: (user?.firstName?.[0] || "?") },
+          }];
+        } catch { return []; }
+      });
+      setTasks(normalised);
+    } catch (e) {
+      // 500 = task route has server error (likely serialisation issue in task model)
+      // Show empty state rather than crashing
+      setTasks([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleStatusChange = async (taskId, newStatus) => {
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+    const apiStatus = newStatus === "done" ? "completed" : newStatus === "in_progress" ? "in_progress" : "to_do";
+    try {
+      await api.patch(`/tasks/${taskId}`, { status: apiStatus });
+    } catch {
+      load(); // revert
+    }
+  };
+
+  // New Task modal state
+  const [newTask, setNewTask] = useState({ title: "", description: "", priority: "medium", due_date: "" });
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleCreateTask = async () => {
+    if (!newTask.title.trim()) return;
+    setSubmitting(true);
+    try {
+      await api.post("/tasks", {
+        title:       newTask.title,
+        description: newTask.description || "",
+        priority:    newTask.priority,
+        status:      "to_do",
+        due_date:    newTask.due_date || null,
+        assigned_to: user?.id,
+        user_id:     user?.id,      // task owner
+        created_by:  user?.id,
+      });
+      setNewTask({ title: "", description: "", priority: "medium", due_date: "" });
+      setIsModalOpen(false);
+      load();
+    } catch (e) {
+      alert(e?.response?.data?.error || e?.response?.data?.message || "Failed to create task. Check required fields.");
+    } finally { setSubmitting(false); }
+  };
 
   const filteredTasks = tasks.filter(t => 
     t.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -33,14 +102,10 @@ const TaskBoard = () => {
   );
 
   const columns = [
-    { id: "todo", title: "To Do", icon: <Clock className="text-blue-400" size={18} /> },
-    { id: "in_progress", title: "In Progress", icon: <AlertCircle className="text-yellow-400" size={18} /> },
-    { id: "done", title: "Done", icon: <CheckCircle2 className="text-green-400" size={18} /> },
+    { id: "todo",        title: "To Do",       icon: <Clock        className="text-blue-400"   size={18} /> },
+    { id: "in_progress", title: "In Progress",  icon: <AlertCircle  className="text-yellow-400" size={18} /> },
+    { id: "done",        title: "Done",         icon: <CheckCircle2 className="text-green-400"  size={18} /> },
   ];
-
-  const handleStatusChange = (taskId, newStatus) => {
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
-  };
 
   const TaskCard = ({ task }) => (
     <div className="bg-[#1a1a1a] border border-[#262626] rounded-xl p-4 mb-3 hover:border-[#333] transition-all group">
@@ -132,7 +197,9 @@ const TaskBoard = () => {
       </div>
 
       {/* Kanban Board View */}
-      {view === "kanban" ? (
+      {loading ? (
+        <div className="flex justify-center py-16 text-gray-500 text-sm">Loading tasks…</div>
+      ) : view === "kanban" ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {columns.map(column => (
             <div key={column.id} className="flex flex-col h-full">
@@ -203,6 +270,56 @@ const TaskBoard = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* New Task Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          <div className="bg-[#1a1a1a] border border-[#262626] rounded-2xl p-8 w-full max-w-md">
+            <h2 className="text-lg font-semibold text-white mb-6">New Task</h2>
+            <div className="space-y-4">
+              <input
+                type="text" placeholder="Task title *"
+                value={newTask.title}
+                onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                className="w-full bg-[#0a0a0a] border border-[#262626] rounded-lg py-2.5 px-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50"
+              />
+              <textarea
+                rows={3} placeholder="Description"
+                value={newTask.description}
+                onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                className="w-full bg-[#0a0a0a] border border-[#262626] rounded-lg py-2.5 px-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 resize-none"
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Priority</label>
+                  <select value={newTask.priority} onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                    className="w-full bg-[#0a0a0a] border border-[#262626] rounded-lg py-2.5 px-4 text-sm text-white focus:outline-none focus:border-blue-500/50">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Due Date</label>
+                  <input type="date" value={newTask.due_date}
+                    onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                    className="w-full bg-[#0a0a0a] border border-[#262626] rounded-lg py-2.5 px-4 text-sm text-white focus:outline-none focus:border-blue-500/50"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 bg-[#262626] text-white rounded-lg text-sm font-medium hover:bg-[#333] transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleCreateTask} disabled={submitting || !newTask.title.trim()}
+                className="flex-1 py-2.5 bg-white text-black rounded-lg text-sm font-bold hover:bg-gray-200 disabled:opacity-50 transition-colors">
+                {submitting ? "Creating…" : "Create Task"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

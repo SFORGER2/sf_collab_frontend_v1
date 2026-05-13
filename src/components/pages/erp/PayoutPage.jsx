@@ -54,29 +54,6 @@ const STATUS_META = {
   on_hold:    { label: "On Hold",    color: "#9ca3af", bg: "rgba(156,163,175,0.12)", icon: AlertCircle },
 };
 
-// ── Mock data (remove when API is ready) ─────────────────────────────────────
-const MOCK_CURRENT = {
-  amount: 1240.0,
-  status: "pending",
-  period_start: "2025-05-01",
-  period_end: "2025-05-31",
-  breakdown: [
-    { label: "Base contribution", amount: 800 },
-    { label: "Task completion bonus", amount: 250 },
-    { label: "Streak bonus", amount: 120 },
-    { label: "Referral credit", amount: 70 },
-  ],
-};
-
-const MOCK_HISTORY = [
-  { id: 1, amount: 1100,  status: "paid",       paid_at: "2025-04-30", period_label: "April 2025" },
-  { id: 2, amount: 980,   status: "paid",       paid_at: "2025-03-31", period_label: "March 2025" },
-  { id: 3, amount: 1350,  status: "paid",       paid_at: "2025-02-28", period_label: "February 2025" },
-  { id: 4, amount: 760,   status: "paid",       paid_at: "2025-01-31", period_label: "January 2025" },
-  { id: 5, amount: 890,   status: "failed",     paid_at: null,         period_label: "December 2024" },
-  { id: 6, amount: 1020,  status: "paid",       paid_at: "2024-11-30", period_label: "November 2024" },
-];
-
 // ═════════════════════════════════════════════════════════════════════════════
 export default function PayoutPage() {
   const { user } = useSelector((s) => s.auth);
@@ -98,10 +75,10 @@ export default function PayoutPage() {
       setCurrent(curRes.data);
       const rawHistory = histRes.data;
       setHistory(Array.isArray(rawHistory) ? rawHistory : rawHistory?.history || rawHistory?.data || []);
-    } catch {
-      // Fallback to mock data while API is being built
-      setCurrent(MOCK_CURRENT);
-      setHistory(MOCK_HISTORY);
+    } catch (e) {
+      // Payout routes not yet built — show empty state
+      setCurrent(null);
+      setHistory([]);
     } finally {
       setLoading(false);
     }
