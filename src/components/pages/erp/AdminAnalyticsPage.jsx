@@ -51,35 +51,9 @@ const PERIODS = [
   { value: "all",     label: "All Time" },
 ];
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
-const MOCK_OVERVIEW = {
-  task_completion_rate: 74,
-  task_completion_change: 6.2,
-  warning_count: 11,
-  warning_change: -3,
-};
-
-const MOCK_WARNINGS = [
-  { week_label: "Mar 10", count: 8  },
-  { week_label: "Mar 17", count: 14 },
-  { week_label: "Mar 24", count: 11 },
-  { week_label: "Mar 31", count: 9  },
-  { week_label: "Apr 7",  count: 16 },
-  { week_label: "Apr 14", count: 13 },
-  { week_label: "Apr 21", count: 10 },
-  { week_label: "Apr 28", count: 11 },
-];
-
-const MOCK_CONTRIBUTORS = [
-  { user_id: 1, name: "Sarah Chen",   score: 98, tasks_done: 42, streak: 21, rank: 1 },
-  { user_id: 2, name: "Alex Morales", score: 91, tasks_done: 38, streak: 14, rank: 2 },
-  { user_id: 3, name: "Priya Sharma", score: 87, tasks_done: 35, streak: 10, rank: 3 },
-  { user_id: 4, name: "James Okoro",  score: 82, tasks_done: 31, streak: 7,  rank: 4 },
-  { user_id: 5, name: "Mia Tanaka",   score: 78, tasks_done: 28, streak: 5,  rank: 5 },
-  { user_id: 6, name: "Carlos Vega",  score: 71, tasks_done: 24, streak: 3,  rank: 6 },
-];
-
 const RANK_ICONS  = [Crown, Medal, Award];
+
+// ═════════════════════════════════════════════════════════════════════════════
 const RANK_COLORS = ["#f59e0b", "#9ca3af", "#b45309"];
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -106,10 +80,11 @@ export default function AdminAnalyticsPage() {
       setOverview(ovRes.data);
       setWarnings(toArr(warnRes.data, "warnings", "data"));
       setContributors(toArr(contribRes.data, "contributors", "data"));
-    } catch {
-      setOverview(MOCK_OVERVIEW);
-      setWarnings(MOCK_WARNINGS);
-      setContributors(MOCK_CONTRIBUTORS);
+    } catch (e) {
+      setError(e?.response?.data?.error || "Could not load analytics. Routes may not be set up yet.");
+      setOverview(null);
+      setWarnings([]);
+      setContributors([]);
     } finally {
       setLoading(false);
     }

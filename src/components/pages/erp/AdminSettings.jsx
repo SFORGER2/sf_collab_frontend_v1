@@ -1,31 +1,103 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import {
+  requestInterceptor,
+  responseInterceptor,
+  responseErrorInterceptor,
+} from "../../../utils/APIs/interceptors";
 import { 
   Users, Calendar, Settings, Shield, 
-  Plus, Search, MoreHorizontal, UserX, 
-  UserCheck, Trash2, Edit3, Globe, 
+  Plus, Search, MoreHorizontal, 
+  Trash2, Edit3, Globe, 
   Lock, Bell, Mail
 } from "lucide-react";
 
-// Mock data for workspace members
-const INITIAL_MEMBERS = [
-  { id: 1, name: "Alex Rivera", email: "alex@sfcollab.com", role: "Admin", status: "Active", joined: "2024-01-15" },
-  { id: 2, name: "Sarah Chen", email: "sarah@sfcollab.com", role: "Member", status: "Active", joined: "2024-02-10" },
-  { id: 3, name: "Marcus Smith", email: "marcus@sfcollab.com", role: "Member", status: "Pending", joined: "2024-05-01" },
-  { id: 4, name: "Elena Vogt", email: "elena@sfcollab.com", role: "Admin", status: "Active", joined: "2023-11-20" },
-];
-
-// Mock data for holidays
-const INITIAL_HOLIDAYS = [
-  { id: 1, name: "New Year's Day", date: "2024-01-01" },
-  { id: 2, name: "Labor Day", date: "2024-05-01" },
-  { id: 3, name: "Independence Day", date: "2024-07-04" },
-];
+const api = axios.create({ baseURL: "/api" });
+api.interceptors.request.use(requestInterceptor);
+api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 const AdminSettings = () => {
-  const [activeTab, setActiveTab] = useState("users"); // 'users', 'holidays', 'general'
-  const [members, setMembers] = useState(INITIAL_MEMBERS);
-  const [holidays, setHolidays] = useState(INITIAL_HOLIDAYS);
+  const { user } = useSelector((s) => s.auth);
+  const workspaceId = user?.id;
+
+  const [activeTab, setActiveTab] = useState("users");
+  const [members, setMembers]     = useState([]);
+  const [holidays, setHolidays]   = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading]     = useState(false);
+  const [newHoliday, setNewHoliday] = useState({ name: "", start_date: "", end_date: "" });
+  const [showHolidayForm, setShowHolidayForm] = useState(false);
+
+  // Load members — users who share this workspace (via UserActivity)
+  const loadMembers = useCallback(async () => {
+    if (!workspaceId) return;
+    setLoading(true);
+    try {
+      // Use friend list as workspace members for now — swap for workspace-member endpoint when available
+      const res = await api.get("/friend-requests/friends");
+      const raw = res.data?.data?.friends || res.data?.friends || res.data || [];
+      const normalised = (Array.isArray(raw) ? raw : []).map((m) => ({
+        id:     m.id,
+        name:   `${m.firstName || ""} ${m.lastName || ""}`.trim() || `User #${m.id}`,
+        email:  m.email || "—",
+        role:   "member",
+        status: "Active",
+        joined: m.friendSince ? new Date(m.friendSince).toLocaleDateString() : "—",
+      }));
+      // Also include self
+      setMembers([
+        { id: user.id, name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || "You", email: user.email || "—", role: "Admin", status: "Active", joined: "—" },
+        ...normalised,
+      ]);
+    } catch { setMembers([]); }
+    finally  { setLoading(false); }
+  }, [workspaceId, user]);
+
+  // Load holidays
+  const loadHolidays = useCallback(async () => {
+    if (!workspaceId) return;
+    setLoading(true);
+    try {
+      const res = await api.get("/attendance/holidays", { params: { workspace_id: workspaceId } });
+      const raw = res.data?.data || res.data || [];
+      setHolidays(Array.isArray(raw) ? raw : []);
+    } catch { setHolidays([]); }
+    finally  { setLoading(false); }
+  }, [workspaceId]);
+
+  useEffect(() => {
+    if (activeTab === "users")    loadMembers();
+    if (activeTab === "holidays") loadHolidays();
+  }, [activeTab, loadMembers, loadHolidays]);
+
+  const handleAddHoliday = async () => {
+    if (!newHoliday.name || !newHoliday.start_date) return;
+    try {
+      await api.post("/attendance/holidays", {
+        ...newHoliday,
+        workspace_id: workspaceId,
+        end_date: newHoliday.end_date || newHoliday.start_date,
+      });
+      setNewHoliday({ name: "", start_date: "", end_date: "" });
+      setShowHolidayForm(false);
+      loadHolidays();
+    } catch { /* silent */ }
+  };
+
+  const handleDeleteHoliday = async (id) => {
+    try {
+      await api.delete(`/attendance/holidays/${id}`);
+      setHolidays((prev) => prev.filter((h) => h.id !== id));
+    } catch { /* silent */ }
+  };
+
+  const handleRemoveMember = async (memberId) => {
+    if (memberId === user?.id) { alert("You cannot remove yourself."); return; }
+    if (!window.confirm("Remove this member from your workspace view?")) return;
+    // Remove from local state — backend removal requires a startup membership endpoint
+    setMembers((prev) => prev.filter((m) => m.id !== memberId));
+  };
 
   const filteredMembers = members.filter(m => 
     m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -77,13 +149,18 @@ const AdminSettings = () => {
                   className="w-full bg-[#1a1a1a] border border-[#262626] rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500/50 transition-colors"
                 />
               </div>
-              <button className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm">
+              <a href="/people" className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm">
                 <Plus size={18} />
                 Invite Member
-              </button>
+              </a>
             </div>
 
             <div className="bg-[#1a1a1a] border border-[#262626] rounded-xl overflow-hidden shadow-2xl">
+              {loading ? (
+                <p className="text-gray-500 text-sm py-8 text-center">Loading members…</p>
+              ) : filteredMembers.length === 0 ? (
+                <p className="text-gray-500 text-sm py-8 text-center">No members found.</p>
+              ) : (
               <table className="w-full text-left text-sm">
                 <thead className="bg-[#0a0a0a] border-b border-[#262626]">
                   <tr>
@@ -127,7 +204,7 @@ const AdminSettings = () => {
                           <button className="p-1.5 text-gray-500 hover:text-white hover:bg-[#262626] rounded transition-colors" title="Edit Role">
                             <Edit3 size={16} />
                           </button>
-                          <button className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded transition-colors" title="Remove User">
+                          <button onClick={() => handleRemoveMember(member.id)} className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded transition-colors" title="Remove User">
                             <Trash2 size={16} />
                           </button>
                           <button className="p-1.5 text-gray-500 hover:text-white hover:bg-[#262626] rounded transition-colors">
@@ -139,6 +216,7 @@ const AdminSettings = () => {
                   ))}
                 </tbody>
               </table>
+              )}
             </div>
           </div>
         )}
@@ -147,30 +225,66 @@ const AdminSettings = () => {
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 max-w-3xl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Workspace Holidays</h2>
-              <button className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm">
+              <button onClick={() => setShowHolidayForm(!showHolidayForm)} className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm">
                 <Plus size={18} />
                 Add Holiday
               </button>
             </div>
-            
-            <div className="grid gap-3">
-              {holidays.map(holiday => (
-                <div key={holiday.id} className="bg-[#1a1a1a] border border-[#262626] rounded-xl p-4 flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center text-red-400">
-                      <Calendar size={20} />
-                    </div>
-                    <div>
-                      <div className="font-medium text-white">{holiday.name}</div>
-                      <div className="text-xs text-gray-500">{holiday.date}</div>
-                    </div>
+
+            {showHolidayForm && (
+              <div className="bg-[#1a1a1a] border border-[#262626] rounded-xl p-5 mb-6 space-y-3">
+                <input
+                  type="text" placeholder="Holiday name"
+                  value={newHoliday.name}
+                  onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
+                  className="w-full bg-[#0a0a0a] border border-[#262626] rounded-lg py-2 px-4 text-sm focus:outline-none focus:border-blue-500/50"
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Start Date</label>
+                    <input type="date" value={newHoliday.start_date}
+                      onChange={(e) => setNewHoliday({ ...newHoliday, start_date: e.target.value })}
+                      className="w-full bg-[#0a0a0a] border border-[#262626] rounded-lg py-2 px-4 text-sm focus:outline-none focus:border-blue-500/50"
+                    />
                   </div>
-                  <button className="text-gray-500 hover:text-red-400 p-2 rounded-lg transition-colors">
-                    <Trash2 size={18} />
-                  </button>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">End Date (optional)</label>
+                    <input type="date" value={newHoliday.end_date}
+                      onChange={(e) => setNewHoliday({ ...newHoliday, end_date: e.target.value })}
+                      className="w-full bg-[#0a0a0a] border border-[#262626] rounded-lg py-2 px-4 text-sm focus:outline-none focus:border-blue-500/50"
+                    />
+                  </div>
                 </div>
-              ))}
-            </div>
+                <button onClick={handleAddHoliday} className="bg-white text-black px-4 py-2 rounded-lg font-medium text-sm">Save Holiday</button>
+              </div>
+            )}
+
+            {loading ? (
+              <p className="text-gray-500 text-sm py-8 text-center">Loading…</p>
+            ) : holidays.length === 0 ? (
+              <p className="text-gray-500 text-sm py-8 text-center">No holidays added yet.</p>
+            ) : (
+              <div className="grid gap-3">
+                {holidays.map(holiday => (
+                  <div key={holiday.id} className="bg-[#1a1a1a] border border-[#262626] rounded-xl p-4 flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center text-red-400">
+                        <Calendar size={20} />
+                      </div>
+                      <div>
+                        <div className="font-medium text-white">{holiday.name}</div>
+                        <div className="text-xs text-gray-500">
+                          {holiday.start_date}{holiday.end_date && holiday.end_date !== holiday.start_date ? ` → ${holiday.end_date}` : ""}
+                        </div>
+                      </div>
+                    </div>
+                    <button onClick={() => handleDeleteHoliday(holiday.id)} className="text-gray-500 hover:text-red-400 p-2 rounded-lg transition-colors">
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             
             <div className="mt-8 p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl flex gap-3">
               <Calendar className="text-blue-400 shrink-0" size={20} />
