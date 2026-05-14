@@ -8,6 +8,13 @@ import {
 } from "lucide-react";
 import { meetAPI } from "@/utils/APIs/meetAPI";
 import SaveToDriveModal from "./SaveToDriveModal";
+import axios from "axios";
+import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "@/utils/APIs/interceptors";
+import { useSelector } from "react-redux";
+
+const tasksApi = axios.create({ baseURL: "/api" });
+tasksApi.interceptors.request.use(requestInterceptor);
+tasksApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 const PRIORITY_COLORS = {
   urgent: "bg-red-500/20 text-red-300 border-red-500/30",
@@ -72,13 +79,20 @@ export default function PostMeetingSummaryPage() {
   }
 
   async function handleCreateTasks() {
+    if (actionItems.length === 0) return;
     setCreatingTasks(true);
     try {
-      // In production: convert action items to real SF Tasks
-      // for (const item of actionItems) { await tasksAPI.create(...) }
-      await new Promise(r => setTimeout(r, 1000));
+      for (const item of actionItems) {
+        await tasksApi.post("/tasks", {
+          title:       item.title,
+          description: item.description || "",
+          priority:    item.priority || "medium",
+          status:      "to_do",
+          due_date:    item.due_at || null,
+        });
+      }
       setTasksDone(true);
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Failed to create tasks:", e); }
     finally { setCreatingTasks(false); }
   }
 

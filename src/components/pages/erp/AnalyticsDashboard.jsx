@@ -16,7 +16,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
 
-const api = axios.create({ baseURL: "" }); // analytics_bp is at /analytics (no /api prefix per analytics.py)
+const api = axios.create({ baseURL: "" }); // Uses real ERP endpoints
 api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
@@ -54,12 +54,12 @@ export function AnalyticsDashboard() {
     try {
       const params = { period, workspace_id: workspaceId };
       const calls = [
-        api.get("/analytics/workspace", { params }),
+        api.get("/api/attendance/workspace-summary", { params: { workspace_id: workspaceId } }),
       ];
       if (isAdmin) {
-        calls.push(api.get("/analytics/trends", { params }));
-        calls.push(api.get("/analytics/anomalies", { params }));
-        calls.push(api.get(`/analytics/history/${workspaceId}`, {
+        calls.push(api.get("/api/erp-alerts", { params: { workspace_id: workspaceId } }));
+        calls.push(api.get("/api/activity", { params: { workspace_id: workspaceId } }));
+        calls.push(api.get("/api/attendance/history", {
           params: { period: "weekly", limit: 12 },
         }));
       }

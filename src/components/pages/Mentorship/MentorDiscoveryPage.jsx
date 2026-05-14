@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
+import axios from 'axios';
 import { mentorDiscoveryAPI, mentorRequestAPI } from '@/utils/APIs/mentorshipAPI';
 import { API_BASE_URL } from '@/utils/config';
 
@@ -157,8 +158,9 @@ const MentorCard = ({ mentor, onClick }) => {
 
 // ── Request Mentorship Modal ──────────────────────────────────────
 const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
-  const { user } = useSelector(state => state.auth);
-  const [loading, setLoading]       = useState(false);
+  const { user, access_token } = useSelector(state => state.auth);
+  const [loading, setLoading]                     = useState(false);
+  const [stripeRedirecting, setStripeRedirecting] = useState(false);
   const [myIdeas, setMyIdeas]       = useState([]);
   const [myStartups, setMyStartups] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
@@ -237,6 +239,50 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
       toast.error('Failed to send request');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStripeCheckout = async () => {
+    if (!form.idea_id && !form.startup_id) {
+      toast.error('Select a Vision or Startup first');
+      return;
+    }
+    if (!form.message.trim()) {
+      toast.error('Please add a message to the mentor');
+      return;
+    }
+    setStripeRedirecting(true);
+    try {
+      const rateCents = Math.round((mentor.session_rate || 0) * 100);
+      const res = await axios.post(
+        `${API_BASE_URL}/payments/create-checkout-session`,
+        {
+          id: `mentorship-${mentor.id}`,
+          title: `Mentorship session with ${mentor.user?.name}`,
+          description: form.message.trim(),
+          price: rateCents,
+          currency: 'usd',
+          user_id: user?.id,
+          type: 'mentorship',
+          option: JSON.stringify({
+            mentor_id: mentor.id,
+            idea_id: form.idea_id || null,
+            startup_id: form.startup_id || null,
+            areas_of_help: form.areas_of_help,
+            mentorship_mode: form.mentorship_mode,
+          }),
+        },
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      );
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        toast.error('Could not start checkout');
+      }
+    } catch {
+      toast.error('Stripe checkout failed. Please try again.');
+    } finally {
+      setStripeRedirecting(false);
     }
   };
 
@@ -373,20 +419,59 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
               <DollarSign size={14} className="flex-shrink-0 mt-0.5" />
               <span>
                 Paid session at <strong className="text-blue-300">${mentor.session_rate}</strong>.
-                Payment deducted from Balance only after session completes.
+                Choose to pay now via card, or have it deducted from your Balance after the session completes.
               </span>
             </div>
           )}
 
-          <motion.button whileTap={{ scale: 0.98 }} onClick={handleSend}
-            disabled={loading || loadingProjects || (!form.idea_id && !form.startup_id)}
-            className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white
-                       font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-            {loading
-              ? <><Loader2 size={15} className="animate-spin" /> Sending...</>
-              : <><MessageSquare size={15} /> Send Request</>
-            }
-          </motion.button>
+          {/* CTA — free mentor: single send button; paid mentor: two payment paths */}
+          {mentor.is_free ? (
+            <motion.button whileTap={{ scale: 0.98 }} onClick={handleSend}
+              disabled={loading || loadingProjects || (!form.idea_id && !form.startup_id)}
+              className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white
+                         font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+              {loading
+                ? <><Loader2 size={15} className="animate-spin" /> Sending...</>
+                : <><MessageSquare size={15} /> Send Request</>
+              }
+            </motion.button>
+          ) : (
+            <div className="space-y-2">
+              {/* Option 1: send request — Balance deducted after session */}
+              <motion.button whileTap={{ scale: 0.98 }} onClick={handleSend}
+                disabled={loading || stripeRedirecting || loadingProjects || (!form.idea_id && !form.startup_id)}
+                className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white
+                           font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+                {loading
+                  ? <><Loader2 size={15} className="animate-spin" /> Sending...</>
+                  : <><MessageSquare size={15} /> Send Request — Pay from Balance after session</>
+                }
+              </motion.button>
+
+              {/* Divider */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-px bg-white/[0.05]" />
+                <span className="text-gray-600 text-[10px] uppercase tracking-wider">or pay now</span>
+                <div className="flex-1 h-px bg-white/[0.05]" />
+              </div>
+
+              {/* Option 2: Stripe upfront card payment */}
+              <motion.button whileTap={{ scale: 0.98 }} onClick={handleStripeCheckout}
+                disabled={loading || stripeRedirecting || loadingProjects || (!form.idea_id && !form.startup_id)}
+                className="w-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.10]
+                           disabled:opacity-50 text-white font-semibold py-3
+                           rounded-xl transition-all flex items-center justify-center gap-2 text-sm">
+                {stripeRedirecting
+                  ? <><Loader2 size={14} className="animate-spin" /> Redirecting to Stripe...</>
+                  : <><DollarSign size={14} /> Pay ${mentor.session_rate} now with Card (Stripe)</>
+                }
+              </motion.button>
+
+              <p className="text-[10px] text-gray-600 text-center">
+                Card: payment captured upfront · Balance: charged only after session completes
+              </p>
+            </div>
+          )}
         </div>
       </motion.div>
     </motion.div>

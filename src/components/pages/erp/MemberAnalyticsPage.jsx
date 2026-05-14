@@ -100,9 +100,9 @@ export default function MemberAnalyticsPage() {
     setError(null);
     try {
       const [ovRes, trendRes, taskRes] = await Promise.all([
-        api.get("/erp/analytics/member/overview"),
-        api.get("/erp/analytics/member/trend"),
-        api.get("/erp/analytics/member/tasks"),
+        api.get("/api/erp/analytics/member/overview"),
+        api.get("/api/erp/analytics/member/trend"),
+        api.get("/api/erp/analytics/member/tasks"),
       ]);
       setOverview(ovRes.data);
       setTrend(Array.isArray(trendRes.data) ? trendRes.data : trendRes.data?.trend || []);
@@ -110,9 +110,10 @@ export default function MemberAnalyticsPage() {
       setTasks(Array.isArray(rawTasks) ? rawTasks : rawTasks?.tasks || rawTasks?.data || []);
     } catch {
       // Fallback to mock data while API is being built
-      setOverview(MOCK_OVERVIEW);
-      setTrend(MOCK_TREND);
-      setTasks(MOCK_TASKS);
+      setError(e?.response?.data?.error || "Analytics routes not yet available on the backend.");
+      setOverview(null);
+      setTrend([]);
+      setTasks([]);
     } finally {
       setLoading(false);
     }

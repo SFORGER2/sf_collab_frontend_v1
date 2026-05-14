@@ -54,9 +54,7 @@ const DocumentsPage = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get("/api/documents/list", {
-        params: { workspace_id: workspaceId },
-      });
+      const res = await api.get("/api/documents/list", { params: { workspace_id: workspaceId } });
       const raw = res.data?.documents || res.data || [];
       const docs = Array.isArray(raw) ? raw : [];
 
@@ -268,6 +266,7 @@ const DocumentsPage = () => {
             fd.append("file", file);
             fd.append("workspace_id", String(workspaceId));
             fd.append("folder", uploadFolder);
+            fd.append("workspace_id", String(workspaceId));
             return api.post("/api/documents/upload", fd);
           })
         );

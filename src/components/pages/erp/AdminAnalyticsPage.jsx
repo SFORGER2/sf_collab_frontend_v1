@@ -73,13 +73,14 @@ export default function AdminAnalyticsPage() {
     try {
       const params = { period };
       const [ovRes, warnRes, contribRes] = await Promise.all([
-        api.get("/erp/analytics/admin/overview",     { params }),
-        api.get("/erp/analytics/admin/warnings",     { params }),
-        api.get("/erp/analytics/admin/contributors", { params }),
+        api.get("/api/attendance/workspace-summary", { params: { workspace_id: user?.id } }),
+        api.get("/api/erp-alerts",                   { params: { workspace_id: user?.id } }),
+        api.get("/api/attendance/workspace",         { params: { workspace_id: user?.id } }),
       ]);
-      setOverview(ovRes.data);
-      setWarnings(toArr(warnRes.data, "warnings", "data"));
-      setContributors(toArr(contribRes.data, "contributors", "data"));
+      const ovRaw = ovRes.data?.data || ovRes.data || {};
+      setOverview(ovRaw);
+      setWarnings(toArr(warnRes.data, "alerts", "data"));
+      setContributors(toArr(contribRes.data, "members", "attendance", "data"));
     } catch (e) {
       setError(e?.response?.data?.error || "Could not load analytics. Routes may not be set up yet.");
       setOverview(null);
@@ -139,7 +140,7 @@ export default function AdminAnalyticsPage() {
               <KPICard
                 icon={CheckSquare}
                 label="Task Completion Rate"
-                value={pct(overview?.task_completion_rate)}
+                value={overview?.total_present != null ? `${overview.total_present} present` : (overview?.on_time_rate != null ? pct(overview.on_time_rate) : "—")}
                 change={overview?.task_completion_change}
                 accent="#6366f1"
                 description="Tasks completed vs assigned"
@@ -147,7 +148,7 @@ export default function AdminAnalyticsPage() {
               <KPICard
                 icon={AlertTriangle}
                 label="Active Warnings"
-                value={overview?.warning_count ?? "—"}
+                value={overview?.total_absent ?? overview?.late_count ?? "—"}
                 change={overview?.warning_change}
                 accent="#ef4444"
                 invertChange

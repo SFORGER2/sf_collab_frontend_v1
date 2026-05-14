@@ -1,5 +1,6 @@
 import React, { useState, lazy, Suspense, useEffect, useCallback, useRef } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { Upload, FolderPlus, X } from "lucide-react";
 import { BreadcrumbNav } from "./BreadcrumbNav";
 import { FolderTree }    from "./FolderTree";
@@ -48,6 +49,7 @@ export const FolderExplorerUI = () => {
   const { user } = useSelector((s) => s.auth);
   // Drive uses user.id as workspace_id — no startup required
   const workspaceId = user?.id ?? null;
+  const navigate = useNavigate();
 
   // ── state ──────────────────────────────────────────────────────────────
   const [rootNode,       setRootNode]       = useState({ ...ROOT });
@@ -106,6 +108,25 @@ export const FolderExplorerUI = () => {
       setShowFolderInput(false);
       loadRoot();
     } catch { /* silent */ }
+  };
+
+  // ── delete file ───────────────────────────────────────────────────────────
+  const handleDeleteFile = async (file) => {
+    if (!window.confirm(`Delete "${file.name}"?`)) return;
+    try {
+      await driveService.deleteFile(file.id);
+      setItems(prev => prev.filter(i => i.id !== file.id));
+    } catch { /* silent */ }
+  };
+
+  // ── file row click ─────────────────────────────────────────────────────────
+  const handleRowClick = (node) => {
+    if (node.type === "folder") {
+      handleNavigate(node);
+    } else {
+      // Navigate to file detail page
+      navigate(`/drive/file/${node.id}`);
+    }
   };
 
   // ── load root contents ─────────────────────────────────────────────────
@@ -278,8 +299,10 @@ export const FolderExplorerUI = () => {
           ) : (
             <FileListView
               files={items}
-              onRowClick={handleNavigate}
+              onRowClick={handleRowClick}
               onOpenModal={openModal}
+              onDeleteFile={handleDeleteFile}
+              onDownloadFile={(file) => driveService.downloadFile(file.id, file.name)}
             />
           )}
         </main>

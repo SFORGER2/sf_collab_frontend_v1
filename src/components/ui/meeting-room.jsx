@@ -149,17 +149,39 @@ function SettingsModal({ onClose }) {
 
 // ── More menu ────────────────────────────────────────────────────────────────
 function MoreMenu({ onClose, onToggleChat, onToggleFullscreen, onOpenSettings, onLeave }) {
+  const ref = React.useRef(null)
+
+  // Close on outside click — no overlay needed
+  React.useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) onClose()
+    }
+    // Small delay so the button click that opened the menu doesn't immediately close it
+    const id = setTimeout(() => document.addEventListener("mousedown", handler), 10)
+    return () => { clearTimeout(id); document.removeEventListener("mousedown", handler) }
+  }, [onClose])
+
+  const items = [
+    { icon: MessageSquare, label: "Chat",              action: onToggleChat },
+    { icon: Maximize2,     label: "Toggle Fullscreen", action: onToggleFullscreen },
+    { icon: Volume2,       label: "Audio & Video",     action: onOpenSettings },
+    { icon: Settings,      label: "Settings",          action: onOpenSettings },
+    { icon: PhoneOff,      label: "Leave Meeting",     action: onLeave, danger: true },
+  ]
+
   return (
-    <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 w-52
-      bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-      {[
-        { icon: MessageSquare, label: "Chat",            action: onToggleChat },
-        { icon: Maximize2,     label: "Toggle Fullscreen", action: onToggleFullscreen },
-        { icon: Volume2,       label: "Audio & Video",   action: onOpenSettings },
-        { icon: Settings,      label: "Settings",        action: onOpenSettings },
-        { icon: PhoneOff,      label: "Leave Meeting",   action: onLeave, danger: true },
-      ].map(({ icon: Icon, label, action, danger }) => (
-        <button key={label} onClick={() => { action?.(); onClose() }}
+    // fixed + high z-index so it escapes ALL parent stacking contexts
+    <div ref={ref}
+      style={{ position: "fixed", bottom: "72px", left: "50%", transform: "translateX(-50%)", zIndex: 9999 }}
+      className="w-52 bg-zinc-900 border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
+      {items.map(({ icon: Icon, label, action, danger }) => (
+        <button key={label}
+          onMouseDown={(e) => {
+            e.preventDefault() // prevent blur from closing before action fires
+            e.stopPropagation()
+            onClose()
+            setTimeout(() => action?.(), 0)
+          }}
           className={cn("w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-white/5",
             danger ? "text-red-400 hover:text-red-300" : "text-zinc-300 hover:text-white")}>
           <Icon className="size-4 shrink-0" />{label}
@@ -244,6 +266,7 @@ export default function MeetingRoom() {
   const [showChat,     setShowChat]     = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [ending,       setEnding]       = useState(false)
+  const [apiError,     setApiError]     = useState("")
 
   // ── Media ───────────────────────────────────────────────────────────────
   const [micOn,        setMicOn]        = useState(true)
@@ -372,15 +395,21 @@ export default function MeetingRoom() {
 
   const handleAddTask = async () => {
     const title = newTask.trim()
-    if (!title || addingTask) return
+    if (addingTask) return
+    if (!title) return
     setAddingTask(true)
+    setApiError("")
     try {
       const res = await meetAPI.createActionItem(meetingId, { title, priority: "medium" })
       const item = res.data?.action_item || res.data
       if (item?.id) setActionItems(prev => [...prev, item])
       else setActionItems(prev => [...prev, { id: Date.now(), title, status: "open", priority: "medium" }])
       setNewTask("")
-    } catch { console.error("Failed to add task") }
+    } catch (e) {
+      const msg = e?.response?.data?.error || e?.message || "Failed to add task"
+      setApiError(msg)
+      setTimeout(() => setApiError(""), 4000)
+    }
     finally { setAddingTask(false) }
   }
 
@@ -393,15 +422,21 @@ export default function MeetingRoom() {
 
   const handleAddDecision = async () => {
     const statement = newDecision.trim()
-    if (!statement || addingDec) return
+    if (addingDec) return
+    if (!statement) return
     setAddingDec(true)
+    setApiError("")
     try {
       const res = await meetAPI.createDecision(meetingId, { decision_statement: statement })
       const dec = res.data?.decision || res.data
       if (dec?.id) setDecisions(prev => [...prev, dec])
       else setDecisions(prev => [...prev, { id: Date.now(), decision_statement: statement, status: "open" }])
       setNewDecision("")
-    } catch { console.error("Failed to log decision") }
+    } catch (e) {
+      const msg = e?.response?.data?.error || e?.message || "Failed to log decision"
+      setApiError(msg)
+      setTimeout(() => setApiError(""), 4000)
+    }
     finally { setAddingDec(false) }
   }
 
@@ -549,7 +584,7 @@ export default function MeetingRoom() {
 
         {/* Side panel */}
         {panelOpen && (
-          <div className="w-[300px] xl:w-[320px] shrink-0 border-l border-white/[0.06] bg-black/30 backdrop-blur-xl flex flex-col min-h-0">
+          <div className="w-[340px] shrink-0 border-l border-white/[0.06] bg-zinc-950 flex flex-col min-h-0">
             {showChat ? (
               <>
                 <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] shrink-0">
@@ -576,6 +611,13 @@ export default function MeetingRoom() {
                     )
                   })}
                 </div>
+
+                {/* API error banner */}
+                {apiError && (
+                  <div className="mx-3 mt-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400 shrink-0">
+                    {apiError}
+                  </div>
+                )}
 
                 {/* Tab content */}
                 <div className="flex-1 overflow-y-auto min-h-0 p-3">
@@ -611,12 +653,15 @@ export default function MeetingRoom() {
                       </div>
                       {/* Add task */}
                       <div className="flex gap-2">
-                        <input value={newTask}
+                        <input
+                          value={newTask}
                           onChange={e => setNewTask(e.target.value)}
-                          onKeyDown={e => e.key === "Enter" && handleAddTask()}
-                          placeholder="Add action item…"
+                          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAddTask(); } }}
+                          placeholder="Add action item… (Enter to add)"
                           className="flex-1 bg-zinc-900 border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500/40 transition-colors" />
-                        <button onClick={handleAddTask} disabled={addingTask || !newTask.trim()}
+                        <button
+                          onClick={handleAddTask}
+                          disabled={addingTask}
                           className="w-9 h-9 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 flex items-center justify-center transition-colors shrink-0">
                           <Plus className="size-4 text-white" />
                         </button>
@@ -654,12 +699,15 @@ export default function MeetingRoom() {
                       </div>
                       {/* Add decision */}
                       <div className="flex gap-2">
-                        <input value={newDecision}
+                        <input
+                          value={newDecision}
                           onChange={e => setNewDecision(e.target.value)}
-                          onKeyDown={e => e.key === "Enter" && handleAddDecision()}
-                          placeholder="Log a decision…"
+                          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAddDecision(); } }}
+                          placeholder="Log a decision… (Enter to add)"
                           className="flex-1 bg-zinc-900 border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500/40 transition-colors" />
-                        <button onClick={handleAddDecision} disabled={addingDec || !newDecision.trim()}
+                        <button
+                          onClick={handleAddDecision}
+                          disabled={addingDec}
                           className="w-9 h-9 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 flex items-center justify-center transition-colors shrink-0">
                           <Plus className="size-4 text-white" />
                         </button>
@@ -773,7 +821,7 @@ export default function MeetingRoom() {
       </div>
 
       {/* ── BOTTOM TOOLBAR ──────────────────────────────────────────────── */}
-      <footer className="h-16 shrink-0 border-t border-white/[0.06] bg-black/40 backdrop-blur-xl flex items-center justify-between px-4 z-20 relative">
+      <footer className="h-16 shrink-0 border-t border-white/[0.06] bg-black/40 backdrop-blur-xl flex items-center justify-between px-4 relative" style={{zIndex: 20, backdropFilter: 'none'}}>
 
         {/* Left */}
         <div className="flex items-center gap-2 w-32">
@@ -836,7 +884,7 @@ export default function MeetingRoom() {
       </footer>
 
       {/* Click outside to close More menu */}
-      {showMore && <div className="fixed inset-0 z-40" onClick={() => setShowMore(false)} />}
+      
 
       {/* Settings modal */}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}

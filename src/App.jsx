@@ -78,13 +78,13 @@ import ContributionPollsPage from "./components/pages/contribution/ContributionP
 import Crowdfunding from "./components/pages/crowdfunding/Crowdfunding.jsx";
 import Checkout from "./components/pages/checkout/Checkout.jsx";
 import ReturnPage from "./components/pages/checkout/CheckoutReturnPage.jsx";
+import Donate from "./components/pages/donate/Donate.jsx";
 
 // ── SF Meet ──────────────────────────────────────────────────────────────────
-import MeetingRoom         from "./components/ui/meeting-room.jsx";
-import MeetingDetailPage   from "./components/pages/meet/MeetingDetailPage.jsx";
-import MeetingsTab         from "./components/pages/meet/MeetingsTab.jsx";
+import MeetingRoom            from "./components/ui/meeting-room.jsx";
+import MeetingDetailPage      from "./components/pages/meet/MeetingDetailPage.jsx";
+import MeetingsTab            from "./components/pages/meet/MeetingsTab.jsx";
 import PostMeetingSummaryPage from "./components/pages/meet/PostMeetingSummaryPage.jsx";
-import Donate from "./components/pages/donate/Donate.jsx";
 import ConnectionsPage from "./components/pages/connections/ConnectionsPage";
 
 // Builder Dashboard Routes - Phase 2
@@ -127,6 +127,11 @@ import { ActivityMonitorPage } from "./components/pages/erp/ActivityMonitorPage.
 import ERPDashboard from "./components/pages/erp/erp-dashboard";
 import ERPUpdates from "./components/pages/erp/erp-updates";
 import DocumentsPage from "./components/pages/erp/erp-document-page";
+import TaskBoard from "./components/pages/erp/TaskBoard";
+import PayoutPage from "./components/pages/erp/PayoutPage";
+import MemberAnalyticsPage from "./components/pages/erp/MemberAnalyticsPage";
+import AdminAnalyticsPage from "./components/pages/erp/AdminAnalyticsPage";
+import AdminSettings from "./components/pages/erp/AdminSettings";
 import FileDetailPage from "./components/pages/drive/fileDetails";
 
 import MilestonePage from "./components/pages/milestones/MilestonePage.jsx";
@@ -505,15 +510,25 @@ export default function App() {
                   <Route path="erp/analytics" element={<AnalyticsDashboard />} />
                   <Route path="erp/activity" element={<ActivityMonitorPage />} />
                   <Route path="erp-dashboard" element={<ERPDashboard />} />
-                  <Route path="/erp/updates" element={<ERPUpdates />} />
-                  <Route path="/erp/documents" element={<DocumentsPage />} />
+                  <Route path="erp/updates" element={<ERPUpdates />} />
+                  <Route path="erp/documents" element={<DocumentsPage />} />
+                  <Route path="erp/tasks" element={<TaskBoard />} />
+                  <Route path="erp/payouts" element={<PayoutPage />} />
+                  <Route path="erp/my-analytics" element={<MemberAnalyticsPage />} />
+                  <Route path="erp/admin-analytics" element={<AdminAnalyticsPage />} />
+                  <Route path="erp/settings" element={<AdminSettings />} />
 
                   <Route path="milestones" element={<MilestonePage />} />
 
-                  {/* SF Drive Route */}
-                  <Route path="/drive/file-details" element={<FileDetailPage />} />
-                  <Route path="/sf-drive" element={<FolderExplorerUI />} />
-                    
+                  {/* SF Drive */}
+                  <Route path="drive/file/:id" element={<FileDetailPage />} />
+                  <Route path="sf-drive" element={<FolderExplorerUI />} />
+
+                  {/* ── SF Meet — inside Layout (sidebar visible) ── */}
+                  <Route path="meet" element={<MeetingsTab />} />
+                  <Route path="meet/:id" element={<MeetingDetailPage />} />
+                  <Route path="meet/:id/summary" element={<PostMeetingSummaryPage />} />
+
                   <Route path="setting" element={<Setting />}>
                     <Route index element={<ProfileSetting />} />
                     <Route path="preferences" element={<Preferences />} />
@@ -521,13 +536,9 @@ export default function App() {
                   </Route>
                 </Route>
                 <Route path="*" element={<NotFound />} />
-                {/* Catch all route */}
 
-                {/* ── SF Meet — full-screen routes (no sidebar Layout) ── */}
-                <Route path="/meet" element={<ProtectedRoute><MeetingsTab /></ProtectedRoute>} />
+                {/* ── SF Meet Room — fullscreen, no sidebar ── */}
                 <Route path="/meet/room/:id" element={<ProtectedRoute><MeetingRoom /></ProtectedRoute>} />
-                <Route path="/meet/:id" element={<ProtectedRoute><MeetingDetailPage /></ProtectedRoute>} />
-                <Route path="/meet/:id/summary" element={<ProtectedRoute><PostMeetingSummaryPage /></ProtectedRoute>} />
               </Routes>
               <ToastContainer
                 position="bottom-center"
