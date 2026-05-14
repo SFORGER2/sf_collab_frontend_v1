@@ -14,6 +14,8 @@ import {
   Zap, Crown, Tag, Filter, CreditCard, Gem, ExternalLink,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
+import axios from 'axios';
 import { categoryAPI, listingAPI, sellerAPI, myListingsAPI, purchaseAPI, earningsAPI, boostAPI } from '@/utils/APIs/MarketplaceAPI';
 import { API_BASE_URL } from '@/utils/config';
 
@@ -248,8 +250,10 @@ const ListingDetailModal = ({ listing, onClose, myPurchases = [] }) => {
   if (!listing) return null;
   const Icon  = CATEGORY_ICONS[listing.category?.slug] || Package;
   const color = CATEGORY_COLORS[listing.category?.slug] || CATEGORY_COLORS.development;
-  const [activePreview, setActivePreview] = useState(0);
-  const [purchasing, setPurchasing]       = useState(false);
+  const { user, access_token } = useSelector(s => s.auth);
+  const [activePreview, setActivePreview]         = useState(0);
+  const [purchasing, setPurchasing]               = useState(false);
+  const [stripeRedirecting, setStripeRedirecting] = useState(false);
   const [boosting, setBoosting]           = useState(false);
   const [boostUnits, setBoostUnits]       = useState(1);
   const [showBoost, setShowBoost]         = useState(false);
@@ -278,6 +282,34 @@ const ListingDetailModal = ({ listing, onClose, myPurchases = [] }) => {
       }
     } catch { toast.error('Purchase failed'); }
     finally { setPurchasing(false); }
+  };
+
+  const handleStripeCheckout = async () => {
+    setStripeRedirecting(true);
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/payments/create-checkout-session`,
+        {
+          id: `marketplace-${listing.id}`,
+          title: listing.title,
+          description: listing.description || 'Marketplace purchase',
+          price: Math.round((listing.price || 0) * 100), // dollars → cents
+          currency: 'usd',
+          user_id: user?.id,
+          type: 'marketplace',
+        },
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      );
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        toast.error('Could not start checkout');
+      }
+    } catch {
+      toast.error('Stripe checkout failed. Please try again.');
+    } finally {
+      setStripeRedirecting(false);
+    }
   };
 
   const handleDownload = async () => {
@@ -487,21 +519,46 @@ const ListingDetailModal = ({ listing, onClose, myPurchases = [] }) => {
                     )}
                   </div>
                 ) : (
-                  <div>
-                    <p className="text-xs text-gray-600 mb-2.5 flex items-center gap-1.5">
-                      <CreditCard size={12} /> Paid from your Balance wallet
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-600 mb-1 flex items-center gap-1.5">
+                      <CreditCard size={12} /> Choose how to pay
                     </p>
+
+                    {/* Option 1: Balance wallet */}
                     <motion.button whileTap={{ scale: 0.98 }} onClick={handlePurchase}
-                      disabled={purchasing}
+                      disabled={purchasing || stripeRedirecting}
                       className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500
                                  hover:to-blue-400 disabled:opacity-50 text-white font-semibold py-3.5
                                  rounded-xl transition-all shadow-lg shadow-blue-600/20
                                  flex items-center justify-center gap-2">
                       {purchasing
                         ? <><Loader2 size={16} className="animate-spin" /> Processing...</>
-                        : <><CreditCard size={16} /> Purchase for ${listing.price?.toFixed(2)}</>
+                        : <><CreditCard size={16} /> Pay with Balance — ${listing.price?.toFixed(2)}</>
                       }
                     </motion.button>
+
+                    {/* Divider */}
+                    <div className="flex items-center gap-2 py-0.5">
+                      <div className="flex-1 h-px bg-white/[0.05]" />
+                      <span className="text-gray-600 text-[10px] uppercase tracking-wider">or</span>
+                      <div className="flex-1 h-px bg-white/[0.05]" />
+                    </div>
+
+                    {/* Option 2: Stripe card checkout */}
+                    <motion.button whileTap={{ scale: 0.98 }} onClick={handleStripeCheckout}
+                      disabled={purchasing || stripeRedirecting}
+                      className="w-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.10]
+                                 disabled:opacity-50 text-white font-semibold py-3
+                                 rounded-xl transition-all flex items-center justify-center gap-2 text-sm">
+                      {stripeRedirecting
+                        ? <><Loader2 size={15} className="animate-spin" /> Redirecting to Stripe...</>
+                        : <><ExternalLink size={14} /> Pay with Card (Stripe) — ${listing.price?.toFixed(2)}</>
+                      }
+                    </motion.button>
+
+                    <p className="text-[10px] text-gray-600 text-center">
+                      Card payments are processed securely by Stripe
+                    </p>
                   </div>
                 )}
               </div>

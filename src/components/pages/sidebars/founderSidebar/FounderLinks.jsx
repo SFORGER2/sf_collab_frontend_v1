@@ -169,7 +169,7 @@ export function createFounderLinks(
       href: "/meet",
       label: "SF Meet",
       subItems: [
-        { id: "meet",         href: "/meet",         label: "All Meetings",    icon: <Video size={18} /> },
+        { id: "meet-all",    href: "/meet",    label: "All Meetings", icon: <Video size={18} /> },
       ],
     },
     {
