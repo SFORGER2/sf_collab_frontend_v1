@@ -57,6 +57,8 @@ export default function DesktopSidebarContent({
       >
         <div className="flex flex-col gap-1 overflow-y-auto px-2.5">
           {links.map((link) => {
+            const isActive = getAllRoutes(link).includes(location.pathname);
+            const showSubs = expandedId === link.id;
           const isActive = getAllRoutes(link).includes(location.pathname);
             const showSubs = expandedItems[link.id] ?? false;
             const isUpcoming = link.isUpcoming;
@@ -77,9 +79,9 @@ export default function DesktopSidebarContent({
                     ${isHovered ? "gap-3 px-3 justify-start" : "justify-center px-0"}
                     py-3 rounded-lg transition-colors min-w-0
                     ${isActive
-                                      ? "bg-blue-600/20 text-blue-400"
-                                      : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-                                    }
+                      ? "bg-blue-600/20 text-blue-400"
+                      : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
+                    }
                     ${isUpcoming ? upcomingClasses : ""}
                   `}
                 >
@@ -131,7 +133,7 @@ export default function DesktopSidebarContent({
                       className="flex flex-col gap-0.5 mt-1 ml-4 pl-3 border-l border-zinc-700/50 overflow-hidden"
                     >
                       {(link.subItems || []).map((subItem) => {
-                      const isSubActive = location.pathname === subItem.href && location.pathname !== "/dashboard";
+                        const isSubActive = location.pathname === subItem.href && location.pathname !== "/dashboard";
 
 
                         return (
@@ -166,7 +168,7 @@ export default function DesktopSidebarContent({
                 </AnimatePresence>
               </div>
             )
-                
+
           })}
 
           {/* Admin */}
@@ -178,9 +180,9 @@ export default function DesktopSidebarContent({
                 }`}
             >
               <div className="flex items-center justify-center w-6">
-                    <Crown size={22} />
-                  </div>
-              
+                <Crown size={22} />
+              </div>
+
               <motion.span
                 animate={{
                   opacity: isHovered ? 1 : 0,
@@ -195,7 +197,7 @@ export default function DesktopSidebarContent({
           )}
         </div>
 
-        <BottomLinks onLinkClick={onLinkClick} callback={callback} />
+        <BottomLinks onLinkClick={onLinkClick} callback={callback} isHovered={isHovered} />
       </motion.div>
     </div>
   );
