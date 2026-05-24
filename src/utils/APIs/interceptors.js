@@ -2,6 +2,10 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { toast } from "react-toastify";
 
+const logErrorToBackend = (error) => {
+    console.error("API Error:", error);
+};
+
 export const requestInterceptor = (config) => {
   const token = localStorage.getItem('access_token');
   

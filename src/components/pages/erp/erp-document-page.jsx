@@ -1,3 +1,4 @@
+// src/components/pages/erp/erp-document-page.jsx
 import { useState, useEffect, useCallback } from "react";
 import {
   Upload,
@@ -20,13 +21,15 @@ import {
   responseErrorInterceptor,
 } from "../../../utils/APIs/interceptors";
 
-const api = axios.create({ baseURL: "" });
+// Use correct base URL for ERP documents
+const api = axios.create({ baseURL: "/api/erp-documents" });
 api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 const DocumentsPage = () => {
   const { user } = useSelector((s) => s.auth);
-  const workspaceId = user?.id;
+  // Use active workspace ID (ensure backend returns it)
+  const workspaceId = user?.active_workspace_id || 1;
 
   const [activeRole, setActiveRole] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,7 +43,6 @@ const DocumentsPage = () => {
   const [uploadFolder, setUploadFolder] = useState("general");
   const [notice, setNotice] = useState(null);
 
-  // Real data from API — shaped to match original UI expectations
   const [rootFiles, setRootFiles] = useState([]);
   const [stats, setStats] = useState({ totalFiles: 0, folders: 0 });
   const [loading, setLoading] = useState(true);
@@ -50,27 +52,24 @@ const DocumentsPage = () => {
     setTimeout(() => setNotice(null), 3000);
   };
 
-  // Load documents from API and reshape into folder/file tree for the grid
-  const load = useCallback(async () => {
+  const loadDocuments = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get("/api/documents/list", { params: { workspace_id: workspaceId } });
-      const raw = res.data?.documents || res.data || [];
-      const docs = Array.isArray(raw) ? raw : [];
+      const res = await api.get("/list", { params: { workspace_id: workspaceId } });
+      const docs = res.data?.data?.documents || res.data?.documents || [];
+      const docsArray = Array.isArray(docs) ? docs : [];
 
-      // Group flat list by folder — each folder becomes a card, loose files sit at root
+      // Group by folder
       const folderMap = {};
       const looseFiles = [];
 
-      docs.forEach((doc) => {
+      docsArray.forEach((doc) => {
         const folder = doc.folder || "general";
         const fileItem = {
-          id:       doc.id,
-          type:     "file",
-          name:     doc.file_name,
-          modified: doc.created_at
-            ? new Date(doc.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-            : "—",
+          id: doc.id,
+          type: "file",
+          name: doc.original_filename,
+          modified: doc.created_at ? new Date(doc.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—",
           size: doc.file_size
             ? doc.file_size > 1024 ** 2
               ? `${(doc.file_size / 1024 ** 2).toFixed(1)} MB`
@@ -78,19 +77,18 @@ const DocumentsPage = () => {
             : null,
           _docId: doc.id,
         };
-
         if (folder === "general") {
           looseFiles.push(fileItem);
         } else {
           if (!folderMap[folder]) {
             folderMap[folder] = {
-              id:       `folder-${folder}`,
-              type:     "folder",
-              name:     folder.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+              id: `folder-${folder}`,
+              type: "folder",
+              name: folder.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
               modified: "—",
-              items:    0,
+              items: 0,
               children: [],
-              _folder:  folder,
+              _folder: folder,
             };
           }
           folderMap[folder].children.push(fileItem);
@@ -100,42 +98,43 @@ const DocumentsPage = () => {
 
       const tree = [...Object.values(folderMap), ...looseFiles];
       setRootFiles(tree);
-      setStats({ totalFiles: docs.length, folders: Object.keys(folderMap).length });
-    } catch {
+      setStats({ totalFiles: docsArray.length, folders: Object.keys(folderMap).length });
+    } catch (err) {
+      console.error("Failed to load documents", err);
       setRootFiles([]);
     } finally {
       setLoading(false);
     }
   }, [workspaceId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
 
-  //  fetches role from local storage
   useEffect(() => {
     const role = localStorage.getItem("activeRole");
     if (role) setActiveRole(role);
   }, []);
 
   const filteredRootFiles = rootFiles.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getFolderByPath = (path) => {
     if (path.length === 0) return null;
     let current = rootFiles.find(
-      (f) => f.name === path[0] && f.type === "folder",
+      (f) => f.name === path[0] && f.type === "folder"
     );
     if (!current) return null;
-
     for (let i = 1; i < path.length; i++) {
       current = current.children?.find(
-        (f) => f.name === path[i] && f.type === "folder",
+        (f) => f.name === path[i] && f.type === "folder"
       );
       if (!current) return null;
     }
     return current;
   };
-  // folder logic
+
   const handleOpenFolder = (folder) => {
     setModalPath([folder.name]);
     const folderData = getFolderByPath([folder.name]);
@@ -150,7 +149,6 @@ const DocumentsPage = () => {
     setModalItems(folderData?.children || []);
   };
 
-  // modal logic
   const handleModalBack = () => {
     if (modalPath.length <= 1) {
       closeFolderModal();
@@ -168,81 +166,62 @@ const DocumentsPage = () => {
     setModalItems([]);
   };
 
-  // Unzip Feature
   const handleUnzip = (zipItem, isInModal = false) => {
+    // Simple mock unzip – backend zip extraction not implemented
     const extractedFolderName = zipItem.name.replace(".zip", "");
-
     const newExtractedFolder = {
       id: Date.now(),
       type: "folder",
       name: extractedFolderName,
       modified: "just now",
-      items: 5,
+      items: 3,
       children: [
-        {
-          id: Date.now() + 1,
-          type: "file",
-          name: "README.txt",
-          modified: "just now",
-          size: "2 KB",
-        },
-        {
-          id: Date.now() + 2,
-          type: "file",
-          name: "Extracted_Document.pdf",
-          modified: "just now",
-          size: "1.4 MB",
-        },
-        {
-          id: Date.now() + 3,
-          type: "file",
-          name: "Summary.xlsx",
-          modified: "just now",
-          size: "245 KB",
-        },
+        { id: Date.now() + 1, type: "file", name: "README.txt", modified: "just now", size: "2 KB" },
+        { id: Date.now() + 2, type: "file", name: "Extracted_Document.pdf", modified: "just now", size: "1.4 MB" },
+        { id: Date.now() + 3, type: "file", name: "Summary.xlsx", modified: "just now", size: "245 KB" },
       ],
     };
-
     if (!isInModal) {
-      // Unzip in root view
-      setRootFiles((prev) => {
-        const withoutZip = prev.filter((f) => f.id !== zipItem.id);
-        return [newExtractedFolder, ...withoutZip];
-      });
+      setRootFiles((prev) => [newExtractedFolder, ...prev.filter((f) => f.id !== zipItem.id)]);
     } else {
-      // Unzip inside modal
-      setModalItems((prev) => {
-        const withoutZip = prev.filter((f) => f.id !== zipItem.id);
-        return [newExtractedFolder, ...withoutZip];
-      });
+      setModalItems((prev) => [newExtractedFolder, ...prev.filter((f) => f.id !== zipItem.id)]);
     }
   };
-  // handle preview
+
   const handlePreview = (file) => {
     if (file.type === "folder") return;
     setSelectedFile(file);
   };
 
   const closePreview = () => setSelectedFile(null);
-  // Real download from backend
+
   const handleDownload = async (file) => {
     if (!file._docId) return;
     try {
-      const res = await api.get(`/api/documents/${file._docId}/download`, {
-        responseType: "blob",
-      });
+      const res = await api.get(`/${file._docId}/download`, { responseType: "blob" });
       const url = URL.createObjectURL(res.data);
       const a = document.createElement("a");
       a.href = url;
       a.download = file.name;
       a.click();
       URL.revokeObjectURL(url);
-    } catch {
+    } catch (err) {
       flash("Download failed", true);
     }
   };
 
-  // Real upload to backend
+  const handleDelete = async (file) => {
+    if (!file._docId) return;
+    if (!window.confirm(`Delete "${file.name}"?`)) return;
+    try {
+      await api.delete(`/${file._docId}`);
+      flash("Document deleted");
+      loadDocuments();
+    } catch (err) {
+      flash("Delete failed", true);
+    }
+  };
+
   const handleRealUpload = async () => {
     const input = document.createElement("input");
     input.type = "file";
@@ -251,14 +230,11 @@ const DocumentsPage = () => {
       input.setAttribute("webkitdirectory", "true");
       input.setAttribute("directory", "true");
     }
-
     input.onchange = async (e) => {
       const files = Array.from(e.target.files || []);
       if (!files.length) return;
-
       setUploading(true);
       setIsUploadModalOpen(false);
-
       try {
         await Promise.all(
           files.map((file) => {
@@ -266,23 +242,20 @@ const DocumentsPage = () => {
             fd.append("file", file);
             fd.append("workspace_id", String(workspaceId));
             fd.append("folder", uploadFolder);
-            fd.append("workspace_id", String(workspaceId));
-            return api.post("/api/documents/upload", fd);
+            return api.post("/upload", fd);
           })
         );
-        flash(`${files.length} file${files.length > 1 ? "s" : ""} uploaded successfully`);
-        load();
-      } catch {
+        flash(`${files.length} file(s) uploaded successfully`);
+        loadDocuments();
+      } catch (err) {
         flash("Upload failed — please try again", true);
       } finally {
         setUploading(false);
       }
     };
-
     input.click();
   };
 
-  // Grid Rendering
   const renderGrid = (items, isModal = false) => (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
       {items.map((item) => (
@@ -292,9 +265,7 @@ const DocumentsPage = () => {
           whileTap={{ scale: 0.98 }}
           onClick={() => {
             if (item.type === "folder") {
-              isModal
-                ? handleSubFolderClick(item.name)
-                : handleOpenFolder(item);
+              isModal ? handleSubFolderClick(item.name) : handleOpenFolder(item);
             } else {
               handlePreview(item);
             }
@@ -316,16 +287,13 @@ const DocumentsPage = () => {
               </div>
             )}
           </div>
-
           <div className="font-medium text-base line-clamp-2 mb-2 group-hover:text-violet-200 transition-colors">
             {item.name}
           </div>
-
           <div className="mt-auto flex-col items-center justify-between text-xs text-zinc-400">
             <div className="mb-2 md:mb-0">{item.modified}</div>
             {item.size ? <div>{item.size}</div> : <div>{item.items} items</div>}
           </div>
-
           {item.type !== "folder" && (
             <div className="absolute bottom-5 right-5 opacity-0 group-hover:opacity-100 flex gap-2 transition-all">
               <button
@@ -334,6 +302,7 @@ const DocumentsPage = () => {
                   handlePreview(item);
                 }}
                 className="bg-white/10 hover:bg-white/20 backdrop-blur-md p-3 rounded-2xl text-white"
+                title="Preview"
               >
                 <Eye className="w-4 h-4" />
               </button>
@@ -343,8 +312,19 @@ const DocumentsPage = () => {
                   handleDownload(item);
                 }}
                 className="bg-white/10 hover:bg-white/20 backdrop-blur-md p-3 rounded-2xl text-white"
+                title="Download"
               >
                 <Download className="w-4 h-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(item);
+                }}
+                className="bg-white/10 hover:bg-red-500/20 backdrop-blur-md p-3 rounded-2xl text-white"
+                title="Delete"
+              >
+                <Trash2 className="w-4 h-4" />
               </button>
               {item.type === "zip" && (
                 <button
@@ -353,7 +333,7 @@ const DocumentsPage = () => {
                     handleUnzip(item, isModal);
                   }}
                   className="bg-white/10 hover:bg-white/20 backdrop-blur-md p-3 rounded-2xl text-white"
-                  title="Extract ZIP"
+                  title="Extract ZIP (mock)"
                 >
                   <Archive className="w-4 h-4" />
                 </button>
@@ -367,20 +347,19 @@ const DocumentsPage = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8 font-sans">
-      {/* Notice toast */}
+      {/* Toast */}
       {notice && (
         <div className={`fixed bottom-6 right-6 z-[99999] px-6 py-4 rounded-3xl text-white font-semibold shadow-2xl ${notice.isError ? "bg-red-600" : "bg-violet-600"}`}>
           {notice.msg}
         </div>
       )}
-      {/* Uploading indicator */}
       {uploading && (
         <div className="fixed bottom-6 right-6 z-[99999] px-6 py-4 rounded-3xl text-white font-semibold shadow-2xl bg-zinc-800 flex items-center gap-3">
-          <div className="w-4 h-4 rounded-full border-2 border-zinc-600" style={{ borderTopColor: "#7c3aed", animation: "spin 0.8s linear infinite" }} />
-          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+          <div className="w-4 h-4 rounded-full border-2 border-zinc-600 border-t-white animate-spin" />
           Uploading...
         </div>
       )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-10">
         <div>
@@ -391,12 +370,9 @@ const DocumentsPage = () => {
         </div>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-6 mb-10">
-        {/* Total Files Card */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden"
-        >
+        <motion.div whileHover={{ scale: 1.02 }} className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium">
@@ -404,9 +380,7 @@ const DocumentsPage = () => {
                 TOTAL FILES
               </div>
               <div className="text-5xl font-semibold mt-3">{stats.totalFiles}</div>
-              <div className="text-emerald-400 text-sm mt-1">
-                {stats.totalFiles} total
-              </div>
+              <div className="text-emerald-400 text-sm mt-1">{stats.totalFiles} total</div>
             </div>
             <div className="w-16 h-16 bg-gradient-to-br from-violet-500/10 to-transparent rounded-2xl flex items-center justify-center">
               <FileText className="w-9 h-9 text-violet-400" />
@@ -414,11 +388,7 @@ const DocumentsPage = () => {
           </div>
         </motion.div>
 
-        {/* Folders Card */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden"
-        >
+        <motion.div whileHover={{ scale: 1.02 }} className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium">
@@ -434,20 +404,14 @@ const DocumentsPage = () => {
           </div>
         </motion.div>
 
-        {/* Storage Card — not tracked server-side yet */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden"
-        >
+        <motion.div whileHover={{ scale: 1.02 }} className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium">
                 STORAGE
               </div>
               <div className="text-5xl font-semibold mt-3">—</div>
-              <div className="text-zinc-400 text-sm mt-1">
-                Not tracked yet
-              </div>
+              <div className="text-zinc-400 text-sm mt-1">Not tracked yet</div>
             </div>
             <div className="relative w-20 h-20 flex items-center justify-center">
               <div className="w-12 h-12 rounded-full border-4 border-zinc-700 flex items-center justify-center text-zinc-600 text-lg font-semibold">
@@ -457,11 +421,7 @@ const DocumentsPage = () => {
           </div>
         </motion.div>
 
-        {/* Collaborating Card — real active users */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden"
-        >
+        <motion.div whileHover={{ scale: 1.02 }} className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium">
@@ -489,7 +449,6 @@ const DocumentsPage = () => {
       {/* Main Documents Area */}
       <div className="bg-zinc-900/70 backdrop-blur-2xl border border-zinc-700 rounded-3xl p-8">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-6 mb-8">
-          {/* Search Input */}
           <div className="relative w-full md:w-80 flex-1">
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
             <input
@@ -500,8 +459,6 @@ const DocumentsPage = () => {
               className="w-full bg-zinc-800 border border-zinc-700 focus:border-violet-400 rounded-3xl pl-12 pr-6 py-4 text-sm outline-none transition-all"
             />
           </div>
-
-          {/* Upload Button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -515,7 +472,7 @@ const DocumentsPage = () => {
 
         {loading ? (
           <div className="py-20 text-center">
-            <div className="w-8 h-8 rounded-full border-2 border-zinc-800 mx-auto mb-4" style={{ borderTopColor: "#7c3aed", animation: "spin 0.8s linear infinite" }} />
+            <div className="w-8 h-8 rounded-full border-2 border-zinc-800 mx-auto mb-4 border-t-violet-500 animate-spin" />
             <p className="text-zinc-500 text-sm">Loading documents...</p>
           </div>
         ) : (
@@ -553,18 +510,12 @@ const DocumentsPage = () => {
               <div className="px-8 py-6 border-b border-zinc-700 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Upload className="w-6 h-6 text-violet-400" />
-                  <h3 className="text-2xl font-semibold">
-                    Upload to Documents
-                  </h3>
+                  <h3 className="text-2xl font-semibold">Upload to Documents</h3>
                 </div>
-                <button
-                  onClick={() => setIsUploadModalOpen(false)}
-                  className="text-zinc-400 hover:text-white"
-                >
+                <button onClick={() => setIsUploadModalOpen(false)} className="text-zinc-400 hover:text-white">
                   <X className="w-6 h-6" />
                 </button>
               </div>
-
               <div className="px-8 pt-6 flex gap-2">
                 <button
                   onClick={() => setUploadType("file")}
@@ -579,12 +530,9 @@ const DocumentsPage = () => {
                   Entire Folder
                 </button>
               </div>
-
               <div className="mx-8 mt-6 mb-8 border border-dashed border-zinc-600 rounded-3xl p-12 text-center">
                 <Upload className="w-12 h-12 mx-auto text-zinc-400 mb-4" />
-                <p className="text-lg font-medium">
-                  Click below to browse your computer
-                </p>
+                <p className="text-lg font-medium">Click below to browse your computer</p>
                 <div className="mt-6 mb-2 text-left px-4">
                   <label className="text-xs uppercase tracking-widest text-zinc-500 mb-1 block">Save to folder</label>
                   <select
@@ -592,8 +540,8 @@ const DocumentsPage = () => {
                     onChange={(e) => setUploadFolder(e.target.value)}
                     className="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500"
                   >
-                    {["general","contracts","pitch-decks","financials","legal","hr"].map((f) => (
-                      <option key={f} value={f}>{f.replace(/-/g," ").replace(/\b\w/g,(c)=>c.toUpperCase())}</option>
+                    {["general", "contracts", "pitch-decks", "financials", "legal", "hr"].map((f) => (
+                      <option key={f} value={f}>{f.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</option>
                     ))}
                   </select>
                 </div>
@@ -632,35 +580,23 @@ const DocumentsPage = () => {
                 <div className="flex items-center gap-4">
                   <Folder className="w-8 h-8 text-amber-300" />
                   <div>
-                    <h3 className="text-2xl font-semibold">
-                      {modalPath[modalPath.length - 1]}
-                    </h3>
+                    <h3 className="text-2xl font-semibold">{modalPath[modalPath.length - 1]}</h3>
                     <p className="text-zinc-400 text-sm font-medium">
-                      {modalPath.length > 2
-                        ? `Documents / … / ${modalPath[modalPath.length - 1]}`
-                        : modalPath.join(" / ")}
+                      {modalPath.length > 2 ? `Documents / … / ${modalPath[modalPath.length - 1]}` : modalPath.join(" / ")}
                     </p>
                   </div>
                 </div>
-
                 <div className="flex items-center gap-6">
                   {modalPath.length > 1 && (
-                    <button
-                      onClick={handleModalBack}
-                      className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm font-medium"
-                    >
+                    <button onClick={handleModalBack} className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm font-medium">
                       <ArrowLeft className="w-4 h-4" /> Back
                     </button>
                   )}
-                  <button
-                    onClick={closeFolderModal}
-                    className="text-zinc-400 hover:text-white"
-                  >
+                  <button onClick={closeFolderModal} className="text-zinc-400 hover:text-white">
                     <X className="w-7 h-7" />
                   </button>
                 </div>
               </div>
-
               <div className="flex-1 p-8 overflow-auto">
                 {renderGrid(modalItems, true)}
               </div>
@@ -669,7 +605,7 @@ const DocumentsPage = () => {
         )}
       </AnimatePresence>
 
-      {/* File Preview Modal */}
+      {/* File Preview Modal (basic) */}
       <AnimatePresence>
         {selectedFile && (
           <motion.div
@@ -690,35 +626,20 @@ const DocumentsPage = () => {
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                   <FileText className="w-8 h-8 text-violet-300 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold truncate text-base md:text-lg leading-tight">
-                      {selectedFile.name}
-                    </div>
-                    <div className="text-xs text-zinc-400 truncate mt-0.5">
-                      {selectedFile.size} • {selectedFile.modified}
-                    </div>
+                    <div className="font-semibold truncate text-base md:text-lg leading-tight">{selectedFile.name}</div>
+                    <div className="text-xs text-zinc-400 truncate mt-0.5">{selectedFile.size} • {selectedFile.modified}</div>
                   </div>
                 </div>
-
-                <button
-                  onClick={closePreview}
-                  className="text-zinc-400 hover:text-white flex-shrink-0 p-2 -mr-2 md:-mr-1 transition-colors"
-                >
+                <button onClick={closePreview} className="text-zinc-400 hover:text-white flex-shrink-0 p-2 -mr-2 transition-colors">
                   <X className="w-6 h-6" />
                 </button>
               </div>
-
               <div className="p-8 md:p-12 min-h-[420px] flex flex-col items-center justify-center bg-gradient-to-br from-zinc-950 to-zinc-900">
                 <div className="w-40 h-56 bg-white/5 border border-white/10 rounded-3xl flex flex-col items-center justify-center mb-8 shadow-inner">
                   <FileText className="w-16 h-16 text-violet-200 mb-6" />
-                  <div className="text-xs uppercase tracking-[1px] text-zinc-400 font-medium">
-                    PREVIEW
-                  </div>
+                  <div className="text-xs uppercase tracking-[1px] text-zinc-400 font-medium">PREVIEW</div>
                 </div>
-
-                <p className="text-zinc-400 text-center max-w-xs">
-                  Document Preview
-                </p>
-
+                <p className="text-zinc-400 text-center max-w-xs">Document Preview</p>
                 <button
                   onClick={() => handleDownload(selectedFile)}
                   className="flex items-center gap-2 text-sm font-medium px-6 py-3 bg-emerald-400 hover:bg-emerald-500 text-black rounded-3xl mt-8 transition-colors"
