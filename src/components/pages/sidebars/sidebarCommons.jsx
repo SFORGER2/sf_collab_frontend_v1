@@ -5,7 +5,7 @@ import {
   MessageSquare, MessageSquareHeart, Rss, StickyNote, TrendingUp,
   UserPlus, Users, VideoIcon, Wallet, Wand2, CalendarClock, FileStack,
   Bell, DollarSign, BarChart2, Award,
-  CheckCircle, LayoutDashboard    // ✅ Added missing import
+  CheckCircle, LayoutDashboard, Settings, PieChart, Coins, CreditCard   // ✅ Added missing import
 } from "lucide-react";
 import { BsGear, BsPeople } from "react-icons/bs";
 import { IoChatbubbles } from "react-icons/io5";
@@ -88,10 +88,9 @@ export function erpSection(id) {
   return {
     id,
     icon: <BriefcaseBusiness size={22} />,
-    href: "/erp/member-dashboard",   // start with member dashboard (personal)
+    href: "/erp/member-dashboard",
     label: "ERP",
     subItems: [
-      // Personal / member‑facing (core workflow)
       { id: "erp-member-dashboard", href: "/erp/member-dashboard", label: "Member Dashboard", icon: <LayoutDashboard size={18} /> },
       { id: "erp-attendance",    href: "/erp/attendance",    label: "My Attendance",    icon: <CalendarClock size={18} /> },
       { id: "erp-tasks",         href: "/erp/tasks",         label: "Task Board",       icon: <ClipboardList size={18} /> },
@@ -103,8 +102,6 @@ export function erpSection(id) {
       { id: "erp-payouts",       href: "/erp/payouts",       label: "Payouts",          icon: <DollarSign size={18} /> },
       { id: "erp-documents",     href: "/erp/documents",     label: "Documents",        icon: <FileTerminal size={18} /> },
       { id: "erp-alerts",        href: "/erp/alerts",        label: "Alerts",           icon: <Bell size={18} /> },
-
-      // Admin / workspace management (grouped at the end)
       { id: "erp-workspace-dashboard", href: "/erp/workspace-dashboard", label: "Workspace Dashboard", icon: <TrendingUp size={18} /> },
       { id: "erp-admin-settings",      href: "/erp/admin-settings",      label: "Admin Settings",      icon: <Settings size={18} /> },
       { id: "erp-admin-revenue",       href: "/erp/admin/revenue-pools", label: "Revenue Pools",       icon: <Coins size={18} /> },
