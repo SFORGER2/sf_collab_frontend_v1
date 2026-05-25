@@ -88,24 +88,27 @@ export function erpSection(id) {
   return {
     id,
     icon: <BriefcaseBusiness size={22} />,
-    href: "/erp/attendance",
+    href: "/erp/member-dashboard",   // start with member dashboard (personal)
     label: "ERP",
     subItems: [
+      // Personal / member‑facing (core workflow)
+      { id: "erp-member-dashboard", href: "/erp/member-dashboard", label: "Member Dashboard", icon: <LayoutDashboard size={18} /> },
       { id: "erp-attendance",    href: "/erp/attendance",    label: "My Attendance",    icon: <CalendarClock size={18} /> },
       { id: "erp-tasks",         href: "/erp/tasks",         label: "Task Board",       icon: <ClipboardList size={18} /> },
-      { id: "erp-updates",       href: "/erp/updates",       label: "Updates",          icon: <FileStack size={18} /> },
+      { id: "erp-task-approval", href: "/erp/task-approval", label: "Task Approval",    icon: <CheckCircle size={18} /> },
+      { id: "erp-updates",       href: "/erp/updates",       label: "Daily Updates",    icon: <FileStack size={18} /> },
+      { id: "erp-points",        href: "/erp/points",        label: "Points Dashboard", icon: <Award size={18} /> },
+      { id: "erp-analytics",     href: "/erp/analytics",     label: "Analytics",        icon: <BarChart3 size={18} /> },
+      { id: "erp-my-analytics",  href: "/erp/my-analytics",  label: "My Analytics",     icon: <BarChart2 size={18} /> },
+      { id: "erp-payouts",       href: "/erp/payouts",       label: "Payouts",          icon: <DollarSign size={18} /> },
       { id: "erp-documents",     href: "/erp/documents",     label: "Documents",        icon: <FileTerminal size={18} /> },
       { id: "erp-alerts",        href: "/erp/alerts",        label: "Alerts",           icon: <Bell size={18} /> },
-      { id: "erp-analytics",     href: "/erp/analytics",     label: "Analytics",        icon: <BarChart3 size={18} /> },
-      { id: "erp-payouts",       href: "/erp/payouts",       label: "Payouts",          icon: <DollarSign size={18} /> },
-      { id: "erp-my-analytics",  href: "/erp/my-analytics",  label: "My Analytics",     icon: <BarChart2 size={18} /> },
-      { id: "erp-admin-settings",href: "/erp/admin-settings",label: "Admin Settings",   icon: <BsGear size={18} /> },
-      { id: "erp-admin-revenue", href: "/erp/admin/revenue-pools", label: "Revenue Pools", icon: <DollarSign size={18} /> },
-      { id: "erp-admin-payouts", href: "/erp/admin/payouts", label: "Admin Payouts", icon: <DollarSign size={18} /> },
-      { id: "erp-task-approval", href: "/erp/task-approval", label: "Task Approval", icon: <CheckCircle size={18} /> },
-      { id: "erp-member-dashboard", href: "/erp/member-dashboard", label: "Member Dashboard", icon: <LayoutDashboard size={18} /> },
-      { id: "erp-points", href: "/erp/points", label: "Points Dashboard", icon: <Award size={18} /> },
+
+      // Admin / workspace management (grouped at the end)
       { id: "erp-workspace-dashboard", href: "/erp/workspace-dashboard", label: "Workspace Dashboard", icon: <TrendingUp size={18} /> },
+      { id: "erp-admin-settings",      href: "/erp/admin-settings",      label: "Admin Settings",      icon: <Settings size={18} /> },
+      { id: "erp-admin-revenue",       href: "/erp/admin/revenue-pools", label: "Revenue Pools",       icon: <Coins size={18} /> },
+      { id: "erp-admin-payouts",       href: "/erp/admin/payouts",       label: "Admin Payouts",       icon: <CreditCard size={18} /> },
     ],
   };
 }
