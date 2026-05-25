@@ -4,7 +4,7 @@ import {
   FileSignature, FileTerminal, FileText, Images, Lightbulb, LightbulbIcon,
   MessageSquare, MessageSquareHeart, Rss, StickyNote, TrendingUp,
   UserPlus, Users, VideoIcon, Wallet, Wand2, CalendarClock, FileStack,
-  Bell, DollarSign, BarChart2, Award,
+  Bell, DollarSign, BarChart2, Award, Flag, AlertTriangle,
   CheckCircle, LayoutDashboard, Settings, PieChart, Coins, CreditCard   // ✅ Added missing import
 } from "lucide-react";
 import { BsGear, BsPeople } from "react-icons/bs";
@@ -102,6 +102,9 @@ export function erpSection(id) {
       { id: "erp-payouts",       href: "/erp/payouts",       label: "Payouts",          icon: <DollarSign size={18} /> },
       { id: "erp-documents",     href: "/erp/documents",     label: "Documents",        icon: <FileTerminal size={18} /> },
       { id: "erp-alerts",        href: "/erp/alerts",        label: "Alerts",           icon: <Bell size={18} /> },
+      { id: "erp-warnings",      href: "/warnings",          label: "Warnings",         icon: <AlertTriangle size={18} /> },
+      { id: "erp-flags",         href: "/admin/flags",       label: "Flags (Admin)",    icon: <Flag size={18} /> },
+      { id: "erp-audit-logs",    href: "/admin/audit-logs",  label: "Audit Logs",       icon: <FileText size={18} /> },
       { id: "erp-workspace-dashboard", href: "/erp/workspace-dashboard", label: "Workspace Dashboard", icon: <TrendingUp size={18} /> },
       { id: "erp-admin-settings",      href: "/erp/admin-settings",      label: "Admin Settings",      icon: <Settings size={18} /> },
       { id: "erp-admin-revenue",       href: "/erp/admin/revenue-pools", label: "Revenue Pools",       icon: <Coins size={18} /> },

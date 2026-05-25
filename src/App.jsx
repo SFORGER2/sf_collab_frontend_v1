@@ -140,7 +140,9 @@ import MemberDashboard from "./components/pages/erp/MemberDashboard";
 import PointsDashboard from "./components/pages/erp/PointsDashboard";
 import TaskDetail from "./components/pages/erp/TaskDetail";
 import WorkspaceDashboard from "./components/pages/erp/WorkspaceDashboard";
-
+import { WarningActionsPage } from "./components/pages/erp/WarningActionsPage";
+import { FlagsPage } from "./components/pages/erp/FlagsPage";
+import { AuditLogsPage } from "./components/pages/erp/AuditLogsPage";
 
 export default function App() {
   const { access_token, user } = useSelector((state) => state.auth);
@@ -369,6 +371,9 @@ export default function App() {
                   <Route path="erp/points" element={<PointsDashboard />} />
                   <Route path="erp/tasks/:taskId" element={<TaskDetail />} />
                   <Route path="erp/workspace-dashboard" element={<WorkspaceDashboard />} />
+                  <Route path="/warnings" element={<WarningActionsPage />} />
+                  <Route path="/admin/flags" element={<FlagsPage />} />
+                  <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
 
 
 
