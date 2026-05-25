@@ -1,4 +1,4 @@
-// src/components/pages/erp/AnalyticsDashboard.jsx
+// src/components/pages/erp/AnalyticsDashboard.jsx (debug version)
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
@@ -45,12 +45,15 @@ export function AnalyticsDashboard() {
         start.setMonth(start.getMonth() - 3);
         startDate = start.toISOString().split("T")[0];
       }
+      console.log("Fetching analytics with:", { workspaceId, startDate, endDate });
       const response = await api.get("/workspace", {
         params: { workspace_id: workspaceId, start_date: startDate, end_date: endDate },
       });
+      console.log("Analytics API response:", response.data);
       const data = response.data?.data || response.data;
       setMetrics(data.metrics);
     } catch (err) {
+      console.error("Analytics error:", err);
       setError(err?.response?.data?.error || "Failed to load analytics");
     } finally {
       setLoading(false);
@@ -97,6 +100,8 @@ export function AnalyticsDashboard() {
     </div>
   );
 }
+
+// ... (rest of the component – same as before, but I'll keep the sub-components for completeness)
 
 function KPICard({ label, value, icon, accent, sub }) {
   return (

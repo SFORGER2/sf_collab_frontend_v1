@@ -27,6 +27,7 @@ export default function MemberDashboard() {
   const [warnings, setWarnings] = useState([]);
   const [points, setPoints] = useState(0);
   const [estimatedPayout, setEstimatedPayout] = useState(null);
+  const [totalPaid, setTotalPaid] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
@@ -56,20 +57,23 @@ export default function MemberDashboard() {
       const alertsData = alertsRes.data?.data?.alerts || alertsRes.data?.alerts || [];
       setWarnings(alertsData);
 
-      // 4. Calculate points from approved tasks (if tasks have approved_points)
+      // 4. Calculate points from approved tasks
       const totalPoints = tasksData.reduce((sum, t) => sum + (t.approved_points || 0), 0);
       setPoints(totalPoints);
 
-      // 5. Fetch estimated payout (current payout if any)
-      // Using the existing Payout endpoint
+      // 5. Fetch all payouts for the user
       const payoutApi = axios.create({ baseURL: "/api/payout" });
       payoutApi.interceptors.request.use(requestInterceptor);
       payoutApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
       try {
         const payoutRes = await payoutApi.get(`/workspaces/${workspaceId}/payouts/me`);
         const payouts = payoutRes.data?.data || [];
-        const current = payouts.find(p => p.status === "approved" || p.status === "pending");
+        // Current estimated payout (pending or approved)
+        const current = payouts.find(p => p.status === "approved" || p.status === "pending" || p.status === "pending_review");
         if (current) setEstimatedPayout(current.final_payout_amount);
+        // Total amount paid (sum of all paid payouts)
+        const paidSum = payouts.reduce((sum, p) => sum + (p.status === "paid" ? (p.final_payout_amount || 0) : 0), 0);
+        setTotalPaid(paidSum);
       } catch (err) {
         // No payouts yet – ignore
       }
@@ -87,7 +91,7 @@ export default function MemberDashboard() {
   // Task counts
   const todoTasks = tasks.filter(t => t.status === "todo");
   const inProgressTasks = tasks.filter(t => t.status === "in_progress");
-  const doneTasks = tasks.filter(t => t.status === "done");
+  const doneTasks = tasks.filter(t => t.status === "done" || t.status === "approved");
 
   if (loading) return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">Loading...</div>;
 
@@ -97,15 +101,16 @@ export default function MemberDashboard() {
         <h1 className="text-3xl font-bold mb-2">Member Dashboard</h1>
         <p className="text-zinc-400 mb-8">Your workspace overview</p>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        {/* Stats Row – now 5 cards, responsive grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <StatCard icon={CheckCircle} label="Points" value={points} accent="#22c55e" />
           <StatCard icon={DollarSign} label="Est. Payout" value={`$${estimatedPayout?.toFixed(2) || "0.00"}`} accent="#f59e0b" />
+          <StatCard icon={DollarSign} label="Total Paid" value={`$${totalPaid.toFixed(2)}`} accent="#06b6d4" />
           <StatCard icon={AlertTriangle} label="Open Warnings" value={warnings.length} accent="#ef4444" />
           <StatCard icon={Clock} label="Tasks Done" value={doneTasks.length} accent="#6366f1" />
         </div>
 
-        {/* Tasks Section */}
+        {/* Tasks Section (unchanged) */}
         <div className="bg-[#121215] border border-zinc-800 rounded-2xl p-6 mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">My Tasks</h2>
@@ -118,7 +123,7 @@ export default function MemberDashboard() {
           </div>
         </div>
 
-        {/* Daily Update & Warnings Side by Side */}
+        {/* Daily Update & Warnings Side by Side (unchanged) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Daily Update Card */}
           <div className="bg-[#121215] border border-zinc-800 rounded-2xl p-6">

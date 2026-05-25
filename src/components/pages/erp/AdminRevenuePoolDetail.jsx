@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
-import { ArrowLeft, Calculator, Lock, Wallet, Edit3, DollarSign as DollarSignIcon } from "lucide-react";
+import { ArrowLeft, Calculator, Lock, Wallet, Edit3 } from "lucide-react";
 
 const api = axios.create({ baseURL: "/api/revenue-pool" });
 api.interceptors.request.use(requestInterceptor);
@@ -30,7 +30,6 @@ export default function AdminRevenuePoolDetail() {
   const loadPool = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch all pools and find the one (inefficient but works without a single GET endpoint)
       const res = await api.get(`/workspaces/${workspaceId}/revenue-pools`);
       const data = res.data?.data || res.data;
       const found = (data.pools || []).find(p => p.id === parseInt(poolId));
@@ -54,8 +53,6 @@ export default function AdminRevenuePoolDetail() {
     if (!poolId) return;
     setLoadingPayouts(true);
     try {
-      // Try to fetch payouts filtered by revenue_pool_id – this endpoint may not exist yet.
-      // If it fails, just show a message.
       const res = await payoutApi.get(`/workspaces/${workspaceId}/payouts?revenue_pool_id=${poolId}`);
       const data = res.data?.data || res.data;
       setPayouts(Array.isArray(data) ? data : []);
@@ -83,9 +80,6 @@ export default function AdminRevenuePoolDetail() {
           break;
         case "lock":
           endpoint = `/workspaces/${workspaceId}/revenue-pools/${poolId}/lock`;
-          break;
-        case "mark-paid":
-          endpoint = `/workspaces/${workspaceId}/revenue-pools/${poolId}/mark-paid`;
           break;
         case "generate":
           await payoutApi.post(`/workspaces/${workspaceId}/payouts/generate`, { revenue_pool_id: poolId });
@@ -123,7 +117,6 @@ export default function AdminRevenuePoolDetail() {
   const canCalculate = pool.status === "open";
   const canLock = pool.status === "pending_admin_review";
   const canGenerate = pool.status === "locked";
-  const canMarkPaid = pool.status === "locked"; // or after generation
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
@@ -152,11 +145,6 @@ export default function AdminRevenuePoolDetail() {
               {canGenerate && (
                 <button onClick={() => handleAction("generate")} disabled={actionLoading} className="flex items-center gap-2 bg-emerald-600 px-4 py-2 rounded-lg">
                   <Wallet size={16} /> Generate Payouts
-                </button>
-              )}
-              {canMarkPaid && (
-                <button onClick={() => handleAction("mark-paid")} disabled={actionLoading} className="flex items-center gap-2 bg-purple-600 px-4 py-2 rounded-lg">
-                  <DollarSignIcon size={16} /> Mark Paid
                 </button>
               )}
               <button onClick={() => setShowEdit(!showEdit)} className="flex items-center gap-2 bg-zinc-700 px-4 py-2 rounded-lg">

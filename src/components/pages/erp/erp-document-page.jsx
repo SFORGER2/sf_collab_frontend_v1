@@ -28,12 +28,15 @@ api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 const DocumentsPage = () => {
   const { user } = useSelector((s) => s.auth);
-  // Use active workspace ID (ensure backend returns it)
   const workspaceId = user?.active_workspace_id || 1;
 
   const [activeRole, setActiveRole] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
+  const [previewContent, setPreviewContent] = useState(null);
+  const [previewType, setPreviewType] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewText, setPreviewText] = useState(null);
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [modalPath, setModalPath] = useState([]);
   const [modalItems, setModalItems] = useState([]);
@@ -59,7 +62,6 @@ const DocumentsPage = () => {
       const docs = res.data?.data?.documents || res.data?.documents || [];
       const docsArray = Array.isArray(docs) ? docs : [];
 
-      // Group by folder
       const folderMap = {};
       const looseFiles = [];
 
@@ -167,7 +169,6 @@ const DocumentsPage = () => {
   };
 
   const handleUnzip = (zipItem, isInModal = false) => {
-    // Simple mock unzip – backend zip extraction not implemented
     const extractedFolderName = zipItem.name.replace(".zip", "");
     const newExtractedFolder = {
       id: Date.now(),
@@ -188,12 +189,38 @@ const DocumentsPage = () => {
     }
   };
 
-  const handlePreview = (file) => {
+  const handlePreview = async (file) => {
     if (file.type === "folder") return;
     setSelectedFile(file);
+    setPreviewLoading(true);
+    setPreviewContent(null);
+    setPreviewType(null);
+    setPreviewText(null);
+    try {
+      const res = await api.get(`/${file._docId}/download`, { responseType: "blob" });
+      const blob = res.data;
+      const url = URL.createObjectURL(blob);
+      setPreviewContent(url);
+      setPreviewType(blob.type);
+      if (blob.type.startsWith("text/")) {
+        const text = await blob.text();
+        setPreviewText(text);
+      }
+    } catch (err) {
+      console.error("Failed to load preview", err);
+      setPreviewContent(null);
+    } finally {
+      setPreviewLoading(false);
+    }
   };
 
-  const closePreview = () => setSelectedFile(null);
+  const closePreview = () => {
+    if (previewContent) URL.revokeObjectURL(previewContent);
+    setSelectedFile(null);
+    setPreviewContent(null);
+    setPreviewType(null);
+    setPreviewText(null);
+  };
 
   const handleDownload = async (file) => {
     if (!file._docId) return;
@@ -347,7 +374,6 @@ const DocumentsPage = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8 font-sans">
-      {/* Toast */}
       {notice && (
         <div className={`fixed bottom-6 right-6 z-[99999] px-6 py-4 rounded-3xl text-white font-semibold shadow-2xl ${notice.isError ? "bg-red-600" : "bg-violet-600"}`}>
           {notice.msg}
@@ -360,7 +386,6 @@ const DocumentsPage = () => {
         </div>
       )}
 
-      {/* Header */}
       <div className="flex items-center justify-between mb-10">
         <div>
           <h1 className="text-4xl font-semibold tracking-tight bg-gradient-to-br from-white to-gray-500 bg-clip-text text-transparent">
@@ -370,77 +395,47 @@ const DocumentsPage = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards (unchanged) */}
       <div className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-6 mb-10">
         <motion.div whileHover={{ scale: 1.02 }} className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium">
-                <Folder className="w-5 h-5" />
-                TOTAL FILES
-              </div>
+              <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium"><Folder className="w-5 h-5" /> TOTAL FILES</div>
               <div className="text-5xl font-semibold mt-3">{stats.totalFiles}</div>
               <div className="text-emerald-400 text-sm mt-1">{stats.totalFiles} total</div>
             </div>
-            <div className="w-16 h-16 bg-gradient-to-br from-violet-500/10 to-transparent rounded-2xl flex items-center justify-center">
-              <FileText className="w-9 h-9 text-violet-400" />
-            </div>
+            <div className="w-16 h-16 bg-gradient-to-br from-violet-500/10 to-transparent rounded-2xl flex items-center justify-center"><FileText className="w-9 h-9 text-violet-400" /></div>
           </div>
         </motion.div>
-
         <motion.div whileHover={{ scale: 1.02 }} className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium">
-                <Folder className="w-5 h-5" />
-                FOLDERS
-              </div>
+              <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium"><Folder className="w-5 h-5" /> FOLDERS</div>
               <div className="text-5xl font-semibold mt-3">{stats.folders}</div>
               <div className="text-amber-400 text-sm mt-1">{stats.folders} folders</div>
             </div>
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-500/10 to-transparent rounded-2xl flex items-center justify-center">
-              <Folder className="w-9 h-9 text-amber-400" />
-            </div>
+            <div className="w-16 h-16 bg-gradient-to-br from-amber-500/10 to-transparent rounded-2xl flex items-center justify-center"><Folder className="w-9 h-9 text-amber-400" /></div>
           </div>
         </motion.div>
-
         <motion.div whileHover={{ scale: 1.02 }} className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium">
-                STORAGE
-              </div>
+              <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium">STORAGE</div>
               <div className="text-5xl font-semibold mt-3">—</div>
               <div className="text-zinc-400 text-sm mt-1">Not tracked yet</div>
             </div>
-            <div className="relative w-20 h-20 flex items-center justify-center">
-              <div className="w-12 h-12 rounded-full border-4 border-zinc-700 flex items-center justify-center text-zinc-600 text-lg font-semibold">
-                ?
-              </div>
-            </div>
+            <div className="relative w-20 h-20 flex items-center justify-center"><div className="w-12 h-12 rounded-full border-4 border-zinc-700 flex items-center justify-center text-zinc-600 text-lg font-semibold">?</div></div>
           </div>
         </motion.div>
-
         <motion.div whileHover={{ scale: 1.02 }} className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium">
-                <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse" />
-                COLLABORATING
-              </div>
-              <div className="text-5xl font-semibold mt-3">
-                {loading ? "—" : stats.totalFiles > 0 ? 1 : 0}
-              </div>
-              <div className="text-zinc-400 text-sm mt-1">
-                {stats.totalFiles > 0 ? "currently editing" : "no active editors"}
-              </div>
+              <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium"><div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse" /> COLLABORATING</div>
+              <div className="text-5xl font-semibold mt-3">{loading ? "—" : stats.totalFiles > 0 ? 1 : 0}</div>
+              <div className="text-zinc-400 text-sm mt-1">{stats.totalFiles > 0 ? "currently editing" : "no active editors"}</div>
             </div>
             <div className="flex -space-x-4">
-              {stats.totalFiles > 0 && (
-                <div className="w-9 h-9 bg-violet-500 rounded-2xl flex items-center justify-center text-xs font-bold ring-2 ring-zinc-900">
-                  {user?.firstName?.[0]}{user?.lastName?.[0]}
-                </div>
-              )}
+              {stats.totalFiles > 0 && <div className="w-9 h-9 bg-violet-500 rounded-2xl flex items-center justify-center text-xs font-bold ring-2 ring-zinc-900">{user?.firstName?.[0]}{user?.lastName?.[0]}</div>}
             </div>
           </div>
         </motion.div>
@@ -451,161 +446,76 @@ const DocumentsPage = () => {
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-6 mb-8">
           <div className="relative w-full md:w-80 flex-1">
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search documents..."
-              className="w-full bg-zinc-800 border border-zinc-700 focus:border-violet-400 rounded-3xl pl-12 pr-6 py-4 text-sm outline-none transition-all"
-            />
+            <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search documents..." className="w-full bg-zinc-800 border border-zinc-700 focus:border-violet-400 rounded-3xl pl-12 pr-6 py-4 text-sm outline-none transition-all" />
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsUploadModalOpen(true)}
-            className="flex items-center justify-center gap-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 px-8 py-4 rounded-3xl font-medium text-sm shadow-lg shadow-violet-500/30 transition-all whitespace-nowrap"
-          >
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsUploadModalOpen(true)} className="flex items-center justify-center gap-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 px-8 py-4 rounded-3xl font-medium text-sm shadow-lg shadow-violet-500/30 transition-all whitespace-nowrap">
             <Upload className="w-5 h-5" />
             {activeRole === "founder" ? "Upload new file" : "Upload file"}
           </motion.button>
         </div>
 
         {loading ? (
-          <div className="py-20 text-center">
-            <div className="w-8 h-8 rounded-full border-2 border-zinc-800 mx-auto mb-4 border-t-violet-500 animate-spin" />
-            <p className="text-zinc-500 text-sm">Loading documents...</p>
-          </div>
+          <div className="py-20 text-center"><div className="w-8 h-8 rounded-full border-2 border-zinc-800 mx-auto mb-4 border-t-violet-500 animate-spin" /><p className="text-zinc-500 text-sm">Loading documents...</p></div>
         ) : (
           <>
             {renderGrid(filteredRootFiles, false)}
             {filteredRootFiles.length === 0 && (
-              <div className="py-20 text-center">
-                <FileText className="w-12 h-12 mx-auto text-zinc-600 mb-4" />
-                <p className="text-zinc-400">
-                  {rootFiles.length === 0 ? "No documents yet — upload your first file" : "No documents match your search"}
-                </p>
-              </div>
+              <div className="py-20 text-center"><FileText className="w-12 h-12 mx-auto text-zinc-600 mb-4" /><p className="text-zinc-400">{rootFiles.length === 0 ? "No documents yet — upload your first file" : "No documents match your search"}</p></div>
             )}
           </>
         )}
       </div>
 
-      {/* Upload Modal */}
+      {/* Upload Modal (unchanged) */}
       <AnimatePresence>
         {isUploadModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-center justify-center p-8"
-            onClick={() => setIsUploadModalOpen(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-zinc-900 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl"
-            >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-center justify-center p-8" onClick={() => setIsUploadModalOpen(false)}>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="bg-zinc-900 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl">
               <div className="px-8 py-6 border-b border-zinc-700 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Upload className="w-6 h-6 text-violet-400" />
-                  <h3 className="text-2xl font-semibold">Upload to Documents</h3>
-                </div>
-                <button onClick={() => setIsUploadModalOpen(false)} className="text-zinc-400 hover:text-white">
-                  <X className="w-6 h-6" />
-                </button>
+                <div className="flex items-center gap-3"><Upload className="w-6 h-6 text-violet-400" /><h3 className="text-2xl font-semibold">Upload to Documents</h3></div>
+                <button onClick={() => setIsUploadModalOpen(false)} className="text-zinc-400 hover:text-white"><X className="w-6 h-6" /></button>
               </div>
               <div className="px-8 pt-6 flex gap-2">
-                <button
-                  onClick={() => setUploadType("file")}
-                  className={`flex-1 py-4 text-sm font-medium rounded-3xl transition-all ${uploadType === "file" ? "bg-violet-600 text-white" : "bg-zinc-800 hover:bg-zinc-700 text-zinc-400"}`}
-                >
-                  Single File
-                </button>
-                <button
-                  onClick={() => setUploadType("folder")}
-                  className={`flex-1 py-4 text-sm font-medium rounded-3xl transition-all ${uploadType === "folder" ? "bg-violet-600 text-white" : "bg-zinc-800 hover:bg-zinc-700 text-zinc-400"}`}
-                >
-                  Entire Folder
-                </button>
+                <button onClick={() => setUploadType("file")} className={`flex-1 py-4 text-sm font-medium rounded-3xl transition-all ${uploadType === "file" ? "bg-violet-600 text-white" : "bg-zinc-800 hover:bg-zinc-700 text-zinc-400"}`}>Single File</button>
+                <button onClick={() => setUploadType("folder")} className={`flex-1 py-4 text-sm font-medium rounded-3xl transition-all ${uploadType === "folder" ? "bg-violet-600 text-white" : "bg-zinc-800 hover:bg-zinc-700 text-zinc-400"}`}>Entire Folder</button>
               </div>
               <div className="mx-8 mt-6 mb-8 border border-dashed border-zinc-600 rounded-3xl p-12 text-center">
                 <Upload className="w-12 h-12 mx-auto text-zinc-400 mb-4" />
                 <p className="text-lg font-medium">Click below to browse your computer</p>
                 <div className="mt-6 mb-2 text-left px-4">
                   <label className="text-xs uppercase tracking-widest text-zinc-500 mb-1 block">Save to folder</label>
-                  <select
-                    value={uploadFolder}
-                    onChange={(e) => setUploadFolder(e.target.value)}
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500"
-                  >
+                  <select value={uploadFolder} onChange={(e) => setUploadFolder(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500">
                     {["general", "contracts", "pitch-decks", "financials", "legal", "hr"].map((f) => (
                       <option key={f} value={f}>{f.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</option>
                     ))}
                   </select>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleRealUpload}
-                  className="mt-6 px-10 py-4 bg-white/10 hover:bg-white/20 text-white rounded-3xl text-sm font-medium"
-                >
-                  Browse {uploadType === "folder" ? "Folder" : "Files"}
-                </motion.button>
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleRealUpload} className="mt-6 px-10 py-4 bg-white/10 hover:bg-white/20 text-white rounded-3xl text-sm font-medium">Browse {uploadType === "folder" ? "Folder" : "Files"}</motion.button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Folder Modal */}
+      {/* Folder Modal (unchanged) */}
       <AnimatePresence>
         {isFolderModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[60] flex items-center justify-center p-8"
-            onClick={closeFolderModal}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-zinc-900 w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl max-h-[88vh] flex flex-col"
-            >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[60] flex items-center justify-center p-8" onClick={closeFolderModal}>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="bg-zinc-900 w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl max-h-[88vh] flex flex-col">
               <div className="px-8 py-6 border-b border-zinc-700 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Folder className="w-8 h-8 text-amber-300" />
-                  <div>
-                    <h3 className="text-2xl font-semibold">{modalPath[modalPath.length - 1]}</h3>
-                    <p className="text-zinc-400 text-sm font-medium">
-                      {modalPath.length > 2 ? `Documents / … / ${modalPath[modalPath.length - 1]}` : modalPath.join(" / ")}
-                    </p>
-                  </div>
-                </div>
+                <div className="flex items-center gap-4"><Folder className="w-8 h-8 text-amber-300" /><div><h3 className="text-2xl font-semibold">{modalPath[modalPath.length - 1]}</h3><p className="text-zinc-400 text-sm font-medium">{modalPath.length > 2 ? `Documents / … / ${modalPath[modalPath.length - 1]}` : modalPath.join(" / ")}</p></div></div>
                 <div className="flex items-center gap-6">
-                  {modalPath.length > 1 && (
-                    <button onClick={handleModalBack} className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm font-medium">
-                      <ArrowLeft className="w-4 h-4" /> Back
-                    </button>
-                  )}
-                  <button onClick={closeFolderModal} className="text-zinc-400 hover:text-white">
-                    <X className="w-7 h-7" />
-                  </button>
+                  {modalPath.length > 1 && <button onClick={handleModalBack} className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm font-medium"><ArrowLeft className="w-4 h-4" /> Back</button>}
+                  <button onClick={closeFolderModal} className="text-zinc-400 hover:text-white"><X className="w-7 h-7" /></button>
                 </div>
               </div>
-              <div className="flex-1 p-8 overflow-auto">
-                {renderGrid(modalItems, true)}
-              </div>
+              <div className="flex-1 p-8 overflow-auto">{renderGrid(modalItems, true)}</div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* File Preview Modal (basic) */}
+      {/* Preview Modal (fixed) */}
       <AnimatePresence>
         {selectedFile && (
           <motion.div
@@ -620,32 +530,31 @@ const DocumentsPage = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-zinc-900 max-w-3xl w-full rounded-3xl overflow-hidden shadow-2xl"
+              className="bg-zinc-900 max-w-4xl w-full rounded-3xl overflow-hidden shadow-2xl"
             >
-              <div className="px-6 md:px-8 py-5 md:py-6 border-b border-zinc-700 flex items-center gap-4">
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <FileText className="w-8 h-8 text-violet-300 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold truncate text-base md:text-lg leading-tight">{selectedFile.name}</div>
-                    <div className="text-xs text-zinc-400 truncate mt-0.5">{selectedFile.size} • {selectedFile.modified}</div>
-                  </div>
-                </div>
-                <button onClick={closePreview} className="text-zinc-400 hover:text-white flex-shrink-0 p-2 -mr-2 transition-colors">
-                  <X className="w-6 h-6" />
-                </button>
+              <div className="px-6 py-4 border-b border-zinc-700 flex justify-between items-center">
+                <h3 className="text-lg font-semibold truncate">{selectedFile.name}</h3>
+                <button onClick={closePreview} className="text-zinc-400 hover:text-white"><X size={20} /></button>
               </div>
-              <div className="p-8 md:p-12 min-h-[420px] flex flex-col items-center justify-center bg-gradient-to-br from-zinc-950 to-zinc-900">
-                <div className="w-40 h-56 bg-white/5 border border-white/10 rounded-3xl flex flex-col items-center justify-center mb-8 shadow-inner">
-                  <FileText className="w-16 h-16 text-violet-200 mb-6" />
-                  <div className="text-xs uppercase tracking-[1px] text-zinc-400 font-medium">PREVIEW</div>
-                </div>
-                <p className="text-zinc-400 text-center max-w-xs">Document Preview</p>
-                <button
-                  onClick={() => handleDownload(selectedFile)}
-                  className="flex items-center gap-2 text-sm font-medium px-6 py-3 bg-emerald-400 hover:bg-emerald-500 text-black rounded-3xl mt-8 transition-colors"
-                >
-                  <Download className="w-4 h-4" /> Download
-                </button>
+              <div className="p-4 min-h-[400px] max-h-[70vh] overflow-auto bg-zinc-950">
+                {previewLoading ? (
+                  <div className="flex justify-center py-20">Loading preview...</div>
+                ) : previewContent ? (
+                  previewText !== null ? (
+                    <pre className="whitespace-pre-wrap font-mono text-sm text-zinc-300 bg-black/50 p-4 rounded-lg overflow-auto">{previewText}</pre>
+                  ) : previewType?.startsWith("image/") ? (
+                    <img src={previewContent} alt={selectedFile.name} className="max-w-full max-h-[60vh] mx-auto object-contain" />
+                  ) : previewType === "application/pdf" ? (
+                    <iframe src={previewContent} className="w-full h-[60vh]" title={selectedFile.name} />
+                  ) : (
+                    <div className="text-center py-20">
+                      <p className="text-zinc-500">Preview not available for this file type.</p>
+                      <button onClick={() => handleDownload(selectedFile)} className="mt-4 bg-blue-600 px-4 py-2 rounded-lg">Download</button>
+                    </div>
+                  )
+                ) : (
+                  <div className="text-center py-20 text-zinc-500">Could not load preview.</div>
+                )}
               </div>
             </motion.div>
           </motion.div>

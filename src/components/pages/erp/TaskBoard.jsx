@@ -10,14 +10,13 @@ import {
 import { 
   Plus, Search, LayoutGrid, List, Filter, 
   MoreVertical, Calendar, User, CheckCircle2, 
-  Clock, AlertCircle, Trash2
+  Clock, AlertCircle, Trash2, Award, ChevronDown, ChevronRight
 } from "lucide-react";
 
 const api = axios.create({ baseURL: "/api/erp-tasks" });
 api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
-// New instance for workspace task operations (approve, reject, delete)
 const workspaceApi = axios.create({ baseURL: "/api/workspaces" });
 workspaceApi.interceptors.request.use(requestInterceptor);
 workspaceApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
@@ -31,6 +30,7 @@ const TaskBoard = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [approvedCollapsed, setApprovedCollapsed] = useState(true);
 
   const loadTasks = useCallback(async () => {
     if (!workspaceId) return;
@@ -122,9 +122,12 @@ const TaskBoard = () => {
     { id: "todo", title: "To Do", icon: <Clock className="text-blue-400" size={18} /> },
     { id: "in_progress", title: "In Progress", icon: <AlertCircle className="text-yellow-400" size={18} /> },
     { id: "done", title: "Done", icon: <CheckCircle2 className="text-green-400" size={18} /> },
+    { id: "approved", title: "Approved", icon: <Award className="text-purple-400" size={18} /> },
   ];
 
   const canDelete = (task) => {
+    // Only allow deletion for tasks that are NOT approved
+    if (task.status === "approved") return false;
     const isAdmin = user?.role === "admin";
     const isCreator = task.created_by === user?.id;
     return isAdmin || isCreator;
@@ -177,13 +180,62 @@ const TaskBoard = () => {
                 Move to {nextLabel}
               </button>
             )}
+            {task.status === "done" && (
+              <span className="text-xs text-gray-400 italic">Awaiting approval</span>
+            )}
+            {task.status === "approved" && (
+              <span className="text-xs text-purple-400 font-medium">Points awarded</span>
+            )}
           </div>
         </div>
       </div>
     );
   };
+
+  const renderColumn = (column) => {
+    const tasksInColumn = filteredTasks.filter(t => t.status === column.id);
+    const isApprovedColumn = column.id === "approved";
+    const isCollapsed = isApprovedColumn && approvedCollapsed;
+
+    return (
+      <div key={column.id} className="flex flex-col h-full">
+        <div className="flex items-center justify-between mb-4 px-2">
+          <div className="flex items-center gap-2">
+            {isApprovedColumn && (
+              <button
+                onClick={() => setApprovedCollapsed(!approvedCollapsed)}
+                className="text-gray-400 hover:text-white"
+              >
+                {approvedCollapsed ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
+              </button>
+            )}
+            {column.icon}
+            <h3 className="font-semibold text-sm">{column.title}</h3>
+            <span className="bg-[#1a1a1a] text-gray-500 text-[10px] px-2 py-0.5 rounded-full border border-[#262626]">
+              {tasksInColumn.length}
+            </span>
+          </div>
+          <button className="text-gray-500 hover:text-white">
+            <Plus size={16} />
+          </button>
+        </div>
+        {!isCollapsed && (
+          <div className="flex-1 bg-[#0a0a0a] rounded-2xl p-2 border border-dashed border-[#262626]">
+            {tasksInColumn.map(task => (
+              <TaskCard key={task.id} task={task} onStatusChange={handleStatusChange} onDelete={handleDeleteTask} />
+            ))}
+            {tasksInColumn.length === 0 && (
+              <p className="text-center text-gray-500 text-xs py-4">No tasks</p>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-black text-white p-6 pb-20">
+      {/* Header and search – same as before */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Task Management</h1>
@@ -224,28 +276,8 @@ const TaskBoard = () => {
       {loading ? (
         <div className="flex justify-center py-16 text-gray-500 text-sm">Loading tasks…</div>
       ) : view === "kanban" ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {columns.map(column => (
-            <div key={column.id} className="flex flex-col h-full">
-              <div className="flex items-center justify-between mb-4 px-2">
-                <div className="flex items-center gap-2">
-                  {column.icon}
-                  <h3 className="font-semibold text-sm">{column.title}</h3>
-                  <span className="bg-[#1a1a1a] text-gray-500 text-[10px] px-2 py-0.5 rounded-full border border-[#262626]">
-                    {filteredTasks.filter(t => t.status === column.id).length}
-                  </span>
-                </div>
-                <button className="text-gray-500 hover:text-white">
-                  <Plus size={16} />
-                </button>
-              </div>
-              <div className="flex-1 bg-[#0a0a0a] rounded-2xl p-2 border border-dashed border-[#262626]">
-                {filteredTasks.filter(t => t.status === column.id).map(task => (
-                  <TaskCard key={task.id} task={task} onStatusChange={handleStatusChange} onDelete={handleDeleteTask} />
-                ))}
-              </div>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {columns.map(column => renderColumn(column))}
         </div>
       ) : (
         <div className="bg-[#1a1a1a] border border-[#262626] rounded-xl overflow-hidden">
@@ -268,15 +300,21 @@ const TaskBoard = () => {
                 >
                   <td className="px-6 py-4 font-medium text-white">{task.title}</td>
                   <td className="px-6 py-4">
-                    <select
-                      value={task.status}
-                      onChange={(e) => { e.stopPropagation(); handleStatusChange(task.id, e.target.value); }}
-                      className="bg-[#1a1a1a] border border-[#262626] rounded px-2 py-1 text-xs text-white"
-                    >
-                      <option value="todo">To Do</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="done">Done</option>
-                    </select>
+                    {task.status === "approved" ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-400">
+                        <Award size={12} /> Approved
+                      </span>
+                    ) : (
+                      <select
+                        value={task.status}
+                        onChange={(e) => { e.stopPropagation(); handleStatusChange(task.id, e.target.value); }}
+                        className="bg-[#1a1a1a] border border-[#262626] rounded px-2 py-1 text-xs text-white"
+                      >
+                        <option value="todo">To Do</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="done">Done</option>
+                      </select>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
@@ -307,6 +345,7 @@ const TaskBoard = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          {/* modal content unchanged */}
           <div className="bg-[#1a1a1a] border border-[#262626] rounded-2xl p-8 w-full max-w-md">
             <h2 className="text-lg font-semibold text-white mb-6">New Task</h2>
             <div className="space-y-4">

@@ -172,15 +172,11 @@ export default function AdminPayouts() {
                               Approve
                             </button>
                           )}
-                          {(p.status === "pending" || p.status === "approved") && (
-                            <button
-                              onClick={() => setModal({ action: "hold", payoutId: p.id })}
-                              disabled={actionLoading}
-                              className="px-3 py-1 bg-amber-600 rounded text-xs hover:bg-amber-700"
-                            >
-                              Hold
-                            </button>
-                          )}
+                          {(p.status === "pending" || p.status === "pending_review") && (
+  <button onClick={() => handleAction(p.id, "approve")} className="px-3 py-1 bg-green-600 rounded text-xs hover:bg-green-700">
+    Approve
+  </button>
+)}
                           {p.status === "approved" && (
                             <button
                               onClick={() => handleAction(p.id, "mark-paid")}
