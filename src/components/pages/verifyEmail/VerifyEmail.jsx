@@ -39,35 +39,65 @@ const VerifyEmail = () => {
     return () => clearInterval(timer);
   }, [timeRemaining]);
 
-  const handleVerification = async (e) => {
-    e.preventDefault();
-    
-    if (!verificationCode.trim()) {
-      toast.error("Please enter the verification code");
+const handleVerification = async (e) => {
+  e.preventDefault();
+  
+  if (!verificationCode.trim()) {
+    toast.error("Please enter the verification code");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    // Try to get email from Redux user, then from localStorage
+    let email = user?.email;
+    if (!email) {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          email = parsed.email || parsed.user?.email || null;
+        } catch (err) {
+          console.error("Failed to parse stored user", err);
+        }
+      }
+    }
+
+    // If still no email, try to get from the token (if it's a JWT)
+    if (!email && token) {
+      try {
+        // Simple base64 decode of JWT payload (middle part)
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(atob(base64));
+        email = payload.email || payload.sub || null;
+      } catch (e) {
+        console.error("Failed to decode token", e);
+      }
+    }
+
+    if (!email) {
+      toast.error("Email not found. Please log in again.");
       return;
     }
 
-    setLoading(true);
-    try {
-      const response = await authAPI.verifyEmailRequest(verificationCode, token);
-      if (response.data.verified) {
-        setVerified(true);
-        toast.success("Email verified successfully!");
-        dispatch(updateUser({ ...user, isEmailVerified: true }));
-        setTimeout(() => navigate("/dashboard"), 2000);
-      }
-      else {
-        toast.error("Invalid verification code. Please try again.");
-        setVerificationCode("")
-      }
-
-    } catch (error) {
-      toast.error("Error verifying email. Please try again.");
-      console.error("Verification error:", error);
-    } finally {
-      setLoading(false);
+    const response = await authAPI.verifyEmailRequest(email, verificationCode, token);
+    if (response.data.verified) {
+      setVerified(true);
+      toast.success("Email verified successfully!");
+      dispatch(updateUser({ ...user, isEmailVerified: true }));
+      setTimeout(() => navigate("/dashboard"), 2000);
+    } else {
+      toast.error("Invalid verification code. Please try again.");
+      setVerificationCode("");
     }
-  };
+  } catch (error) {
+    toast.error("Error verifying email. Please try again.");
+    console.error("Verification error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleResendCode = async () => {
     try {

@@ -51,10 +51,9 @@ export const authAPI = {
     return response.data;
   },
 
-  verifyEmailRequest: async (code, token) => {
-    const response = await api.post('/auth/verify-code', { code }, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  verifyEmailRequest: async (email, code, token) => {
+    const response = await api.post('/auth/verify-code', { email, code }, {
+      headers: { Authorization: `Bearer ${token}` },});
     return response.data;
   },
 

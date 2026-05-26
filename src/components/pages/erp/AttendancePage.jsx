@@ -1,15 +1,18 @@
 /**
- * AttendancePage.jsx — SFCollab ERP
- * Covers: My Attendance (clock-in/out + history) + Workspace Attendance (admin)
- * API wiring: attendance.py routes at /api/attendance/*
- * Auth: uses existing JWT via interceptors.js (requestInterceptor / responseInterceptor)
+ * AttendancePage.jsx — SFCollab ERP (Corrected for backend)
+ * API wiring:
+ *   MY ATTENDANCE:
+ *     GET  /attendance/my-history?workspace_id=<id>&limit=30
+ *     POST /attendance/clock-in
+ *     POST /attendance/clock-out
+ *   WORKSPACE ATTENDANCE (admin):
+ *     GET  /attendance/workspace-overview/<workspace_id>?date=YYYY-MM-DD
  */
 
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
 
-// ── Shared interceptor setup (match existing SFCollab pattern) ────────────────
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
 
 const api = axios.create({ baseURL: "/api" });
@@ -43,12 +46,11 @@ const statusLabel = {
 // ═════════════════════════════════════════════════════════════════════════════
 export function MyAttendancePage() {
   const { user } = useSelector((s) => s.auth);
+  // Use active_workspace_id from user object (backend should return this)
+  const workspaceId = user?.active_workspace_id;
 
-  // Use user.id as the workspace scope — backend defaults workspace_id to user_id
-  const workspaceId = user?.id;
-
-  const [today, setToday] = useState(null);       // GET /api/attendance/today-status
-  const [history, setHistory] = useState([]);     // GET /api/attendance/history
+  const [today, setToday] = useState(null);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -60,39 +62,34 @@ export function MyAttendancePage() {
     setTimeout(() => { setError(null); setNotice(null); }, 4000);
   };
 
-  const loadToday = useCallback(async () => {
-    if (!workspaceId) return;
-    try {
-      const { data } = await api.get("/attendance/today-status", {
-        params: { workspace_id: workspaceId },
-      });
-      setToday(data);
-    } catch (e) {
-      flash(e?.response?.data?.error || "Could not load today's status", true);
-    }
-  }, [workspaceId]);
-
   const loadHistory = useCallback(async () => {
     if (!workspaceId) return;
     try {
-      const { data } = await api.get("/attendance/history", {
+      const { data } = await api.get("/attendance/my-history", {
         params: { workspace_id: workspaceId, limit: 30 },
       });
-      setHistory(data.records || []);
-    } catch {/* silent */ }
+      const records = data.data?.records || data.records || [];
+      setHistory(records);
+      // Find today's record
+      const todayStr = new Date().toISOString().split("T")[0];
+      const todayRecord = records.find(r => r.date?.startsWith?.(todayStr));
+      setToday(todayRecord || null);
+    } catch (e) {
+      flash(e?.response?.data?.error || "Could not load attendance", true);
+    }
   }, [workspaceId]);
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([loadToday(), loadHistory()]).finally(() => setLoading(false));
-  }, [loadToday, loadHistory]);
+    loadHistory().finally(() => setLoading(false));
+  }, [loadHistory]);
 
   const clockIn = async () => {
     setActionLoading(true);
     try {
       await api.post("/attendance/clock-in", { workspace_id: workspaceId });
       flash("Clocked in successfully!");
-      await loadToday();
+      await loadHistory();
     } catch (e) {
       flash(e?.response?.data?.error || "Clock-in failed", true);
     } finally {
@@ -105,7 +102,7 @@ export function MyAttendancePage() {
     try {
       await api.post("/attendance/clock-out", { workspace_id: workspaceId });
       flash("Clocked out successfully!");
-      await Promise.all([loadToday(), loadHistory()]);
+      await loadHistory();
     } catch (e) {
       flash(e?.response?.data?.error || "Clock-out failed", true);
     } finally {
@@ -115,66 +112,53 @@ export function MyAttendancePage() {
 
   if (loading) return <PageLoader label="Loading attendance…" />;
 
-  const att = today?.attendance || {};
-  const isHoliday = today?.is_holiday;
+  const canClockIn = !today || !today.clock_in_time;
+  const canClockOut = today && today.clock_in_time && !today.clock_out_time;
 
   return (
     <div style={styles.page}>
       <PageHeader title="My Attendance" sub={new Date().toDateString()} />
-
-      {/* Flash messages */}
       {notice && <Banner type="success">{notice}</Banner>}
-      {error  && <Banner type="error">{error}</Banner>}
-
-      {/* Holiday notice */}
-      {isHoliday && (
-        <Banner type="info">🎉 Today is a holiday: <strong>{today.holiday?.name}</strong>. No attendance required.</Banner>
-      )}
-
-      {/* Today's card */}
+      {error && <Banner type="error">{error}</Banner>}
       <div style={styles.grid2}>
         <StatCard
           label="Today's Status"
-          value={statusLabel[att.status] || "—"}
-          accent={statusColor[att.status] || "#6b7280"}
-          sub={att.status === "late" ? `Threshold: 09:00` : undefined}
+          value={statusLabel[today?.status] || "Not Clocked In"}
+          accent={statusColor[today?.status] || "#6b7280"}
+          sub={today?.status === "late" ? "Threshold: 09:00" : undefined}
         />
         <StatCard
           label="Hours Worked"
-          value={att.duration_hours ? `${att.duration_hours}h` : "—"}
+          value={today?.duration_hours ? `${today.duration_hours}h` : "—"}
           accent="#6366f1"
-          sub={att.clock_in_time ? `In: ${fmt(att.clock_in_time)}` : "Not clocked in yet"}
+          sub={today?.clock_in_time ? `In: ${fmt(today.clock_in_time)}` : "Not clocked in yet"}
         />
       </div>
-
-      {/* Clock buttons */}
       <div style={styles.card}>
         <h3 style={styles.cardTitle}>Clock Actions</h3>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <ActionButton
             label="Clock In"
             icon="⏱"
-            disabled={!today?.can_clock_in || actionLoading}
+            disabled={!canClockIn || actionLoading}
             onClick={clockIn}
             color="#22c55e"
           />
           <ActionButton
             label="Clock Out"
             icon="🏁"
-            disabled={!today?.can_clock_out || actionLoading}
+            disabled={!canClockOut || actionLoading}
             onClick={clockOut}
             color="#ef4444"
           />
         </div>
-        {att.clock_in_time && (
+        {today?.clock_in_time && (
           <p style={styles.meta}>
-            Clocked in at <strong>{fmt(att.clock_in_time)}</strong>
-            {att.clock_out_time && <> · Clocked out at <strong>{fmt(att.clock_out_time)}</strong></>}
+            Clocked in at <strong>{fmt(today.clock_in_time)}</strong>
+            {today.clock_out_time && <> · Clocked out at <strong>{fmt(today.clock_out_time)}</strong></>}
           </p>
         )}
       </div>
-
-      {/* History table */}
       <div style={styles.card}>
         <h3 style={styles.cardTitle}>Attendance History</h3>
         <AttendanceTable records={history} />
@@ -188,36 +172,29 @@ export function MyAttendancePage() {
 // ═════════════════════════════════════════════════════════════════════════════
 export function WorkspaceAttendancePage() {
   const { user } = useSelector((s) => s.auth);
-
-  // Use user.id as the workspace scope — backend defaults workspace_id to user_id
-  const workspaceId = user?.id;
+  const workspaceId = user?.active_workspace_id;
 
   const [records, setRecords] = useState([]);
   const [summary, setSummary] = useState(null);
   const [dateFilter, setDateFilter] = useState(new Date().toISOString().split("T")[0]);
   const [loading, setLoading] = useState(true);
-  const [notice, setNotice] = useState(null);
   const [error, setError] = useState(null);
 
   const flash = (msg, isError = false) => {
-    if (isError) setError(msg); else setNotice(msg);
-    setTimeout(() => { setError(null); setNotice(null); }, 4000);
+    if (isError) setError(msg);
+    setTimeout(() => setError(null), 4000);
   };
 
   const load = useCallback(async () => {
     if (!workspaceId) return;
     setLoading(true);
     try {
-      const [recs, sum] = await Promise.all([
-        api.get("/attendance/workspace", {
-          params: { workspace_id: workspaceId, date: dateFilter, limit: 100 },
-        }),
-        api.get("/attendance/workspace-summary", {
-          params: { workspace_id: workspaceId, date: dateFilter },
-        }),
-      ]);
-      setRecords(recs.data.records || []);
-      setSummary(sum.data);
+      const res = await api.get(`/attendance/workspace-overview/${workspaceId}`, {
+        params: { date: dateFilter },
+      });
+      const data = res.data?.data || res.data;
+      setRecords(data.records || []);
+      setSummary(data.summary);
     } catch (e) {
       flash(e?.response?.data?.error || "Failed to load workspace attendance", true);
     } finally {
@@ -227,28 +204,10 @@ export function WorkspaceAttendancePage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const bulkMarkAbsent = async () => {
-    if (!confirm(`Mark all missing clock-ins as absent for ${dateFilter}?`)) return;
-    try {
-      const { data } = await api.post("/attendance/admin/bulk-mark-absent", {
-        workspace_id: workspaceId,
-        date: dateFilter,
-      });
-      flash(data.message || "Done");
-      load();
-    } catch (e) {
-      flash(e?.response?.data?.error || "Bulk mark failed", true);
-    }
-  };
-
   return (
     <div style={styles.page}>
       <PageHeader title="Workspace Attendance" sub="Admin view — all members" />
-
-      {notice && <Banner type="success">{notice}</Banner>}
-      {error  && <Banner type="error">{error}</Banner>}
-
-      {/* Summary cards */}
+      {error && <Banner type="error">{error}</Banner>}
       {summary && (
         <div style={styles.grid4}>
           <StatCard label="Present" value={summary.present ?? "—"} accent="#22c55e" />
@@ -257,8 +216,6 @@ export function WorkspaceAttendancePage() {
           <StatCard label="Total"   value={summary.total   ?? "—"} accent="#6366f1" />
         </div>
       )}
-
-      {/* Filters & actions */}
       <div style={{ ...styles.card, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         <label style={styles.label}>Date</label>
         <input
@@ -268,12 +225,7 @@ export function WorkspaceAttendancePage() {
           style={styles.input}
         />
         <button onClick={load} style={styles.btnSecondary}>Refresh</button>
-        <button onClick={bulkMarkAbsent} style={{ ...styles.btnDanger, marginLeft: "auto" }}>
-          Bulk Mark Absent
-        </button>
       </div>
-
-      {/* Table */}
       <div style={styles.card}>
         <h3 style={styles.cardTitle}>Member Attendance — {fmtDate(dateFilter)}</h3>
         {loading ? <PageLoader label="Loading…" inline /> : <AttendanceTable records={records} showUser />}
@@ -283,13 +235,10 @@ export function WorkspaceAttendancePage() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Shared sub-components
+// Shared sub‑components (unchanged from original)
 // ─────────────────────────────────────────────────────────────────────────────
-
 function AttendanceTable({ records, showUser = false }) {
-  if (!records.length)
-    return <p style={styles.empty}>No attendance records found.</p>;
-
+  if (!records.length) return <p style={styles.empty}>No attendance records found.</p>;
   return (
     <div style={styles.tableWrap}>
       <table style={styles.table}>
@@ -308,9 +257,7 @@ function AttendanceTable({ records, showUser = false }) {
             <tr key={r.id} style={styles.tr}>
               {showUser && <Td>{r.user?.name || "—"}</Td>}
               <Td>{fmtDate(r.date)}</Td>
-              <Td>
-                <StatusPill status={r.status} />
-              </Td>
+              <Td><StatusPill status={r.status} /></Td>
               <Td>{fmt(r.clock_in_time)}</Td>
               <Td>{fmt(r.clock_out_time)}</Td>
               <Td>{r.duration_hours ? `${r.duration_hours}h` : "—"}</Td>
@@ -431,7 +378,7 @@ const Td = ({ children }) => (
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Styles
+// Styles (unchanged)
 // ─────────────────────────────────────────────────────────────────────────────
 const styles = {
   page: { padding: "28px 32px", maxWidth: 1100, margin: "0 auto", fontFamily: "'DM Sans', sans-serif" },

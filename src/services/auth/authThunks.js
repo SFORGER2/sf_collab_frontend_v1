@@ -94,7 +94,10 @@ export const fetchUserProfile = createAsyncThunk(
     try {
       const token = localStorage.getItem('access_token');
       if (!token) throw new Error('No token found');
-      return await authAPI.getProfileRequest(token);
+      const response = await authAPI.getProfileRequest(token);
+      // Extract user from response.data.user (adjust based on actual shape)
+      const user = response.data?.user || response.user || response;
+      return user;
     } catch (err) {
       return rejectWithValue(err.message);
     }
