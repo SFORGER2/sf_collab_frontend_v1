@@ -24,5 +24,12 @@ export const workspaceAPI = {
   getWorkspace: async (workspaceId) => {
     const response = await apiClient.get(`/workspaces/${workspaceId}`);  // Removed /api
     return response.data.data?.workspace || response.data.workspace;
-  }
+  },
+
+  // src/services/workspaceAPI.js – add this at the end
+  deleteWorkspace: async (workspaceId) => {
+    const response = await apiClient.delete(`/workspaces/${workspaceId}`);
+    return response.data;
+  },
+
 };
