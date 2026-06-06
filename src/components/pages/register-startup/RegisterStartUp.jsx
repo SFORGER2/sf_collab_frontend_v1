@@ -508,20 +508,28 @@ export default function RegisterStartUp() {
       let response
       if (id) {
         response = await startupsAPI.update(id, submitData, token);
+        response = await startupsAPI.update(id, submitData, token);
       } else {
+        response = await startupsAPI.register(submitData);
         response = await startupsAPI.register(submitData);
       }
       console.log("Startup registration response:", response);
 
-      if (!response.success && !response.id) {
+      // FIX: startupsAPI.register returns response.data.data = { startup, role }
+      // startupsAPI.update returns response.data = { success, data: { startup } }
+      // Normalise: success when we have a startup object with an id
+      const startupObj = response.startup || response.data?.startup || response;
+      const startupId  = startupObj?.id || response.id;
+
+      if (!startupId) {
         throw new Error(response.error || response.message || "Registration failed");
       }
 
-      if (response.ok) {
+      // Success
+      {
         localStorage.removeItem('formData');
         toast.success(`Startup ${id ? "updated" : "registered"} successfully!`);
         if (id) {
-          // Edit mode: go directly to the startup detail page
           navigate(`/startup-details/${id}`);
         } else {
           // Add mode: show the celebration / launch complete screen
@@ -551,8 +559,6 @@ export default function RegisterStartUp() {
           });
         }
         
-      } else {
-        throw new Error(data.error || data.message || "Registration failed");
       }
     } catch (err) {
       console.error("Startup registration failed:", err);

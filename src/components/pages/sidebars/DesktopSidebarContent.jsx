@@ -26,11 +26,7 @@ export default function DesktopSidebarContent({
     onLinkClick?.();
   };
 
-  const baseItemClasses =
-    "w-full flex items-center justify-center px-3 py-3 rounded-lg transition-colors";
-
-  const upcomingClasses =
-    "opacity-50 cursor-not-allowed hover:bg-transparent";
+  const upcomingClasses = "opacity-50 cursor-not-allowed hover:bg-transparent";
 
   return (
     <div
@@ -43,9 +39,8 @@ export default function DesktopSidebarContent({
       <div
         className="absolute inset-0"
         style={{
-          background:
-            "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
-          zIndex: -1
+          background: "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
+          zIndex: -1,
         }}
       />
 
@@ -57,10 +52,9 @@ export default function DesktopSidebarContent({
       >
         <div className="flex flex-col gap-1 overflow-y-auto px-2.5">
           {links.map((link) => {
-            const isActive = getAllRoutes(link).includes(location.pathname);
-            const showSubs = expandedId === link.id;
-          const isActive = getAllRoutes(link).includes(location.pathname);
-            const showSubs = expandedItems[link.id] ?? false;
+            // FIX: removed duplicate declarations; expandedId → expandedItems[link.id]
+            const isActive   = getAllRoutes(link).includes(location.pathname);
+            const showSubs   = expandedItems[link.id] ?? false;
             const isUpcoming = link.isUpcoming;
 
             return (
@@ -85,12 +79,12 @@ export default function DesktopSidebarContent({
                     ${isUpcoming ? upcomingClasses : ""}
                   `}
                 >
-                  {/* ICON — always rendered */}
+                  {/* Icon — always visible */}
                   <div className="flex items-center justify-center w-6">
                     {link.icon}
                   </div>
 
-                  {/* Everything else ONLY when hovered */}
+                  {/* Label + chevron — only when hovered */}
                   {isHovered && (
                     <>
                       <motion.span
@@ -109,8 +103,7 @@ export default function DesktopSidebarContent({
                             toggleExpand(link.id);
                           }}
                           size={18}
-                          className={`ml-auto transition-transform ${showSubs ? "rotate-180" : ""
-                            }`}
+                          className={`ml-auto transition-transform ${showSubs ? "rotate-180" : ""}`}
                         />
                       )}
 
@@ -120,7 +113,6 @@ export default function DesktopSidebarContent({
                     </>
                   )}
                 </button>
-
 
                 {/* Sub Items */}
                 <AnimatePresence>
@@ -133,8 +125,9 @@ export default function DesktopSidebarContent({
                       className="flex flex-col gap-0.5 mt-1 ml-4 pl-3 border-l border-zinc-700/50 overflow-hidden"
                     >
                       {(link.subItems || []).map((subItem) => {
-                        const isSubActive = location.pathname === subItem.href && location.pathname !== "/dashboard";
-
+                        const isSubActive =
+                          location.pathname === subItem.href &&
+                          location.pathname !== "/dashboard";
 
                         return (
                           <button
@@ -156,7 +149,6 @@ export default function DesktopSidebarContent({
                             {subItem.icon || (
                               <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
                             )}
-
                             <span className="text-xs font-medium flex-1 whitespace-nowrap">
                               {subItem.label}
                             </span>
@@ -167,8 +159,7 @@ export default function DesktopSidebarContent({
                   )}
                 </AnimatePresence>
               </div>
-            )
-
+            );
           })}
 
           {/* Admin */}
@@ -176,18 +167,21 @@ export default function DesktopSidebarContent({
             <Link
               to="/admin"
               onClick={onLinkClick}
-              className={`w-full flex items-center ${isHovered ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-3 rounded-lg transition-colors ${location.pathname.startsWith("/admin") ? "bg-blue-600/20 text-blue-400" : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-                }`}
+              className={`
+                w-full flex items-center
+                ${isHovered ? "gap-3 px-3 justify-start" : "justify-center px-0"}
+                py-3 rounded-lg transition-colors
+                ${location.pathname.startsWith("/admin")
+                  ? "bg-blue-600/20 text-blue-400"
+                  : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
+                }
+              `}
             >
               <div className="flex items-center justify-center w-6">
                 <Crown size={22} />
               </div>
-
               <motion.span
-                animate={{
-                  opacity: isHovered ? 1 : 0,
-                  maxWidth: isHovered ? 160 : 0
-                }}
+                animate={{ opacity: isHovered ? 1 : 0, maxWidth: isHovered ? 160 : 0 }}
                 transition={{ duration: 0.2 }}
                 className="text-sm font-medium whitespace-nowrap overflow-hidden"
               >

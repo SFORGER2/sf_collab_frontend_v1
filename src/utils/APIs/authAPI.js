@@ -1,17 +1,16 @@
 import axios from 'axios';
-import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
+import {
+  API_CONFIG,
+  requestInterceptor,
+  requestErrorInterceptor,
+  responseInterceptor,
+  responseErrorInterceptor,
+} from './interceptors';
 
 const api = axios.create(API_CONFIG);
 
-api.interceptors.request.use(
-  requestInterceptor,
-  requestErrorInterceptor
-);
-
-api.interceptors.response.use(
-  responseInterceptor,
-  responseErrorInterceptor
-);
+api.interceptors.request.use(requestInterceptor, requestErrorInterceptor);
+api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 export const authAPI = {
   loginRequest: async (credentials) => {
@@ -34,10 +33,9 @@ export const authAPI = {
     return response.data;
   },
 
-  getProfileRequest: async (token) => {
-    const response = await api.get('/auth/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  getProfileRequest: async () => {
+    // No manual token needed — interceptor handles it
+    const response = await api.get('/auth/me');
     return response.data;
   },
 
@@ -51,18 +49,20 @@ export const authAPI = {
     return response.data;
   },
 
-  verifyEmailRequest: async (code, token) => {
-    const response = await api.post('/auth/verify-code', { code }, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  verifyEmailRequest: async (code) => {
+    // interceptor handles the token — no manual header needed
+    const response = await api.post('/auth/verify-code', { code });
     return response.data;
   },
 
-  setupProfileRequest: async (profileData, token) => {
-    const response = await api.post('/users/profile-setup', profileData, {
-      headers: { 
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
+  // FIX: correct endpoint is /auth/setup-profile (not /users/profile-setup)
+  // FIX: no manual token arg — requestInterceptor reads from localStorage automatically
+  setupProfileRequest: async (profileData) => {
+    const response = await api.post('/auth/setup-profile', profileData, {
+      headers: {
+        // Let axios set Content-Type automatically for FormData so the
+        // multipart boundary is included correctly
+        'Content-Type': undefined,
       },
     });
     return response.data;

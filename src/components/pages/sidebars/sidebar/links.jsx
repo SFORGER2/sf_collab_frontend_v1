@@ -12,6 +12,7 @@ import { createFounderLinks } from "../founderSidebar/FounderLinks";
 import { createInfluencerLinks } from "../influencerSidebar/influencerLinks";
 import { BsPeople } from "react-icons/bs";
 import { aiTools, dashboardLink, erpSection, ideation, socialSection, toolsSection } from "../sidebarCommons";
+import { aiTools, dashboardLink, erpSection, ideation, socialSection, toolsSection } from "../sidebarCommons";
 
 export const CONTEXT_THEME = {
   1:  { pillBg: "bg-blue-600/20",    pillText: "text-blue-200",   activeBg: "bg-white", activeText: "text-gray-950" },
@@ -31,28 +32,15 @@ export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) 
       href: "/discover-startups",
       label: "Startups",
       subItems: [
-        { id: "discover-startups", href: "/discover-startups", label: "Discover",        icon: <Rocket size={18} /> },
-        { id: "my-startups",       href: "/my-startups",       label: "My Startups",     icon: <Building2 size={18} /> },
-        { id: "register-startup",  href: "/register-startup",  label: "Register",        icon: <PlusSquare size={18} /> },
-        { id: "saved-startups",    href: "/saved-startups",    label: "Saved Startups",  icon: <Save size={18} /> },
+        { id: "discover-startups", href: "/discover-startups", label: "Discover",       icon: <Rocket size={18} /> },
+        { id: "my-startups",       href: "/my-startups",       label: "My Startups",    icon: <Building2 size={18} /> },
+        { id: "register-startup",  href: "/register-startup",  label: "Register",       icon: <PlusSquare size={18} /> },
+        { id: "saved-startups",    href: "/saved-startups",    label: "Saved Startups", icon: <Save size={18} /> },
       ],
     },
     ideation(4),
-
-    // {
-    //   id: 4,
-    //   icon: <IoChatbubbles size={23} />,
-    //   href: "/chat",
-    //   label: "Chat",
-    //   unreadCount: (
-    //     <Badge className="absolute top-1 right-0 h-4.5 min-w-4.5 rounded-full px-1 font-mono tabular-nums bg-blue-800 text-blue-300">
-    //       {unreadMessagesCount > 0 ? unreadMessagesCount : "0"}
-    //     </Badge>
-    //   ),
-    // },
     erpSection(5),
     socialSection(6),
-    // Learning & Mentors — combined under one section
     {
       id: 7,
       icon: <BookOpen size={22} />,
@@ -67,7 +55,6 @@ export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) 
     },
     aiTools(8),
     toolsSection(9),
-    // Wallet & Store
     {
       id: 10,
       icon: <Wallet size={22} />,
@@ -96,16 +83,12 @@ export function getAllRoutes(element) {
 }
 
 export function getCurrentContext(pathname) {
-  // Check wallet/store routes first (custom handling)
-  if (["/wallet", "/store", "/leaderboard"].some((p) => pathname.startsWith(p))) return 10;
-
-  const links = createLinks(0); // Create links without unreadMessagesCount
-  if (["/wallet", "/store", "/leaderboard", "/marketplace"].some((p) => pathname.startsWith(p))) return 10;
+  // FIX: removed duplicate wallet check and duplicate `const links` declaration
   const links = createLinks(0);
   for (const link of links) {
-    if (pathname.startsWith(link.href)) return link.id;
+    if (link.href && pathname.startsWith(link.href)) return link.id;
     for (const subItem of link.subItems || []) {
-      if (pathname.startsWith(subItem.href)) return link.id;
+      if (subItem.href && pathname.startsWith(subItem.href)) return link.id;
     }
   }
   return 1;

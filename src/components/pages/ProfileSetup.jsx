@@ -1,175 +1,127 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
 import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../../services/auth/authSlice";
 import { Mail, User, Building, Globe, Clock, MapPin, Camera } from "lucide-react";
-import { Button } from "../ui/button";
 import { toast } from "react-toastify";
 import LoadingSpinner from "../LoadingSpinner";
 import { authAPI } from "@/utils/APIs/authAPI";
 
 const COUNTRIES = [
-  "United States",
-  "Canada",
-  "United Kingdom",
-  "Australia",
-  "India",
-  "Germany",
-  "France",
-  "Japan",
-  "China",
-  "Brazil",
-  "Mexico",
-  "Singapore",
-  "UAE",
-  "Other",
+  "United States", "Canada", "United Kingdom", "Australia", "India",
+  "Germany", "France", "Japan", "China", "Brazil", "Mexico",
+  "Singapore", "UAE", "Nigeria", "Other",
 ];
 
 const TIMEZONES = [
-  "UTC",
-  "EST (UTC-5)",
-  "CST (UTC-6)",
-  "MST (UTC-7)",
-  "PST (UTC-8)",
-  "GMT (UTC+0)",
-  "CET (UTC+1)",
-  "IST (UTC+5:30)",
-  "SGT (UTC+8)",
-  "AEST (UTC+10)",
-  "JST (UTC+9)",
+  "UTC", "EST (UTC-5)", "CST (UTC-6)", "MST (UTC-7)", "PST (UTC-8)",
+  "GMT (UTC+0)", "CET (UTC+1)", "IST (UTC+5:30)", "SGT (UTC+8)",
+  "AEST (UTC+10)", "JST (UTC+9)", "WAT (UTC+1)",
 ];
 
 const LANGUAGES = [
-  "English",
-  "Spanish",
-  "French",
-  "German",
-  "Hindi",
-  "Chinese",
-  "Japanese",
-  "Portuguese",
-  "Russian",
-  "Arabic",
+  "English", "Spanish", "French", "German", "Hindi",
+  "Chinese", "Japanese", "Portuguese", "Russian", "Arabic",
 ];
 
 export default function ProfileSetup() {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { user: authUser } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [profileImage, setProfileImage] = useState(null);
+  const navigate  = useNavigate();
+  const dispatch  = useDispatch();
+
+  // FIX: get user from Redux — NOT from useAuth() which may not exist
+  const { user } = useSelector((state) => state.auth);
+
+  const [isLoading, setIsLoading]                   = useState(false);
+  const [profileImage, setProfileImage]             = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(null);
+
   const [formData, setFormData] = useState({
     firstName: "",
-    lastName: "",
-    email: "",
-    company: "",
-    country: "",
-    city: "",
-    timezone: "UTC",
-    language: "English",
-    bio: "",
-    profileImage: null,
+    lastName:  "",
+    email:     "",
+    company:   "",
+    country:   "",
+    city:      "",
+    timezone:  "UTC",
+    language:  "English",
+    bio:       "",
   });
 
-  // Populate email and name from auth context
+  // Populate from Redux user on mount
   useEffect(() => {
-    if (authUser) {
+    if (user) {
       setFormData((prev) => ({
         ...prev,
-        email: authUser.email || "",
-        firstName: authUser.firstName || "",
-        lastName: authUser.lastName || "",
+        email:     user.email      || "",
+        firstName: user.first_name || user.firstName || "",
+        lastName:  user.last_name  || user.lastName  || "",
       }));
     }
-  }, [authUser]);
+  }, [user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image size must be less than 5MB");
-        return;
-      }
+    if (!file) return;
 
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        toast.error("Please select a valid image file");
-        return;
-      }
-
-      setProfileImage(file);
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size must be less than 5MB");
+      return;
     }
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+
+    setProfileImage(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setProfileImagePreview(reader.result);
+    reader.readAsDataURL(file);
   };
-  const { user } = useSelector((state) => state.auth);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate required fields
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
       toast.error("First name and last name are required");
       return;
     }
-
     if (!formData.country) {
       toast.error("Please select a country");
       return;
     }
 
     setIsLoading(true);
-
     try {
-      const token = localStorage.getItem("authToken");
       const data = new FormData();
-
-      // Add form fields
       data.append("firstName", formData.firstName);
-      data.append("lastName", formData.lastName);
-      data.append("company", formData.company);
-      data.append("country", formData.country);
-      data.append("city", formData.city);
-      data.append("timezone", formData.timezone);
-      data.append("language", formData.language);
-      data.append("bio", formData.bio);
-
-      // Add profile image if selected
+      data.append("lastName",  formData.lastName);
+      data.append("company",   formData.company);
+      data.append("country",   formData.country);
+      data.append("city",      formData.city);
+      data.append("timezone",  formData.timezone);
+      data.append("language",  formData.language);
+      data.append("bio",       formData.bio);
       if (profileImage) {
         data.append("profileImage", profileImage);
       }
 
-      const response = await authAPI.setupProfileRequest(data, token);
+      // FIX: authAPI.setupProfileRequest now hits the correct endpoint
+      // (/auth/setup-profile) and uses the shared interceptor for auth —
+      // no manual token argument needed
+      const response = await authAPI.setupProfileRequest(data);
 
-      if (response.success) {
-        // Update Redux store with new user data
-        const updatedUser = response.user;
+      if (response.success || response.user) {
+        const updatedUser = response.user || response.data;
         dispatch(setUser(updatedUser));
-
-        // Update localStorage
-        localStorage.setItem("userData", JSON.stringify(updatedUser));
-
         toast.success("Profile setup completed successfully!");
-
-        // Redirect to multi-role profile form after 1 second
-        setTimeout(() => {
-          navigate("/complete-profile");
-        }, 1000);
+        setTimeout(() => navigate("/complete-profile"), 1000);
+      } else {
+        toast.error(response.message || "Failed to setup profile");
       }
     } catch (error) {
       console.error("Error setting up profile:", error);
@@ -181,10 +133,15 @@ export default function ProfileSetup() {
     }
   };
 
-  const handleSkip = () => {
-    // Allow user to skip and go to multi-role profile form
-    navigate("/complete-profile");
-  };
+  const handleSkip = () => navigate("/complete-profile");
+
+  // Resolve profile picture URL — backend stores relative paths like /uploads/...
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5001";
+  const currentPic = user?.profile_picture
+    ? (user.profile_picture.startsWith("http")
+        ? user.profile_picture
+        : `${API_BASE}${user.profile_picture}`)
+    : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
@@ -193,20 +150,21 @@ export default function ProfileSetup() {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Complete Your Profile</h1>
           <p className="text-gray-400">
-            Help us get to know you better. This information will help personalize your experience.
+            Help us get to know you better. This information will help personalise your experience.
           </p>
         </div>
 
         {/* Form Container */}
         <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Profile Image Section */}
+
+            {/* Profile Image */}
             <div className="flex justify-center mb-8">
               <div className="relative">
                 <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden border-4 border-slate-700">
-                  {profileImagePreview ? (
+                  {profileImagePreview || currentPic ? (
                     <img
-                      src={user.profileImage || profileImagePreview}
+                      src={profileImagePreview || currentPic}
                       alt="Profile preview"
                       className="w-full h-full object-cover"
                     />
@@ -259,7 +217,7 @@ export default function ProfileSetup() {
               </div>
             </div>
 
-            {/* Email Field (Read-only) */}
+            {/* Email (read-only) */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 <Mail className="w-4 h-4 inline mr-2" />
@@ -273,7 +231,7 @@ export default function ProfileSetup() {
               />
             </div>
 
-            {/* Company and Country */}
+            {/* Company + Country */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -302,16 +260,14 @@ export default function ProfileSetup() {
                   required
                 >
                   <option value="">Select a country</option>
-                  {COUNTRIES.map((country) => (
-                    <option key={country} value={country}>
-                      {country}
-                    </option>
+                  {COUNTRIES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {/* City, Timezone, and Language */}
+            {/* City + Timezone + Language */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -339,9 +295,7 @@ export default function ProfileSetup() {
                   className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 >
                   {TIMEZONES.map((tz) => (
-                    <option key={tz} value={tz}>
-                      {tz}
-                    </option>
+                    <option key={tz} value={tz}>{tz}</option>
                   ))}
                 </select>
               </div>
@@ -356,9 +310,7 @@ export default function ProfileSetup() {
                   className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 >
                   {LANGUAGES.map((lang) => (
-                    <option key={lang} value={lang}>
-                      {lang}
-                    </option>
+                    <option key={lang} value={lang}>{lang}</option>
                   ))}
                 </select>
               </div>
@@ -393,19 +345,12 @@ export default function ProfileSetup() {
                 disabled={isLoading}
                 className="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {isLoading ? (
-                  <>
-                    <LoadingSpinner /> Setting up...
-                  </>
-                ) : (
-                  "Complete Setup"
-                )}
+                {isLoading ? <><LoadingSpinner /> Setting up...</> : "Complete Setup"}
               </button>
             </div>
           </form>
         </div>
 
-        {/* Footer Note */}
         <p className="text-center text-gray-500 text-sm mt-6">
           You can always update your profile information later in your account settings.
         </p>

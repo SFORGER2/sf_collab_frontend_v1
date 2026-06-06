@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import StartUpHeader from "../headers/StartUpHeader";
 import ScrollToTop from "../sections/ScrollToTop";
 import { startupsAPI } from "@/utils/APIs/startupsAPI";
+import { resolveImageUrlWithFallback } from "@/utils/imageUrl";
 
 import {
   Users,
@@ -17,24 +18,24 @@ import {
 } from "lucide-react";
 
 const StartUp = () => {
-  const [startups, setStartups] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [startups, setStartups]               = useState([]);
+  const [searchQuery, setSearchQuery]         = useState("");
   const [selectedIndustry, setSelectedIndustry] = useState("All Industries");
-  const [selectedStage, setSelectedStage] = useState("All Stages");
+  const [selectedStage, setSelectedStage]     = useState("All Stages");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [networkError, setNetworkError] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [page, setPage]                       = useState(1);
+  const [totalPages, setTotalPages]           = useState(1);
+  const [networkError, setNetworkError]       = useState(false);
+  const [error, setError]                     = useState("");
+  const [loading, setLoading]                 = useState(true);
 
   const getStageColor = (stage) => {
     const colors = {
-      idea: "bg-yellow-600",
-      seed: "bg-purple-600",
-      early: "bg-green-600",
+      idea:   "bg-yellow-600",
+      seed:   "bg-purple-600",
+      early:  "bg-green-600",
       growth: "bg-blue-600",
-      scale: "bg-red-600",
+      scale:  "bg-red-600",
     };
     return colors[stage?.toLowerCase()] || "bg-gray-600";
   };
@@ -45,20 +46,17 @@ const StartUp = () => {
       setNetworkError(false);
       setError("");
 
-      // ✅ Use the shared startupsAPI — has auth interceptors, correct base URL,
-      // and won't trigger logout on 401 the way raw axios does
       const response = await startupsAPI.getAll({
         page,
         per_page: 12,
         industry: selectedIndustry !== "All Industries" ? selectedIndustry : undefined,
-        stage: selectedStage !== "All Stages" ? selectedStage : undefined,
-        location: selectedLocation !== "All Locations" ? selectedLocation : undefined,
-        search: searchQuery || undefined,
+        stage:    selectedStage    !== "All Stages"     ? selectedStage    : undefined,
+        location: selectedLocation !== "All Locations"  ? selectedLocation : undefined,
+        search:   searchQuery || undefined,
       });
 
-      // ✅ Flask success_response wraps data under response.data
-      const data = response.data ?? response;
-      const items = data.startups ?? [];
+      const data       = response.data ?? response;
+      const items      = data.startups  ?? [];
       const pagination = data.pagination ?? {};
 
       setStartups(items);
@@ -140,9 +138,7 @@ const StartUp = () => {
       ) : startups.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 px-4">
           <div className="text-center">
-            <h3 className="text-xl font-semibold text-gray-300 mb-2">
-              No startups found
-            </h3>
+            <h3 className="text-xl font-semibold text-gray-300 mb-2">No startups found</h3>
             <p className="text-gray-500">
               Try adjusting your search terms or filters to find what you're looking for.
             </p>
@@ -152,8 +148,6 @@ const StartUp = () => {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5 p-4 max-sm:p-0">
             {startups.map((startup) => (
-              // ✅ Use startup.id (not startup._id) and path param (not query param)
-              // ✅ Route matches what StartupDetailPage expects: /startup-details/:id
               <Link
                 key={startup.id}
                 to={`/startup-details/${startup.id}`}
@@ -165,12 +159,11 @@ const StartUp = () => {
                     <div className="flex w-full justify-between items-start">
                       <div className="flex items-center gap-3">
                         <div className="h-12 w-12 rounded-full overflow-hidden bg-zinc-700">
+                          {/* FIX: use resolveImageUrlWithFallback — backend logo_url is
+                              a relative path like /startups/12/logo, not /api/startups/...
+                              VITE_API_URL must be http://localhost:5001 (no /api suffix) */}
                           <img
-                            src={startup.logo_url
-                              ? (startup.logo_url.startsWith('http')
-                                  ? startup.logo_url
-                                  : `${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}${startup.logo_url}`)
-                              : "https://via.placeholder.com/150"}
+                            src={resolveImageUrlWithFallback(startup.logo_url)}
                             alt={startup.name}
                             className="h-full w-full object-cover"
                           />
