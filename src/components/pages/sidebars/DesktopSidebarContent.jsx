@@ -14,7 +14,7 @@ export default function DesktopSidebarContent({
   shouldShowSubItems,
   isAdmin,
   onLinkClick,
-  callback
+  callback,
 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -44,7 +44,7 @@ export default function DesktopSidebarContent({
         }}
       />
 
-      {/* Sidebar Container */}
+      {/* Sidebar container */}
       <motion.div
         className="flex flex-col justify-between h-full overflow-hidden py-2.5"
         animate={{ width: isHovered ? 250 : 60 }}
@@ -59,7 +59,7 @@ export default function DesktopSidebarContent({
 
             return (
               <div key={link.id}>
-                {/* Main Item */}
+                {/* Main item */}
                 <button
                   onClick={() => {
                     if (hasSubItems(link) && !link.href) {
@@ -74,8 +74,7 @@ export default function DesktopSidebarContent({
                     py-3 rounded-lg transition-colors min-w-0
                     ${isActive
                       ? "bg-blue-600/20 text-blue-400"
-                      : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-                    }
+                      : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"}
                     ${isUpcoming ? upcomingClasses : ""}
                   `}
                 >
@@ -134,16 +133,18 @@ export default function DesktopSidebarContent({
                             key={subItem.id}
                             onClick={() => {
                               if (subItem.isUpcoming) return;
+                              if (subItem.onLinkClick) {
+                                subItem.onLinkClick();
+                                return;
+                              }
                               navigate(subItem.href);
-                              subItem.onLinkClick?.();
                               onLinkClick?.();
                             }}
                             className={`
                               flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-colors
                               ${isSubActive
                                 ? "bg-blue-600/30 text-white"
-                                : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"
-                              }
+                                : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"}
                             `}
                           >
                             {subItem.icon || (

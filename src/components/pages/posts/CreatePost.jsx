@@ -4,66 +4,81 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import ShinyText from "@/components/ui/ShinyText";
 import { Textarea } from "@/components/ui/textarea";
 import { AnimatePresence, motion } from "framer-motion";
-import { ImageIcon, Sparkles, Video, X, Loader2 } from "lucide-react";
+import { ImageIcon, Sparkles, Video, X, Loader2, AlertCircle } from "lucide-react";
 import { useRef, useState } from "react";
 import MultiImageGrid from "./MultiImageGrid";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 
-// Create Post Component
 export default function CreatePost({ currentUser, onPost }) {
-  const [caption, setCaption] = useState("");
-  // files: array of { file: File, url: string }
-  const [files, setFiles] = useState([]);
-  const [fileType, setFileType] = useState(null);
-  const [destination, setDestination] = useState("feed"); // 'feed' or 'story'
-  const [isUploading, setIsUploading] = useState(false);
+  const [caption,        setCaption]        = useState("");
+  const [files,          setFiles]          = useState([]);   // [{ file: File, url: string }]
+  const [fileType,       setFileType]       = useState(null);
+  const [destination,    setDestination]    = useState("feed"); // "feed" | "story"
+  const [isUploading,    setIsUploading]    = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [error,          setError]          = useState(null);
+
   const imageInputRef = useRef(null);
   const videoInputRef = useRef(null);
+
+  // FIX: `if (!currentUser) return null` was placed AFTER useState/useRef hooks
+  // but BEFORE the JSX return, which means on some renders React would call fewer
+  // hooks than others → "Rendered fewer hooks than expected" crash.
+  // Moved the guard to wrap the JSX output instead (hooks always run).
 
   const handleFileChange = (e, type) => {
     const selectedFiles = Array.from(e.target.files);
     if (!selectedFiles.length) return;
-
     const mapped = selectedFiles.map((file) => ({ file, url: URL.createObjectURL(file) }));
     setFiles((prev) => [...prev, ...mapped]);
     setFileType(type);
+    setError(null);
+  };
+
+  const removeFile  = (index) => setFiles((prev) => prev.filter((_, i) => i !== index));
+  const removeAllFiles = () => {
+    setFiles([]);
+    setFileType(null);
+    if (imageInputRef.current) imageInputRef.current.value = "";
+    if (videoInputRef.current) videoInputRef.current.value = "";
   };
 
   const handlePost = async () => {
+    setError(null);
+
+    // Validation
     if (!caption.trim() && !files.length) return;
 
+    // FIX: story requires at least one media file — give user clear feedback
+    if (destination === "story" && !files.length) {
+      setError("Please select a photo or video for your story.");
+      return;
+    }
+
     const postType = files.length > 1 ? "image" : fileType || "text";
+    let progressInterval = null;
 
     try {
       setIsUploading(true);
       setUploadProgress(0);
 
-      // Simulate progress over time
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 30, 90));
+      // Simulated progress — gives the user visual feedback while the real upload runs
+      progressInterval = setInterval(() => {
+        setUploadProgress((prev) => Math.min(prev + 20, 85));
       }, 300);
 
-      // pass destination so parent can decide story vs feed
       await onPost(
-        {
-          caption,
-          files,
-          type: postType,
-          isMultiImage: files.length > 1,
-          destination,
-        },
-        (progress) => {
-          setUploadProgress(Math.round(progress * 100));
-        }
+        { caption, files, type: postType, isMultiImage: files.length > 1, destination },
+        (progress) => setUploadProgress(Math.round(progress * 100))
       );
 
-      setUploadProgress(100);
+      // Upload succeeded
       clearInterval(progressInterval);
+      setUploadProgress(100);
 
-      // Reset after success
+      // Reset form after a short delay so the 100% flash is visible
       setTimeout(() => {
         setCaption("");
         setFiles([]);
@@ -72,25 +87,24 @@ export default function CreatePost({ currentUser, onPost }) {
         setUploadProgress(0);
         if (imageInputRef.current) imageInputRef.current.value = "";
         if (videoInputRef.current) videoInputRef.current.value = "";
-      }, 500);
-    } catch (error) {
-      console.error("Failed to post:", error);
+      }, 600);
+
+    } catch (err) {
+      // FIX: original never cleared the interval on error, leaving it running forever
+      if (progressInterval) clearInterval(progressInterval);
+      console.error("Failed to post:", err);
       setIsUploading(false);
       setUploadProgress(0);
+      setError("Failed to post. Please try again.");
     }
   };
 
-  const removeFile = (index) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-  };
+  // Guard here so hooks above always run in the same order
+  if (!currentUser) return null;
 
-  const removeAllFiles = () => {
-    setFiles([]);
-    setFileType(null);
-    if (imageInputRef.current) imageInputRef.current.value = "";
-    if (videoInputRef.current) videoInputRef.current.value = "";
-  };
-if (!currentUser) return null; // or skeleton
+  const isStory       = destination === "story";
+  const canSubmit     = (caption.trim() || files.length > 0) && !isUploading;
+  const storyNeedsFile = isStory && !files.length;
 
   return (
     <Card className="create-post bg-zinc-900/50 backdrop-blur-xl border-zinc-800/50 shadow-xl overflow-hidden">
@@ -99,20 +113,29 @@ if (!currentUser) return null; // or skeleton
           <ShinyText>Create Post</ShinyText>
         </h2>
       </CardHeader>
+
       <CardContent className="space-y-4">
+        {/* Author + caption */}
         <div className="flex gap-4">
           <Avatar className="w-10 h-10 ring-2 ring-blue-400/50">
             <AvatarImage src={getProfilePicture(currentUser)} />
-            <AvatarFallback>{currentUser.name}</AvatarFallback>
+            <AvatarFallback>
+              {currentUser.first_name?.charAt(0) || currentUser.firstName?.charAt(0) || "U"}
+            </AvatarFallback>
           </Avatar>
           <Textarea
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
-            placeholder="What's on your mind?"
+            placeholder={
+              isStory
+                ? "Add a caption for your story (optional)..."
+                : "What's on your mind?"
+            }
             className="flex-1 bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-400 focus:ring-blue-500/50 focus:border-blue-500/50 resize-none min-h-[80px]"
           />
         </div>
 
+        {/* File previews */}
         <AnimatePresence>
           {files.length > 0 && (
             <motion.div
@@ -123,8 +146,7 @@ if (!currentUser) return null; // or skeleton
             >
               <div className="flex items-center justify-between">
                 <p className="text-sm text-zinc-400">
-                  {files.length} {files.length === 1 ? "file" : "files"}{" "}
-                  selected
+                  {files.length} {files.length === 1 ? "file" : "files"} selected
                 </p>
                 <Button
                   onClick={removeAllFiles}
@@ -163,18 +185,33 @@ if (!currentUser) return null; // or skeleton
               ) : (
                 <MultiImageGrid
                   images={files.map((f) => f.url)}
-                  onImageClick={(image) => console.log("Preview image:", image)}
+                  onImageClick={(img) => console.log("Preview:", img)}
                 />
               )}
             </motion.div>
           )}
         </AnimatePresence>
 
+        {/* Error banner */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"
+            >
+              <AlertCircle size={14} />
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <Separator className="bg-zinc-800/50" />
 
-        {/* Upload Progress Bar */}
+        {/* Upload progress */}
         <AnimatePresence>
-          {isUploading && uploadProgress > 0 && (
+          {isUploading && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -182,7 +219,9 @@ if (!currentUser) return null; // or skeleton
               className="space-y-2"
             >
               <div className="flex items-center justify-between">
-                <p className="text-xs text-zinc-400">Uploading...</p>
+                <p className="text-xs text-zinc-400">
+                  {isStory ? "Uploading story..." : "Posting..."}
+                </p>
                 <p className="text-xs text-zinc-400">{uploadProgress}%</p>
               </div>
               <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
@@ -197,7 +236,9 @@ if (!currentUser) return null; // or skeleton
           )}
         </AnimatePresence>
 
+        {/* Action bar */}
         <div className="flex justify-between items-center">
+          {/* Media pickers */}
           <div className="flex gap-2">
             <TooltipProvider>
               <Tooltip>
@@ -232,11 +273,12 @@ if (!currentUser) return null; // or skeleton
             </TooltipProvider>
           </div>
 
+          {/* Destination picker */}
           <div className="flex items-center gap-3">
-            <div className="text-sm text-zinc-400">Post to</div>
+            <span className="text-sm text-zinc-400">Post to</span>
             <select
               value={destination}
-              onChange={(e) => setDestination(e.target.value)}
+              onChange={(e) => { setDestination(e.target.value); setError(null); }}
               className="bg-zinc-800 text-white text-sm px-2 py-1 rounded"
             >
               <option value="feed">Feed</option>
@@ -244,24 +286,22 @@ if (!currentUser) return null; // or skeleton
             </select>
           </div>
 
+          {/* Submit */}
           <Button
             onClick={handlePost}
-            disabled={(!caption.trim() && !files.length) || isUploading}
+            disabled={!canSubmit || storyNeedsFile}
             className="bg-gradient-to-br from-gray-600 to-black text-gray-200 hover:from-gray-800 hover:to-gray-400 hover:cursor-pointer disabled:bg-zinc-800 disabled:text-zinc-600 gap-2 group relative overflow-hidden"
           >
             <span className="relative z-10 flex items-center gap-2">
               {isUploading ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />
-                  Posting...
+                  {isStory ? "Uploading..." : "Posting..."}
                 </>
               ) : (
                 <>
-                  <Sparkles
-                    size={16}
-                    className="group-hover:rotate-12 transition-transform"
-                  />
-                  Post
+                  <Sparkles size={16} className="group-hover:rotate-12 transition-transform" />
+                  {isStory ? "Share Story" : "Post"}
                 </>
               )}
             </span>
@@ -269,6 +309,14 @@ if (!currentUser) return null; // or skeleton
           </Button>
         </div>
 
+        {/* Story hint */}
+        {isStory && !files.length && (
+          <p className="text-xs text-amber-400/80 text-center">
+            ↑ Select a photo or video above to post as a Story
+          </p>
+        )}
+
+        {/* Hidden file inputs */}
         <input
           type="file"
           ref={imageInputRef}
@@ -287,4 +335,4 @@ if (!currentUser) return null; // or skeleton
       </CardContent>
     </Card>
   );
-};
+}

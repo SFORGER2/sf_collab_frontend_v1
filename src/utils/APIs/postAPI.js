@@ -148,8 +148,14 @@ export const postAPI = {
     return response.data
   },
 
-  viewStory: async (storyId, userId) => {
-    const response = await api.post(`/stories/${storyId}/view`, { user_id: userId })
+  viewStory: async (storyId) => {
+    // FIX: user_id now read from JWT on backend — do not send in body
+    const response = await api.post(`/stories/${storyId}/view`, {})
+    return response.data
+  },
+
+  getStoryViewers: async (storyId) => {
+    const response = await api.get(`/stories/${storyId}/viewers`)
     return response.data
   },
 

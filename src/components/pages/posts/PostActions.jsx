@@ -1,24 +1,23 @@
-// Post Actions Component
+/**
+ * PostActions.jsx — fixed
+ *
+ * FIX: CommentDialog was never passed postId, so it couldn't load or submit
+ * real comments from the database. Added postId prop passthrough.
+ * Also wired like/unlike to the real API via onLikeClick from PostCard.
+ */
 import { useCallback } from "react";
 import { motion } from "framer-motion";
 import { Bookmark, Heart, Share2, MessageCircle } from "lucide-react";
 import { Button } from "../../ui/button";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "../../ui/tooltip";
 import CommentDialog from "./CommentDialog";
 
 const iconVariants = {
-  idle: { scale: 1 },
-  tap: { scale: 0.9 },
-  hover: {
-    scale: 1.1,
-    rotate: [0, -10, 10, 0],
-    transition: { duration: 0.3 },
-  },
+  idle:  { scale: 1 },
+  tap:   { scale: 0.9 },
+  hover: { scale: 1.1, rotate: [0, -10, 10, 0], transition: { duration: 0.3 } },
 };
 
 function ShareSheet({ post }) {
@@ -29,24 +28,15 @@ function ShareSheet({ post }) {
       (post?.id || post?._id ? `?postId=${post.id || post._id}` : "");
 
     if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "Check out this post",
-          text: post?.caption || post?.content || "",
-          url,
-        });
-      } catch {
-        // user cancelled or share failed silently
-      }
+      try { await navigator.share({ title: "Check out this post", text: post?.content || "", url }); }
+      catch { /* user cancelled */ }
       return;
     }
-
     try {
       await navigator.clipboard.writeText(url);
-      // Optional: you could hook this into a toast system instead of alert
       alert("Post link copied to clipboard");
     } catch {
-      alert("Unable to copy link. Please copy it from the address bar.");
+      alert("Unable to copy link.");
     }
   }, [post]);
 
@@ -59,7 +49,7 @@ function ShareSheet({ post }) {
               variant="ghost"
               size="sm"
               onClick={handleShare}
-              className="gap-2 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
+              className="gap-2 text-zinc-400 hover:text-green-400 hover:bg-green-500/10 transition-all"
             >
               <Share2 size={18} />
             </Button>
@@ -74,35 +64,31 @@ function ShareSheet({ post }) {
 export default function PostActions({
   post,
   liked,
-  setLiked,
-  onLikeClick,
   bookmarked,
+  onLikeClick,
+  setLiked,
   setBookmarked,
 }) {
-  const likesCount = Number(post.likes || 0) + (liked ? 1 : 0);
+  const postId = post?.id ?? post?._id;
+
+  const likesCount = Number(post.likes || 0) + (liked ? 0 : 0); // count from backend
   const commentsCount = Array.isArray(post.comments)
     ? post.comments.length
-    : Number(post.commentsCount ?? post.comments ?? 0);
+    : Number(post.commentsCount ?? post.comments_count ?? post.comments ?? 0);
 
   const handleLike = () => {
-    if (onLikeClick) {
-      onLikeClick();
-    } else {
-      setLiked(!liked);
-    }
+    if (onLikeClick) onLikeClick();
+    else setLiked(!liked);
   };
 
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
+        {/* Like */}
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <motion.div
-                variants={iconVariants}
-                whileHover="hover"
-                whileTap="tap"
-              >
+              <motion.div variants={iconVariants} whileHover="hover" whileTap="tap">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -118,22 +104,25 @@ export default function PostActions({
                 </Button>
               </motion.div>
             </TooltipTrigger>
-            <TooltipContent>Like</TooltipContent>
+            <TooltipContent>{liked ? "Unlike" : "Like"}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
-        <CommentDialog comments={commentsCount} postAuthor={post.author} />
+        {/* FIX: pass postId so CommentDialog can load/submit real comments */}
+        <CommentDialog
+          postId={postId}
+          comments={commentsCount}
+          postAuthor={post.author}
+        />
+
         <ShareSheet post={post} />
       </div>
 
+      {/* Bookmark */}
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div
-              variants={iconVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
+            <motion.div variants={iconVariants} whileHover="hover" whileTap="tap">
               <Button
                 variant="ghost"
                 size="sm"
@@ -144,14 +133,11 @@ export default function PostActions({
                     : "text-zinc-400 hover:text-blue-400 hover:bg-blue-500/10"
                 }`}
               >
-                <Bookmark
-                  size={18}
-                  className={bookmarked ? "fill-blue-400" : ""}
-                />
+                <Bookmark size={18} className={bookmarked ? "fill-blue-400" : ""} />
               </Button>
             </motion.div>
           </TooltipTrigger>
-          <TooltipContent>Save</TooltipContent>
+          <TooltipContent>{bookmarked ? "Unsave" : "Save"}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     </div>

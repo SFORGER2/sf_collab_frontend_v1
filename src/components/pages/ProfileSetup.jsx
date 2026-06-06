@@ -146,7 +146,6 @@ export default function ProfileSetup() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Complete Your Profile</h1>
           <p className="text-gray-400">
@@ -154,10 +153,8 @@ export default function ProfileSetup() {
           </p>
         </div>
 
-        {/* Form Container */}
         <div className="bg-slate-800 rounded-lg shadow-xl border border-slate-700 p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-
             {/* Profile Image */}
             <div className="flex justify-center mb-8">
               <div className="relative">
@@ -174,45 +171,29 @@ export default function ProfileSetup() {
                 </div>
                 <label className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full cursor-pointer shadow-lg transition">
                   <Camera className="w-4 h-4" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
+                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                 </label>
               </div>
             </div>
 
-            {/* Name Fields */}
+            {/* Name */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  <User className="w-4 h-4 inline mr-2" />
-                  First Name *
+                  <User className="w-4 h-4 inline mr-2" />First Name *
                 </label>
                 <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  placeholder="John"
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  required
+                  type="text" name="firstName" value={formData.firstName}
+                  onChange={handleInputChange} placeholder="John" required
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Last Name *
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Last Name *</label>
                 <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  placeholder="Doe"
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  required
+                  type="text" name="lastName" value={formData.lastName}
+                  onChange={handleInputChange} placeholder="Doe" required
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
             </div>
@@ -220,14 +201,11 @@ export default function ProfileSetup() {
             {/* Email (read-only) */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                <Mail className="w-4 h-4 inline mr-2" />
-                Email
+                <Mail className="w-4 h-4 inline mr-2" />Email
               </label>
               <input
-                type="email"
-                value={formData.email}
-                disabled
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-gray-400 placeholder-gray-500 focus:outline-none cursor-not-allowed"
+                type="email" value={formData.email} disabled
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-gray-400 cursor-not-allowed focus:outline-none"
               />
             </div>
 
@@ -235,29 +213,21 @@ export default function ProfileSetup() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  <Building className="w-4 h-4 inline mr-2" />
-                  Company
+                  <Building className="w-4 h-4 inline mr-2" />Company
                 </label>
                 <input
-                  type="text"
-                  name="company"
-                  value={formData.company}
-                  onChange={handleInputChange}
-                  placeholder="Your Company"
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  type="text" name="company" value={formData.company}
+                  onChange={handleInputChange} placeholder="Your Company"
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  <Globe className="w-4 h-4 inline mr-2" />
-                  Country *
+                  <Globe className="w-4 h-4 inline mr-2" />Country *
                 </label>
                 <select
-                  name="country"
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  required
+                  name="country" value={formData.country} onChange={handleInputChange} required
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
                 >
                   <option value="">Select a country</option>
                   {COUNTRIES.map((c) => (
@@ -271,28 +241,21 @@ export default function ProfileSetup() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  <MapPin className="w-4 h-4 inline mr-2" />
-                  City
+                  <MapPin className="w-4 h-4 inline mr-2" />City
                 </label>
                 <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  placeholder="Your City"
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  type="text" name="city" value={formData.city}
+                  onChange={handleInputChange} placeholder="Your City"
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  <Clock className="w-4 h-4 inline mr-2" />
-                  Timezone
+                  <Clock className="w-4 h-4 inline mr-2" />Timezone
                 </label>
                 <select
-                  name="timezone"
-                  value={formData.timezone}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  name="timezone" value={formData.timezone} onChange={handleInputChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
                 >
                   {TIMEZONES.map((tz) => (
                     <option key={tz} value={tz}>{tz}</option>
@@ -300,14 +263,10 @@ export default function ProfileSetup() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Language
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Language</label>
                 <select
-                  name="language"
-                  value={formData.language}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  name="language" value={formData.language} onChange={handleInputChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
                 >
                   {LANGUAGES.map((lang) => (
                     <option key={lang} value={lang}>{lang}</option>
@@ -318,32 +277,25 @@ export default function ProfileSetup() {
 
             {/* Bio */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Bio
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Bio</label>
               <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={handleInputChange}
-                placeholder="Tell us about yourself..."
-                rows="4"
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                name="bio" value={formData.bio} onChange={handleInputChange}
+                placeholder="Tell us about yourself..." rows="4"
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
 
-            {/* Buttons */}
+            {/* Actions */}
             <div className="flex gap-4 pt-6">
               <button
-                type="button"
-                onClick={handleSkip}
-                className="flex-1 px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition duration-200"
+                type="button" onClick={handleSkip}
+                className="flex-1 px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition"
               >
                 Skip for now
               </button>
               <button
-                type="submit"
-                disabled={isLoading}
-                className="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                type="submit" disabled={isLoading}
+                className="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? <><LoadingSpinner /> Setting up...</> : "Complete Setup"}
               </button>

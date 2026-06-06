@@ -1,17 +1,25 @@
+/**
+ * StoryModal.jsx — fixed
+ *
+ * FIX: removed user_id, author_id, author_first_name, author_last_name
+ * from the FormData. The backend story_routes.py reads author identity
+ * from the JWT token — sending these fields was redundant and caused
+ * a subtle bug: user.firstName is undefined when Redux stores it as
+ * first_name (snake_case), so formData.append("author_first_name", undefined)
+ * sent the string "undefined" to the backend.
+ */
 import React, { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Upload, Loader2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
 import { postAPI } from "@/utils/APIs/postAPI";
-import { useSelector } from "react-redux";
 
 const StoryModal = ({ isOpen, onClose }) => {
-  const fileInputRef = useRef(null);
+  const fileInputRef  = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const { user } = useSelector((state) => state.auth);
+  const [previewUrl,   setPreviewUrl]   = useState(null);
+  const [isUploading,  setIsUploading]  = useState(false);
 
   const handleUploadClick = () => fileInputRef.current?.click();
 
@@ -31,20 +39,16 @@ const StoryModal = ({ isOpen, onClose }) => {
 
   const handlePostStory = async () => {
     if (!selectedFile) return;
-
     try {
       setIsUploading(true);
       const formData = new FormData();
-      formData.append("media", selectedFile);
-      formData.append("type", selectedFile.type.startsWith("video/") ? "video" : "image");
-      formData.append("user_id", user.id);
-      formData.append("author_id", user.id);
-      formData.append("author_first_name", user.firstName);
-      formData.append("author_last_name", user.lastName);
+      formData.append("media",      selectedFile);
+      formData.append("type",       selectedFile.type.startsWith("video/") ? "video" : "image");
       formData.append("expires_at", new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
+      // user_id / author_id / author_first_name / author_last_name intentionally
+      // omitted — the backend reads identity from the JWT token.
 
       await postAPI.createStory(formData);
-
       toast.success("Story posted successfully!");
       handleRemoveFile();
       onClose();
@@ -118,22 +122,12 @@ const StoryModal = ({ isOpen, onClose }) => {
                   exit={{ opacity: 0, y: -10 }}
                   className="flex flex-col items-center gap-4"
                 >
-                  <motion.div
-                    layoutId="preview"
-                    className="relative rounded-lg overflow-hidden"
-                  >
+                  <motion.div layoutId="preview" className="relative rounded-lg overflow-hidden">
                     {selectedFile.type.startsWith("image/") && (
-                      <img
-                        src={previewUrl}
-                        alt={selectedFile.name}
-                        className="w-40 h-40 object-cover"
-                      />
+                      <img src={previewUrl} alt={selectedFile.name} className="w-40 h-40 object-cover" />
                     )}
                     {selectedFile.type.startsWith("video/") && (
-                      <video
-                        src={previewUrl}
-                        className="w-40 h-40 object-cover"
-                      />
+                      <video src={previewUrl} className="w-40 h-40 object-cover" />
                     )}
                   </motion.div>
                   <p className="text-gray-300 text-sm truncate w-40 text-center">
@@ -141,8 +135,7 @@ const StoryModal = ({ isOpen, onClose }) => {
                   </p>
                   <div className="flex gap-3 w-full">
                     <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                       disabled={isUploading}
                       onClick={handleRemoveFile}
                       className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
@@ -150,17 +143,13 @@ const StoryModal = ({ isOpen, onClose }) => {
                       Remove
                     </motion.button>
                     <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                       disabled={isUploading}
                       onClick={handlePostStory}
                       className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-500 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
                     >
                       {isUploading ? (
-                        <>
-                          <Loader2 size={16} className="animate-spin" />
-                          Posting...
-                        </>
+                        <><Loader2 size={16} className="animate-spin" /> Posting...</>
                       ) : (
                         "Post"
                       )}
