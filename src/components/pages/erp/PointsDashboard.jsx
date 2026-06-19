@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
-import { Award, CheckCircle, Calendar, Star, TrendingUp } from "lucide-react";
+import { Award, CheckCircle, Calendar } from "lucide-react";
 
 const tasksApi = axios.create({ baseURL: "/api/erp-tasks" });
 tasksApi.interceptors.request.use(requestInterceptor);
@@ -18,6 +18,7 @@ export default function PointsDashboard() {
   const userId = user?.id;
 
   const [tasks, setTasks] = useState([]);
+  const [taskPoints, setTaskPoints] = useState(0);
   const [consistencyPoints, setConsistencyPoints] = useState(0);
   const [totalPoints, setTotalPoints] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -26,25 +27,27 @@ export default function PointsDashboard() {
     if (!workspaceId || !userId) return;
     setLoading(true);
     try {
-      // Fetch tasks assigned to user (including approved ones)
+      // Fetch tasks assigned to user
       const tasksRes = await tasksApi.get("/list", {
         params: { workspace_id: workspaceId, assigned_to: userId }
       });
       const tasksData = tasksRes.data?.data?.tasks || tasksRes.data?.tasks || [];
-      // Filter approved tasks (those with approved_points > 0)
-      const approvedTasks = tasksData.filter(t => t.status === "approved" && (t.approved_points || 0) > 0);
+      const approvedTasks = tasksData.filter(t => 
+        (t.status || "").toLowerCase() === "approved" && 
+        Number(t.approved_points) > 0
+      );
       setTasks(approvedTasks);
-      const taskPoints = approvedTasks.reduce((sum, t) => sum + (t.approved_points || 0), 0);
+      const points = approvedTasks.reduce((sum, t) => sum + Number(t.approved_points || 0), 0);
+      setTaskPoints(points);
 
-      // Consistency points – from daily updates submitted count (1 point per update? adjust as needed)
+      // Consistency points
       const updatesRes = await updatesApi.get("/my", {
         params: { workspace_id: workspaceId, limit: 100 }
       });
       const updates = updatesRes.data?.data?.records || updatesRes.data?.records || [];
-      const submittedCount = updates.length; // Total updates ever
-      const consistency = submittedCount * 2; // Example: 2 points per daily update
+      const submittedCount = updates.length;
+      const consistency = submittedCount * 2;
       setConsistencyPoints(consistency);
-      setTotalPoints(taskPoints + consistency);
     } catch (err) {
       console.error("Failed to load points data", err);
     } finally {
@@ -55,6 +58,11 @@ export default function PointsDashboard() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Recompute total whenever taskPoints or consistencyPoints change
+  useEffect(() => {
+    setTotalPoints(taskPoints + consistencyPoints);
+  }, [taskPoints, consistencyPoints]);
 
   if (loading) return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">Loading...</div>;
 
@@ -78,7 +86,7 @@ export default function PointsDashboard() {
               <CheckCircle className="w-5 h-5 text-green-500" />
               <h2 className="text-xl font-semibold">Task Points</h2>
             </div>
-            <p className="text-3xl font-bold text-white mb-4">{tasks.reduce((sum, t) => sum + (t.approved_points || 0), 0)}</p>
+            <p className="text-3xl font-bold text-white mb-4">{taskPoints}</p>
             <p className="text-sm text-zinc-400">From {tasks.length} approved tasks</p>
           </div>
           <div className="bg-[#121215] border border-zinc-800 rounded-2xl p-6">

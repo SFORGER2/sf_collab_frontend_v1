@@ -5,7 +5,7 @@ export const workspaceAPI = {
   // Get user's workspaces
   getMyWorkspaces: async () => {
     const response = await apiClient.get('/workspaces/my');  // Removed /api
-    return response.data.data?.workspaces || response.data.workspaces || [];
+    return response.data.data || [];
   },
 
   // Create a new workspace
