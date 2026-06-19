@@ -106,17 +106,25 @@ export default function ERPUpdates() {
     loadUpdates();
   }, [loadUpdates]);
 
+  const showToast = (message, isError = false) => {
+    const toast = document.createElement("div");
+    toast.className = `fixed bottom-6 right-6 ${isError ? "bg-red-600" : "bg-violet-600"} text-white px-6 py-4 rounded-3xl shadow-2xl z-[99999] flex items-center gap-3`;
+    toast.innerHTML = `<span class="font-semibold">${message}</span>`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.today_work.trim()) {
-      alert("Please describe what you did today.");
+      showToast("Please describe what you did today.", true);
       return;
     }
     try {
       await api.post("/submit", {
         workspace_id: workspaceId,
         today_work: formData.today_work,
-        next_plan: formData.next_plan,
+        next_plan: formData.next_plan || null,
         blockers: formData.blockers || null,
         progress_rating: formData.progress_rating || null,
       });
@@ -124,20 +132,15 @@ export default function ERPUpdates() {
       setIsModalOpen(false);
       setCurrentPage(1);
       loadUpdates();
-
-      // Toast notification
-      const toast = document.createElement("div");
-      toast.className = "fixed bottom-6 right-6 bg-violet-600 text-white px-6 py-4 rounded-3xl shadow-2xl shadow-violet-500/30 flex items-center gap-3 z-[99999]";
-      toast.innerHTML = `<span class="font-semibold">Daily update submitted successfully</span>`;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 2800);
+      showToast("Daily update submitted successfully!");
     } catch (error) {
       console.error("Failed to submit update", error);
-      const toast = document.createElement("div");
-      toast.className = "fixed bottom-6 right-6 bg-red-600 text-white px-6 py-4 rounded-3xl shadow-2xl z-[99999]";
-      toast.innerHTML = `<span class="font-semibold">Failed to submit update</span>`;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 2800);
+      // Extract server error message if available
+      const serverMsg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to submit update. Please try again.";
+      showToast(serverMsg, true);
     }
   };
 
@@ -346,7 +349,7 @@ export default function ERPUpdates() {
                 </div>
                 <div>
                   <label className="flex items-center gap-x-2 text-sm font-medium text-zinc-400 mb-3">
-                    What will you do next?
+                    What will you do next? <span className="text-zinc-600 text-xs">(optional)</span>
                   </label>
                   <textarea
                     value={formData.next_plan}
