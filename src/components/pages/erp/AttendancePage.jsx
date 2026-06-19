@@ -14,6 +14,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
+import { workspaceAPI } from "../../../services/workspaceAPI";
 
 const api = axios.create({ baseURL: "/api" });
 api.interceptors.request.use(requestInterceptor);
@@ -46,9 +47,13 @@ const statusLabel = {
 // ═════════════════════════════════════════════════════════════════════════════
 export function MyAttendancePage() {
   const { user } = useSelector((s) => s.auth);
-  // Use active_workspace_id from user object (backend should return this)
-  const workspaceId = user?.active_workspace_id;
 
+  // ── Workspace selection ──────────────────────────────────────────────────
+  const [workspaces, setWorkspaces] = useState([]);
+  const [workspaceId, setWorkspaceId] = useState(null);
+  const [workspacesLoading, setWorkspacesLoading] = useState(true);
+
+  // ── Attendance data ──────────────────────────────────────────────────────
   const [today, setToday] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,8 +67,39 @@ export function MyAttendancePage() {
     setTimeout(() => { setError(null); setNotice(null); }, 4000);
   };
 
+  // ── Load workspaces ──────────────────────────────────────────────────────
+  useEffect(() => {
+    const loadWorkspaces = async () => {
+      try {
+        const data = await workspaceAPI.getMyWorkspaces();
+        setWorkspaces(data);
+      } catch (e) {
+        console.error("Failed to load workspaces", e);
+        flash("Could not load workspaces", true);
+      } finally {
+        setWorkspacesLoading(false);
+      }
+    };
+    loadWorkspaces();
+  }, []);
+
+  // ── Compute workspaceId ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (user?.active_workspace_id) {
+      setWorkspaceId(user.active_workspace_id);
+    } else if (workspaces.length > 0) {
+      setWorkspaceId(workspaces[0].id);
+    } else {
+      setWorkspaceId(null);
+    }
+  }, [user, workspaces]);
+
+  // ── Load attendance history (depends on workspaceId) ──────────────────
   const loadHistory = useCallback(async () => {
-    if (!workspaceId) return;
+    if (!workspaceId) {
+      // Still no workspace – skip API call
+      return;
+    }
     try {
       const { data } = await api.get("/attendance/my-history", {
         params: { workspace_id: workspaceId, limit: 30 },
@@ -79,12 +115,23 @@ export function MyAttendancePage() {
     }
   }, [workspaceId]);
 
+  // ── Trigger initial load when workspaceId is set ──────────────────────
   useEffect(() => {
-    setLoading(true);
-    loadHistory().finally(() => setLoading(false));
-  }, [loadHistory]);
+    if (workspaceId) {
+      setLoading(true);
+      loadHistory().finally(() => setLoading(false));
+    } else if (!workspacesLoading) {
+      // No workspaces and we've finished loading – show empty state
+      setLoading(false);
+    }
+  }, [workspaceId, workspacesLoading, loadHistory]);
 
+  // ── Clock In ─────────────────────────────────────────────────────────────
   const clockIn = async () => {
+    if (!workspaceId) {
+      flash("No workspace selected", true);
+      return;
+    }
     setActionLoading(true);
     try {
       await api.post("/attendance/clock-in", { workspace_id: workspaceId });
@@ -97,7 +144,12 @@ export function MyAttendancePage() {
     }
   };
 
+  // ── Clock Out ────────────────────────────────────────────────────────────
   const clockOut = async () => {
+    if (!workspaceId) {
+      flash("No workspace selected", true);
+      return;
+    }
     setActionLoading(true);
     try {
       await api.post("/attendance/clock-out", { workspace_id: workspaceId });
@@ -110,7 +162,22 @@ export function MyAttendancePage() {
     }
   };
 
-  if (loading) return <PageLoader label="Loading attendance…" />;
+  // ── Loading state ────────────────────────────────────────────────────────
+  if (loading || workspacesLoading) {
+    return <PageLoader label="Loading attendance…" />;
+  }
+
+  // If we have no workspaceId after loading, show a message
+  if (!workspaceId) {
+    return (
+      <div style={styles.page}>
+        <PageHeader title="My Attendance" sub="No workspace available" />
+        <div style={styles.card}>
+          <p style={{ color: "#9ca3af" }}>Please create or join a workspace to track attendance.</p>
+        </div>
+      </div>
+    );
+  }
 
   const canClockIn = !today || !today.clock_in_time;
   const canClockOut = today && today.clock_in_time && !today.clock_out_time;
@@ -172,7 +239,10 @@ export function MyAttendancePage() {
 // ═════════════════════════════════════════════════════════════════════════════
 export function WorkspaceAttendancePage() {
   const { user } = useSelector((s) => s.auth);
-  const workspaceId = user?.active_workspace_id;
+
+  const [workspaces, setWorkspaces] = useState([]);
+  const [workspaceId, setWorkspaceId] = useState(null);
+  const [workspacesLoading, setWorkspacesLoading] = useState(true);
 
   const [records, setRecords] = useState([]);
   const [summary, setSummary] = useState(null);
@@ -185,6 +255,34 @@ export function WorkspaceAttendancePage() {
     setTimeout(() => setError(null), 4000);
   };
 
+  // Load workspaces
+  useEffect(() => {
+    const loadWorkspaces = async () => {
+      try {
+        const data = await workspaceAPI.getMyWorkspaces();
+        setWorkspaces(data);
+      } catch (e) {
+        console.error("Failed to load workspaces", e);
+        flash("Could not load workspaces", true);
+      } finally {
+        setWorkspacesLoading(false);
+      }
+    };
+    loadWorkspaces();
+  }, []);
+
+  // Compute workspaceId
+  useEffect(() => {
+    if (user?.active_workspace_id) {
+      setWorkspaceId(user.active_workspace_id);
+    } else if (workspaces.length > 0) {
+      setWorkspaceId(workspaces[0].id);
+    } else {
+      setWorkspaceId(null);
+    }
+  }, [user, workspaces]);
+
+  // Load workspace attendance
   const load = useCallback(async () => {
     if (!workspaceId) return;
     setLoading(true);
@@ -202,7 +300,26 @@ export function WorkspaceAttendancePage() {
     }
   }, [workspaceId, dateFilter]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    if (workspaceId) {
+      load();
+    } else if (!workspacesLoading) {
+      setLoading(false);
+    }
+  }, [workspaceId, workspacesLoading, load]);
+
+  if (loading || workspacesLoading) return <PageLoader label="Loading workspace attendance…" />;
+
+  if (!workspaceId) {
+    return (
+      <div style={styles.page}>
+        <PageHeader title="Workspace Attendance" sub="No workspace available" />
+        <div style={styles.card}>
+          <p style={{ color: "#9ca3af" }}>Please create or join a workspace to view attendance.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.page}>

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
+import { workspaceAPI } from "../../../services/workspaceAPI";
 import { CheckCircle, Clock, Flame } from "lucide-react";
 
 const analyticsApi = axios.create({ baseURL: "/api/erp-analytics" });
@@ -20,7 +21,6 @@ updatesApi.interceptors.response.use(responseInterceptor, responseErrorIntercept
 const pct = (v) => (v != null ? `${Math.round(v)}%` : "—");
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : "—");
 
-// Calculate streak from a list of update dates (YYYY-MM-DD strings)
 const calculateStreak = (updateDates) => {
   if (!updateDates.length) return 0;
   const today = new Date().toISOString().split("T")[0];
@@ -40,8 +40,11 @@ const calculateStreak = (updateDates) => {
 
 export default function MemberAnalyticsPage() {
   const { user } = useSelector((s) => s.auth);
-  const workspaceId = user?.active_workspace_id || 1;
   const userId = user?.id;
+
+  const [workspaces, setWorkspaces] = useState([]);
+  const [workspaceId, setWorkspaceId] = useState(null);
+  const [workspacesLoading, setWorkspacesLoading] = useState(true);
 
   const [metrics, setMetrics] = useState(null);
   const [tasks, setTasks] = useState([]);
@@ -49,14 +52,45 @@ export default function MemberAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // ── Load workspaces ──────────────────────────────────────────────────────
+  useEffect(() => {
+    const loadWorkspaces = async () => {
+      try {
+        const data = await workspaceAPI.getMyWorkspaces();
+        setWorkspaces(data);
+      } catch (e) {
+        console.error("Failed to load workspaces", e);
+        setError("Could not load workspaces");
+      } finally {
+        setWorkspacesLoading(false);
+      }
+    };
+    loadWorkspaces();
+  }, []);
+
+  // ── Compute workspaceId ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (user?.active_workspace_id) {
+      setWorkspaceId(user.active_workspace_id);
+    } else if (workspaces.length > 0) {
+      setWorkspaceId(workspaces[0].id);
+    } else {
+      setWorkspaceId(null);
+    }
+  }, [user, workspaces]);
+
+  // ── Load analytics data ──────────────────────────────────────────────────
   const loadData = useCallback(async () => {
-    if (!userId || !workspaceId) return;
+    if (!userId || !workspaceId) {
+      console.log("⏭️ Skipping load: missing userId or workspaceId", { userId, workspaceId });
+      return;
+    }
     setLoading(true);
     try {
-      // 1. Analytics metrics
       const endDate = new Date().toISOString().split("T")[0];
       const startDate = new Date();
       startDate.setDate(1);
+      console.log("📡 Fetching analytics for user", userId, "workspace", workspaceId);
       const analyticsRes = await analyticsApi.get(`/user/${userId}`, {
         params: {
           workspace_id: workspaceId,
@@ -64,17 +98,18 @@ export default function MemberAnalyticsPage() {
           end_date: endDate,
         },
       });
+      console.log("✅ Analytics response:", analyticsRes.data);
       const analyticsData = analyticsRes.data?.data || analyticsRes.data;
-      setMetrics(analyticsData.metrics);
+      setMetrics(analyticsData.metrics || analyticsData);
 
-      // 2. Task history
+      // Task history
       const tasksRes = await tasksApi.get("/list", {
         params: { workspace_id: workspaceId, assigned_to: userId },
       });
       const tasksData = tasksRes.data?.data?.tasks || tasksRes.data?.tasks || [];
       setTasks(tasksData);
 
-      // 3. Daily updates for streak calculation (fetch last 30 days)
+      // Daily updates for streak
       const updatesRes = await updatesApi.get("/my", {
         params: { workspace_id: workspaceId, limit: 30 },
       });
@@ -83,6 +118,7 @@ export default function MemberAnalyticsPage() {
       const currentStreak = calculateStreak(updateDates);
       setStreak(currentStreak);
     } catch (err) {
+      console.error("❌ Analytics load error:", err);
       setError(err?.response?.data?.error || "Failed to load analytics");
     } finally {
       setLoading(false);
@@ -90,11 +126,36 @@ export default function MemberAnalyticsPage() {
   }, [userId, workspaceId]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (workspaceId) {
+      loadData();
+    } else if (!workspacesLoading) {
+      // No workspace available
+      setLoading(false);
+    }
+  }, [workspaceId, workspacesLoading, loadData]);
 
-  if (loading) return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">Loading...</div>;
-  if (error) return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center text-red-500">{error}</div>;
+  if (loading || workspacesLoading) {
+    return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!workspaceId) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-zinc-400">No workspace available.</p>
+          <p className="text-sm text-zinc-500 mt-2">Please create or join a workspace to see your analytics.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
 
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.status === "done" || t.status === "approved").length;
@@ -107,7 +168,7 @@ export default function MemberAnalyticsPage() {
           My Analytics
         </h1>
 
-        {/* KPI Row – including streak with static flame */}
+        {/* KPI Row */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <MetricCard
             label="Attendance Rate"
@@ -131,12 +192,12 @@ export default function MemberAnalyticsPage() {
             label="Current Streak"
             value={`${streak} day${streak !== 1 ? 's' : ''}`}
             accent="#f97316"
-            icon={<Flame size={20} />}   // no animation
+            icon={<Flame size={20} />}
             sub={streak === 0 ? "Submit an update to start your streak!" : "Keep it up!"}
           />
         </div>
 
-        {/* Period details (if available) */}
+        {/* Period details */}
         {metrics?.details && (
           <div className="bg-[#121215] border border-zinc-800/80 rounded-3xl p-8 mb-8">
             <h2 className="text-xl font-semibold mb-4">Period Details</h2>
@@ -189,6 +250,10 @@ export default function MemberAnalyticsPage() {
     </div>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sub‑components
+// ─────────────────────────────────────────────────────────────────────────────
 
 function MetricCard({ label, value, accent, icon, sub }) {
   return (
