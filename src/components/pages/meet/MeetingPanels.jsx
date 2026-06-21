@@ -385,12 +385,32 @@ export function AIAssistantPanel({ meetingId }) {
     setLoading(true);
 
     try {
-      // In production, call your AI endpoint. For now simulate.
-      await new Promise(r => setTimeout(r, 1200));
-      const response = `I've reviewed the meeting context for meeting ${meetingId}. Based on the decisions and action items captured, here's what I found regarding: "${q}"\n\nThis feature connects to your workspace memory system — ensure the AI memory update has been triggered after the meeting ends for full context.`;
-      setMessages(prev => [...prev, { role: "assistant", content: response }]);
+      // Build context from meeting ID for the AI
+      const systemPrompt = `You are a smart meeting assistant for SF Collab, a startup collaboration platform. 
+You help teams understand their meeting context, decisions, action items, and blockers.
+Meeting ID: ${meetingId}. Be concise, practical, and focused on what the team needs to move forward.`;
+
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          system: systemPrompt,
+          messages: [
+            ...messages.filter(m => m.role !== "system").map(m => ({
+              role: m.role,
+              content: m.content,
+            })),
+            { role: "user", content: q }
+          ],
+        }),
+      });
+      const data = await response.json();
+      const reply = data.content?.[0]?.text || "I couldn't process that right now.";
+      setMessages(prev => [...prev, { role: "assistant", content: reply }]);
     } catch (e) {
-      setMessages(prev => [...prev, { role: "assistant", content: "Sorry, I couldn't process that right now." }]);
+      setMessages(prev => [...prev, { role: "assistant", content: "Sorry, I couldn't connect to the AI assistant right now." }]);
     } finally {
       setLoading(false);
     }

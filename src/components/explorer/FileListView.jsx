@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Folder, FileText, Image as ImageIcon, Table, MoreHorizontal, History, Link as LinkIcon, Share2 } from "lucide-react";
+import { Folder, FileText, Image as ImageIcon, Table, MoreHorizontal, History, Link as LinkIcon, Share2, Download, Trash2 } from "lucide-react";
 
 const formatBytes = (bytes) => {
   if (!bytes) return "--";
@@ -18,7 +18,7 @@ const getIcon = (type) => {
   }
 };
 
-function RowMenu({ file, onOpenModal }) {
+function RowMenu({ file, onOpenModal, onDeleteFile, onDownloadFile }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -29,12 +29,6 @@ function RowMenu({ file, onOpenModal }) {
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  const actions = [
-    { icon: History,   label: 'Version History', modal: 'version' },
-    { icon: LinkIcon,  label: 'Link to…',        modal: 'link'    },
-    { icon: Share2,    label: 'Share',            modal: 'share'   },
-  ];
-
   return (
     <div ref={ref} className="relative" onClick={(e) => e.stopPropagation()}>
       <button
@@ -44,23 +38,35 @@ function RowMenu({ file, onOpenModal }) {
         <MoreHorizontal className="w-4 h-4" />
       </button>
       {open && (
-        <div className="absolute right-0 top-8 z-50 w-44 bg-[#1e2130] border border-white/10 rounded-xl shadow-2xl overflow-hidden">
-          {actions.map(({ icon: Icon, label, modal }) => (
-            <button
-              key={modal}
-              onClick={() => { setOpen(false); onOpenModal(file, modal); }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition font-mono"
-            >
-              <Icon className="w-4 h-4" /> {label}
-            </button>
-          ))}
+        <div className="absolute right-0 top-8 z-50 w-48 bg-[#1e2130] border border-white/10 rounded-xl shadow-2xl overflow-hidden">
+          <button onClick={() => { setOpen(false); onDownloadFile?.(file); }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition font-mono">
+            <Download className="w-4 h-4" /> Download
+          </button>
+          <button onClick={() => { setOpen(false); onOpenModal(file, 'version'); }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition font-mono">
+            <History className="w-4 h-4" /> Version History
+          </button>
+          <button onClick={() => { setOpen(false); onOpenModal(file, 'link'); }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition font-mono">
+            <LinkIcon className="w-4 h-4" /> Link to…
+          </button>
+          <button onClick={() => { setOpen(false); onOpenModal(file, 'share'); }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition font-mono">
+            <Share2 className="w-4 h-4" /> Share
+          </button>
+          <div className="border-t border-white/10 my-1" />
+          <button onClick={() => { setOpen(false); onDeleteFile?.(file); }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 transition font-mono">
+            <Trash2 className="w-4 h-4" /> Delete
+          </button>
         </div>
       )}
     </div>
   );
 }
 
-export const FileListView = ({ files, onRowClick, onOpenModal }) => {
+export const FileListView = ({ files, onRowClick, onOpenModal, onDeleteFile, onDownloadFile }) => {
   return (
     <div className="overflow-auto flex-1">
       <table className="w-full text-left text-sm border-collapse">
@@ -94,7 +100,7 @@ export const FileListView = ({ files, onRowClick, onOpenModal }) => {
               <td className="px-6 py-3">
                 {file.type !== 'folder' && onOpenModal && (
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <RowMenu file={file} onOpenModal={onOpenModal} />
+                    <RowMenu file={file} onOpenModal={onOpenModal} onDeleteFile={onDeleteFile} onDownloadFile={onDownloadFile} />
                   </div>
                 )}
               </td>

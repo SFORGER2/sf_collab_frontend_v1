@@ -25,6 +25,7 @@ import {
   Building2,
   CalendarClock,
   FileStack,
+  Video,
 } from "lucide-react";
 import {
   aiTools,
@@ -140,6 +141,15 @@ export function createBuilderLinks(
         { id: "erp-payouts",      href: "/erp/payouts",      label: "Payouts",      icon: <DollarSign size={18} /> },
         { id: "erp-my-analytics", href: "/erp/my-analytics", label: "My Analytics", icon: <BarChart2 size={18} /> },
         { id: "erp-settings",     href: "/erp/settings",     label: "Settings",     icon: <Settings size={18} /> },
+      ],
+    },
+    {
+      id: 13,
+      icon: <Video size={22} />,
+      href: "/meet",
+      label: "SF Meet",
+      subItems: [
+        { id: "meet-all",    href: "/meet",    label: "All Meetings", icon: <Video size={18} /> },
       ],
     },
     {

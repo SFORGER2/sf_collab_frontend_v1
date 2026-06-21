@@ -44,10 +44,13 @@ The following changes have been implemented as part of the ERP MVP Phase 1 (Fron
   - **User Management:** View and manage workspace members and roles.
   - **Holiday System:** Interface for setting workspace holidays.
   - **Workspace Settings:** General configuration for workspace name and defaults.
+<<<<<<< HEAD
+=======
 - **Execution Dashboard UI (`/erp/execution`):**
   - High-fidelity KPI grid with real-time status signals.
   - Interactive "Submit Proof" workflow with multi-stage verification.
   - Formula breakdowns and activity auditing details.
+>>>>>>> origin/main
 - **Navigation Integration:**
   - Integrated a new **ERP Section** in the sidebar containing the Task Board and Admin Settings.
 
@@ -55,11 +58,17 @@ The following changes have been implemented as part of the ERP MVP Phase 1 (Fron
 #### [NEW] New Components
 - `src/components/pages/erp/TaskBoard.jsx`
 - `src/components/pages/erp/AdminSettings.jsx`
+<<<<<<< HEAD
+
+#### [MODIFY] Existing Files
+- `src/App.jsx`: Registered new ERP routes and imported components.
+=======
 - `src/components/pages/erp/data/` (Modular mock data storage)
 
 #### [MODIFY] Existing Files
 - `src/App.jsx`: Registered new ERP routes and imported components.
 - `src/components/pages/erp/ExecutionDashboard.jsx`: Refactored to SF-OS standard with high-fidelity proof workflow.
+>>>>>>> origin/main
 - `src/components/pages/sidebars/sidebarCommons.jsx`: Added `erpSection` logic.
 - `src/components/pages/sidebars/sidebar/links.jsx`: Integrated the ERP section into the main sidebar structure.
 

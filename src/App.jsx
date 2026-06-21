@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { FolderExplorerUI } from "./components/explorer/FolderExplorerUI";
 import Layout from "./Layout/Layout.jsx";
 import Project from "./components/pages/Project.jsx";
@@ -12,8 +12,6 @@ import Login from "./components/auth/Login.jsx";
 import SignUp from "./components/auth/SignUp.jsx";
 import RegisterStartUp from "./components/pages/register-startup/RegisterStartUp.jsx";
 import Ideationdetails from "./components/pages/ideation/Ideationdetails.jsx";
-import MeetingRoom from "./components/ui/meeting-room.jsx";
-import MeetingDetailPage from "./components/pages/meet/MeetingDetailPage.jsx";
 import Knowledgedetails from "./components/detailspage (previous)/Knowledgedetails.jsx";
 import ProjectDetails from "./components/detailspage (previous)/ProjectDetails.jsx";
 import Posts from "./components/pages/posts/Posts.jsx";
@@ -79,7 +77,15 @@ import Crowdfunding from "./components/pages/crowdfunding/Crowdfunding.jsx";
 import Checkout from "./components/pages/checkout/Checkout.jsx";
 import ReturnPage from "./components/pages/checkout/CheckoutReturnPage.jsx";
 import Donate from "./components/pages/donate/Donate.jsx";
+
+// SF Meet
+import MeetingRoom from "./components/ui/meeting-room.jsx";
+import MeetingDetailPage from "./components/pages/meet/MeetingDetailPage.jsx";
+import MeetingsTab from "./components/pages/meet/MeetingsTab.jsx";
+import PostMeetingSummaryPage from "./components/pages/meet/PostMeetingSummaryPage.jsx";
 import ConnectionsPage from "./components/pages/connections/ConnectionsPage";
+
+// Builder Dashboard Routes - Phase 2
 import SavedStartups from "./components/pages/dashboards/builderDashboard/SavedStartups.jsx";
 import MyApplications from "./components/pages/dashboards/builderDashboard/MyApplications.jsx";
 import MyWork from "./components/pages/dashboards/builderDashboard/MyWork.jsx";
@@ -119,42 +125,35 @@ import ERPDashboard from "./components/pages/erp/erp-dashboard";
 import ERPUpdates from "./components/pages/erp/erp-updates";
 import DocumentsPage from "./components/pages/erp/erp-document-page";
 import TaskBoard from "./components/pages/erp/TaskBoard";
+import PayoutPage from "./components/pages/erp/PayoutPage";
+import MemberAnalyticsPage from "./components/pages/erp/MemberAnalyticsPage";
+import AdminAnalyticsPage from "./components/pages/erp/AdminAnalyticsPage";
 import AdminSettings from "./components/pages/erp/AdminSettings";
-import MemberAnalyticsPage from "./components/pages/erp/MemberAnalyticsPage.jsx";
-import PayoutPage from "./components/pages/erp/PayoutPage.jsx";
-import AdminAnalyticsPage from "./components/pages/erp/AdminAnalyticsPage.jsx";
-import ExecutionDashboard from "./components/pages/erp/ExecutionDashboard.jsx";
-import TaskManagementPage from "./components/pages/erp/TaskManagementPage";
 import FileDetailPage from "./components/pages/drive/fileDetails";
-import MeetingsTab from "./components/pages/meet/MeetingsTab.jsx";
-import PostMeetingSummaryPage from "./components/pages/meet/PostMeetingSummaryPage.jsx";
 import MilestonePage from "./components/pages/milestones/MilestonePage.jsx";
-import ProofUploadUI from "./components/pages/Reputation/proofUpload.jsx";
-import TaskManagementUI from "./components/pages/Reputation/taskManagement.jsx";
-import RevenueShareDashboard from "./components/pages/Reputation/RevenueShareDashboard.jsx";
-
-function ScrollToTop() {
-  const { pathname } = useLocation();
-  useLayoutEffect(() => {
-    document.documentElement.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    document.body.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  }, [pathname]);
-  return null;
-}
+import AdminRevenuePools from "./components/pages/erp/AdminRevenuePools";
+import AdminRevenuePoolDetail from "./components/pages/erp/AdminRevenuePoolDetail";
+import AdminPayouts from "./components/pages/erp/AdminPayouts";
+import TaskApproval from "./components/pages/erp/TaskApproval";
+import MemberDashboard from "./components/pages/erp/MemberDashboard";
+import PointsDashboard from "./components/pages/erp/PointsDashboard";
+import TaskDetail from "./components/pages/erp/TaskDetail";
+import WorkspaceDashboard from "./components/pages/erp/WorkspaceDashboard";
+import { WarningActionsPage } from "./components/pages/erp/WarningActionsPage";
+import { FlagsPage } from "./components/pages/erp/FlagsPage";
+import { AuditLogsPage } from "./components/pages/erp/AuditLogsPage";
 
 export default function App() {
   const { access_token, user } = useSelector((state) => state.auth);
   const [userRoles, setUserRoles] = useState([]);
-  const [activeRole, setActiveRole] = useState(
-    localStorage.getItem("activeRole") || "member"
-  );
+  const [activeRole, setActiveRole] = useState(localStorage.getItem("activeRole") || "member");
 
   useEffect(() => {
     localStorage.setItem("activeRole", activeRole);
   }, [activeRole]);
 
   if (import.meta.env.PROD) {
-    console.log  = () => {};
+    console.log = () => {};
     console.warn = () => {};
   }
 
@@ -171,10 +170,18 @@ export default function App() {
     if (
       !["/login", "/signup", "/verify-email"].includes(location.pathname) ||
       (location.pathname !== "/" && access_token)
-    ) {
+    )
       fetchUserRoles();
-    }
   }, [access_token]);
+
+  function ScrollToTop() {
+    const { pathname } = useLocation();
+    useLayoutEffect(() => {
+      document.documentElement.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.body.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }, [pathname]);
+    return null;
+  }
 
   return (
     <BrowserRouter>
@@ -184,7 +191,7 @@ export default function App() {
             <NotificationProvider>
               <ScrollToTop />
               <Routes>
-                {/* Public */}
+                {/* Public Routes */}
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/team" element={<TeamPage />} />
@@ -192,18 +199,20 @@ export default function App() {
                 <Route path="/startuppage" element={<StartupPage />} />
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/explore_section" element={<Explore_Section />} />
-                <Route path="/membership-benefits" element={<MembershipBenefits />} />
-                <Route path="/implementation-plans" element={<ImplementationPlans />} />
-                <Route path="/featured-projects" element={<FeaturedProjects />} />
-                <Route path="/pricing" element={<Pricing />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/membership-benefits" element={<MembershipBenefits />} />
+                <Route path="/implementation-plans" element={<ImplementationPlans />} />
+                <Route path="/featured-projects" element={<FeaturedProjects />} />
                 <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/data-collection-and-tracking" element={<DataCollection />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/waitlist" element={<Waitlist />} />
+                <Route path="/waitlist-terms" element={<WaitlistTerms />} />
 
-                {/* Protected */}
+                {/* Protected Routes (with Layout) */}
                 <Route
                   path="/"
                   element={
@@ -216,19 +225,25 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 >
+                  {/* Dashboard (role-based) */}
                   <Route
                     path="dashboard"
-                    element={(() => {
-                      const props = { activeRole, setActiveRole, userRoles, setUserRoles };
-                      if (user && activeRole === "influencer") return <InfluencerDashboard {...props} />;
-                      if (user && activeRole === "builder")    return <BuilderDashboard {...props} />;
-                      if (user && activeRole === "founder")    return <FounderDashboard {...props} />;
-                      if (user && activeRole === "investor")   return <InvestorDashboard {...props} />;
-                      return <Dashboard {...props} />;
-                    })()}
+                    element={
+                      user && activeRole === "influencer" ? (
+                        <InfluencerDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} setUserRoles={setUserRoles} />
+                      ) : user && activeRole === "builder" ? (
+                        <BuilderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} setUserRoles={setUserRoles} />
+                      ) : user && activeRole === "founder" ? (
+                        <FounderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} setUserRoles={setUserRoles} />
+                      ) : user && activeRole === "investor" ? (
+                        <InvestorDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} setUserRoles={setUserRoles} />
+                      ) : (
+                        <Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />
+                      )
+                    }
                   />
 
-                  {/* Builder */}
+                  {/* Builder Routes */}
                   <Route path="builder/my-applications" element={<MyApplications />} />
                   <Route path="builder/my-work" element={<MyWork />} />
                   <Route path="builder/rewards" element={<Rewards />} />
@@ -236,25 +251,16 @@ export default function App() {
                   <Route path="builder/profile-skills" element={<SkillProfile />} />
                   <Route path="builder/profile" element={<SkillProfile />} />
 
-                  {/* Founder */}
+                  {/* Founder Routes */}
                   <Route path="founder/my-applications" element={<FounderManageApplications />} />
                   <Route path="founder/my-team" element={<FounderManageTeam />} />
                   <Route path="founder/manage-tasks" element={<FounderManageTasks />} />
 
-                  {/* AI Tools */}
+                  {/* AI & Tools */}
                   <Route path="ai-dashboard" element={<AIToolsGuard><AIDashboard /></AIToolsGuard>} />
-                  <Route path="business-plan" element={<AIToolsGuard><BusinessIdeaGenerator /></AIToolsGuard>} />
-                  <Route path="multimodal-images" element={<AIToolsGuard><ImageGenerator /></AIToolsGuard>} />
-                  <Route path="logo-generator" element={<AIToolsGuard><StartupLogoGenerator /></AIToolsGuard>} />
-                  <Route path="data-scraper" element={<AIToolsGuard><ScraperForm /></AIToolsGuard>} />
-                  <Route path="qwen-chat" element={<AIToolsGuard><QwenChat /></AIToolsGuard>} />
-                  <Route path="caption-generator" element={<AIToolsGuard><CaptionGenerator /></AIToolsGuard>} />
-                  <Route path="video-generator" element={<AIToolsGuard><VideoGenerator /></AIToolsGuard>} />
-
-                  {/* General */}
                   <Route path="tools-dashboard" element={<ToolsDashboard />} />
-                  <Route path="waitlist" element={<Waitlist />} />
-                  <Route path="waitlist-terms" element={<WaitlistTerms />} />
+
+                  {/* Users & Profiles */}
                   <Route path="influencer" element={<Influencer />} />
                   <Route path="admin" element={<AdminPage />} />
                   <Route path="refer" element={<ReferPage />} />
@@ -263,14 +269,11 @@ export default function App() {
                   <Route path="profile-setup" element={<ProfileSetup />} />
                   <Route path="users/:id" element={<UserPage />} />
                   <Route path="user-profile" element={<Profile />} />
-                  <Route path="test" element={<Test />} />
 
-                  {/* Projects */}
+                  {/* Projects & Ideation */}
                   <Route path="projects" element={<Project />} />
                   <Route path="project-management" element={<ProjectManagement />} />
                   <Route path="project-details" element={<ProjectDetails />} />
-
-                  {/* Ideation */}
                   <Route path="ideation" element={<Ideation activeRole={activeRole} />} />
                   <Route path="saved-ideas" element={<SavedIdeas />} />
                   <Route path="ideation-details" element={<Ideationdetails />} />
@@ -283,19 +286,18 @@ export default function App() {
                   <Route path="help" element={<Help />} />
                   <Route path="video-tutorials" element={<VideoTutorials />} />
 
-                  {/* Chat & social */}
+                  {/* Chat & Social */}
                   <Route path="chat" element={<ChatPage />} />
                   <Route path="connections" element={<ConnectionsPage />} />
                   <Route path="notifications" element={<NotificationPage />} />
                   <Route path="posts" element={<Posts />} />
-                  <Route path="discover-users" element={<DiscoverUsers />} />
 
                   {/* Contribution */}
                   <Route path="contribution" element={<ContributionPage />} />
                   <Route path="contribution-ideas" element={<ContributionIdeasPage />} />
                   <Route path="contribution-polls" element={<ContributionPollsPage />} />
 
-                  {/* Crowdfunding */}
+                  {/* Crowdfunding & Payments */}
                   <Route path="crowdfunding" element={<Crowdfunding />} />
                   <Route path="checkout/:tierId" element={<Checkout />} />
                   <Route path="checkout/return" element={<ReturnPage />} />
@@ -305,6 +307,9 @@ export default function App() {
                   <Route path="getting-started" element={<GettingStarted />} />
                   <Route path="team-collaboration" element={<TeamCollaboration />} />
 
+                  {/* Test */}
+                  <Route path="test" element={<Test />} />
+
                   {/* Startups */}
                   <Route path="register-startup" element={<RegisterStartUp />} />
                   <Route path="discover-startups" element={<DiscoverStartups />} />
@@ -313,57 +318,71 @@ export default function App() {
                   <Route path="saved-startups" element={<SavedStartups />} />
                   <Route path="invitations" element={<InviteToStartup />} />
 
-                  {/* Economy */}
+                  {/* AI Tools */}
+                  <Route path="business-plan" element={<AIToolsGuard><BusinessIdeaGenerator /></AIToolsGuard>} />
+                  <Route path="multimodal-images" element={<AIToolsGuard><ImageGenerator /></AIToolsGuard>} />
+                  <Route path="logo-generator" element={<AIToolsGuard><StartupLogoGenerator /></AIToolsGuard>} />
+                  <Route path="data-scraper" element={<AIToolsGuard><ScraperForm /></AIToolsGuard>} />
+                  <Route path="qwen-chat" element={<AIToolsGuard><QwenChat /></AIToolsGuard>} />
+                  <Route path="caption-generator" element={<AIToolsGuard><CaptionGenerator /></AIToolsGuard>} />
+                  <Route path="video-generator" element={<AIToolsGuard><VideoGenerator /></AIToolsGuard>} />
+
+                  {/* Wallet & Store */}
                   <Route path="wallet" element={<WalletDashboard />} />
                   <Route path="store" element={<StorePage />} />
                   <Route path="leaderboard" element={<LeaderboardPage />} />
-
-                  {/* Marketplace */}
                   <Route path="marketplace" element={<MarketplacePage />} />
-
-                  {/* Mentorship */}
-                  <Route path="mentors" element={<MentorshipDiscovery />} />
-                  <Route path="mentor-dashboard" element={<MentorDashboard />} />
-                  <Route path="my-mentorship-requests" element={<MyMentorshipRequests />} />
 
                   {/* Tools */}
                   <Route path="pdf-signing" element={<PDFSigningApp />} />
                   <Route path="calculator" element={<CalculatorPage />} />
                   <Route path="notes" element={<NotesPage />} />
 
-                  {/* ERP */}
+                  {/* Discover */}
+                  <Route path="discover-users" element={<DiscoverUsers />} />
+
+                  {/* Mentorship */}
+                  <Route path="mentors" element={<MentorshipDiscovery />} />
+                  <Route path="mentor-dashboard" element={<MentorDashboard />} />
+                  <Route path="my-mentorship-requests" element={<MyMentorshipRequests />} />
+
+                  {/* ========== ERP MODULE ========== */}
+                  <Route path="erp" element={<Navigate to="/erp/attendance" replace />} />
                   <Route path="erp/attendance" element={<MyAttendancePage />} />
                   <Route path="erp/attendance/workspace" element={<WorkspaceAttendancePage />} />
                   <Route path="erp/alerts" element={<AlertsPage />} />
                   <Route path="erp/activity" element={<ActivityMonitorPage />} />
-                  <Route path="erp/execution" element={<ExecutionDashboard />} />
-                  <Route path="erp/analytics" element={<AnalyticsDashboard />} />
                   <Route path="erp-dashboard" element={<ERPDashboard />} />
                   <Route path="erp/updates" element={<ERPUpdates />} />
                   <Route path="erp/documents" element={<DocumentsPage />} />
-                  <Route path="erp/task" element={<TaskManagementPage />} />
                   <Route path="erp/tasks" element={<TaskBoard />} />
-                  <Route path="erp/admin-settings" element={<AdminSettings />} />
-                  <Route path="erp/my-analytics" element={<MemberAnalyticsPage />} />
                   <Route path="erp/payouts" element={<PayoutPage />} />
+                  <Route path="erp/my-analytics" element={<MemberAnalyticsPage />} />
                   <Route path="erp/admin-analytics" element={<AdminAnalyticsPage />} />
+                  <Route path="erp/admin-settings" element={<AdminSettings />} />
+                  <Route path="erp/admin/revenue-pools" element={<AdminRevenuePools />} />
+                  <Route path="erp/admin/revenue-pools/:poolId" element={<AdminRevenuePoolDetail />} />
+                  <Route path="erp/admin/payouts" element={<AdminPayouts />} />
+                  <Route path="erp/task-approval" element={<TaskApproval />} />
+                  <Route path="erp/member-dashboard" element={<MemberDashboard />} />
+                  <Route path="erp/points" element={<PointsDashboard />} />
+                  <Route path="erp/tasks/:taskId" element={<TaskDetail />} />
+                  <Route path="erp/workspace-dashboard" element={<WorkspaceDashboard />} />
+                  <Route path="/warnings" element={<WarningActionsPage />} />
+                  <Route path="/admin/flags" element={<FlagsPage />} />
+                  <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
 
                   {/* Milestones */}
                   <Route path="milestones" element={<MilestonePage />} />
 
-                  {/* Reputation */}
-                  <Route path="reputation/proofs" element={<ProofUploadUI />} />
-                  <Route path="reputation/tasks" element={<TaskManagementUI />} />
-
                   {/* SF Drive */}
-                  <Route path="/drive/file-details" element={<FileDetailPage />} />
-                  <Route path="/sf-drive" element={<FolderExplorerUI />} />
+                  <Route path="drive/file/:id" element={<FileDetailPage />} />
+                  <Route path="sf-drive" element={<FolderExplorerUI />} />
 
-                  {/* SF Meet */}
+                  {/* SF Meet (inside Layout) */}
                   <Route path="meet" element={<MeetingsTab />} />
                   <Route path="meet/:id" element={<MeetingDetailPage />} />
                   <Route path="meet/:id/summary" element={<PostMeetingSummaryPage />} />
-                  <Route path="meet/room/:id" element={<MeetingRoom />} />
 
                   {/* Settings */}
                   <Route path="setting" element={<Setting />}>
@@ -373,7 +392,18 @@ export default function App() {
                   </Route>
                 </Route>
 
+                {/* 404 */}
                 <Route path="*" element={<NotFound />} />
+
+                {/* SF Meet Room (fullscreen, no sidebar) */}
+                <Route
+                  path="/meet/room/:id"
+                  element={
+                    <ProtectedRoute>
+                      <MeetingRoom />
+                    </ProtectedRoute>
+                  }
+                />
               </Routes>
 
               <ToastContainer

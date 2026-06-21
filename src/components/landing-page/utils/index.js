@@ -1,4 +1,4 @@
-import herovideoOne from '../../../assets/videos/hero.mp4';
+import herovideoOne from '../../../assets/videos/8085924f.mp4';
 import herovideotwo from '../../../assets/videos/hero.mp4';
 import herovideothree from '../../../assets/videos/aedb3913.mp4';
 import herovideoFour from '/landing_video.mp4';

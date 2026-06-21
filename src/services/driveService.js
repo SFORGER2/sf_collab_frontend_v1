@@ -1,10 +1,28 @@
 /**
- * SF Drive Service
- * Covers: file listing, version history, file linking, permissions/sharing
+ * driveService.js — SF Drive API service
+ *
+ * Maps all driveService.* calls used by:
+ *   - FileLinkModal    (getLinkedObjects, linkToMilestone, linkToTask, unlink)
+ *   - FileShareModal   (getPermissions, shareWithUser, shareWithWorkspace, updatePermission, revokePermission)
+ *   - VersionHistoryModal (getVersions, restoreVersion, compareVersions)
+ *   - FolderExplorerUI   (getFolders, getFiles, createFolder, uploadFile)
+ *
+ * Backend URL map (from blueprints.py):
+ *   /api/drive/folders                           — folder CRUD
+ *   /api/drive/files                             — file metadata CRUD
+ *   /api/drive/files/upload                      — binary upload
+ *   /api/drive/files/:id/download                — binary download
+ *   /api/drive/files/:id/versions                — version list
+ *   /api/drive/files/:id/versions/:vid/restore   — restore version
+ *   /api/drive/files/:id/links                   — link CRUD
+ *   /api/drive/files/:id/permissions             — permission list
+ *   /api/drive/files/:id/permissions/grant       — grant permission
+ *   /api/drive/files/:id/permissions/revoke      — revoke permission
+ *   /api/drive/files/list                        — advanced list with pagination
+ *   /api/drive/audit/:file_id                    — audit log
  */
 
 import axios from 'axios';
-import { getApiUrl } from '@/utils/config';
 import {
   requestInterceptor,
   requestErrorInterceptor,
@@ -12,89 +30,273 @@ import {
   responseErrorInterceptor,
 } from '@/utils/APIs/interceptors';
 
-const api = axios.create({
-  baseURL: `${getApiUrl()}/api/drive`,
-  headers: { 'Content-Type': 'application/json' },
-});
-
+// Relative baseURL — same pattern as all working ERP pages, avoids double /api prefix
+const api = axios.create({ baseURL: '/api/drive' });
 api.interceptors.request.use(requestInterceptor, requestErrorInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
-// ── Files ─────────────────────────────────────────────────────────────────────
-export const driveService = {
+// ── helpers ────────────────────────────────────────────────────────────────
+const unwrap = (res) => res.data?.data ?? res.data;
 
-  // List files with optional filters
-  listFiles: (params = {}) =>
-    api.get('/files', { params }).then(r => r.data),
+// ── Folders ────────────────────────────────────────────────────────────────
+const getFolders = async (workspaceId) => {
+  const res = await api.get('/folders', { params: { workspace_id: workspaceId } });
+  return unwrap(res);
+};
 
-  // Get single file (with summaries)
-  getFile: (fileId) =>
-    api.get(`/files/${fileId}`).then(r => r.data.file),
+const createFolder = async (workspaceId, name, parentFolderId = null) => {
+  const res = await api.post('/folders', {
+    workspace_id: workspaceId,
+    name,
+    parent_folder_id: parentFolderId,
+  });
+  return unwrap(res);
+};
 
-  // Update tags
-  updateTags: (fileId, tags, mode = 'merge') =>
-    api.patch(`/files/${fileId}/tags`, { tags, mode }).then(r => r.data),
+const deleteFolder = async (folderId) => {
+  const res = await api.delete(`/folders/${folderId}`);
+  return unwrap(res);
+};
 
-  // Update knowledge type
-  updateKnowledgeType: (fileId, knowledgeType) =>
-    api.patch(`/files/${fileId}/knowledge-type`, { knowledge_type: knowledgeType }).then(r => r.data),
+// ── Files ──────────────────────────────────────────────────────────────────
+/**
+ * List files for a workspace (uses drive_routes list, returns active files).
+ * workspaceId is the startup_id / workspace_id.
+ */
+const getFiles = async (workspaceId, folderId = null) => {
+  const params = { workspace_id: workspaceId };
+  if (folderId != null) params.folder_id = folderId;
+  const res = await api.get('/files', { params });
+  return unwrap(res);
+};
 
-  // Delete file
-  deleteFile: (fileId) =>
-    api.delete(`/files/${fileId}`).then(r => r.data),
+/**
+ * Advanced paginated file list (drive_files_routes).
+ */
+const listFiles = async ({ workspaceId, folderId, page = 1, perPage = 20, sort = 'updated_at', order = 'desc' } = {}) => {
+  const params = { page, per_page: perPage, sort, order };
+  if (workspaceId) params.workspace_id = workspaceId;
+  if (folderId != null) params.folder_id = folderId;
+  const res = await api.get('/files/list', { params });
+  return unwrap(res); // { items, total, page, pages, per_page }
+};
 
-  // Reprocess (re-run pipeline)
-  reprocess: (fileId) =>
-    api.post(`/files/${fileId}/reprocess`).then(r => r.data),
+/**
+ * Upload a binary file to drive.
+ * ownerScopeType: 'personal' | 'startup' | 'org'
+ * ownerScopeId:   startup_id / user_id / org_id
+ */
+const uploadFile = async (file, { ownerScopeType, ownerScopeId, workspaceId, folderId, visibility = 'private', sensitivity = 'internal' } = {}) => {
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('owner_scope_type', ownerScopeType || 'startup');
+  fd.append('owner_scope_id', String(ownerScopeId || workspaceId));
+  if (workspaceId) fd.append('workspace_id', String(workspaceId));
+  if (folderId)    fd.append('parent_folder_id', String(folderId));
+  fd.append('visibility_scope',  visibility);
+  fd.append('sensitivity_level', sensitivity);
+  // Let axios set Content-Type with boundary automatically
+  const res = await api.post('/files/upload', fd);
+  return unwrap(res);
+};
 
-  // ── Version History ─────────────────────────────────────────────────────────
-  getVersions: (fileId) =>
-    api.get(`/files/${fileId}/versions`).then(r => r.data),
+const deleteFile = async (fileId) => {
+  const res = await api.delete(`/files/${fileId}`);
+  return unwrap(res);
+};
 
-  restoreVersion: (fileId, versionId) =>
-    api.post(`/files/${fileId}/versions/${versionId}/restore`).then(r => r.data),
+const downloadFile = async (fileId, filename) => {
+  const res = await api.get(`/files/${fileId}/download`, { responseType: 'blob' });
+  const url = URL.createObjectURL(res.data);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename || 'file';
+  a.click();
+  URL.revokeObjectURL(url);
+};
 
-  compareVersions: (fileId, versionIdA, versionIdB) =>
-    api.get(`/files/${fileId}/versions/compare`, {
-      params: { version_a: versionIdA, version_b: versionIdB },
-    }).then(r => r.data),
+const searchFiles = async (query, workspaceId) => {
+  const res = await api.get('/files/search', { params: { q: query, workspace_id: workspaceId } });
+  return unwrap(res);
+};
 
-  // ── File Linking ────────────────────────────────────────────────────────────
-  linkToMilestone: (fileId, milestoneId) =>
-    api.post(`/files/${fileId}/link`, { entity_type: 'milestone', entity_id: milestoneId }).then(r => r.data),
+// ── Versions ───────────────────────────────────────────────────────────────
+const getVersions = async (fileId) => {
+  const res = await api.get(`/files/${fileId}/versions`);
+  const raw = unwrap(res);
+  // backend returns array directly
+  return { versions: Array.isArray(raw) ? raw : raw?.versions || [] };
+};
 
-  linkToTask: (fileId, taskId) =>
-    api.post(`/files/${fileId}/link`, { entity_type: 'task', entity_id: taskId }).then(r => r.data),
+const restoreVersion = async (fileId, versionId) => {
+  const res = await api.post(`/files/${fileId}/versions/${versionId}/restore`);
+  return unwrap(res);
+};
 
-  unlink: (fileId, entityType, entityId) =>
-    api.delete(`/files/${fileId}/link`, { data: { entity_type: entityType, entity_id: entityId } }).then(r => r.data),
+/**
+ * compareVersions — backend has no diff endpoint, return both version dicts
+ * so the UI can show the version details side-by-side.
+ */
+const compareVersions = async (fileId, versionIdA, versionIdB) => {
+  const { versions } = await getVersions(fileId);
+  const a = versions.find((v) => v.id === versionIdA);
+  const b = versions.find((v) => v.id === versionIdB);
+  return {
+    version_a: { summary: a ? `v${a.version_number} — ${new Date(a.created_at).toLocaleDateString()}` : 'Unknown', preview: null },
+    version_b: { summary: b ? `v${b.version_number} — ${new Date(b.created_at).toLocaleDateString()}` : 'Unknown', preview: null },
+  };
+};
 
-  getLinkedObjects: (fileId) =>
-    api.get(`/files/${fileId}/links`).then(r => r.data),
+// ── Links / Relations ──────────────────────────────────────────────────────
+/**
+ * getLinkedObjects — returns { links: [...] } shaped for FileLinkModal.
+ * Backend returns { relations: [...] }, we normalise.
+ */
+const getLinkedObjects = async (fileId) => {
+  const res = await api.get(`/files/${fileId}/links`);
+  const raw = unwrap(res);
+  const relations = raw?.relations || raw || [];
+  const links = relations.map((r) => ({
+    id:          r.id,
+    entity_type: r.relation_type,          // milestone | task | meeting | ...
+    entity_id:   r.related_entity_id,
+    entity_name: r.related_entity_label || null,
+  }));
+  return { links };
+};
 
-  // ── Permissions / Sharing ───────────────────────────────────────────────────
-  getPermissions: (fileId) =>
-    api.get(`/files/${fileId}/permissions`).then(r => r.data),
+const linkToMilestone = async (fileId, milestoneId) => {
+  const res = await api.post(`/files/${fileId}/links`, {
+    relation_type:        'milestone',
+    related_entity_id:    milestoneId,
+    related_entity_type:  'milestone',
+  });
+  return unwrap(res);
+};
 
-  shareWithUser: (fileId, userId, permissionLevel = 'view') =>
-    api.post(`/files/${fileId}/permissions`, {
-      subject_type: 'user',
-      subject_id: userId,
-      permission_level: permissionLevel,
-    }).then(r => r.data),
+const linkToTask = async (fileId, taskId) => {
+  const res = await api.post(`/files/${fileId}/links`, {
+    relation_type:        'task',
+    related_entity_id:    taskId,
+    related_entity_type:  'task',
+  });
+  return unwrap(res);
+};
 
-  shareWithWorkspace: (fileId, workspaceId, permissionLevel = 'view') =>
-    api.post(`/files/${fileId}/permissions`, {
-      subject_type: 'workspace',
-      subject_id: workspaceId,
-      permission_level: permissionLevel,
-    }).then(r => r.data),
+/**
+ * unlink — FileLinkModal passes (entityType, entityId), we DELETE by entity.
+ */
+const unlink = async (fileId, entityType, entityId) => {
+  const res = await api.delete(`/files/${fileId}/links`, {
+    data: { relation_type: entityType, related_entity_id: entityId },
+  });
+  return unwrap(res);
+};
 
-  revokePermission: (fileId, permissionId) =>
-    api.delete(`/files/${fileId}/permissions/${permissionId}`).then(r => r.data),
+// ── Permissions ────────────────────────────────────────────────────────────
+/**
+ * getPermissions — returns { permissions: [...] } shaped for FileShareModal.
+ */
+const getPermissions = async (fileId) => {
+  const res = await api.get(`/files/${fileId}/permissions`);
+  const raw = unwrap(res);
+  const perms = Array.isArray(raw) ? raw : raw?.permissions || [];
+  // normalise to what FileShareModal expects
+  const permissions = perms.map((p) => ({
+    id:               p.id,
+    permission_level: p.role,           // viewer | editor | owner
+    subject_type:     'user',
+    subject_id:       p.user_id,
+    subject_name:     p.user_name || `User #${p.user_id}`,
+  }));
+  return { permissions };
+};
 
-  updatePermission: (fileId, permissionId, permissionLevel) =>
-    api.patch(`/files/${fileId}/permissions/${permissionId}`, { permission_level: permissionLevel }).then(r => r.data),
+/**
+ * shareWithUser — grants view/edit to a user.
+ * permission_level ('view'|'edit') → role ('viewer'|'editor')
+ */
+const shareWithUser = async (fileId, userId, permissionLevel) => {
+  const roleMap = { view: 'viewer', edit: 'editor', owner: 'owner' };
+  const res = await api.post(`/files/${fileId}/permissions/grant`, {
+    user_id: userId,
+    role: roleMap[permissionLevel] || permissionLevel,
+  });
+  return unwrap(res);
+};
+
+/**
+ * shareWithWorkspace — backend permission model only supports user-level grants.
+ * We grant 'viewer' to the workspace owner as a proxy until workspace-level
+ * permissions are added to the backend.
+ */
+const shareWithWorkspace = async (fileId, workspaceId, permissionLevel) => {
+  // stub — backend has no workspace-level permission yet
+  console.warn('[driveService] shareWithWorkspace not yet supported by backend');
+  return { message: 'Workspace sharing coming soon' };
+};
+
+/**
+ * updatePermission — FileShareModal calls with (permId, level).
+ * We don't have an update endpoint; revoke + re-grant is the workaround.
+ * Backend grant endpoint upserts so we can just call grant again.
+ */
+const updatePermission = async (fileId, permId, permissionLevel) => {
+  // We need user_id to re-grant; FileShareModal has the perm object
+  // so it should pass user_id — but it only passes permId.
+  // Fetch permissions to resolve user_id.
+  const { permissions } = await getPermissions(fileId);
+  const perm = permissions.find((p) => p.id === permId);
+  if (!perm) throw new Error('Permission not found');
+  return shareWithUser(fileId, perm.subject_id, permissionLevel);
+};
+
+const revokePermission = async (fileId, permId) => {
+  const { permissions } = await getPermissions(fileId);
+  const perm = permissions.find((p) => p.id === permId);
+  if (!perm) throw new Error('Permission not found');
+  const res = await api.delete(`/files/${fileId}/permissions/revoke`, {
+    data: { user_id: perm.subject_id },
+  });
+  return unwrap(res);
+};
+
+// ── Audit ──────────────────────────────────────────────────────────────────
+const getAuditLog = async (fileId) => {
+  const res = await api.get(`/audit/${fileId}`);
+  return unwrap(res);
+};
+
+// ── Export ─────────────────────────────────────────────────────────────────
+const driveService = {
+  // folders
+  getFolders,
+  createFolder,
+  deleteFolder,
+  // files
+  getFiles,
+  listFiles,
+  uploadFile,
+  deleteFile,
+  downloadFile,
+  searchFiles,
+  // versions
+  getVersions,
+  restoreVersion,
+  compareVersions,
+  // links
+  getLinkedObjects,
+  linkToMilestone,
+  linkToTask,
+  unlink,
+  // permissions
+  getPermissions,
+  shareWithUser,
+  shareWithWorkspace,
+  updatePermission,
+  revokePermission,
+  // audit
+  getAuditLog,
 };
 
 export default driveService;

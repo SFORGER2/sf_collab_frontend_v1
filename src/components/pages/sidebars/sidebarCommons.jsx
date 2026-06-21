@@ -1,4 +1,12 @@
-import { Activity, BarChart3, Bookmark, BookOpen, Bot, BrainCircuit, BriefcaseBusiness, Calculator, CaptionsIcon, ClipboardList, Cpu, Database, Earth, FileSignature, FileTerminal, FileText, Images, Lightbulb, LightbulbIcon, MessageSquare, MessageSquareHeart, Rss, StickyNote, TrendingUp, UserPlus, Users, VideoIcon, Wallet, Wand2 } from "lucide-react";
+import {
+  BarChart3, Bookmark, BookOpen, Bot, BrainCircuit, BriefcaseBusiness,
+  Calculator, CaptionsIcon, ClipboardList, Cpu, Database, Earth,
+  FileSignature, FileTerminal, FileText, Images, Lightbulb, LightbulbIcon,
+  MessageSquare, MessageSquareHeart, Rss, StickyNote, TrendingUp,
+  UserPlus, Users, VideoIcon, Wallet, Wand2, CalendarClock, FileStack,
+  Bell, DollarSign, BarChart2, Award, Flag, AlertTriangle,
+  CheckCircle, LayoutDashboard, Settings, PieChart, Coins, CreditCard   // ✅ Added missing import
+} from "lucide-react";
 import { BsGear, BsPeople } from "react-icons/bs";
 import { IoChatbubbles } from "react-icons/io5";
 import { LuLayoutDashboard } from "react-icons/lu";
@@ -49,13 +57,13 @@ export function dashboardLink(userRoles = [], setActiveRole) {
       },
       href: `/dashboard`,
       icon: role === 'founder' 
-        ? <BriefcaseBusiness size={18} /> // liderazgo / negocios
+        ? <BriefcaseBusiness size={18} />
         : role === 'investor' 
-        ? <BarChart3 size={18} /> // inversiones / rendimiento
+        ? <BarChart3 size={18} />
         : role === 'builder' 
-        ? <Cpu size={18} /> // tech / desarrollo / innovación
+        ? <Cpu size={18} />
         : role === 'influencer' 
-        ? <IoChatbubbles size={18} /> // comunicación / social
+        ? <IoChatbubbles size={18} />
         : <LuLayoutDashboard size={18} />,
       label: `${role.charAt(0).toUpperCase() + role.slice(1)} Dashboard`,
     })) : [],
@@ -80,14 +88,29 @@ export function erpSection(id) {
   return {
     id,
     icon: <BriefcaseBusiness size={22} />,
-    href: "/erp/execution",
+    href: "/erp/member-dashboard",
     label: "ERP",
     subItems: [
-      { id: "erp-execution", href: "/erp/execution", label: "Execution Dashboard", icon: <Activity size={18} /> },
-      { id: "erp-tasks", href: "/erp/tasks", label: "Task Board", icon: <ClipboardList size={18} /> },
-      { id: "erp-admin-settings", href: "/erp/admin-settings", label: "Admin Settings", icon: <BsGear size={18} /> },
-    ]
-  }
+      { id: "erp-member-dashboard", href: "/erp/member-dashboard", label: "Member Dashboard", icon: <LayoutDashboard size={18} /> },
+      { id: "erp-attendance",    href: "/erp/attendance",    label: "My Attendance",    icon: <CalendarClock size={18} /> },
+      { id: "erp-tasks",         href: "/erp/tasks",         label: "Task Board",       icon: <ClipboardList size={18} /> },
+      { id: "erp-task-approval", href: "/erp/task-approval", label: "Task Approval",    icon: <CheckCircle size={18} /> },
+      { id: "erp-updates",       href: "/erp/updates",       label: "Daily Updates",    icon: <FileStack size={18} /> },
+      { id: "erp-points",        href: "/erp/points",        label: "Points Dashboard", icon: <Award size={18} /> },
+      { id: "erp-analytics",     href: "/erp/analytics",     label: "Analytics",        icon: <BarChart3 size={18} /> },
+      { id: "erp-my-analytics",  href: "/erp/my-analytics",  label: "My Analytics",     icon: <BarChart2 size={18} /> },
+      { id: "erp-payouts",       href: "/erp/payouts",       label: "Payouts",          icon: <DollarSign size={18} /> },
+      { id: "erp-documents",     href: "/erp/documents",     label: "Documents",        icon: <FileTerminal size={18} /> },
+      { id: "erp-alerts",        href: "/erp/alerts",        label: "Alerts",           icon: <Bell size={18} /> },
+      { id: "erp-warnings",      href: "/warnings",          label: "Warnings",         icon: <AlertTriangle size={18} /> },
+      { id: "erp-flags",         href: "/admin/flags",       label: "Flags (Admin)",    icon: <Flag size={18} /> },
+      { id: "erp-audit-logs",    href: "/admin/audit-logs",  label: "Audit Logs",       icon: <FileText size={18} /> },
+      { id: "erp-workspace-dashboard", href: "/erp/workspace-dashboard", label: "Workspace Dashboard", icon: <TrendingUp size={18} /> },
+      { id: "erp-admin-settings",      href: "/erp/admin-settings",      label: "Admin Settings",      icon: <Settings size={18} /> },
+      { id: "erp-admin-revenue",       href: "/erp/admin/revenue-pools", label: "Revenue Pools",       icon: <Coins size={18} /> },
+      { id: "erp-admin-payouts",       href: "/erp/admin/payouts",       label: "Admin Payouts",       icon: <CreditCard size={18} /> },
+    ],
+  };
 }
 
 export function wallet(id) {

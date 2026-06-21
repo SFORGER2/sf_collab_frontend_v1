@@ -13,7 +13,6 @@ import { createInfluencerLinks } from "../influencerSidebar/influencerLinks";
 import { BsPeople } from "react-icons/bs";
 import { aiTools, dashboardLink, erpSection, ideation, socialSection, toolsSection } from "../sidebarCommons";
 
-
 export const CONTEXT_THEME = {
   1:  { pillBg: "bg-blue-600/20",    pillText: "text-blue-200",    activeBg: "bg-white", activeText: "text-gray-950" },
   2:  { pillBg: "bg-yellow-600/15",  pillText: "text-yellow-100",  activeBg: "bg-white", activeText: "text-gray-950" },

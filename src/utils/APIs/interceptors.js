@@ -2,20 +2,8 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { toast } from "react-toastify";
 
-const logErrorToBackend = async (error) => {
-  try {
-    // Use a clean axios instance to avoid interceptor recursion
-    const cleanAxios = axios.create();
-    await cleanAxios.post(`${API_BASE_URL}/log-client-error`, {
-      errorMessage: error.message,
-      stack: error.stack,
-      url: window.location.href,
-      timestamp: new Date().toISOString(),
-      errorFromBackend: true
-    });
-  } catch (e) {
-    // Silently fail to avoid infinite error loops
-  }
+const logErrorToBackend = (error) => {
+    console.error("API Error:", error);
 };
 
 export const requestInterceptor = (config) => {
