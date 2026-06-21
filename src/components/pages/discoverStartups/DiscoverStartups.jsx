@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Building2,
-  ChevronLeft, ChevronRight, Plus, Flame, Mail, Briefcase, AlertCircle
+  ChevronLeft, ChevronRight, Plus, Flame, Mail, Briefcase, AlertCircle, Lightbulb
 } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +12,10 @@ import StartupCard from './StartupCard';
 import StartupCardSkeleton from './StartupCardSkeleton';
 import StartupsHeader from './StartupsHeader';
 import StartupSearchAndFilter from './StartupSearchAndFilter';
+import VisionCard from './VisionCard';
+import ActivityItem from './ActivityItem';
 import { startupsAPI } from '@/utils/APIs/startupsAPI';
+import { discoveryFeedAPI } from '@/utils/APIs/discoveryFeedAPI';
 import usePaginatedFetch from '@/utils/hooks/usePaginated';
 import InfiniteList from '@/components/InfiniteList';
 
@@ -68,6 +71,16 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   const [topStartups, setTopStartups] = useState([]);
   const [topStartupsLoading, setTopStartupsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // New discovery feed state
+  const [feedSections, setFeedSections] = useState({
+    visions: [],
+    startups: [],
+    milestones: [],
+    fastGrowing: []
+  });
+  const [feedLoading, setFeedLoading] = useState(false);
+
   const navigate = useNavigate();
   
   const { user, access_token } = useSelector((state) => state.auth);
@@ -123,7 +136,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
     },
     search: buildSearchString(),
     objectKey: 'startups',
-    enabled: !!access_token,
+    enabled: !!access_token && mode === 'myStartups',
   });
 
   const fetchFilters = async () => {
@@ -160,9 +173,39 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   useEffect(() => {
     if (mode === 'discover') {
       fetchFilters();
-      fetchTopStartups();
+      // fetchTopStartups(); // Replaced by feedSections.fastGrowing
     }
   }, [mode]);
+
+  // Feed fetching effect
+  useEffect(() => {
+    if (mode === 'discover' && access_token) {
+      const fetchDiscoveryFeed = async () => {
+        setFeedLoading(true);
+        try {
+          const response = await discoveryFeedAPI.getFeed({
+            sector: selectedIndustry !== 'All' ? selectedIndustry : '',
+            search: searchQuery,
+            // role could be added if filter UI supported it
+          }, access_token);
+          if (response.success && response.sections) {
+            setFeedSections(response.sections);
+          }
+        } catch (error) {
+          console.error("Failed to fetch discovery feed:", error);
+          setError("Failed to load discovery feed.");
+        } finally {
+          setFeedLoading(false);
+        }
+      };
+      
+      const timeoutId = setTimeout(() => {
+        fetchDiscoveryFeed();
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [mode, access_token, searchQuery, selectedIndustry, selectedStage, selectedFundingRange, customMinFunding, customMaxFunding]);
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -264,56 +307,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
             </motion.div>
           )}
 
-          {mode === 'discover' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-12"
-            >
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Flame className="w-5 h-5 text-orange-500" />
-                  <h2 className="text-2xl font-bold text-white">Trending Now</h2>
-                </div>
-                <p className="text-gray-400">Check out the most popular startups this week</p>
-              </div>
-
-              {topStartupsLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[...Array(3)].map((_, i) => (
-                    <StartupCardSkeleton key={i} />
-                  ))}
-                </div>
-              ) : topStartups.length > 0 ? (
-                <motion.div
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  {topStartups.map((startup, index) => (
-                    <motion.div
-                      key={startup.id}
-                      variants={itemVariants}
-                      whileHover={{ y: -4, scale: 1.02 }}
-                    >
-                      <div className="relative">
-                        <div className="absolute -top-3 -right-3 bg-orange-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm z-10">
-                          #{index + 1}
-                        </div>
-                        <StartupCard
-                          startup={startup}
-                          index={index}
-                          getStageBadgeVariant={getStageBadgeVariant}
-                          mode={mode}
-                        />
-                      </div>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              ) : null}
-            </motion.div>
-          )}
+          {/* Hidden Trending Now block, replaced via Feed Sections below filters */}
 
           <StartupSearchAndFilter
             mode={mode}
@@ -339,98 +333,202 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
             FUNDING_RANGES={FUNDING_RANGES}
           />
 
-          <div className="flex flex-wrap relative gap-8">
-            {/* Startup Grid */}
-            <div className="flex-1">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm text-gray-400">
-                  {totalStartups} {totalStartups === 1 ? 'startup' : 'startups'} found
-                </p>
-                {mode === 'discover' && activeFiltersCount > 0 && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={clearFilters}
-                    className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-                  >
-                    Clear all filters
-                  </motion.button>
+          <div className="flex flex-wrap relative gap-8 mt-12">
+            {mode === 'discover' ? (
+              <div className="flex-1">
+                {feedLoading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                     {[...Array(6)].map((_, i) => <StartupCardSkeleton key={i} />)}
+                  </div>
+                ) : (
+                  (!feedSections?.visions?.length && !feedSections?.startups?.length && !feedSections?.fastGrowing?.length && !feedSections?.milestones?.length) ? (
+                    <motion.div
+                      className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-2xl backdrop-blur"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                    >
+                      <div className="flex justify-center mb-4">
+                        <div className="p-4 bg-blue-500/20 rounded-full">
+                          <Search className="w-12 h-12 text-blue-400" />
+                        </div>
+                      </div>
+                      <h3 className="text-xl font-semibold text-white mb-2">
+                        No opportunities found
+                      </h3>
+                      <p className="text-gray-400 mb-6 text-center max-w-md">
+                        Try adjusting your filters or search query to discover more opportunities
+                      </p>
+                      <motion.button onClick={clearFilters} className="px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors">
+                        Clear all filters
+                      </motion.button>
+                    </motion.div>
+                  ) : (
+                    <div className="space-y-16 mt-4">
+                       
+                       {/* Section: Trending Now */}
+                       {feedSections?.fastGrowing && feedSections.fastGrowing.length > 0 && (
+                          <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                              <div className="flex items-center gap-2 mb-6">
+                                <Flame className="w-6 h-6 text-orange-500" />
+                                <h2 className="text-2xl font-bold text-white tracking-tight">Trending Now</h2>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                 {feedSections.fastGrowing.map((startup, i) => (
+                                    <motion.div key={startup.id} variants={itemVariants}>
+                                      <StartupCard startup={startup} index={i} getStageBadgeVariant={getStageBadgeVariant} mode={mode} />
+                                    </motion.div>
+                                 ))}
+                              </div>
+                          </motion.div>
+                       )}
+
+                       {/* Section: Visions */}
+                       {feedSections?.visions && feedSections.visions.length > 0 && (
+                          <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                              <div className="flex items-center gap-2 mb-6">
+                                <Lightbulb className="w-6 h-6 text-purple-400" />
+                                <h2 className="text-2xl font-bold text-white tracking-tight">Visions Exploring Ideas</h2>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                 {feedSections.visions.map((vision, i) => (
+                                    <motion.div key={vision.id} variants={itemVariants}>
+                                      <VisionCard vision={vision} />
+                                    </motion.div>
+                                 ))}
+                              </div>
+                          </motion.div>
+                       )}
+
+                       {/* Section: Startups Recruiting */}
+                       {feedSections?.startups && feedSections.startups.length > 0 && (
+                          <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                              <div className="flex items-center gap-2 mb-6">
+                                <Briefcase className="w-6 h-6 text-blue-400" />
+                                <h2 className="text-2xl font-bold text-white tracking-tight">Startups Recruiting</h2>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                 {feedSections.startups.map((startup, i) => (
+                                    <motion.div key={startup.id} variants={itemVariants}>
+                                      <StartupCard startup={startup} index={i} getStageBadgeVariant={getStageBadgeVariant} mode={mode} />
+                                    </motion.div>
+                                 ))}
+                              </div>
+                          </motion.div>
+                       )}
+
+                       {/* Section: Recent Activity */}
+                       {feedSections?.milestones && feedSections.milestones.length > 0 && (
+                          <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                              <div className="flex items-center gap-2 mb-6">
+                                <AlertCircle className="w-6 h-6 text-green-400" />
+                                <h2 className="text-2xl font-bold text-white tracking-tight">Recent Activity</h2>
+                              </div>
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                 {feedSections.milestones.map((activity, i) => (
+                                    <motion.div key={activity.id} variants={itemVariants}>
+                                      <ActivityItem activity={activity} />
+                                    </motion.div>
+                                 ))}
+                              </div>
+                          </motion.div>
+                       )}
+
+                    </div>
+                  )
                 )}
               </div>
-
-              {loading && startups.length === 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {[...Array(6)].map((_, i) => (
-                    <StartupCardSkeleton key={i} />
-                  ))}
-                </div>
-              ) : startups.length === 0 ? (
-                <motion.div
-                  className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-2xl backdrop-blur"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                >
-                  <div className="flex justify-center mb-4">
-                    <div className="p-4 bg-blue-500/20 rounded-full">
-                      {mode === 'discover' ? (
-                        <Search className="w-12 h-12 text-blue-400" />
-                      ) : (
-                        <Building2 className="w-12 h-12 text-blue-400" />
-                      )}
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    {modeConfig.emptyState.title}
-                  </h3>
-                  <p className="text-gray-400 mb-6 text-center max-w-md">
-                    {modeConfig.emptyState.message}
+            ) : (
+              <div className="flex-1">
+                <div className="mb-4 flex items-center justify-between">
+                  <p className="text-sm text-gray-400">
+                    {totalStartups} {totalStartups === 1 ? 'startup' : 'startups'} found
                   </p>
-                  {mode === 'discover' ? (
+                  {mode === 'discover' && activeFiltersCount > 0 && (
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={clearFilters}
-                      className="px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors"
+                      className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
                     >
                       Clear all filters
                     </motion.button>
-                  ) : (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate(modeConfig.ctaRoute)}
-                      className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      {modeConfig.ctaButton}
-                    </motion.button>
                   )}
-                </motion.div>
-              ) : (
-                <div
-                  layout
-                  className="md:grid flex flex-col gap-6 w-full"
-                  style={{
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))'
-                  }}
-                >
-                  <InfiniteList
-                    items={startups}
-                    renderItem={(startup, index) => (
-                      <StartupCard
-                        key={startup.id}
-                        startup={startup}
-                        index={index}
-                        getStageBadgeVariant={getStageBadgeVariant}
-                        mode={mode}
-                      />
-                    )}
-                    sentinelRef={targetRef}
-                    loading={loading}
-                  />
                 </div>
-              )}
-            </div>
+
+                {loading && startups.length === 0 ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {[...Array(6)].map((_, i) => (
+                      <StartupCardSkeleton key={i} />
+                    ))}
+                  </div>
+                ) : startups.length === 0 ? (
+                  <motion.div
+                    className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-2xl backdrop-blur"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                  >
+                    <div className="flex justify-center mb-4">
+                      <div className="p-4 bg-blue-500/20 rounded-full">
+                        {mode === 'discover' ? (
+                          <Search className="w-12 h-12 text-blue-400" />
+                        ) : (
+                          <Building2 className="w-12 h-12 text-blue-400" />
+                        )}
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-2">
+                      {modeConfig.emptyState.title}
+                    </h3>
+                    <p className="text-gray-400 mb-6 text-center max-w-md">
+                      {modeConfig.emptyState.message}
+                    </p>
+                    {mode === 'discover' ? (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={clearFilters}
+                        className="px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors"
+                      >
+                        Clear all filters
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigate(modeConfig.ctaRoute)}
+                        className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        {modeConfig.ctaButton}
+                      </motion.button>
+                    )}
+                  </motion.div>
+                ) : (
+                  <div
+                    layout
+                    className="md:grid flex flex-col gap-6 w-full"
+                    style={{
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))'
+                    }}
+                  >
+                    <InfiniteList
+                      items={startups}
+                      renderItem={(startup, index) => (
+                        <StartupCard
+                          key={startup.id}
+                          startup={startup}
+                          index={index}
+                          getStageBadgeVariant={getStageBadgeVariant}
+                          mode={mode}
+                        />
+                      )}
+                      sentinelRef={targetRef}
+                      loading={loading}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

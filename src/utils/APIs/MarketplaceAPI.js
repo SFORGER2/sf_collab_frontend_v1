@@ -8,34 +8,21 @@
  */
 
 import axios from 'axios';
-import { API_BASE_URL } from '@/utils/config';
+import {
+  API_CONFIG,
+  requestInterceptor,
+  requestErrorInterceptor,
+  responseInterceptor,
+  responseErrorInterceptor,
+} from './interceptors';
 
-const getAuthToken = () =>
-  localStorage.getItem('accessToken') ||
-  localStorage.getItem('token') ||
-  localStorage.getItem('access_token') ||
-  sessionStorage.getItem('accessToken') ||
-  sessionStorage.getItem('token');
+// Use the shared interceptors — same pattern as every other API file.
+// The requestInterceptor reads from localStorage.getItem('access_token')
+// which is the correct key set by the login flow.
+const api = axios.create(API_CONFIG);
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: { 'Content-Type': 'application/json' },
-});
-
-api.interceptors.request.use((config) => {
-  const token = getAuthToken();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    if (err.response?.status === 401)
-      console.error('[MarketplaceAPI] 401 - Token missing or expired');
-    return Promise.reject(err);
-  }
-);
+api.interceptors.request.use(requestInterceptor, requestErrorInterceptor);
+api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 const handleError = (error, defaultMsg) => {
   if (error.response) {
@@ -96,9 +83,6 @@ export const sellerAPI = {
 };
 
 // ============================================================================
-// MY LISTINGS (SELLER)
-// ============================================================================
-// ============================================================================
 // PURCHASE API
 // ============================================================================
 export const purchaseAPI = {
@@ -126,7 +110,8 @@ export const purchaseAPI = {
   rate: async (purchaseId, rating, reviewText = '') => {
     try {
       const res = await api.post(`/marketplace/purchases/${purchaseId}/rate`, {
-        rating, review_text: reviewText
+        rating,
+        review_text: reviewText,
       });
       return res.data;
     } catch (e) { return handleError(e, 'Failed to submit rating'); }
@@ -159,7 +144,7 @@ export const boostAPI = {
   boostListing: async (listingId, durationUnits = 1) => {
     try {
       const res = await api.post(`/marketplace/listings/${listingId}/boost`, {
-        duration_units: durationUnits
+        duration_units: durationUnits,
       });
       return res.data;
     } catch (e) { return handleError(e, 'Failed to boost listing'); }
@@ -176,7 +161,8 @@ export const boostAPI = {
 // ============================================================================
 // MY LISTINGS (SELLER)
 // ============================================================================
-export const myListingsAPI = {  getAll: async (params = {}) => {
+export const myListingsAPI = {
+  getAll: async (params = {}) => {
     try {
       const res = await api.get('/marketplace/my-listings', { params });
       return res.data;

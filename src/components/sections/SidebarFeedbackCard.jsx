@@ -32,7 +32,8 @@ const FeedbackPopup = ({
   onOpenChange,
   trigger = "sidebar", // "sidebar" | "none"
   hideTooltip = false,
-  callback = () => {},
+  callback = () => { },
+  isHovered = false,
 }) => {
   const isControlled = open !== undefined;
   const [internalOpen, setInternalOpen] = useState(false);
@@ -91,14 +92,21 @@ const FeedbackPopup = ({
               <button
                 onClick={() => {
                   setIsOpen(true)
-                }
-                }
-                className="cursor-pointer text-white"
+                }}
+                className={`w-full flex items-center ${isHovered ? "gap-3 px-3 justify-start" : "justify-center px-0"
+                  } py-3 rounded-lg transition-colors min-w-0 text-gray-400 hover:bg-[#2A2A2A] hover:text-white group`}
               >
-                <RiFeedbackLine size={20} />
+                <div className="flex items-center justify-center w-6 text-white group-hover:text-white transition-colors">
+                  <RiFeedbackLine size={20} />
+                </div>
+                {isHovered && (
+                  <span className="text-sm font-medium whitespace-nowrap overflow-hidden">
+                    Feedback
+                  </span>
+                )}
               </button>
             </TooltipTrigger>
-            <TooltipContent>Send feedback</TooltipContent>
+            {!isHovered && <TooltipContent>Send feedback</TooltipContent>}
           </Tooltip>
         </TooltipProvider>
       )}

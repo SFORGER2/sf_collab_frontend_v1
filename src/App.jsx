@@ -11,7 +11,6 @@ import AccountandSecurity from "./components/pages/AccountandSecurity.jsx";
 import Login from "./components/auth/Login.jsx";
 import SignUp from "./components/auth/SignUp.jsx";
 import RegisterStartUp from "./components/pages/register-startup/RegisterStartUp.jsx";
-import HomedetailsPage from "./components/detailspage (previous)/HomedetailsPage.jsx";
 import Ideationdetails from "./components/pages/ideation/Ideationdetails.jsx";
 import Knowledgedetails from "./components/detailspage (previous)/Knowledgedetails.jsx";
 import ProjectDetails from "./components/detailspage (previous)/ProjectDetails.jsx";
@@ -99,7 +98,6 @@ import NotificationPage from "./components/notifications/NotificationPage.jsx";
 import ToolsDashboard from "./components/pages/dashboards/toolsDashboard/ToolsDashboard.jsx";
 import CalculatorPage from "./components/pages/calculatorPage/CalculatorPage.jsx";
 import NotesPage from "./components/pages/notes/NotesPage.jsx";
-import BoardPage from "./components/pages/board/BoardPage.jsx";
 import WalletDashboard from "./components/pages/wallet/WalletDashboard";
 import StorePage from "./components/pages/store/StorePage";
 import LeaderboardPage from "./components/pages/leaderboard/LeaderboardPage";
@@ -114,11 +112,12 @@ import BuilderStartups from "./components/pages/builderStartups/BuilderStartups.
 import InviteToStartup from "./components/pages/inviteToStartup/InviteToStartup.jsx";
 import MarketplacePage from "./components/pages/marketplace/MarketplacePage";
 import MentorshipDiscovery from "./components/pages/Mentorship/MentorDiscoveryPage.jsx";
-import MentorDashboard from './components/pages/Mentorship/MentorDashboard';
-import MyMentorshipRequests from './components/pages/Mentorship/MyMentorshipRequests';
-
-// ── ERP Module ────────────────────────────────────────────────────────────────
-import { MyAttendancePage, WorkspaceAttendancePage } from "./components/pages/erp/AttendancePage.jsx";
+import MentorDashboard from "./components/pages/Mentorship/MentorDashboard";
+import MyMentorshipRequests from "./components/pages/Mentorship/MyMentorshipRequests";
+import {
+  MyAttendancePage,
+  WorkspaceAttendancePage,
+} from "./components/pages/erp/AttendancePage.jsx";
 import { AlertsPage } from "./components/pages/erp/AlertsPage.jsx";
 import { AnalyticsDashboard } from "./components/pages/erp/AnalyticsDashboard.jsx";
 import { ActivityMonitorPage } from "./components/pages/erp/ActivityMonitorPage.jsx";
@@ -348,12 +347,10 @@ export default function App() {
                   <Route path="my-mentorship-requests" element={<MyMentorshipRequests />} />
 
                   {/* ========== ERP MODULE ========== */}
-                  {/* Redirect from /erp to attendance */}
                   <Route path="erp" element={<Navigate to="/erp/attendance" replace />} />
                   <Route path="erp/attendance" element={<MyAttendancePage />} />
                   <Route path="erp/attendance/workspace" element={<WorkspaceAttendancePage />} />
                   <Route path="erp/alerts" element={<AlertsPage />} />
-                  <Route path="erp/analytics" element={<AnalyticsDashboard />} />
                   <Route path="erp/activity" element={<ActivityMonitorPage />} />
                   <Route path="erp-dashboard" element={<ERPDashboard />} />
                   <Route path="erp/updates" element={<ERPUpdates />} />
@@ -374,8 +371,6 @@ export default function App() {
                   <Route path="/warnings" element={<WarningActionsPage />} />
                   <Route path="/admin/flags" element={<FlagsPage />} />
                   <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
-
-
 
                   {/* Milestones */}
                   <Route path="milestones" element={<MilestonePage />} />
@@ -399,7 +394,7 @@ export default function App() {
 
                 {/* 404 */}
                 <Route path="*" element={<NotFound />} />
-                
+
                 {/* SF Meet Room (fullscreen, no sidebar) */}
                 <Route
                   path="/meet/room/:id"
@@ -410,6 +405,7 @@ export default function App() {
                   }
                 />
               </Routes>
+
               <ToastContainer
                 position="bottom-center"
                 autoClose={5000}

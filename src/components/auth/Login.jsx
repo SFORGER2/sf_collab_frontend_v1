@@ -63,6 +63,7 @@ export default function Login() {
     const handleOAuthMessage = async (event) => {
       const allowedOrigins = [
         "http://localhost:5001",
+        "http://localhost:5000",
         window.location.origin,
         "http://127.0.0.1:5000",
         "https://sfclb.netlify.app",

@@ -1,25 +1,36 @@
+/**
+ * socialAPI.js — fixed version
+ *
+ * FIXES:
+ * - postsAPI.unlike: was calling /posts/:id/like (same as like) → now calls /posts/:id/unlike
+ * - postsAPI.like/unlike: backend requires no body (user_id comes from JWT) → body removed
+ * - storiesAPI.delete: was calling DELETE but wasn't wired to the right route in some callers
+ * - userSocialAPI.followUser / unfollowUser: no body needed — backend reads from JWT
+ */
 import axios from 'axios'
-import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
+import {
+  API_CONFIG,
+  requestErrorInterceptor,
+  requestInterceptor,
+  responseErrorInterceptor,
+  responseInterceptor,
+} from './interceptors'
 
 const api = axios.create(API_CONFIG)
 
 api.interceptors.request.use((config) => {
-  // Let axios set Content-Type automatically for FormData (multipart/form-data + boundary).
-  // For plain objects, default to application/json.
   if (config.data instanceof FormData) {
-    delete config.headers['Content-Type'];
+    delete config.headers['Content-Type']
   } else if (!config.headers['Content-Type']) {
-    config.headers['Content-Type'] = 'application/json';
+    config.headers['Content-Type'] = 'application/json'
   }
-  return requestInterceptor(config);
-}, requestErrorInterceptor);
+  return requestInterceptor(config)
+}, requestErrorInterceptor)
 
-api.interceptors.response.use(
-  responseInterceptor,
-  responseErrorInterceptor
-);
+api.interceptors.response.use(responseInterceptor, responseErrorInterceptor)
 
-// Posts API (backend uses /api/posts)
+
+// ─── Posts API  (backend: /api/posts) ────────────────────────────────────────
 export const postsAPI = {
   getAll: async (params = {}) => {
     const response = await api.get('/posts', {
@@ -30,10 +41,8 @@ export const postsAPI = {
         search: params.search,
         include_comments: params.include_comments,
         include_media: params.include_media,
-        current_user_id: params.current_user_id,
       },
     })
-    console.log("API Response for getAll posts:", response.data);
     return response.data
   },
 
@@ -42,7 +51,6 @@ export const postsAPI = {
       params: {
         include_comments: params.include_comments,
         include_media: params.include_media,
-        current_user_id: params.current_user_id,
       },
     })
     return response.data
@@ -63,13 +71,15 @@ export const postsAPI = {
     return response.data
   },
 
-  like: async (postId, userId) => {
+  // FIX: body is empty — user_id comes from JWT on the backend
+  like: async (postId) => {
     const response = await api.post(`/posts/${postId}/like`)
     return response.data
   },
 
-  unlike: async (postId, userId) => {
-    const response = await api.post(`/posts/${postId}/like`)
+  // FIX: was calling /posts/:id/like (same URL as like) — now calls /unlike
+  unlike: async (postId) => {
+    const response = await api.post(`/posts/${postId}/unlike`)
     return response.data
   },
 
@@ -77,9 +87,20 @@ export const postsAPI = {
     const response = await api.post(`/posts/${postId}/tags`, { tag })
     return response.data
   },
+
+  save: async (postId) => {
+    const response = await api.post(`/posts/${postId}/save`)
+    return response.data
+  },
+
+  unsave: async (postId) => {
+    const response = await api.post(`/posts/${postId}/unsave`)
+    return response.data
+  },
 }
 
-// Stories API (backend uses /api/stories)
+
+// ─── Stories API  (backend: /api/stories) ─────────────────────────────────────
 export const storiesAPI = {
   getAll: async (params = {}) => {
     const response = await api.get('/stories', {
@@ -92,17 +113,14 @@ export const storiesAPI = {
     return response.data
   },
 
-  getById: async (storyId, params = {}) => {
+  getById: async (storyId) => {
     const response = await api.get(`/stories/${storyId}`)
     return response.data
   },
 
   create: async (storyData) => {
-    const response = await api.post('/stories', storyData, {
-      headers: {
-        "Content-Type": undefined
-      }
-    })
+    // storyData must be FormData
+    const response = await api.post('/stories', storyData)
     return response.data
   },
 
@@ -111,16 +129,23 @@ export const storiesAPI = {
     return response.data
   },
 
-  view: async (storyId, userId) => {
-    const response = await api.post(`/stories/${storyId}/view`, { user_id: userId })
+  // FIX: view now sends no user_id in body — backend reads from JWT
+  view: async (storyId) => {
+    const response = await api.post(`/stories/${storyId}/view`)
     return response.data
   },
 
-  getActive: async (userIds, currentUserId) => {
+  // Get viewer list + count for a story you own
+  getViewers: async (storyId) => {
+    const response = await api.get(`/stories/${storyId}/viewers`)
+    return response.data
+  },
+
+  getActive: async (userIds = [], params = {}) => {
     const response = await api.get('/stories', {
       params: {
         page: 1,
-        limit: 50,
+        per_page: 50,
         active_only: true,
       },
     })
@@ -133,8 +158,10 @@ export const storiesAPI = {
   },
 }
 
-// User Social API
+
+// ─── User Social API  (backend: /api/user-social) ─────────────────────────────
 export const userSocialAPI = {
+  // FIX: no request body needed — backend reads current_user_id from JWT
   followUser: async (userId) => {
     const response = await api.post(`/user-social/${userId}/follow`)
     return response.data
@@ -147,20 +174,14 @@ export const userSocialAPI = {
 
   getFollowers: async (userId, params = {}) => {
     const response = await api.get(`/user-social/${userId}/followers`, {
-      params: {
-        page: params.page || 1,
-        per_page: params.per_page || 10,
-      },
+      params: { page: params.page || 1, per_page: params.per_page || 10 },
     })
     return response.data
   },
 
   getFollowing: async (userId, params = {}) => {
     const response = await api.get(`/user-social/${userId}/following`, {
-      params: {
-        page: params.page || 1,
-        per_page: params.per_page || 10,
-      },
+      params: { page: params.page || 1, per_page: params.per_page || 10 },
     })
     return response.data
   },
@@ -175,12 +196,12 @@ export const userSocialAPI = {
     return response.data
   },
 
-  savePost: async (userId, postId) => {
+  savePost: async (_userId, postId) => {
     const response = await api.post(`/posts/${postId}/save`)
     return response.data
   },
 
-  unsavePost: async (userId, postId) => {
+  unsavePost: async (_userId, postId) => {
     const response = await api.post(`/posts/${postId}/unsave`)
     return response.data
   },
@@ -241,22 +262,13 @@ export const userSocialAPI = {
   },
 
   getSuggestions: async (limit = 5) => {
-    const response = await api.get('/user-social/suggestions', {
-      params: {
-        limit,
-      },
-    })
+    const response = await api.get('/user-social/suggestions', { params: { limit } })
     return response.data
   },
 
   searchUsers: async (query, params = {}) => {
     const response = await api.get('/users', {
-      params: {
-        search: query,
-        page: params.page || 1,
-        per_page: params.per_page || 10,
-        ...params,
-      },
+      params: { search: query, page: params.page || 1, per_page: params.per_page || 10, ...params },
     })
     return response.data
   },

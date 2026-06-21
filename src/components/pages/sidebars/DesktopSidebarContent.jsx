@@ -14,7 +14,7 @@ export default function DesktopSidebarContent({
   shouldShowSubItems,
   isAdmin,
   onLinkClick,
-  callback
+  callback,
 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -26,11 +26,7 @@ export default function DesktopSidebarContent({
     onLinkClick?.();
   };
 
-  const baseItemClasses =
-    "w-full flex items-center justify-center px-3 py-3 rounded-lg transition-colors";
-
-  const upcomingClasses =
-    "opacity-50 cursor-not-allowed hover:bg-transparent";
+  const upcomingClasses = "opacity-50 cursor-not-allowed hover:bg-transparent";
 
   return (
     <div
@@ -43,13 +39,12 @@ export default function DesktopSidebarContent({
       <div
         className="absolute inset-0"
         style={{
-          background:
-            "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
-          zIndex: -1
+          background: "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
+          zIndex: -1,
         }}
       />
 
-      {/* Sidebar Container */}
+      {/* Sidebar container */}
       <motion.div
         className="flex flex-col justify-between h-full overflow-hidden py-2.5"
         animate={{ width: isHovered ? 250 : 60 }}
@@ -57,13 +52,14 @@ export default function DesktopSidebarContent({
       >
         <div className="flex flex-col gap-1 overflow-y-auto px-2.5">
           {links.map((link) => {
-          const isActive = getAllRoutes(link).includes(location.pathname);
-            const showSubs = expandedItems[link.id] ?? false;
+            // FIX: removed duplicate declarations; expandedId → expandedItems[link.id]
+            const isActive   = getAllRoutes(link).includes(location.pathname);
+            const showSubs   = expandedItems[link.id] ?? false;
             const isUpcoming = link.isUpcoming;
 
             return (
               <div key={link.id}>
-                {/* Main Item */}
+                {/* Main item */}
                 <button
                   onClick={() => {
                     if (hasSubItems(link) && !link.href) {
@@ -77,18 +73,17 @@ export default function DesktopSidebarContent({
                     ${isHovered ? "gap-3 px-3 justify-start" : "justify-center px-0"}
                     py-3 rounded-lg transition-colors min-w-0
                     ${isActive
-                                      ? "bg-blue-600/20 text-blue-400"
-                                      : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-                                    }
+                      ? "bg-blue-600/20 text-blue-400"
+                      : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"}
                     ${isUpcoming ? upcomingClasses : ""}
                   `}
                 >
-                  {/* ICON — always rendered */}
+                  {/* Icon — always visible */}
                   <div className="flex items-center justify-center w-6">
                     {link.icon}
                   </div>
 
-                  {/* Everything else ONLY when hovered */}
+                  {/* Label + chevron — only when hovered */}
                   {isHovered && (
                     <>
                       <motion.span
@@ -107,8 +102,7 @@ export default function DesktopSidebarContent({
                             toggleExpand(link.id);
                           }}
                           size={18}
-                          className={`ml-auto transition-transform ${showSubs ? "rotate-180" : ""
-                            }`}
+                          className={`ml-auto transition-transform ${showSubs ? "rotate-180" : ""}`}
                         />
                       )}
 
@@ -118,7 +112,6 @@ export default function DesktopSidebarContent({
                     </>
                   )}
                 </button>
-
 
                 {/* Sub Items */}
                 <AnimatePresence>
@@ -131,30 +124,32 @@ export default function DesktopSidebarContent({
                       className="flex flex-col gap-0.5 mt-1 ml-4 pl-3 border-l border-zinc-700/50 overflow-hidden"
                     >
                       {(link.subItems || []).map((subItem) => {
-                      const isSubActive = location.pathname === subItem.href && location.pathname !== "/dashboard";
-
+                        const isSubActive =
+                          location.pathname === subItem.href &&
+                          location.pathname !== "/dashboard";
 
                         return (
                           <button
                             key={subItem.id}
                             onClick={() => {
                               if (subItem.isUpcoming) return;
+                              if (subItem.onLinkClick) {
+                                subItem.onLinkClick();
+                                return;
+                              }
                               navigate(subItem.href);
-                              subItem.onLinkClick?.();
                               onLinkClick?.();
                             }}
                             className={`
                               flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-colors
                               ${isSubActive
                                 ? "bg-blue-600/30 text-white"
-                                : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"
-                              }
+                                : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"}
                             `}
                           >
                             {subItem.icon || (
                               <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
                             )}
-
                             <span className="text-xs font-medium flex-1 whitespace-nowrap">
                               {subItem.label}
                             </span>
@@ -165,8 +160,7 @@ export default function DesktopSidebarContent({
                   )}
                 </AnimatePresence>
               </div>
-            )
-                
+            );
           })}
 
           {/* Admin */}
@@ -174,18 +168,21 @@ export default function DesktopSidebarContent({
             <Link
               to="/admin"
               onClick={onLinkClick}
-              className={`w-full flex items-center ${isHovered ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-3 rounded-lg transition-colors ${location.pathname.startsWith("/admin") ? "bg-blue-600/20 text-blue-400" : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-                }`}
+              className={`
+                w-full flex items-center
+                ${isHovered ? "gap-3 px-3 justify-start" : "justify-center px-0"}
+                py-3 rounded-lg transition-colors
+                ${location.pathname.startsWith("/admin")
+                  ? "bg-blue-600/20 text-blue-400"
+                  : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
+                }
+              `}
             >
               <div className="flex items-center justify-center w-6">
-                    <Crown size={22} />
-                  </div>
-              
+                <Crown size={22} />
+              </div>
               <motion.span
-                animate={{
-                  opacity: isHovered ? 1 : 0,
-                  maxWidth: isHovered ? 160 : 0
-                }}
+                animate={{ opacity: isHovered ? 1 : 0, maxWidth: isHovered ? 160 : 0 }}
                 transition={{ duration: 0.2 }}
                 className="text-sm font-medium whitespace-nowrap overflow-hidden"
               >
@@ -195,7 +192,7 @@ export default function DesktopSidebarContent({
           )}
         </div>
 
-        <BottomLinks onLinkClick={onLinkClick} callback={callback} />
+        <BottomLinks onLinkClick={onLinkClick} callback={callback} isHovered={isHovered} />
       </motion.div>
     </div>
   );
