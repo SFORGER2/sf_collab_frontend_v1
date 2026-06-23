@@ -17,14 +17,14 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5001',
+        target: 'http://localhost:5000',
         changeOrigin: true,
       },
       // FIX: proxy /uploads/* so user avatars and other files served
       // from the local Flask disk storage load correctly in the browser.
       // Without this, GET /uploads/user_avatars/filename returns 404 from Vite.
       '/uploads': {
-        target: 'http://localhost:5001',
+        target: 'http://localhost:5000',
         changeOrigin: true,
       },
       '/socket.io': {

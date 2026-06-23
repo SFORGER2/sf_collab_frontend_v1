@@ -295,17 +295,25 @@ const DocumentsPage = () => {
     }
   };
 
-  const handleDelete = async (file) => {
-    if (!file._docId) return;
-    if (!window.confirm(`Delete "${file.name}"?`)) return;
-    try {
-      await api.delete(`/${file._docId}`);
-      flash("Document deleted");
-      loadDocuments();
-    } catch (err) {
-      flash("Delete failed", true);
-    }
-  };
+const handleDelete = async (file) => {
+  if (!file._docId) return;
+
+  if (!window.confirm(`Delete "${file.name}"?`)) return;
+
+  try {
+    await api.delete(`/${file._docId}`);
+
+    setModalItems((prev) =>
+      prev.filter((item) => item._docId !== file._docId)
+    );
+
+    flash("Document deleted");
+
+    await loadDocuments();
+  } catch (err) {
+    flash("Delete failed", true);
+  }
+};
 
   const handleRealUpload = async () => {
     const input = document.createElement("input");
@@ -572,7 +580,7 @@ const DocumentsPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-center justify-center p-8"
+            className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[100] flex items-center justify-center p-8"
             onClick={() => setIsUploadModalOpen(false)}
           >
             <motion.div
@@ -687,7 +695,7 @@ const DocumentsPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex items-center justify-center p-4 md:p-8"
+            className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[100] flex items-center justify-center p-4 md:p-8"
             onClick={closePreview}
           >
             <motion.div

@@ -23,7 +23,7 @@ import {
 } from "../../../utils/APIs/interceptors";
 
 // Use the correct backend base URL for daily updates
-const api = axios.create({ baseURL: "/api/daily-updates-new" });
+const api = axios.create({ baseURL: "/api/daily-update" });
 api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
