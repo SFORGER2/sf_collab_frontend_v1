@@ -175,6 +175,44 @@ export const aiAPI = {
     });
     return response.data;
   },
+
+  // Generate caption
+  generateCaption: async ({ prompt, model, platform = 'Instagram', tone = 'casual', temperature = 0.7, maxTokens = 200 }) => {
+    const response = await api.post('/ai/generate/caption', {
+      prompt,
+      model,
+      platform,
+      tone,
+      content_type: 'text',
+      temperature,
+      max_tokens: maxTokens,
+    });
+    return response.data;
+  },
+
+  // Generate video — backend expects multipart/form-data
+  generateVideo: async ({ mode, prompt, style = 'cinematic', duration = 10, files = null }) => {
+    const formData = new FormData();
+    formData.append('mode', mode === 'text-to-video' ? 'text' : mode === 'image-to-video' ? 'image' : mode);
+    formData.append('prompt', prompt);
+    formData.append('style', style);
+    formData.append('duration', String(duration));
+    if (files && files.length > 0) {
+      files.forEach((file) => formData.append('files', file));
+    }
+    const response = await api.post('/video/generate', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // Download generated video
+  downloadVideo: async (filename) => {
+    const response = await api.get(`/video/download/${filename}`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
 };
 
 export default api;

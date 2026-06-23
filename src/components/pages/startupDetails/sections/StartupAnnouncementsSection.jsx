@@ -79,7 +79,11 @@ export default function StartupAnnouncementsSection({ startup }) {
       }
     } catch (error) {
       console.error('Error creating announcement:', error);
-      toast.error('Failed to create announcement');
+      if (error?.response?.status === 403 || error?.status === 403) {
+        toast.error('Only platform admins can create broadcast announcements.');
+      } else {
+        toast.error('Failed to create announcement');
+      }
     }
   };
 
@@ -93,7 +97,7 @@ export default function StartupAnnouncementsSection({ startup }) {
     return colors[priority] || colors.medium;
   };
 
-  const isCreator = user?.id === startup?.creator?.id;
+  const isCreator = user?.id === startup?.creator?.id || startup?.access_level === 'owner';
 
   return (
     <div className="space-y-6">

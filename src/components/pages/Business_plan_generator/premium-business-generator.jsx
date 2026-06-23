@@ -20,7 +20,7 @@ import {
 import ShinyText from "../../ui/ShinyText";
 import VoiceInput from './VoiceInput';
 import { aiAPI } from '@/utils/APIs/aiAPI';
-import { AIAPI } from '@/services/auth/AIAPI';
+
 import { useSelector } from 'react-redux';
 import ResponsePrompt from './ResponsePrompt';
 import { API_BASE_URL_NO_API } from '@/utils/config';
@@ -106,19 +106,27 @@ export default function BusinessIdeaGenerator() {
     try {
       setIsLoading(true);
 
-      const response = await AIAPI.generateBusinessPlan(body, access_token)
+      const response = await aiAPI.generateBusinessIdeas({
+        contentType: mode === 'ideas' ? 'business_ideas' : 'business_plan',
+        maxTokens: mode === 'ideas' ? 2048 : 4096,
+        metadata: {
+          business_idea: formData.businessIdea,
+          industry: formData.industry,
+          budget: formData.budget,
+          location: formData.location,
+          tech: formData.tech
+        }
+      });
       if (!response?.success) {
-        throw new Error(response?.message || "Generation failed");
+        throw new Error(response?.error || 'Generation failed');
       }
-      console.log(response);
       setResults({
         type: mode,
         content: `Generated ${mode === 'ideas' ? 'Business Ideas' : 'Business Plan'} based on your inputs...`,
-        response: response?.data.response || '',
-        pdfLink: response?.data.download_links.pdf || '',
-        mdLink: response?.data.download_links.md || ''
+        response: response?.data?.response || '',
+        pdfLink: '',
+        mdLink: response?.data?.download_links?.md || ''
       });
-      console.log(response);
     } catch (error) {
       toast.error("Error generating content: " + error.message);
 

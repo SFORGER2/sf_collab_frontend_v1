@@ -26,7 +26,7 @@ const CaptionGenerator = () => {
   const [error, setError] = useState('');
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(200);
-  const [selectedModel, setSelectedModel] = useState('openai/gpt-oss-20b');
+  const [selectedModel, setSelectedModel] = useState('qwen/qwen3-32b');
   const [imagePreview, setImagePreview] = useState(null);
 
   const credits = useGetCredits();
@@ -74,16 +74,14 @@ const CaptionGenerator = () => {
         tone: formData.tone,
         temperature,
         maxTokens,
-        image: formData.image
       });
-      console.log('Caption generation response:', response);
       if (!response.success) {
         throw new Error(response.error || 'Failed to generate captions');
       }
 
       setCaptions(prev => [...prev, {
         id: Date.now(),
-        caption: response.data.response,
+        caption: response.data?.response || response.data || '',
         platform: formData.platform,
         timestamp: new Date(),
         tone: formData.tone

@@ -508,9 +508,7 @@ export default function RegisterStartUp() {
       let response
       if (id) {
         response = await startupsAPI.update(id, submitData, token);
-        response = await startupsAPI.update(id, submitData, token);
       } else {
-        response = await startupsAPI.register(submitData);
         response = await startupsAPI.register(submitData);
       }
       console.log("Startup registration response:", response);
@@ -561,8 +559,14 @@ export default function RegisterStartUp() {
         
       }
     } catch (err) {
-      console.error("Startup registration failed:", err);
-      toast.error(err.message || "Internal server error");
+      console.error('Startup registration failed:', err);
+      // FIX: parse the actual backend error message from the Axios response
+      const backendMsg = err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Internal server error';
+      toast.error(backendMsg);
+      // If name already exists, jump back to step 1 so user can change it
+      if (err?.response?.status === 409 || backendMsg.toLowerCase().includes('already exists')) {
+        setCurrentStep(1);
+      }
     } finally {
       setIsSubmitting(false);
     }

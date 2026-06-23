@@ -123,7 +123,15 @@ const VideoGenerator = () => {
         throw new Error(response.error || 'Failed to generate video');
       }
 
-      setGeneratedVideos([...generatedVideos, response.data]);
+      const videoData = response.data || {};
+      setGeneratedVideos([...generatedVideos, {
+        url: videoData.video_url || '',
+        filename: videoData.video_url ? videoData.video_url.split('/').pop() : '',
+        mode: videoData.mode || mode,
+        duration: videoData.duration || duration,
+        remaining: videoData.remaining_today,
+        generated_at: videoData.generated_at || new Date().toISOString()
+      }]);
       setPrompt('');
       setUploadedFiles([]);
     } catch (err) {
@@ -439,11 +447,14 @@ const VideoGenerator = () => {
 
                     <div className="relative z-10 space-y-4">
                       <div className="aspect-video bg-neutral-800/50 rounded-xl flex items-center justify-center border border-neutral-700/50">
-                        <video
-                          src={video.url}
-                          controls
-                          className="w-full h-full rounded-lg"
-                        />
+                        {video.url ? (
+                          <video src={video.url} controls className="w-full h-full rounded-lg" />
+                        ) : (
+                          <div className="text-center p-6">
+                            <Film className="h-12 w-12 text-neutral-600 mx-auto mb-3" />
+                            <p className="text-neutral-400 text-sm">Video generated — URL pending server config</p>
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-2">
