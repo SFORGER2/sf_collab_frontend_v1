@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import StepsTimeline from './StepsTimeline';
 import InputSection from './InputSection';
 import OutputSection from './OutputSection';
-import { useSelector } from 'react-redux';
+
 import useGetCredits from '@/utils/hooks/useGetCredits';
 
 const StartupLogoGenerator = () => {
@@ -31,13 +31,10 @@ const StartupLogoGenerator = () => {
     visible: { opacity: 1, y: 0 }
   };
   const costPerImage = 50;
-  const { user } = useSelector((state) => state.auth);
   const imageCount = imagesAmount;
   const totalCost = imageCount * costPerImage;
-  const remainingCredits =
-    typeof userCredits === "number"
-      ? Math.max((user.credits || 0) - totalCost, 0)
-      : null;
+  // credits comes from useGetCredits() which fetches from /api/payments/credits (real-time)
+  const hasEnoughCredits = credits >= totalCost;
   function SummaryCard({ label, value, accent = "white", suffix, edit = false }) {
   const accentColor =
     accent === "emerald"
@@ -137,8 +134,15 @@ const StartupLogoGenerator = () => {
             <div className="flex w-full justify-center gap-10 lg:gap-16 max-lg:flex-col">
             {
               logos.length === 0 ? (
+                !hasEnoughCredits ? (
+                  <div className="w-full flex flex-col items-center gap-3 p-6 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-center">
+                    <p className="text-amber-400 font-medium">You need {totalCost} credits to generate {imageCount} logo{imageCount > 1 ? 's' : ''}</p>
+                    <p className="text-gray-400 text-sm">Your balance: {credits} credits</p>
+                    <a href="/store" className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold transition-colors">Buy Credits</a>
+                  </div>
+                ) : (
                 <InputSection formData={formData} setFormData={setFormData} setLogos={setLogos} containerVariants={containerVariants} imagesAmount={imagesAmount} setImagesAmount={setImagesAmount} setSloganDesigns={setSloganDesigns} />
-              ) : (
+              )) : (
                 <OutputSection formData={formData} logos={logos} setLogos={setLogos} sloganDesigns={sloganDesigns} />
               )
             }

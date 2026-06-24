@@ -395,23 +395,32 @@ const VideoGenerator = () => {
                         </Alert>
                       )}
 
-                      <Button
-                        type="submit"
-                        disabled={loading || credits < totalCost}
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-6 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Generating Video...
-                          </>
-                        ) : (
-                          <>
-                            <Play className="h-4 w-4 mr-2" />
-                            Generate Video
-                          </>
-                        )}
-                      </Button>
+                      {credits < totalCost ? (
+                        <div className="w-full flex flex-col items-center gap-2 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center">
+                          <p className="text-amber-400 text-sm font-medium">You need {totalCost} SF Coins to generate a video</p>
+                          <a href="/store" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition-colors">
+                            Buy SF Coins
+                          </a>
+                        </div>
+                      ) : (
+                        <Button
+                          type="submit"
+                          disabled={loading}
+                          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-6 rounded-xl transition-all"
+                        >
+                          {loading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Generating Video...
+                            </>
+                          ) : (
+                            <>
+                              <Play className="h-4 w-4 mr-2" />
+                              Generate Video
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </form>
                   </div>
                 </div>
