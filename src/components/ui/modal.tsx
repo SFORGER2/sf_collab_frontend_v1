@@ -27,22 +27,22 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
             className="absolute inset-0 bg-black/30 backdrop-blur-sm"
             onClick={onClose}
           />
 
           {/* Panel */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.97, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="relative w-full max-w-md rounded-2xl border border-border bg-card shadow-xl"
+            exit={{ opacity: 0, scale: 0.97, y: 8 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="relative w-full max-w-xl rounded-xl sm:rounded-2xl border border-border bg-card shadow-xl"
           >
             {/* Header */}
             {title && (
-              <div className="flex items-center justify-between px-6 pt-6 pb-0">
+              <div className="flex items-center justify-between px-4 pt-4 pb-0 sm:px-6 sm:pt-6">
                 <h2 className="text-base font-heading tracking-tight text-card-foreground">
                   {title}
                 </h2>
@@ -55,8 +55,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
               </div>
             )}
 
-            {/* Content */}
-            <div className="px-6 py-6">{children}</div>
+            {/* Content */}              <div className="px-4 py-4 sm:px-6 sm:py-6">{children}</div>
           </motion.div>
         </div>
       )}

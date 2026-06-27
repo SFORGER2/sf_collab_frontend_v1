@@ -101,13 +101,13 @@ export function Dashboard() {
 							<RefreshCw
 								className={`h-3.5 w-3.5 ${isLoading ? "animate-spin text-primary" : ""}`}
 							/>
-						</Button>							{/* New Website */}
+						</Button>						{/* New Website */}
 						<Button
 							onClick={() => setShowCreateModal(true)}
 							size="sm"
-							className="gap-1.5 bg-brand text-brand-foreground hover:bg-brand/90">
+							className="gap-1.5 bg-brand text-brand-foreground hover:bg-brand/90 !p-0 h-8 w-8 sm:h-auto sm:w-auto sm:!px-3 sm:!py-1.5">
 							<Plus className="h-3.5 w-3.5" />
-							<span>New Website</span>
+							<span className="hidden sm:inline">New Website</span>
 						</Button>
 					</div>
 				</div>
