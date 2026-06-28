@@ -7,20 +7,13 @@ import { EmptyState } from "./empty-state";
 import { Button } from "./ui/button";
 import { CreateWebsiteModal } from "./create-website-modal";
 import { DeleteWebsiteDialog } from "./delete-website-dialog";
-import type { Project } from "../types";
+import type { Project } from "../types";	export function Dashboard() {
+		const { projects, isLoading, error, refetch, addProject, removeProject } = useProjects();
+		const [searchQuery, setSearchQuery] = useState("");
+		const [showCreateModal, setShowCreateModal] = useState(false);
+		const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
-export function Dashboard() {
-	const { projects, isLoading, error, refetch } = useProjects();
-	const [searchQuery, setSearchQuery] = useState("");
-	const [showCreateModal, setShowCreateModal] = useState(false);
-	const [newProjects, setNewProjects] = useState<Project[]>([]);
-	const [deletedProjectIds, setDeletedProjectIds] = useState<Set<string>>(new Set());
-	const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
-
-	const allProjects = [
-		...newProjects,
-		...projects.filter((p) => !deletedProjectIds.has(p.id)),
-	];
+		const allProjects = projects;
 
 	const filteredProjects = searchQuery
 		? allProjects.filter((p) =>
@@ -29,7 +22,7 @@ export function Dashboard() {
 		: allProjects;
 
 	const handleCreateProject = (project: Project) => {
-		setNewProjects((prev) => [project, ...prev]);
+		addProject(project);
 	};
 
 	const handleDeleteProject = (project: Project) => {
@@ -37,8 +30,7 @@ export function Dashboard() {
 	};
 
 	const handleConfirmDelete = (project: Project) => {
-		setNewProjects((prev) => prev.filter((p) => p.id !== project.id));
-		setDeletedProjectIds((prev) => new Set(prev).add(project.id));
+		removeProject(project.id);
 	};
 
 	return (
@@ -56,40 +48,88 @@ export function Dashboard() {
 			/>
 			<div className="min-h-screen">
 			{/* Navbar */}
-			<header className="sticky top-0 z-10 border-b border-nav-border bg-nav shadow-sm">
+			<motion.header
+				initial={{ opacity: 0, y: -12 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.3, ease: "easeOut" }}
+				className="sticky top-0 z-10 border-b border-nav-border bg-nav shadow-sm"
+			>
 				{/* Accent line */}
-				<div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-primary/40 via-primary to-primary/40" />
+				<motion.div
+					initial={{ scaleX: 0 }}
+					animate={{ scaleX: 1 }}
+					transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+					className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-primary/40 via-primary to-primary/40 origin-left"
+				/>
 
 				<div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
 					{/* Left: Brand + Count */}
-					<div className="flex items-center gap-3">
+					<motion.div
+						initial={{ opacity: 0, x: -8 }}
+						animate={{ opacity: 1, x: 0 }}
+						transition={{ duration: 0.3, delay: 0.1 }}
+						className="flex items-center gap-3"
+					>
 						<div className="flex items-center gap-3">
-							<img
+							<motion.img
 								src="/sfcollab-logo.png"
 								alt="SFCollab"
 								className="h-6 w-auto"
+								initial={{ opacity: 0, rotate: -10, scale: 0.8 }}
+								animate={{ opacity: 1, rotate: 0, scale: 1 }}
+								transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" }}
 							/>
 							<div className="flex items-baseline gap-2">
-								<h1 className="text-sm font-heading tracking-tight text-foreground">
+								<motion.h1
+									initial={{ opacity: 0, x: -4 }}
+									animate={{ opacity: 1, x: 0 }}
+									transition={{ duration: 0.3, delay: 0.2 }}
+									className="text-sm font-heading tracking-tight text-foreground"
+								>
 									SFCollab
-								</h1>
+								</motion.h1>
 							</div>
 						</div>
-						<div className="h-4 w-px bg-border/60" />
-						<div className="flex items-center gap-2">
-							<span className="text-xs text-muted-foreground/50">
+						<motion.div
+							initial={{ opacity: 0, scaleX: 0 }}
+							animate={{ opacity: 1, scaleX: 1 }}
+							transition={{ duration: 0.3, delay: 0.25 }}
+							className="h-4 w-px bg-border/60 origin-left"
+						/>
+						<motion.div
+							initial={{ opacity: 0, x: -4 }}
+							animate={{ opacity: 1, x: 0 }}
+							transition={{ duration: 0.3, delay: 0.3 }}
+							className="flex items-center gap-2"
+						>
+							<motion.span
+								initial={{ opacity: 0 }}
+								animate={{ opacity: 1 }}
+								transition={{ duration: 0.3, delay: 0.35 }}
+								className="text-xs text-muted-foreground/50"
+							>
 								Website Generator
-							</span>
+							</motion.span>
 							{!isLoading && (
-								<span className="text-[11px] font-medium text-muted-foreground/60 bg-secondary/60 px-2 py-0.5 rounded-full tabular-nums leading-none">
+								<motion.span
+									initial={{ opacity: 0, scale: 0.5 }}
+									animate={{ opacity: 1, scale: 1 }}
+									transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.4 }}
+									className="text-[11px] font-medium text-muted-foreground/60 bg-secondary/60 px-2 py-0.5 rounded-full tabular-nums leading-none"
+								>
 									{allProjects.length}
-								</span>
+								</motion.span>
 							)}
-						</div>
-					</div>
+						</motion.div>
+					</motion.div>
 
 					{/* Right: Actions */}
-					<div className="flex items-center gap-1.5">
+					<motion.div
+						initial={{ opacity: 0, x: 8 }}
+						animate={{ opacity: 1, x: 0 }}
+						transition={{ duration: 0.3, delay: 0.3 }}
+						className="flex items-center gap-1.5"
+					>
 						{/* Refresh */}
 						<Button
 							variant="ghost"
@@ -109,9 +149,9 @@ export function Dashboard() {
 							<Plus className="h-3.5 w-3.5" />
 							<span className="hidden sm:inline">New Website</span>
 						</Button>
-					</div>
+					</motion.div>
 				</div>
-			</header>
+			</motion.header>
 
 			<main className="max-w-5xl mx-auto px-6 py-6">
 				{/* Search */}

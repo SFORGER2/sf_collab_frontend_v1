@@ -4,16 +4,13 @@ import type { Project, CreateProjectRequest } from "../types"
 interface UseCreateProjectReturn {
   createProject: (data: CreateProjectRequest) => Promise<Project>
   isCreating: boolean
-  error: string | null
 }
 
 export function useCreateProject(): UseCreateProjectReturn {
   const [isCreating, setIsCreating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const createProject = useCallback(async (data: CreateProjectRequest): Promise<Project> => {
     setIsCreating(true)
-    setError(null)
 
     try {
       const response = await fetch("/projects", {
@@ -45,5 +42,5 @@ export function useCreateProject(): UseCreateProjectReturn {
     }
   }, [])
 
-  return { createProject, isCreating, error }
+  return { createProject, isCreating }
 }

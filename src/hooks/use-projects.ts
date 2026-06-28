@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react"
 import type { Project } from "../types"
 
+const STORAGE_KEY = "sfcollab_projects"
+
 const MOCK_PROJECTS: Project[] = [
   {
     id: "1",
@@ -48,42 +50,89 @@ const MOCK_PROJECTS: Project[] = [
   },
 ]
 
+function loadProjects(): Project[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const parsed: Project[] = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    }
+  } catch {
+    // corrupted data — fall through to seed
+  }
+  // Seed with mock data on first load
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_PROJECTS))
+  return MOCK_PROJECTS
+}
+
+function saveProjects(projects: Project[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(projects))
+  } catch {
+    // storage full or unavailable — silently ignore
+  }
+}
+
 interface UseProjectsReturn {
   projects: Project[]
   isLoading: boolean
   error: string | null
   refetch: () => void
+  addProject: (project: Project) => void
+  removeProject: (id: string) => void
 }
 
 export function useProjects(): UseProjectsReturn {
-  const [projects, setProjects] = useState<Project[]>([])
+  const [projects, setProjects] = useState<Project[]>(() => loadProjects())
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error] = useState<string | null>(null)
 
-  const fetchProjects = useCallback(async () => {
+  const syncProjects = useCallback((updated: Project[]) => {
+    setProjects(updated)
+    saveProjects(updated)
+  }, [])
+
+  const addProject = useCallback(
+    (project: Project) => {
+      setProjects((prev) => {
+        const updated = [project, ...prev]
+        saveProjects(updated)
+        return updated
+      })
+    },
+    []
+  )
+
+  const removeProject = useCallback(
+    (id: string) => {
+      setProjects((prev) => {
+        const updated = prev.filter((p) => p.id !== id)
+        saveProjects(updated)
+        return updated
+      })
+    },
+    []
+  )
+
+  const refetch = useCallback(async () => {
     setIsLoading(true)
-    setError(null)
-
     try {
       const response = await fetch("/projects")
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch projects: ${response.statusText}`)
+      if (response.ok) {
+        const data: Project[] = await response.json()
+        syncProjects(data)
       }
-
-      const data: Project[] = await response.json()
-      setProjects(data)
     } catch {
-      // API not available — use mock data for development
-      setProjects(MOCK_PROJECTS)
+      // API not available — use what's in localStorage
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [syncProjects])
 
   useEffect(() => {
-    fetchProjects()
-  }, [fetchProjects])
+    // Attempt API fetch on mount; localStorage data is already loaded
+    refetch()
+  }, [refetch])
 
-  return { projects, isLoading, error, refetch: fetchProjects }
+  return { projects, isLoading, error, refetch, addProject, removeProject }
 }

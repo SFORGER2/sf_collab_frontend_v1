@@ -64,11 +64,21 @@ export function ProjectCard({ project, index, onDelete }: ProjectCardProps) {
 
         <div className="p-4 flex flex-col gap-3">
           {/* Top row: icon + name + menu */}
-          <div className="flex items-start justify-between gap-2">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.05 }}
+            className="flex items-start justify-between gap-2"
+          >
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center ring-1 ring-border group-hover:ring-primary/20 group-hover:shadow-sm transition-all duration-300">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 250, damping: 15, delay: 0.08 }}
+                className="shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center ring-1 ring-border group-hover:ring-primary/20 group-hover:shadow-sm transition-all duration-300"
+              >
                 <Globe className="h-4 w-4 text-primary/60" strokeWidth={1.5} />
-              </div>
+              </motion.div>
               <div className="min-w-0">
                 <h3 className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors duration-200">
                   {project.name}
@@ -83,7 +93,7 @@ export function ProjectCard({ project, index, onDelete }: ProjectCardProps) {
 
             <div ref={menuRef} className="relative">
               <button
-                className="shrink-0 h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground hover:bg-secondary opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer"
+                className="shrink-0 h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground hover:bg-secondary sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation()
                   setMenuOpen(!menuOpen)
@@ -114,28 +124,41 @@ export function ProjectCard({ project, index, onDelete }: ProjectCardProps) {
                 </motion.div>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* Status + Timestamp */}
-          <div className="flex items-center justify-between">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.12 }}
+            className="flex items-center justify-between"
+          >
             <StatusBadge status={project.status} />
-            <span className="text-[11px] text-muted-foreground/70 tabular-nums">
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.15 }}
+              className="text-[11px] text-muted-foreground/70 tabular-nums"
+            >
               {formatRelativeTime(project.lastUpdated)}
-            </span>
-          </div>
+            </motion.span>
+          </motion.div>
 
           {/* URL */}
           {project.url && (
-            <a
+            <motion.a
               href={project.url}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.18 }}
               className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/60 hover:text-primary transition-colors duration-200"
             >
               <ExternalLink className="h-3 w-3" />
               <span className="truncate max-w-[200px]">{project.url}</span>
-            </a>
+            </motion.a>
           )}
         </div>
       </div>

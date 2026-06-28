@@ -42,17 +42,32 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
           >
             {/* Header */}
             {title && (
-              <div className="flex items-center justify-between px-4 pt-4 pb-0 sm:px-6 sm:pt-6">
-                <h2 className="text-base font-heading tracking-tight text-card-foreground">
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: 0.05 }}
+                className="flex items-center justify-between px-4 pt-4 pb-0 sm:px-6 sm:pt-6"
+              >
+                <motion.h2
+                  initial={{ opacity: 0, x: -4 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2, delay: 0.08 }}
+                  className="text-base font-heading tracking-tight text-card-foreground"
+                >
                   {title}
-                </h2>
-                <button
+                </motion.h2>
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: "spring", stiffness: 250, damping: 15, delay: 0.1 }}
                   onClick={onClose}
-                  className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground hover:bg-secondary transition-all duration-200 cursor-pointer"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground hover:bg-secondary transition-colors duration-200 cursor-pointer"
                 >
                   <X className="h-4 w-4" />
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             )}
 
             {/* Content */}              <div className="px-4 py-4 sm:px-6 sm:py-6">{children}</div>

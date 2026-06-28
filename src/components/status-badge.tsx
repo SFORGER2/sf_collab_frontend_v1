@@ -39,7 +39,10 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   const Icon = config.icon
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium leading-none tracking-wide",
         {
@@ -66,6 +69,6 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
         )}
         {config.label}
       </span>
-    </div>
+    </motion.div>
   )
 }

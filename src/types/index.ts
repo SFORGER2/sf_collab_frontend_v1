@@ -32,6 +32,9 @@ export const STEP_ORDER: WizardStep[] = ["app-type", "name", "branding", "featur
 
 export interface BrandingData {
   primaryColor: string
+  accentColor: string
+  tagline: string
+  logoUrl: string
   font: string
 }
 
@@ -68,6 +71,9 @@ export function getDefaultWizardData(): WizardData {
     packId: null,
     branding: {
       primaryColor: "#503c8c",
+      accentColor: "#2563eb",
+      tagline: "",
+      logoUrl: "",
       font: "Inter",
     },
     features: [],

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
 import { Type } from "lucide-react"
 import type { WizardData, WizardErrors } from "../../types"
 
@@ -26,20 +27,46 @@ export function WebsiteNameStep({ data, onChange, errors, onErrors }: WebsiteNam
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="text-center">
-        <div className="mx-auto h-10 w-10 rounded-xl bg-brand/[0.08] flex items-center justify-center mb-3">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="text-center"
+      >
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.05 }}
+          className="mx-auto h-10 w-10 rounded-xl bg-brand/[0.08] flex items-center justify-center mb-3"
+        >
           <Type className="h-5 w-5 text-brand" strokeWidth={1.5} />
-        </div>
-        <h3 className="text-base font-heading tracking-tight text-card-foreground mb-1">
+        </motion.div>
+        <motion.h3
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="text-base font-heading tracking-tight text-card-foreground mb-1"
+        >
           Name your website
-        </h3>
-        <p className="text-xs text-muted-foreground/70">
+        </motion.h3>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.15 }}
+          className="text-xs text-muted-foreground/70"
+        >
           Give your project a clear name and description
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
 
       {/* Name */}
-      <div className="flex flex-col gap-1.5">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+        className="flex flex-col gap-1.5"
+      >
         <label htmlFor="wiz-name" className="text-xs font-medium text-card-foreground/70">
           Website name <span className="text-destructive">*</span>
         </label>
@@ -60,10 +87,15 @@ export function WebsiteNameStep({ data, onChange, errors, onErrors }: WebsiteNam
         {errors.name && (
           <p className="text-[11px] text-destructive/80">{errors.name}</p>
         )}
-      </div>
+      </motion.div>
 
       {/* Description */}
-      <div className="flex flex-col gap-1.5">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.25 }}
+        className="flex flex-col gap-1.5"
+      >
         <label htmlFor="wiz-desc" className="text-xs font-medium text-card-foreground/70">
           Description{" "}
           <span className="text-muted-foreground/40 font-normal">(optional)</span>
@@ -76,7 +108,7 @@ export function WebsiteNameStep({ data, onChange, errors, onErrors }: WebsiteNam
           rows={3}
           className="h-20 resize-none rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm placeholder:text-muted-foreground/40 text-card-foreground focus:outline-none focus:ring-1 focus:ring-ring focus:border-transparent transition-all duration-200"
         />
-      </div>
+      </motion.div>
     </div>
   )
 }

@@ -50,8 +50,8 @@ export function DeleteWebsiteDialog({
       <div className="flex flex-col items-center gap-5">
         {/* Warning icon */}
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
+          initial={{ scale: 0, rotate: -15 }}
+          animate={{ scale: 1, rotate: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 15 }}
           className="h-14 w-14 rounded-2xl bg-destructive/10 ring-1 ring-destructive/20 flex items-center justify-center"
         >
@@ -59,22 +59,42 @@ export function DeleteWebsiteDialog({
         </motion.div>
 
         {/* Message */}
-        <div className="text-center">
-          <p className="text-sm text-card-foreground/80 leading-relaxed">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="text-center"
+        >
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
+            className="text-sm text-card-foreground/80 leading-relaxed"
+          >
             Are you sure you want to delete{" "}
             <span className="font-semibold text-card-foreground">
               {project?.name}
             </span>
             ?
-          </p>
-          <p className="text-xs text-muted-foreground/60 mt-1.5">
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className="text-xs text-muted-foreground/60 mt-1.5"
+          >
             This action cannot be undone. The website and all its data will be
             permanently removed.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-1 w-full">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.25 }}
+          className="flex items-center gap-2 pt-1 w-full"
+        >
           <Button
             type="button"
             variant="ghost"
@@ -99,7 +119,7 @@ export function DeleteWebsiteDialog({
             )}
             {isDeleting ? "Deleting..." : "Delete"}
           </Button>
-        </div>
+        </motion.div>
       </div>
     </Modal>
   )

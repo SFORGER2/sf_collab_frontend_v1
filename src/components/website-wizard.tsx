@@ -111,25 +111,47 @@ export function WebsiteWizard({
     <Modal open={open} onClose={handleClose} title="Create Website">
       {/* Progress bar */}
       <div className="mb-5 px-0.5">
-        <div className="flex items-center gap-1.5 mb-2">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="flex items-center gap-1.5 mb-2"
+        >
           {STEP_ORDER.map((step, i) => (
-            <div key={step} className="flex-1 flex items-center gap-0">
+            <motion.div
+              key={step}
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={{ scaleX: 1, opacity: 1 }}
+              transition={{ duration: 0.4, delay: i * 0.08, ease: "easeOut" }}
+              className="flex-1 flex items-center gap-0 origin-left"
+            >
               <div
-                className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
                   i <= stepIndex ? "bg-brand" : "bg-border"
                 }`}
               />
-            </div>
+            </motion.div>
           ))}
-        </div>
-        <div className="flex items-center justify-between px-0.5">
-          <span className="text-[11px] font-medium text-brand">
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.25 }}
+          className="flex items-center justify-between px-0.5"
+        >
+          <motion.span
+            key={currentStep}
+            initial={{ opacity: 0, x: -4 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
+            className="text-[11px] font-medium text-brand"
+          >
             {STEP_LABELS[currentStep]}
-          </span>
+          </motion.span>
           <span className="text-[11px] text-muted-foreground/50 tabular-nums">
             {stepIndex + 1} / {STEP_ORDER.length}
           </span>
-        </div>
+        </motion.div>
       </div>
 
       {/* Step content */}
@@ -137,10 +159,10 @@ export function WebsiteWizard({
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -12 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
           >
             {currentStep === "name" && (
               <WebsiteNameStep data={data} onChange={updateData} errors={errors} onErrors={updateErrors} />
