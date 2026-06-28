@@ -15,6 +15,7 @@ import {
   Clock3,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDraft } from "@/utils/hooks/useDraft";
 import { ideaAPI } from "@/utils/APIs/ideaAPI";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
@@ -27,7 +28,9 @@ const API_URL = import.meta.env.VITE_API_URL || "";
 
 // ── Co-Developer Request Modal ────────────────────────────────────────────
 function CollabRequestModal({ idea, onClose, onSuccess, accessToken }) {
-  const [message, setMessage] = useState("");
+  // B5 FIX: save idea application message draft
+  const [{ message }, setIdeaDraft, clearIdeaDraft] = useDraft("idea_apply_message", { message: "" });
+  const setMessage = (val) => setIdeaDraft(prev => ({ ...prev, message: val }));
   const [role, setRole] = useState("co-developer");
   const [loading, setLoading] = useState(false);
 

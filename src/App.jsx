@@ -105,7 +105,6 @@ import CaptionGenerator from "./components/pages/captionGenerator/CaptionGenerat
 import VideoGenerator from "./components/pages/videoGenerator/VideoGenerator.jsx";
 import FounderManageApplications from "./components/pages/founder/manageApplications/FounderManageApplications.jsx";
 import FounderManageTeam from "./components/pages/founder/manageTeam/FounderManageTeam.jsx";
-import FounderManageTasks from "./components/pages/founder/manageTasks/FounderManageTasks.jsx";
 import SavedIdeas from "./components/pages/ideation/SavedIdeas.jsx";
 import AIToolsGuard from "./components/ai/AIToolsGuard.jsx";
 import BuilderStartups from "./components/pages/builderStartups/BuilderStartups.jsx";
@@ -254,7 +253,7 @@ export default function App() {
                   {/* Founder Routes */}
                   <Route path="founder/my-applications" element={<FounderManageApplications />} />
                   <Route path="founder/my-team" element={<FounderManageTeam />} />
-                  <Route path="founder/manage-tasks" element={<FounderManageTasks />} />
+                  <Route path="founder/manage-tasks" element={<Navigate to="/erp/tasks" replace />} />
 
                   {/* AI & Tools */}
                   <Route path="ai-dashboard" element={<AIToolsGuard><AIDashboard /></AIToolsGuard>} />

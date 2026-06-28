@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useDraft, useModalDraftGuard } from "@/utils/hooks/useDraft";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +36,11 @@ export default function CreateGoalDialog({
   const [loading, setLoading] = useState(false);
   const { user } = useSelector((state) => state.auth);
 
-  const [form, setForm] = useState(emptyGoalForm);
+  // B5 FIX: auto-save goal form draft (skip in edit mode)
+  const [form, setForm, clearGoalDraft, hasGoalDraft] = useDraft(
+    editMode ? `edit_goal_${goal?.id}` : "create_goal",
+    editMode && goal ? goal : emptyGoalForm
+  );
 
   const [milestones, setMilestones] = useState(["", "", ""]);
 

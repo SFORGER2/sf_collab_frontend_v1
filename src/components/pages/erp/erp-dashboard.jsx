@@ -28,6 +28,7 @@ const updatesApi    = mk("/api/daily-updates");
 const alertsApi     = mk("/api/erp-alerts");
 const activityApi   = mk("/api/activity");
 const tasksApi      = mk("/api/erp-tasks");
+const membersApi    = mk("/api/startup-members");
 
 // ── Status badge helper ──────────────────────────────────────────────────────
 const STATUS_META = {
@@ -92,11 +93,21 @@ export default function ERPDashboard() {
   const [tasksLoading,   setTasksLoading]   = useState(true);
   const [loading,        setLoading]        = useState(true);
 
+  // B8 FIX: derive role from real startup membership data
   useEffect(() => {
-    const storedRole = localStorage.getItem("activeRole");
-    if (storedRole) setRole(storedRole);
-    else localStorage.setItem("activeRole", "builder");
-  }, []);
+    if (!user?.id || !workspaceId) return;
+    membersApi
+      .get("", { params: { user_id: user.id, startup_id: workspaceId } })
+      .then((res) => {
+        const members = res?.data?.data?.members || res?.data?.members || [];
+        const mine = members.find(m => m.userId === user.id || m.user_id === user.id);
+        if (mine?.role) {
+          const raw = (mine.role || "").toLowerCase();
+          setRole(["founder", "owner", "admin"].includes(raw) ? "founder" : "builder");
+        }
+      })
+      .catch(() => {}); // keep default "builder" on error
+  }, [user?.id, workspaceId]);
 
   // ── Load tasks separately so task errors don't break the rest ──────────────
   const loadTasks = useCallback(async () => {

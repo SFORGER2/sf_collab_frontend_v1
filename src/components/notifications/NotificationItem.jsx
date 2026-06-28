@@ -75,7 +75,26 @@ const getNotificationLink = (notification) => {
   if (notification.link_url) {
     return notification.link_url;
   }
-  
+
+  // B1 FIX: backend sends entity_type + entity_id on every notification.
+  // Map these to routes before falling through to template_key logic.
+  const { entity_type, entity_id } = notification;
+  if (entity_type && entity_id) {
+    switch (entity_type) {
+      case 'startup':    return `/startup-details/${entity_id}`;
+      case 'idea':       return `/ideation`;
+      case 'task':       return `/erp/tasks`;
+      case 'meeting':    return `/meet`;
+      case 'post':       return `/posts/${entity_id}`;
+      case 'user':       return `/users/${entity_id}`;
+      case 'workspace':  return `/erp`;
+      case 'knowledge':  return `/knowledge/${entity_id}`;
+      case 'marketplace':return `/marketplace`;
+      case 'announcement': return null;
+      default: break;
+    }
+  }
+
   const { template_key, category, data } = notification;
   const metadata = data || {};
   

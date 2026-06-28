@@ -6,13 +6,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { AnimatePresence, motion } from "framer-motion";
 import { ImageIcon, Sparkles, Video, X, Loader2, AlertCircle } from "lucide-react";
 import { useRef, useState } from "react";
+import { useDraft, useModalDraftGuard } from "@/utils/hooks/useDraft";
 import MultiImageGrid from "./MultiImageGrid";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 
 export default function CreatePost({ currentUser, onPost }) {
-  const [caption,        setCaption]        = useState("");
+  // B5 FIX: auto-save post draft to localStorage
+  const [{ caption }, setDraftForm, clearPostDraft, hasPostDraft] = useDraft("create_post", { caption: "" });
+  const setCaption = (val) => setDraftForm(prev => ({ ...prev, caption: val }));
   const [files,          setFiles]          = useState([]);   // [{ file: File, url: string }]
   const [fileType,       setFileType]       = useState(null);
   const [destination,    setDestination]    = useState("feed"); // "feed" | "story"

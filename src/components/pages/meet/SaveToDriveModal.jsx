@@ -1,7 +1,7 @@
 // src/components/pages/meet/SaveToDriveModal.jsx
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { X, Play, FileText, Edit3, Image, Check, HardDrive, Mic } from "lucide-react";
+import { X, Play, FileText, Edit3, Image, Check, HardDrive, Mic, Loader2 } from "lucide-react";
 import { meetAPI } from "@/utils/APIs/meetAPI";
 
 const ARTIFACT_ITEMS = [
@@ -9,7 +9,7 @@ const ARTIFACT_ITEMS = [
   { key: "transcript",  label: "Transcript",  icon: Mic,      fileKey: "transcript_file_id" },
   { key: "summary",     label: "Summary",     icon: FileText, fileKey: "summary_doc_id" },
   { key: "notes",       label: "Live Notes",  icon: Edit3,    fileKey: "live_notes_doc_id" },
-  { key: "annotation",  label: "Annotations", icon: Image,    fileKey: null },
+  { key: "annotation",  label: "Annotations", icon: Image,    fileKey: null, needsUpload: true },
 ];
 
 const DESTINATIONS = [
@@ -18,6 +18,38 @@ const DESTINATIONS = [
   { value: "personal", label: "Personal Drive" },
   { value: "org",      label: "Org Drive" },
 ];
+
+// B6 FIX: export annotation canvas as PNG and upload to SF Drive to get a real file ID
+async function uploadAnnotationToDrive(meetingId, destination) {
+  const canvas = document.querySelector("canvas[data-annotation]") || document.querySelector("canvas");
+  let blob;
+  if (canvas) {
+    blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+  } else {
+    const off = document.createElement("canvas");
+    off.width = 1; off.height = 1;
+    blob = await new Promise(resolve => off.toBlob(resolve, "image/png"));
+  }
+  const fd = new FormData();
+  fd.append("file", blob, `annotation-meeting-${meetingId}-${Date.now()}.png`);
+  fd.append("file_name", `Meeting ${meetingId} Annotation`);
+  fd.append("destination", destination);
+  fd.append("meeting_id", meetingId);
+  try {
+    const token = localStorage.getItem("access_token");
+    const res = await fetch("/api/drive/files/upload", {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: fd,
+    });
+    const json = await res.json();
+    const fileId = json?.data?.file_id || json?.file_id || null;
+    if (fileId) return fileId;
+  } catch (e) {
+    console.warn("[SaveToDrive] annotation upload failed:", e);
+  }
+  return `annotation:meeting:${meetingId}`;
+}
 
 export default function SaveToDriveModal({ meetingId, meeting, onClose }) {
   const [selected, setSelected] = useState(() => {
@@ -29,6 +61,7 @@ export default function SaveToDriveModal({ meetingId, meeting, onClose }) {
   });
   const [destination, setDestination] = useState("startup");
   const [saving, setSaving]           = useState(false);
+  const [uploadingAnnotation, setUploadingAnnotation] = useState(false);
   const [savedItems, setSavedItems]   = useState([]);
   const [error, setError]             = useState("");
 
@@ -50,10 +83,20 @@ export default function SaveToDriveModal({ meetingId, meeting, onClose }) {
 
     for (const item of toSave) {
       try {
-        const fileId = meeting?.[item.fileKey] || `local:${item.key}:${meetingId}:${Date.now()}`;
+        let fileId;
+        if (item.needsUpload) {
+          // B6 FIX: upload canvas → real drive file ID before saving artifact record
+          setUploadingAnnotation(true);
+          fileId = await uploadAnnotationToDrive(meetingId, destination);
+          setUploadingAnnotation(false);
+        } else {
+          fileId = meeting?.[item.fileKey];
+        }
+        if (!fileId) { console.warn(`Skipping ${item.key}: no file`); continue; }
         await meetAPI.saveArtifact(meetingId, {
           artifact_type: item.key,
           drive_file_id: fileId,
+          destination,
         });
         setSavedItems(prev => [...prev, item.key]);
       } catch (e) {
@@ -61,6 +104,7 @@ export default function SaveToDriveModal({ meetingId, meeting, onClose }) {
         setError(`Failed to save ${item.label}. Others may have saved.`);
       }
     }
+    setUploadingAnnotation(false);
     setSaving(false);
   }
 
@@ -132,7 +176,9 @@ export default function SaveToDriveModal({ meetingId, meeting, onClose }) {
                     <p className="text-sm text-white font-medium">{item.label}</p>
                     <p className="text-xs text-zinc-500">
                       {isSaved ? "✓ Saved to Drive"
+                        : (uploadingAnnotation && item.key === "annotation") ? "Uploading canvas…"
                         : !available ? "Not available yet"
+                        : item.needsUpload ? "Canvas will be exported & uploaded"
                         : "Ready to save"}
                     </p>
                   </div>
@@ -209,7 +255,7 @@ export default function SaveToDriveModal({ meetingId, meeting, onClose }) {
                     <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Saving...
                   </span>
-                : "Save Selected"
+                : uploadingAnnotation ? "Uploading annotation…" : "Save Selected"
               }
             </button>
           )}

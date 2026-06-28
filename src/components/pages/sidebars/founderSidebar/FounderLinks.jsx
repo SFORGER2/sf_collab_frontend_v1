@@ -107,7 +107,7 @@ export function createFounderLinks(
         },
         {
           id: "manage-tasks",
-          href: "/founder/manage-tasks",
+          href: "/erp/tasks",
           label: "Tasks",
           icon: <LightbulbIcon size={18} />,
         },

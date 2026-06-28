@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDraft } from "@/utils/hooks/useDraft";
 import {
   Rocket,
   ArrowLeft,
@@ -47,7 +48,7 @@ export default function CreateStartup() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [formData, setFormData] = useState({
+  const INITIAL_STARTUP = {
     // Step 1: Basics
     name: "",
     tagline: "",
@@ -66,7 +67,9 @@ export default function CreateStartup() {
     fundingStatus: "Bootstrapped",
     fundingTarget: "",
     fundingRaised: "",
-  });
+  };
+  // B5 FIX: auto-save startup registration draft
+  const [formData, setFormData, clearStartupDraft] = useDraft("create_startup", INITIAL_STARTUP);
 
   const [errors, setErrors] = useState({});
 
