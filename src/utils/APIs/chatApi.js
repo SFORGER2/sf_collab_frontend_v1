@@ -50,10 +50,16 @@ export const chatAPI = {
     return response.data;
   },
 
-  markConversationRead: async (conversationId) => {
-    const response = await api.post(`/chat/conversations/${conversationId}/mark-read`);
-    return response.data;
-  },
+  // chatApi.js
+markConversationAsRead: async (conversationId) => {
+  const response = await api.post(`/chat/conversations/${conversationId}/mark-read`);
+  return response.data;
+},
+
+getTotalUnreadCount: async () => {
+  const response = await api.get('/chat/unread-count');
+  return response.data.count;   // adapt to your response structure
+},
   deleteConversation: async (conversationId) => {
     const response = await api.delete(`/chat/conversations/${conversationId}`);
     return response.data;
