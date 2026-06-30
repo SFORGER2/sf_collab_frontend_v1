@@ -24,6 +24,7 @@ import { RiBillFill } from 'react-icons/ri';
 // ✅ NEW IMPORTS
 import { FollowButton } from '@/components/FollowButton';
 import { FollowersModal } from '@/components/FollowersModal';
+import { getMediaUrl } from '@/utils/getMediaUrl'; 
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -456,13 +457,13 @@ const Profile = () => {
                             <div className="relative z-10">
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex items-center gap-3">
-                                  {membership.startup.logo_url ? (
-                                    <img
-                                      src={membership.startup.logo_url.startsWith("http") ? membership.startup.logo_url : `${API_URL}${membership.startup.logo_url}`}
-                                      alt={membership.startup.name}
-                                      className="w-12 h-12 rounded-lg object-cover border border-gray-600"
-                                    />
-                                  ) : (
+                                  {startup.logo_url ? (
+    <img
+      src={getMediaUrl(startup.logo_url)}
+      alt={startup.name}
+      className="w-10 h-10 rounded-lg object-cover border border-orange-600/30"
+    />
+  ) : (
                                     <div className="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center border border-gray-600">
                                       <Briefcase className="w-6 h-6 text-gray-500" />
                                     </div>

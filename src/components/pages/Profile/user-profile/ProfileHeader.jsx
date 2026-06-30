@@ -4,10 +4,12 @@ import { motion } from 'framer-motion';
 import { Camera, Edit, Settings, MapPin, Calendar, Mail, Sparkles, Trophy, Zap, Heart, Flame, TrendingUp, LinkIcon } from 'lucide-react';
 import './background.css';
 import { Link } from 'react-router-dom';
-import { getProfilePicture } from '@/utils/getProfilePicture';
 import { useSelector } from 'react-redux';
 import InviteToStartup from './InviteToStartup';
 import AddFriend from './AddFriend';
+// ✅ Import the new helpers
+import { getAvatarUrl, getMediaUrl } from '@/utils/getMediaUrl';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Helper function to format plan names
@@ -19,7 +21,8 @@ const formatPlanName = (planId) => {
     .join(' ');
 };
 
-const specialIds = [{
+const specialIds = [
+  {
     id: 120,
     name: "SF Founder",
     icon: Zap,
@@ -35,20 +38,21 @@ const specialIds = [{
   }
 ];
 
-const ProfileHeader = ({ 
-  user, 
-  level, 
-  levelProgress, 
-  xpToNextLevel, 
-  isEditing, 
-  onEditToggle, 
+const ProfileHeader = ({
+  user,
+  level,
+  levelProgress,
+  xpToNextLevel,
+  isEditing,
+  onEditToggle,
   isOtherUser,
   onSettingsClick,
-  profileData // Add this prop from parent
+  profileData
 }) => {
   const { user: currentUser } = useSelector((state) => state.auth);
   const hasActivePlan = user?.builder_plan_id || user?.founder_plan_id;
 
+  // ✅ LevelBadge component – correctly defined inside
   const LevelBadge = ({ level }) => {
     const special = specialIds.find(s => s.id === user?.id);
     if (special) {
@@ -75,7 +79,7 @@ const ProfileHeader = ({
         Level {level}
       </motion.div>
     );
-  }
+  };
 
   return (
     <motion.div
@@ -115,8 +119,14 @@ const ProfileHeader = ({
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-black/80 to-gray-900/80 backdrop-blur-xl" />
 
       {/* Cover Photo */}
-      <div className="relative h-48 dashboard-bg">
-      </div>
+      <div
+        className="relative h-48 dashboard-bg"
+        style={{
+          backgroundImage: user?.cover_photo ? `url(${getMediaUrl(user.cover_photo)})` : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
 
       {/* Profile Info */}
       <div className="relative px-8 pb-6">
@@ -126,12 +136,22 @@ const ProfileHeader = ({
             whileHover={{ scale: 1.05 }}
             className="relative w-32 h-32 rounded-full border-4 border-gray-800 bg-gradient-to-br from-blue-500/20 to-purple-500/20 group/picture"
           >
-            <img loading="lazy"
-              src={getProfilePicture(user)}
+            {/* ✅ Use getAvatarUrl */}
+            <img
+              src={getAvatarUrl(user)}
               alt={user?.firstName}
               className="w-full h-full object-cover group-hover/picture:scale-110 rounded-full transition-transform duration-300"
+              onError={(e) => {
+                // Fallback to initials if image fails
+                e.target.style.display = 'none';
+                const parent = e.target.parentElement;
+                const fallback = document.createElement('div');
+                fallback.className = 'w-full h-full flex items-center justify-center text-4xl font-bold text-white bg-gradient-to-br from-blue-500 to-purple-600';
+                fallback.textContent = (user?.firstName?.[0] || 'U') + (user?.lastName?.[0] || '');
+                parent.appendChild(fallback);
+              }}
             />
-            
+
             {/* Level Badge */}
             <LevelBadge level={level} />
 
@@ -140,7 +160,7 @@ const ProfileHeader = ({
               <motion.div
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="absolute z-1 -top-2 -right-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-2 py-1 rounded-full border-2 border-gray-800"
+                className="absolute z-10 -top-2 -right-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-2 py-1 rounded-full border-2 border-gray-800"
               >
                 <Zap className="w-3 h-3 inline mr-0.5" />
                 Pro
@@ -180,9 +200,8 @@ const ProfileHeader = ({
                   </div>
                 </motion.div>
               )}
-
             </div>
-            
+
             <p className="text-gray-300 mb-4 max-w-2xl">
               {user?.profile?.bio}
             </p>
@@ -201,7 +220,7 @@ const ProfileHeader = ({
                   <span className="text-gray-500">Location not set</span>
                 }
               </motion.div>
-              
+
               {/* Email */}
               {!isOtherUser &&
                 <motion.div
@@ -212,7 +231,7 @@ const ProfileHeader = ({
                   <span className="text-gray-300">{user?.email}</span>
                 </motion.div>
               }
-              
+
               {/* Join Date */}
               <motion.div
                 whileHover={{ scale: 1.05 }}
@@ -221,7 +240,7 @@ const ProfileHeader = ({
                 <Calendar className="w-4 h-4 text-green-400" />
                 <span className="text-gray-300">Joined {new Date(user?.createdAt).toLocaleDateString()}</span>
               </motion.div>
-              
+
               {/* Company */}
               {user?.profile.company && (
                 <motion.div
@@ -297,6 +316,7 @@ const ProfileHeader = ({
                   <span className="text-purple-300">{formatPlanName(user?.founder_plan_id)}</span>
                 </motion.div>
               )}
+
               {
                 currentUser.active_startups_count > 0 && currentUser.id !== user?.id && (
                   <>
@@ -313,7 +333,7 @@ const ProfileHeader = ({
                   !user?.profile?.country,
                   !user?.profile?.company,
                 ].filter(Boolean).length;
-                
+
                 return emptyFields >= 3 && currentUser && currentUser.id === user?.id && (
                   <motion.div
                     whileHover={{ scale: 1.05 }}

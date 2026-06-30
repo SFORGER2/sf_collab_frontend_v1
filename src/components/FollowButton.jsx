@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { followAPI } from '@/utils/APIs/followAPI';
+import followAPI from '@/utils/APIs/followAPI';
 
 export function FollowButton({ targetUserId, onFollowChange }) {
   const { user, access_token } = useSelector((state) => state.auth);

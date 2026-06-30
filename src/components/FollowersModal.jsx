@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import  followAPI from '@/utils/APIs/followAPI';
+import followAPI from '../utils/APIs/followAPI';
 import UserCard from "./pages/connections/UserCard";
 import { Button } from '@/components/ui/button';
 import InfiniteList from './InfiniteList';
