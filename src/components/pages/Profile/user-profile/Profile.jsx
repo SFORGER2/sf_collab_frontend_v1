@@ -21,6 +21,10 @@ import { formatCurrency } from '@/lib/utils';
 import { API_URL } from '@/utils/config';
 import { RiBillFill } from 'react-icons/ri';
 
+// ✅ NEW IMPORTS
+import { FollowButton } from '@/components/FollowButton';
+import { FollowersModal } from '@/components/FollowersModal';
+
 const Profile = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
@@ -33,6 +37,9 @@ const Profile = () => {
   const [loadingPortfolio, setLoadingPortfolio] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
+
+  // ✅ NEW STATE for modal
+  const [modalType, setModalType] = useState(null); // 'followers' or 'following'
 
   const viewedUserId = queryParams.get("userId");
   const page = queryParams.get("page");
@@ -87,6 +94,7 @@ const Profile = () => {
 
     fetchPortfolio();
   }, [authUser, access_token, isOtherUser]);
+
   const tabs = useMemo(() => [
     { id: 'overview', label: 'Overview', icon: User },
     { id: 'achievements', label: 'Achievements', icon: Award },
@@ -95,7 +103,14 @@ const Profile = () => {
     authUser && !isOtherUser && { id: 'transactions', label: 'Transactions', icon: RiBillFill },
   ].filter(Boolean), [authUser, isOtherUser]);
 
-  
+  // ✅ OPTIMISTIC FOLLOW COUNT UPDATE
+  const handleFollowChange = (newStatus) => {
+    setProfileData(prev => ({
+      ...prev,
+      followersCount: newStatus ? (prev?.followersCount || 0) + 1 : Math.max(0, (prev?.followersCount || 0) - 1)
+    }));
+  };
+
   const user = profileData || authUser;
   console.log(user);
   if (!user || loadingProfile) {
@@ -116,22 +131,30 @@ const Profile = () => {
   const xpToNextLevel = level * 1000 - xp;
   const levelProgress = ((xp % 1000) / 1000) * 100;
 
-  
   return (
     <div className="min-h-screen text-white">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent"></div>
 
       <div className="relative w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <ProfileHeader
-          user={user}
-          level={level || 0}
-          levelProgress={levelProgress}
-          xpToNextLevel={xpToNextLevel}
-          isEditing={isEditing}
-          isOtherUser={isOtherUser}
-          onEditToggle={() => setIsEditing(!isEditing)}
-          onSettingsClick={() => navigate("/user-profile?page=settings")}
-        />
+        {/* ───── WRAP HEADER WITH FOLLOW BUTTON ───── */}
+        <div className="relative">
+          <ProfileHeader
+            user={user}
+            level={level || 0}
+            levelProgress={levelProgress}
+            xpToNextLevel={xpToNextLevel}
+            isEditing={isEditing}
+            isOtherUser={isOtherUser}
+            onEditToggle={() => setIsEditing(!isEditing)}
+            onSettingsClick={() => navigate("/user-profile?page=settings")}
+          />
+          {isOtherUser && (
+            <div className="absolute top-4 right-4 z-10">
+              <FollowButton targetUserId={viewedUserId} onFollowChange={handleFollowChange} />
+            </div>
+          )}
+        </div>
+
         <ProfileStats profile={profileData} />
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
@@ -202,6 +225,22 @@ const Profile = () => {
                   <span className="text-sm text-gray-400">Friends</span>
                   <span className="text-blue-400">{profileData?.friendsCount || 0}</span>
                 </div>
+                {/* ─── NEW FOLLOWING / FOLLOWERS ROWS (clickable) ─── */}
+                <div
+                  className="flex justify-between items-center cursor-pointer hover:text-blue-400 transition-colors"
+                  onClick={() => setModalType('following')}
+                >
+                  <span className="text-sm text-gray-400">Following</span>
+                  <span className="text-blue-400">{profileData?.followingCount || 0}</span>
+                </div>
+                <div
+                  className="flex justify-between items-center cursor-pointer hover:text-blue-400 transition-colors"
+                  onClick={() => setModalType('followers')}
+                >
+                  <span className="text-sm text-gray-400">Followers</span>
+                  <span className="text-blue-400">{profileData?.followersCount || 0}</span>
+                </div>
+                {/* ─────────────────────────────────────────────── */}
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-400">Founded Startups</span>
                   <span className="text-green-400">{profileData?.foundedStartups?.length || 0}</span>
@@ -216,7 +255,6 @@ const Profile = () => {
                 </div>
               </div>
             </motion.div>
-
 
             {/* Social Links */}
             {profileData?.social && (
@@ -555,6 +593,14 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* ───── FOLLOWERS / FOLLOWING MODAL ───── */}
+      <FollowersModal
+        isOpen={modalType !== null}
+        onClose={() => setModalType(null)}
+        userId={viewedUserId || user?.id}
+        type={modalType}
+      />
     </div>
   );
 };
