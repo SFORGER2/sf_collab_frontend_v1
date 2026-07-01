@@ -54,41 +54,40 @@ const ProfileSetting = () => {
 
   // FIX: was a simulated API call (setTimeout). Now calls usersAPI.updateProfile
   // with the correct field names that the backend profile_routes expects.
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!user) return
+  // ProfileSetting.jsx - handleSubmit
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!user) return;
 
-    setIsLoading(true)
-    try {
-      // Backend expects JSON for profile fields (no file in this form)
-      const payload = {
+  setIsLoading(true);
+  try {
+    const payload = {
+      profile: {                         // ✅ wrap inside 'profile'
         bio: formData.bio,
         socialLinks: {
           facebook: formData.facebook,
-          twitter:  formData.twitter,
+          twitter: formData.twitter,
           linkedin: formData.linkedin,
         },
-      }
+      },
+      // If you later want to support username -> firstName/lastName, handle it separately
+    };
 
-      // FIX: access_token is stored under 'access_token' not 'authToken'
-      const token    = localStorage.getItem("access_token")
-      const response = await usersAPI.updateProfile(user.id, payload, token, "application/json")
-
-      // Unwrap: success_response returns { success, data: { user } }
-      const updated = response?.data?.user || response?.user
-      if (updated) {
-        dispatch(setUser(updated))
-        localStorage.setItem("userData", JSON.stringify(updated))
-      }
-
-      toast.success("Profile updated successfully!")
-    } catch (error) {
-      console.error("Error updating profile:", error)
-      toast.error("Failed to update profile. Please try again.")
-    } finally {
-      setIsLoading(false)
+    const token = localStorage.getItem("access_token");
+    const response = await usersAPI.updateProfile(user.id, payload, token, "application/json");
+    const updated = response?.data?.user || response?.user;
+    if (updated) {
+      dispatch(setUser(updated));
+      localStorage.setItem("userData", JSON.stringify(updated));
     }
+    toast.success("Profile updated successfully!");
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    toast.error(error?.response?.data?.error || "Failed to update profile.");
+  } finally {
+    setIsLoading(false);
   }
+};
 
   return (
     <div className="flex flex-row gap-6">
