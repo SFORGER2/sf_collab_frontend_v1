@@ -15,7 +15,6 @@ import {
   Clock3,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useDraft } from "@/utils/hooks/useDraft";
 import { ideaAPI } from "@/utils/APIs/ideaAPI";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
@@ -28,9 +27,7 @@ const API_URL = import.meta.env.VITE_API_URL || "";
 
 // ── Co-Developer Request Modal ────────────────────────────────────────────
 function CollabRequestModal({ idea, onClose, onSuccess, accessToken }) {
-  // B5 FIX: save idea application message draft
-  const [{ message }, setIdeaDraft, clearIdeaDraft] = useDraft("idea_apply_message", { message: "" });
-  const setMessage = (val) => setIdeaDraft(prev => ({ ...prev, message: val }));
+  const [message, setMessage] = useState("");
   const [role, setRole] = useState("co-developer");
   const [loading, setLoading] = useState(false);
 
@@ -337,8 +334,14 @@ export default function VisionCard({ content, shouldBlur }) {
           return !prev;
         });
         const res = await ideaAPI?.likeIdea?.(content?.id, access_token);
-        setLikes(res?.data?.idea?.likes);
-        setLiked(res?.data?.idea?.likedBy?.includes(user?.id));
+        // B8 FIX: backend returns { likes, hasLiked } — use those directly
+        const ideaData = res?.data?.idea || res?.idea || res?.data || {};
+        if (typeof ideaData.likes === 'number') setLikes(ideaData.likes);
+        if (typeof ideaData.hasLiked === 'boolean') setLiked(ideaData.hasLiked);
+        // Fallback: server-side count confirmed, keep optimistic if no server data
+        else if (!ideaData.likes && !ideaData.hasLiked) {
+          // optimistic already applied — leave as-is
+        }
       } catch (err) {
         console.error(err);
       }

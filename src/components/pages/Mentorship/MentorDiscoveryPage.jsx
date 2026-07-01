@@ -62,7 +62,7 @@ const StarRating = ({ rating, count, size = 14 }) => (
 );
 
 // ── Mentor Card ───────────────────────────────────────────────────────────────
-const MentorCard = ({ mentor, onClick }) => {
+const MentorCard = ({ mentor, onClick, currentUserId }) => {
   const user    = mentor.user;
   const initials = user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'M';
 
@@ -183,11 +183,18 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
         const startups = startupsRes?.startups || startupsRes?.data?.startups || [];
         setMyStartups(startups);
 
-        // Load user's ideas via the same axios instance as the rest of the app
-        const { default: api } = await import('@/utils/APIs/mentorshipAPI');
-        const ideasRes = await api.get('/ideas?per_page=50').catch(() => null);
-        const ideas = ideasRes?.data?.ideas || ideasRes?.data?.data?.ideas || [];
-        setMyIdeas(ideas);
+        // Load user's ideas (visions) — use fetch with stored token
+        try {
+          const token = localStorage.getItem('access_token');
+          const res = await fetch('/api/ideas?per_page=50', {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+          });
+          const json = await res.json();
+          const ideas = json?.data?.ideas || json?.ideas || [];
+          setMyIdeas(ideas);
+        } catch {
+          setMyIdeas([]);
+        }
 
       } catch (e) {
         console.error('Failed to load projects', e);
@@ -480,7 +487,7 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
 
 
 // ── Mentor Profile Modal ──────────────────────────────────────────────────────
-const MentorProfileModal = ({ mentor, onClose, onRequest }) => {
+const MentorProfileModal = ({ mentor, onClose, onRequest, onDelete, currentUserId }) => {
   const user     = mentor.user;
   const initials = user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'M';
 
@@ -633,7 +640,17 @@ const MentorProfileModal = ({ mentor, onClose, onRequest }) => {
             )}
 
             {/* CTA */}
-            {mentor.is_available ? (
+            {String(mentor.user_id) === String(currentUserId) ? (
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => onDelete(mentor)}
+                className="w-full bg-red-600/20 hover:bg-red-600/40 border border-red-500/30
+                           text-red-300 font-semibold py-3.5 rounded-xl transition-colors
+                           flex items-center justify-center gap-2"
+              >
+                Delete My Listing
+              </motion.button>
+            ) : mentor.is_available ? (
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onRequest(mentor)}
@@ -1033,6 +1050,22 @@ const MentorDiscoveryPage = () => {
             mentor={selectedMentor}
             onClose={() => setSelectedMentor(null)}
             onRequest={(m) => { setSelectedMentor(null); setRequestMentor(m); }}
+            onDelete={async (m) => {
+              if (!window.confirm('Delete your mentor listing? This cannot be undone.')) return;
+              try {
+                const token = localStorage.getItem('access_token');
+                const res = await fetch(`/api/mentorship/mentors/${m.id}`, {
+                  method: 'DELETE',
+                  headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
+                if (res.ok) {
+                  toast.success('Mentor listing deleted');
+                  setMentors(prev => prev.filter(x => x.id !== m.id));
+                  setSelectedMentor(null);
+                } else { toast.error('Failed to delete listing'); }
+              } catch { toast.error('Failed to delete listing'); }
+            }}
+            currentUserId={user?.id}
           />
         )}
         {requestMentor && (

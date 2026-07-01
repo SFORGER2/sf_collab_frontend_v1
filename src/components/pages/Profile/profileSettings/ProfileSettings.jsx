@@ -192,13 +192,15 @@ useEffect(() => {
   ----------------------------------------- */
   const dispatch = useDispatch();
   const updateUser = async (payload, isMultipart = false) => {
-    const contentType = isMultipart ? 'multipart/form-data' : 'application/json';
+    // FIX: for FormData, don't set Content-Type — axios must add boundary automatically
+    const contentType = isMultipart ? undefined : 'application/json';
     const data = await usersAPI.updateProfile(user.id, payload, access_token, contentType);
 
     if (!data.success) {
       throw new Error(data.error || "Update failed");
     }
-    dispatch(updateUserSlice(data.data.user))
+    const updatedUser = data?.data?.user || data?.user || data;
+    if (updatedUser?.id) dispatch(updateUserSlice(updatedUser));
     return data;
   };
 

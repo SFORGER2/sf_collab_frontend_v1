@@ -14,6 +14,7 @@ import { ShineButton } from '../lightswind/shine-button';
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import getNotificationsWithPreferences from "@/utils/getNotificationsWithPreferences";
 import { notificationAPI } from "@/utils/APIs/notificationAPI";
+import { useUnreadCounts } from "@/utils/hooks/useUnreadCounts";
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import { plotCount } from "@/utils/plotCount";
 
@@ -53,6 +54,7 @@ const LogoutIcon = () => (
 const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [notifications, setNotifications] = useState([]);
+  const { notifications: notifUnread, messages: msgUnread } = useUnreadCounts();
   const [loaderState, setLoaderState] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -96,12 +98,10 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [activeDropdown]);
 
-  // FIX: fetchNotifications updated to use apiClient
   const fetchNotifications = async () => {
     if (!user) return;
 
     try {
-      // apiClient handles the BaseURL and the Bearer token automatically
       const response = await notificationAPI.getAll();
       const notificationsData = response?.notifications || [];
       
@@ -120,7 +120,6 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
       
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
-      // Fallback to local user object if exists
       if (user?.notifications) {
         const fallback = user.notifications
           .map(notif => ({
@@ -139,9 +138,8 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
   useEffect(() => {
     fetchNotifications();
   }, [user]);
-  const location = useLocation(); // Get the current location
+  const location = useLocation();
 
-  // Close dropdowns when the location changes
   useEffect(() => {
     setIsNotificationsOpen(false);
     setIsProfileOpen(false);
@@ -155,6 +153,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
       console.error("Failed to mark notifications as read:", error);
     }
   };
+
   if (loaderState) return (
     <nav
       className={`flex px-6 items-center w-full h-16 justify-between relative transition-transform duration-300 will-change-transform ${
@@ -169,30 +168,11 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
     </nav>
   );
 
-  // const handleOpenChat = useCallback((chatData) => {
-  //   window.dispatchEvent(new CustomEvent('chatDock:open', { detail: chatData }));
-  // }, []);
-
-  // // Close connections dropdown when opening messages (and vice versa)
-  // const handleMessagesClick = () => {
-  //   setIsConnectionsOpen(false);
-  //   setIsMiniInboxOpen(!isMiniInboxOpen);
-  // };
-
-  // const handleConnectionsClick = () => {
-  //   setIsMiniInboxOpen(false);
-  //   setIsConnectionsOpen(!isConnectionsOpen);
-  //   if (hasNewConnectionRequest) {
-  //     setHasNewConnectionRequest(false);
-  //   }
-  // };
+  // Derived count to fall back cleanly if hook values aren't populated yet
+  const calculatedUnreadCount = notifUnread > 0 ? notifUnread : notifications.filter(n => n.unread).length;
 
   return (
-    <nav
-      className={`fixed top-0 z-100 left-0 flex px-6 items-center w-full h-16 justify-between transition-transform duration-300 will-change-transform ${isHidden ? "-translate-y-full" : "translate-y-0"
-        }`}
-
-    >
+    <nav className={`fixed top-0 z-100 left-0 flex px-6 items-center w-full h-16 justify-between transition-transform duration-300 will-change-transform ${isHidden ? "-translate-y-full" : "translate-y-0"}`}>
       <div
         className="absolute inset-0 z-0"
         style={{ background: "radial-gradient(125% 125% at 50% 90%, #000000 40%, #0d1a36 100%)" }}
@@ -209,15 +189,20 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
           <>
             <WorkspaceSwitcher />
             <Link to="/chat" className="chat p-2.5 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/10 text-slate-300 hover:text-white hover:from-blue-500/30 hover:to-cyan-500/20 border border-blue-500/20 transition-all duration-200">
-              <IoChatbubbles size={23} />
+              <div className="relative inline-flex">
+                <IoChatbubbles size={23} />
+                {msgUnread > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full border border-[#0a0a0a]">
+                    {msgUnread > 99 ? '99+' : msgUnread}
+                  </span>
+                )}
+              </div>
             </Link>
-            <div
-              id="notification-dropdown"
-              className="relative" ref={notificationRef}>
+            
+            <div id="notification-dropdown" className="relative" ref={notificationRef}>
               {/* 🔔 NOTIFICATIONS */}
               <Tippy
                 content={
-                  
                   <GlareHover
                     width="100%"
                     height="100%"
@@ -229,19 +214,18 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                       <div className="p-4 border-b border-slate-700/50">
                         <div className="flex flex-wrap items-center justify-between">
                           <h3 className="text-lg font-bold text-white">Notifications</h3>
-                          {
-                            notifications.filter(n => n.unread).length > 0 &&
+                          {calculatedUnreadCount > 0 && (
                             <>
-                            <span className="px-2.5 py-1 bg-red-600/10 text-rose-400 text-xs font-semibold rounded-full ring-1 ring-rose-500/20">
-                              {plotCount(notifications.filter(n => n.unread).length)} New
+                              <span className="px-2.5 py-1 bg-red-600/10 text-rose-400 text-xs font-semibold rounded-full ring-1 ring-rose-500/20">
+                                {plotCount(calculatedUnreadCount)} New
                               </span>
                               <span
                                 onClick={markAllRead}
-                                className="px-2.5 py-1 bg-blue-600/10 text-blue-400 text-xs font-semibold rounded-full ring-1 ring-blue-500/20">
-                              Mark all as read
+                                className="px-2.5 py-1 bg-blue-600/10 text-blue-400 text-xs font-semibold rounded-full ring-1 ring-blue-500/20 cursor-pointer">
+                                Mark all as read
                               </span>
-                              </>
-                          }
+                            </>
+                          )}
                         </div>
                       </div>
                       <div className="max-h-80 overflow-y-auto">
@@ -260,7 +244,10 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                               key={notif.id} className="p-4 hover:bg-slate-800/50 border-b border-slate-800/50 last:border-0 cursor-pointer">
                               <div className="flex items-start gap-3">
                                 <div className="p-1.5 rounded-lg bg-blue-500/10 ring-1 ring-blue-500/20">
-                                  <BellIcon />
+                                  <div className="relative">
+                                    {/* FIXED: Removed the secondary global badge here */}
+                                    <BellIcon />
+                                  </div>
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-md text-white font-medium">{notif.title}</p>
@@ -292,18 +279,19 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                     setIsProfileOpen(false);
                     setIsNotificationsOpen(v => !v);
                   }}
-                  className="relative p-2 rounded-lg bg-blue-500/10"
+                  className="relative p-2 rounded-lg bg-blue-500/10 text-slate-300 hover:text-white"
                 >
-                  <BellIcon />
-                  {notifications.filter(n => n.unread).length > 0 && (
-                    <span className="absolute top-0 right-0 text-xs bg-red-500 rounded-full px-1">
-                      {plotCount(notifications.filter(n => n.unread).length)}
-                    </span>
-                  )}
+                  <div className="relative">
+                    <BellIcon />
+                    {/* FIXED: Consolidated into a single clean notification badge */}
+                    {calculatedUnreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full border border-[#0a0a0a]">
+                        {calculatedUnreadCount > 99 ? '99+' : calculatedUnreadCount}
+                      </span>
+                    )}
+                  </div>
                 </button>
               </Tippy>
-
-            
             </div>
 
             <div className="relative" ref={profileRef}>
@@ -343,7 +331,6 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                         <Link to="/help" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 rounded-lg transition-colors duration-200">
                           <HelpCircle size={18} /> <span className="text-sm font-medium">Help</span>
                         </Link>
-                        
                         <Link to="/user-profile?page=settings" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 rounded-lg transition-colors duration-200">
                           <SettingsIcon /> <span className="text-sm font-medium">Settings</span>
                         </Link>
@@ -369,7 +356,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                   }}
                   className="w-10 h-10 rounded-lg overflow-hidden"
                 >
-                  <img loading="lazy" src={getProfilePicture(user)} className="w-full h-full object-cover" />
+                  <img loading="lazy" src={getProfilePicture(user)} className="w-full h-full object-cover" alt="avatar" />
                 </button>
               </Tippy>
             </div>

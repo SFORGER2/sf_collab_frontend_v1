@@ -105,6 +105,7 @@ import CaptionGenerator from "./components/pages/captionGenerator/CaptionGenerat
 import VideoGenerator from "./components/pages/videoGenerator/VideoGenerator.jsx";
 import FounderManageApplications from "./components/pages/founder/manageApplications/FounderManageApplications.jsx";
 import FounderManageTeam from "./components/pages/founder/manageTeam/FounderManageTeam.jsx";
+import FounderManageTasks from "./components/pages/founder/manageTasks/FounderManageTasks.jsx";
 import SavedIdeas from "./components/pages/ideation/SavedIdeas.jsx";
 import AIToolsGuard from "./components/ai/AIToolsGuard.jsx";
 import BuilderStartups from "./components/pages/builderStartups/BuilderStartups.jsx";
@@ -253,7 +254,7 @@ export default function App() {
                   {/* Founder Routes */}
                   <Route path="founder/my-applications" element={<FounderManageApplications />} />
                   <Route path="founder/my-team" element={<FounderManageTeam />} />
-                  <Route path="founder/manage-tasks" element={<Navigate to="/erp/tasks" replace />} />
+                  <Route path="founder/manage-tasks" element={<FounderManageTasks />} />
 
                   {/* AI & Tools */}
                   <Route path="ai-dashboard" element={<AIToolsGuard><AIDashboard /></AIToolsGuard>} />
@@ -343,6 +344,7 @@ export default function App() {
                   {/* Mentorship */}
                   <Route path="mentors" element={<MentorshipDiscovery />} />
                   <Route path="mentor-dashboard" element={<MentorDashboard />} />
+                  <Route path="mentors/dashboard" element={<Navigate to="/mentor-dashboard" replace />} />
                   <Route path="my-mentorship-requests" element={<MyMentorshipRequests />} />
 
                   {/* ========== ERP MODULE ========== */}

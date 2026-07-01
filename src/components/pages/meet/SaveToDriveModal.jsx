@@ -117,7 +117,14 @@ export default function SaveToDriveModal({ meetingId, meeting, onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
-      onClick={e => e.target === e.currentTarget && onClose()}
+      onClick={e => {
+        if (e.target !== e.currentTarget) return;
+        const hasSelected = Object.values(selected).some(Boolean);
+        if (hasSelected && !allDone) {
+          if (!window.confirm("Close without saving? Your selections will be lost.")) return;
+        }
+        onClose();
+      }}
     >
       <motion.div
         initial={{ y: 40, opacity: 0 }}

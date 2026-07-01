@@ -402,6 +402,44 @@ const VisionDetails = () => {
   }
   const isCreator = useMemo(() => user?.id && idea?.creator?.id && user.id === idea.creator.id, [user, idea]);
 
+  // B8c FIX: Vision → Startup activation
+  const [activating,    setActivating]    = useState(false);
+  const [eligibility,   setEligibility]   = useState(null);
+
+  const checkEligibility = async () => {
+    if (!idea?.id) return;
+    try {
+      const token = localStorage.getItem('access_token');
+      const res = await fetch(`/api/activation/ideas/${idea.id}/eligibility`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setEligibility(data);
+    } catch { setEligibility(null); }
+  };
+
+  const handleActivate = async () => {
+    if (!idea?.id || activating) return;
+    setActivating(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const res = await fetch(`/api/activation/ideas/${idea.id}/activate`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Vision activated as a Startup!');
+        if (data.startup?.id) navigate(`/startup-details/${data.startup.id}`);
+      } else {
+        toast.error(data.error || 'Activation failed');
+      }
+    } catch { toast.error('Activation failed'); }
+    finally { setActivating(false); }
+  };
+
+  useEffect(() => { if (isCreator && idea) checkEligibility(); }, [isCreator, idea?.id]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-gray-400">
@@ -541,6 +579,25 @@ const VisionDetails = () => {
               </motion.div>
             </motion.button>
 
+            {isCreator && eligibility?.eligible && (
+              <motion.button
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+                onClick={handleActivate}
+                disabled={activating}
+                className="px-3 py-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10
+                  hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold transition-all flex items-center gap-1.5"
+                title="Vision meets all requirements — activate as Startup"
+              >
+                🚀 {activating ? 'Activating...' : 'Activate as Startup'}
+              </motion.button>
+            )}
+            {isCreator && eligibility && !eligibility.eligible && (
+              <div className="text-[10px] text-zinc-500 px-2 py-1 rounded border border-zinc-800 bg-zinc-900">
+                {eligibility.next_requirement || 'Build readiness to activate'}
+              </div>
+            )}
             {isCreator && (
               <motion.button
                 variants={buttonVariants}

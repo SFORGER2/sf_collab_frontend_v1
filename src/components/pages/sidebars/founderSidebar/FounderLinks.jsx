@@ -73,6 +73,12 @@ export function createFounderLinks(
           icon: <PlusSquare size={18} />,
         },
         {
+          id: "register-existing",
+          href: "/register-existing-startup",
+          label: "Register Existing",
+          icon: <Building2 size={18} />,
+        },
+        {
           id: "my-startups",
           href: "/my-startups",
           label: "My Startups",
