@@ -128,7 +128,7 @@ export function createBuilderLinks(
     {
       id: 11,
       icon: <Building2 size={22} />,
-      href: "/erp-dashboard",
+      href: "/erp",
       label: "ERP",
       subItems: [
         { id: "erp-dashboard",    href: "/erp-dashboard",    label: "Dashboard",    icon: <Building2 size={18} /> },

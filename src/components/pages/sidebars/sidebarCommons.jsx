@@ -88,7 +88,7 @@ export function erpSection(id) {
   return {
     id,
     icon: <BriefcaseBusiness size={22} />,
-    href: "/erp/member-dashboard",
+    href: "/erp",
     label: "ERP",
     subItems: [
       { id: "erp-member-dashboard", href: "/erp/member-dashboard", label: "Member Dashboard", icon: <LayoutDashboard size={18} /> },

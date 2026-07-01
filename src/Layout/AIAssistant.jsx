@@ -19,12 +19,16 @@ function normalizeMessage(m) {
   };
 }
 
-export default function AIAssistant({ callback = () => {}, isMobile = false }) {
+export default function AIAssistant({
+  isOpen,
+  onClose,
+  isMobile = false,
+  callback = () => {},
+}) {
   const { user: currentUser, access_token: token } = useSelector(
     (state) => state.auth
   );
 
-  const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
@@ -100,20 +104,6 @@ export default function AIAssistant({ callback = () => {}, isMobile = false }) {
 
   return (
     <>
-      {/* Floating button */}
-      {(!isOpen && !isMobile )&& (
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            setIsOpen(true);
-            isMobile ? callback() : null
-          }}
-          className="fixed bottom-4 right-4 z-10 w-12 h-12 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg flex items-center justify-center"
-        >
-          <Sparkles size={20} />
-        </motion.button>
-      )}
 
       <AnimatePresence>
         {isOpen && (
@@ -147,15 +137,14 @@ export default function AIAssistant({ callback = () => {}, isMobile = false }) {
                   <Minus size={16} />
                 </button> */}
                 <button
-                  onClick={() => {
-                    setIsOpen(false)
-                    isMobile ? callback() : null
-                  }
-                  }
-                  className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800"
-                >
-                  <X size={16} />
-                </button>
+  onClick={() => {
+    onClose();
+    if (isMobile) callback();
+  }}
+  className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800"
+>
+  <X size={16} />
+</button>
               </div>
             </div>
 

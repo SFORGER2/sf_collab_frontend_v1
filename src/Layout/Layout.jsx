@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
@@ -31,6 +31,12 @@ import EmailVerifyPopUp from "./emailVerifyPopUp";
 import CompleteProfilePopUp from "./CompleteEmailPopUp";
 import AIAssistant from "./AIAssistant";
 import Tutorial from "./DashboardTutorial";
+import { createLinks } from '@/components/pages/sidebars/sidebar/links';
+import { createFounderLinks } from '@/components/pages/sidebars/founderSidebar/FounderLinks';
+import { createBuilderLinks } from '@/components/pages/sidebars/builderSidebar/BuilderLinks';
+import { createInfluencerLinks } from '@/components/pages/sidebars/influencerSidebar/influencerLinks';
+import { createInvestorLinks } from '@/components/pages/sidebars/investorSidebar/InvestorLinks';
+
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const location = useLocation();
@@ -57,6 +63,8 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [disableNavbar, setDisableNavbar] = useState(false);
   const [isCompletePopupVisible, setIsCompletePopupVisible] = useState(false);
+  const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+const toggleAIAssistant = useCallback(() => setIsAIAssistantOpen(prev => !prev), []);
 
 
   useEffect(() => {
@@ -196,24 +204,51 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
     checkProfileCompletion();
   }, [user, location]);
-  // Sidebar resolver
-  const SideBar = () => {
-    const props = { unreadMessagesCount, setIsOpen, isOpen, isAdmin, userRoles, setActiveRole };
 
-    switch (activeRole) {
-      case "founder":
-        return <FounderSidebar {...props} />;
-      case "influencer":
-        return <InfluencerSidebar {...props} />;
-      case "builder":
-        return <BuilderSidebar {...props} />;
-      case "investor":
-        return <InvestorSidebar {...props} />;
-      default:
-        return <UserSidebar {...props} />;
-    }
+const links = useMemo(() => {
+  const unread = 0;
+  switch (activeRole) {
+    case 'founder':
+      return createFounderLinks(unread, userRoles, setActiveRole);
+    case 'builder':
+      return createBuilderLinks(unread, userRoles, setActiveRole);
+    case 'influencer':
+      return createInfluencerLinks(unread, userRoles, setActiveRole);
+    case 'investor':
+      return createInvestorLinks(unread, userRoles, setActiveRole);
+    default:
+      return createLinks(unread, userRoles, setActiveRole);
+  }
+}, [activeRole, userRoles, setActiveRole]);
+
+
+
+  // Sidebar resolver
+ // Layout.jsx – SideBar resolver
+const SideBar = () => {
+  const props = {
+    unreadMessagesCount,
+    setIsOpen,
+    isOpen,
+    isAdmin,
+    userRoles,
+    setActiveRole,
+    links, // add this
   };
 
+  switch (activeRole) {
+    case "founder":
+      return <FounderSidebar {...props} />;
+    case "influencer":
+      return <InfluencerSidebar {...props} />;
+    case "builder":
+      return <BuilderSidebar {...props} />;
+    case "investor":
+      return <InvestorSidebar {...props} />;
+    default:
+      return <UserSidebar {...props} />;
+  }
+};
   const handleNavAreaEnter = () => !isRootPath && setIsOptionsVisible(true);
 
   const handleNavAreaLeave = (e) => {
@@ -261,14 +296,18 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
             className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${isNavHidden ? "h-0" : "h-[60px]"}`}
           >
             <NavBar
-              setIsOpen={setIsOpen}
-              isOpen={isOpen}
-              isHidden={isNavHidden}
-              isAdmin={isAdmin}
-              activeRole={activeRole}
-              setActiveRole={setActiveRole}
-              userRoles={userRoles}
-            />
+  setIsOpen={setIsOpen}
+  isOpen={isOpen}
+  isHidden={isNavHidden}
+  isAdmin={isAdmin}
+  activeRole={activeRole}
+  setActiveRole={setActiveRole}
+  userRoles={userRoles}
+  links={links}                          // new
+  isAIAssistantOpen={isAIAssistantOpen} // new
+  toggleAIAssistant={toggleAIAssistant} // new
+/>
+
           </div>
         )}
 
@@ -308,7 +347,12 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
       {
   (location.pathname !== "/chat") &&
   <>
-    <AIAssistant callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} isMobile={isMobile} />
+    <AIAssistant
+      isOpen={isAIAssistantOpen}
+      onClose={() => setIsAIAssistantOpen(false)}
+      isMobile={isMobile}
+      callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null}
+  />
 
     <ChatDock
       maxWindows={isMobile ? 1 : 2}

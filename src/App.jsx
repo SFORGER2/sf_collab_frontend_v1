@@ -142,6 +142,7 @@ import WorkspaceDashboard from "./components/pages/erp/WorkspaceDashboard";
 import { WarningActionsPage } from "./components/pages/erp/WarningActionsPage";
 import { FlagsPage } from "./components/pages/erp/FlagsPage";
 import { AuditLogsPage } from "./components/pages/erp/AuditLogsPage";
+import ERPLandingPage from "./components/pages/erp/ERPLandingPage";
 
 export default function App() {
   const { access_token, user } = useSelector((state) => state.auth);
@@ -348,7 +349,7 @@ export default function App() {
                   <Route path="my-mentorship-requests" element={<MyMentorshipRequests />} />
 
                   {/* ========== ERP MODULE ========== */}
-                  <Route path="erp" element={<Navigate to="/erp/attendance" replace />} />
+                  <Route path="erp" element={<ERPLandingPage />} />
                   <Route path="erp/attendance" element={<MyAttendancePage />} />
                   <Route path="erp/attendance/workspace" element={<WorkspaceAttendancePage />} />
                   <Route path="erp/alerts" element={<AlertsPage />} />
