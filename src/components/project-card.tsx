@@ -2,35 +2,16 @@ import { useState, useRef, useEffect } from "react"
 import { motion } from "framer-motion"
 import { ExternalLink, MoreHorizontal, Globe, Trash2 } from "lucide-react"
 import { StatusBadge } from "./status-badge"
+import { formatRelativeTime } from "../lib/utils"
 import type { Project } from "../types"
 
 interface ProjectCardProps {
   project: Project
   index: number
   onDelete?: (project: Project) => void
+  onOpenWorkspace?: (projectId: string) => void
 }
-
-function formatRelativeTime(dateString: string): string {
-  const now = new Date()
-  const date = new Date(dateString)
-  const diffMs = now.getTime() - date.getTime()
-  const diffSeconds = Math.floor(diffMs / 1000)
-  const diffMinutes = Math.floor(diffSeconds / 60)
-  const diffHours = Math.floor(diffMinutes / 60)
-  const diffDays = Math.floor(diffHours / 24)
-
-  if (diffSeconds < 60) return "just now"
-  if (diffMinutes < 60) return `${diffMinutes}m ago`
-  if (diffHours < 24) return `${diffHours}h ago`
-  if (diffDays < 7) return `${diffDays}d ago`
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
-  })
-}
-
-export function ProjectCard({ project, index, onDelete }: ProjectCardProps) {
+	export function ProjectCard({ project, index, onDelete, onOpenWorkspace }: ProjectCardProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -58,7 +39,10 @@ export function ProjectCard({ project, index, onDelete }: ProjectCardProps) {
       whileHover={{ y: -3 }}
       layout
     >
-      <div className="group relative rounded-xl border border-border bg-card hover:bg-card-hover transition-all duration-200 cursor-pointer h-full hover:shadow-sm">
+      <div
+        onClick={() => onOpenWorkspace?.(project.id)}
+        className="group relative rounded-xl border border-border bg-card hover:bg-card-hover transition-all duration-200 cursor-pointer h-full hover:shadow-sm"
+      >
         {/* Subtle top accent line */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 

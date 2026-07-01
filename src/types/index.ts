@@ -1,4 +1,13 @@
-export type ProjectStatus = "draft" | "building" | "deployed" | "error"
+export type ProjectStatus =
+  | "draft"
+  | "harvesting"
+  | "proposal_ready"
+  | "approved"
+  | "generating"
+  | "generated"
+  | "pushing"
+  | "delivered"
+  | "failed"
 
 export interface Project {
   id: string
@@ -8,6 +17,63 @@ export interface Project {
   url?: string
   description?: string
   packId?: string
+}
+
+export type WorkspaceStepId = "discovery" | "harvest" | "proposal" | "generate" | "deliver"
+
+export type WorkspaceStepStatus = "pending" | "in-progress" | "completed" | "error"
+
+export interface WorkspaceStep {
+  id: WorkspaceStepId
+  label: string
+  description: string
+  status: WorkspaceStepStatus
+  icon: string
+}
+
+export const WORKSPACE_STEPS: WorkspaceStep[] = [
+  {
+    id: "discovery",
+    label: "Discovery",
+    description: "Research goals, audience, and competitors",
+    status: "in-progress",
+    icon: "Search",
+  },
+  {
+    id: "harvest",
+    label: "Harvest",
+    description: "Collect content, assets, and references",
+    status: "pending",
+    icon: "Upload",
+  },
+  {
+    id: "proposal",
+    label: "Proposal",
+    description: "Review site architecture and design",
+    status: "pending",
+    icon: "FileText",
+  },
+  {
+    id: "generate",
+    label: "Generate",
+    description: "Build the website with AI",
+    status: "pending",
+    icon: "Zap",
+  },
+  {
+    id: "deliver",
+    label: "Deliver",
+    description: "Deploy and share your site",
+    status: "pending",
+    icon: "Rocket",
+  },
+]
+
+export interface FullProject extends Project {
+  workspaceSteps: WorkspaceStep[]
+  branding?: BrandingData
+  features?: string[]
+  referenceUrls?: string[]
 }
 
 export interface AppPack {

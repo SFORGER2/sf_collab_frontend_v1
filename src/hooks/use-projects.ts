@@ -7,7 +7,7 @@ const MOCK_PROJECTS: Project[] = [
   {
     id: "1",
     name: "My Portfolio",
-    status: "deployed",
+    status: "delivered",
     lastUpdated: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
     url: "https://my-portfolio.example.com",
     description: "Personal portfolio website",
@@ -15,7 +15,7 @@ const MOCK_PROJECTS: Project[] = [
   {
     id: "2",
     name: "Company Blog",
-    status: "building",
+    status: "generating",
     lastUpdated: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
     description: "Company blog with CMS",
   },
@@ -29,7 +29,7 @@ const MOCK_PROJECTS: Project[] = [
   {
     id: "4",
     name: "API Documentation",
-    status: "deployed",
+    status: "delivered",
     lastUpdated: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
     url: "https://docs.example.com",
     description: "API reference site",
@@ -37,25 +37,39 @@ const MOCK_PROJECTS: Project[] = [
   {
     id: "5",
     name: "Marketing Landing Page",
-    status: "error",
+    status: "failed",
     lastUpdated: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
     description: "Product launch landing page",
   },
   {
     id: "6",
     name: "Admin Dashboard",
-    status: "draft",
+    status: "proposal_ready",
     lastUpdated: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
     description: "Internal admin panel",
   },
 ]
+
+const STATUS_MIGRATION: Record<string, Project["status"]> = {
+  building: "generating",
+  deployed: "delivered",
+  error: "failed",
+}
 
 function loadProjects(): Project[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed: Project[] = JSON.parse(raw)
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Migrate old status values from previous versions
+        const migrated = parsed.map((p) => ({
+          ...p,
+          status: STATUS_MIGRATION[p.status] ?? p.status,
+        }))
+        saveProjects(migrated)
+        return migrated
+      }
     }
   } catch {
     // corrupted data — fall through to seed

@@ -7,7 +7,13 @@ import { EmptyState } from "./empty-state";
 import { Button } from "./ui/button";
 import { CreateWebsiteModal } from "./create-website-modal";
 import { DeleteWebsiteDialog } from "./delete-website-dialog";
-import type { Project } from "../types";	export function Dashboard() {
+import type { Project } from "../types";
+
+interface DashboardProps {
+  onOpenWorkspace?: (projectId: string) => void
+}
+
+export function Dashboard({ onOpenWorkspace }: DashboardProps) {
 		const { projects, isLoading, error, refetch, addProject, removeProject } = useProjects();
 		const [searchQuery, setSearchQuery] = useState("");
 		const [showCreateModal, setShowCreateModal] = useState(false);
@@ -267,6 +273,7 @@ import type { Project } from "../types";	export function Dashboard() {
 										project={project}
 										index={index}
 										onDelete={handleDeleteProject}
+										onOpenWorkspace={onOpenWorkspace}
 									/>
 								))}
 

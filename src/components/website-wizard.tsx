@@ -102,6 +102,7 @@ export function WebsiteWizard({
 
   const canProceed = useMemo(() => {
     if (currentStep === "name") return data.name.trim().length >= 2
+    if (currentStep === "app-type") return data.packId !== null
     if (currentStep === "features") return true // features are optional
     if (currentStep === "urls") return true // urls are optional
     return true

@@ -21,25 +21,26 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-[200] overflow-y-auto">
+          {/* Backdrop — fixed to cover the screen, doesn't scroll */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm"
             onClick={onClose}
           />
 
-          {/* Panel */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97, y: 8 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="relative w-full max-w-xl rounded-xl sm:rounded-2xl border border-border bg-card shadow-xl"
-          >
+          {/* Scrollable wrapper — centers panel when content fits, scrolls when it doesn't */}
+          <div className="relative min-h-full flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 8 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="relative w-full max-w-xl rounded-xl sm:rounded-2xl border border-border bg-card shadow-xl my-8"
+            >
             {/* Header */}
             {title && (
               <motion.div
@@ -71,7 +72,8 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
             )}
 
             {/* Content */}              <div className="px-4 py-4 sm:px-6 sm:py-6">{children}</div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       )}
     </AnimatePresence>

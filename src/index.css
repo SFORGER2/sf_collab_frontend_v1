@@ -15,10 +15,6 @@
   --color-destructive-foreground: hsl(0 0% 100%);
   --color-success: hsl(142 76% 36%);
   --color-success-foreground: hsl(0 0% 100%);
-  --color-warning: hsl(38 92% 50%);
-  --color-warning-foreground: hsl(0 0% 0%);
-  --color-building: hsl(221 83% 53%);
-  --color-building-foreground: hsl(0 0% 100%);
   --color-border: hsl(0 0% 90%);
   --color-ring: hsl(0 0% 0%);
   --color-card: hsl(0 0% 100%);
@@ -62,8 +58,7 @@
     --color-nav-border: hsl(0 0% 20%);
     --color-destructive: hsl(0 72% 51%);
     --color-success: hsl(142 76% 36%);
-    --color-warning: hsl(38 92% 50%);
-    --color-building: hsl(221 83% 53%);
+
   }
 }
 
@@ -78,6 +73,7 @@ body {
   color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
 
 ::selection {
