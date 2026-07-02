@@ -32,13 +32,7 @@ import {
 } from "lucide-react";
 
 import { Lightbulb } from "lucide-react";
-import {
-  aiTools,
-  dashboardLink,
-  ideation,
-  socialSection,
-  toolsSection,
-} from "../sidebarCommons";
+import { aiTools, dashboardLink, ideation, socialSection, toolsSection, erpSection, filterERPModules, sfDriveSection, sfMeetSection } from "../sidebarCommons";
 import { GiChecklist } from "react-icons/gi";
 
 /**
@@ -47,11 +41,8 @@ import { GiChecklist } from "react-icons/gi";
  * @returns {Array} Array of link objects for sidebar navigation
  */
 // eslint-disable-next-line no-unused-vars
-export function createFounderLinks(
-  unreadMessagesCount = 0,
-  userRoles = [],
-  setActiveRole = () => {},
-) {
+export function createFounderLinks(unreadMessagesCount, userRoles = [], setActiveRole = () => {}, activeRole = 'founder') {
+  const erp = { ...erpSection(11), subItems: filterERPModules(erpSection(11).subItems, activeRole, userRoles) };
   return [
     dashboardLink(userRoles, setActiveRole),
     {
@@ -148,42 +139,8 @@ export function createFounderLinks(
       ],
     },
     // ERP — founder gets full admin access
-    {
-      id: 11,
-      icon: <Building2 size={22} />,
-      href: "/erp",
-      label: "ERP",
-      subItems: [
-        { id: "erp-dashboard",          href: "/erp-dashboard",            label: "Dashboard",            icon: <Building2 size={18} /> },
-        { id: "erp-attendance",         href: "/erp/attendance",           label: "Attendance",           icon: <CalendarClock size={18} /> },
-        { id: "erp-tasks",              href: "/erp/tasks",                label: "Tasks",                icon: <ClipboardList size={18} /> },
-        { id: "erp-updates",            href: "/erp/updates",              label: "Updates",              icon: <FileStack size={18} /> },
-        { id: "erp-documents",          href: "/erp/documents",            label: "Documents",            icon: <FileTerminal size={18} /> },
-        { id: "erp-alerts",             href: "/erp/alerts",               label: "Alerts",               icon: <Bell size={18} /> },
-        { id: "erp-analytics",          href: "/erp/analytics",            label: "Analytics",            icon: <BarChart3 size={18} /> },
-        { id: "erp-admin-analytics",    href: "/erp/admin-analytics",      label: "Admin Analytics",      icon: <ShieldCheck size={18} /> },
-        { id: "erp-payouts",            href: "/erp/payouts",              label: "Payouts",              icon: <DollarSign size={18} /> },
-        { id: "erp-my-analytics",       href: "/erp/my-analytics",         label: "My Analytics",         icon: <BarChart2 size={18} /> },
-        { id: "erp-attendance-ws",      href: "/erp/attendance/workspace", label: "Workspace Attendance", icon: <Users size={18} /> },
-        { id: "erp-activity",           href: "/erp/activity",             label: "Activity Monitor",     icon: <Activity size={18} /> },
-        { id: "erp-settings",           href: "/erp/settings",             label: "Settings",             icon: <Settings size={18} /> },
-      ],
-    },
-    {
-      id: 13,
-      icon: <Video size={22} />,
-      href: "/meet",
-      label: "SF Meet",
-      subItems: [
-        { id: "meet-all",    href: "/meet",    label: "All Meetings", icon: <Video size={18} /> },
-      ],
-    },
-    {
-      id: 12,
-      icon: <FolderOpen size={22} />,
-      href: "/sf-drive",
-      label: "SF Drive",
-      subItems: [],
-    },
+    erp,
+    sfDriveSection(11),
+    sfMeetSection(12),
   ];
 }

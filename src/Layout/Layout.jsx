@@ -205,17 +205,18 @@ const toggleAIAssistant = useCallback(() => setIsAIAssistantOpen(prev => !prev),
     checkProfileCompletion();
   }, [user, location]);
 
+// Inside Layout.jsx, in the useMemo:
 const links = useMemo(() => {
   const unread = 0;
   switch (activeRole) {
     case 'founder':
-      return createFounderLinks(unread, userRoles, setActiveRole);
+      return createFounderLinks(unread, userRoles, setActiveRole, activeRole);
     case 'builder':
-      return createBuilderLinks(unread, userRoles, setActiveRole);
+      return createBuilderLinks(unread, userRoles, setActiveRole, activeRole);
     case 'influencer':
-      return createInfluencerLinks(unread, userRoles, setActiveRole);
+      return createInfluencerLinks(unread, userRoles, setActiveRole, activeRole);
     case 'investor':
-      return createInvestorLinks(unread, userRoles, setActiveRole);
+      return createInvestorLinks(unread, userRoles, setActiveRole, activeRole);
     default:
       return createLinks(unread, userRoles, setActiveRole);
   }

@@ -62,7 +62,15 @@ export default function SidebarContent({
                   className={`flex flex-col gap-1 mt-1 ${isMobile ? "pl-6" : "pl-0"}`}
                 >
                   {link.subItems.map((subItem) => {
-                    const isSubActive = location.pathname === subItem.href;
+  const isSubActive = location.pathname === subItem.href;
+  const handleSubItemClick = (e) => {
+    if (subItem.onLinkClick) {
+      subItem.onLinkClick();
+    }
+    if (onLinkClick) {
+      onLinkClick();
+    }
+  };
 
                     return (
                       <Link

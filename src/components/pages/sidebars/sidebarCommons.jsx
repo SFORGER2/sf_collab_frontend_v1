@@ -5,7 +5,7 @@ import {
   MessageSquare, MessageSquareHeart, Rss, StickyNote, TrendingUp,
   UserPlus, Users, VideoIcon, Wallet, Wand2, CalendarClock, FileStack,
   Bell, DollarSign, BarChart2, Award, Flag, AlertTriangle,
-  CheckCircle, LayoutDashboard, Settings, PieChart, Coins, CreditCard   // ✅ Added missing import
+  CheckCircle, LayoutDashboard, Settings, PieChart, Coins, CreditCard, FolderOpen, Video, Clock, Trash2, Star   // ✅ Added missing import
 } from "lucide-react";
 import { BsGear, BsPeople } from "react-icons/bs";
 import { IoChatbubbles } from "react-icons/io5";
@@ -139,4 +139,81 @@ export function ideation(id) {
         { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
       ]
     }
+}
+
+// src/components/pages/sidebars/sidebarCommons.jsx
+// Add this function after the existing exports
+
+export function filterERPModules(modules, role, userRoles = []) {
+  // Define allowed labels per role
+  const allowedByRole = {
+    founder: [
+      'Member Dashboard', 'My Attendance', 'Task Board', 'Task Approval',
+      'Daily Updates', 'Points Dashboard', 'Analytics', 'My Analytics',
+      'Payouts', 'Documents', 'Alerts', 'Warnings', 'Flags (Admin)',
+      'Audit Logs', 'Workspace Dashboard', 'Admin Settings', 'Revenue Pools',
+      'Admin Payouts'
+    ],
+    builder: [
+      'Member Dashboard', 'My Attendance', 'Task Board', 'Daily Updates',
+      'Points Dashboard', 'My Analytics', 'Payouts', 'Documents', 'Alerts',
+      'Warnings'
+    ],
+    influencer: [
+      'Member Dashboard', 'Task Board', 'Daily Updates',
+      'Points Dashboard', 'My Analytics', 'Payouts', 'Documents', 'Alerts'
+    ],
+    investor: [
+      'Member Dashboard', 'Workspace Dashboard', 'Analytics',
+      'Documents', 'Revenue Pools', 'Alerts'
+    ],
+  };
+
+  // For 'general' or unknown role, return all
+  if (!role || role === 'general' || !allowedByRole[role]) {
+    return modules;
+  }
+
+  // Check if builder is a team lead (has team_lead or admin role)
+  let isTeamLead = userRoles.some(r => ['team_lead', 'admin'].includes(r.toLowerCase()));
+  let allowed = [...allowedByRole[role]];
+  if (role === 'builder' && isTeamLead) {
+    // Add Task Approval for team leads
+    if (!allowed.includes('Task Approval')) {
+      allowed.push('Task Approval');
+    }
+  }
+
+  return modules.filter(mod => allowed.includes(mod.label));
+}
+
+// src/components/pages/sidebars/sidebarCommons.jsx
+export function sfDriveSection(id) {
+  return {
+    id,
+    icon: <FolderOpen size={22} />,
+    href: "/sf-drive",
+    label: "SF Drive",
+    subItems: [
+      { id: "my-drive", href: "/sf-drive", label: "My Drive", icon: <FolderOpen size={18} /> },
+      { id: "shared-with-me", href: "/sf-drive/shared", label: "Shared with me", icon: <Users size={18} /> },
+      { id: "recent", href: "/sf-drive/recent", label: "Recent", icon: <Clock size={18} /> },
+      { id: "starred", href: "/sf-drive/starred", label: "Starred", icon: <Star size={18} /> },
+      { id: "trash", href: "/sf-drive/trash", label: "Trash", icon: <Trash2 size={18} /> },
+    ],
+  };
+}
+export function sfMeetSection(id) {
+  return {
+    id,
+    icon: <Video size={22} />,
+    href: "/meet",
+    label: "SF Meet",
+    subItems: [
+      { id: "all-meetings", href: "/meet", label: "All Meetings", icon: <Video size={18} /> },
+      { id: "upcoming-meetings", href: "/meet/upcoming", label: "Upcoming", icon: <CalendarClock size={18} /> },
+      { id: "past-meetings", href: "/meet/past", label: "Past Meetings", icon: <Clock size={18} /> },
+      { id: "recordings", href: "/meet/recordings", label: "Recordings", icon: <VideoIcon size={18} /> },
+    ],
+  };
 }

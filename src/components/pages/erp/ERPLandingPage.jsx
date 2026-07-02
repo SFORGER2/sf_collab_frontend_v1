@@ -306,69 +306,47 @@ const ERPLandingPage = () => {
               </div>
             </div>
 
-            {/* Workspace & Stats Card (with dropdown) */}
-<motion.div
-  className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6 max-w-2xl mx-auto relative"
-  initial={{ opacity: 0, scale: 0.9 }}
-  animate={{ opacity: 1, scale: 1 }}
-  transition={{ duration: 0.4 }}
->
-  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-    <div className="flex items-center gap-3">
-      <div className="p-2.5 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg">
-        <Building2 className="w-5 h-5 text-white" />
-      </div>
-      <div>
-        <p className="text-sm text-slate-400 font-medium">Active Workspace</p>
-        <p className="text-xl font-bold text-white">{currentWorkspace?.name || 'None'}</p>
-      </div>
-    </div>
-
-    {/* Workspace Selector (dropdown) - high z-index */}
-    <div className="relative z-[9999]">
-      <button
-        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-black/40 border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
-      >
-        <span className="text-sm font-medium">Switch</span>
-        <ChevronDown size={16} className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-      </button>
-      {isDropdownOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-slate-900 border border-white/10 rounded-xl shadow-2xl z-[99999] overflow-hidden">
-          <div className="p-2">
-            {workspaces.map((ws) => (
+            {/* Workspace Selector (dropdown) - high z-index */}
+            <div className="flex flex-col items-end">
               <button
-                key={ws.id}
-                onClick={() => handleSwitchWorkspace(ws.id)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
-                  ws.id === selectedWorkspaceId
-                    ? 'bg-blue-600/20 text-blue-400'
-                    : 'text-gray-300 hover:bg-white/5'
-                }`}
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 px-4 py-2 bg-black/40 border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
               >
-                <span className="text-sm">{ws.name}</span>
-                {ws.id === selectedWorkspaceId && <Check size={14} />}
+                <span className="text-sm font-medium">Switch</span>
+                <ChevronDown size={16} className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
-            ))}
-          </div>
-          <div className="border-t border-white/10 p-2">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-400 hover:bg-white/5 rounded-lg transition-colors"
-            >
-              <Plus size={16} />
-              Create New Workspace
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  </div>
-</motion.div>
+              {isDropdownOpen && (
+                <div className="mt-2 w-64 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden">
+                  <div className="p-2">
+                    {workspaces.map((ws) => (
+                      <button
+                        key={ws.id}
+                        onClick={() => handleSwitchWorkspace(ws.id)}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
+                          ws.id === selectedWorkspaceId
+                            ? 'bg-blue-600/20 text-blue-400'
+                            : 'text-gray-300 hover:bg-white/5'
+                        }`}
+                      >
+                        <span className="text-sm">{ws.name}</span>
+                        {ws.id === selectedWorkspaceId && <Check size={14} />}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="border-t border-white/10 p-2">
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-400 hover:bg-white/5 rounded-lg transition-colors"
+                    >
+                      <Plus size={16} />
+                      Create New Workspace
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </motion.div>
-
-        {/* 🚀 REMOVED Feature Highlights Section – no longer present */}
 
         {/* Modules Grid */}
         <motion.div
