@@ -1,88 +1,12 @@
-// import React from "react";
-// import { Navigate, useLocation } from "react-router-dom";
-// import { useSelector } from "react-redux";
-// import LoadingSpinner from "./LoadingSpinner";
-
-// export const ProtectedRoute = ({ children }) => {
-//   const location = useLocation();
-//   const { access_token, loading } = useSelector((state) => state.auth);
-
-//   if (loading) return <LoadingSpinner />;
-
-//   if (!access_token) {
-//     return <Navigate to="/login" state={{ from: location }} replace />;
-//   }
-
-//   return children;
-// };
-
-// export const AuthRoute = ({ children }) => {
-//   const { access_token, loading } = useSelector((state) => state.auth);
-
-//   if (loading) return <LoadingSpinner />;
-
-//   if (access_token) {
-//     return <Navigate to="/dashboard" replace />;
-//   }
-
-//   return children;
-// };
-
-
-// ProtectedRoute.jsx (updated)
+// src/components/ProtectedRoute.jsx
 import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import LoadingSpinner from "./LoadingSpinner";
 import AccessRequestModal from "./auth/admin/AccessRequestModal";
 import { hasPermission } from "../utils/permissionCheck";
 
-export const ProtectedRoute = ({ children, requiredPermission }) => {
-  const location = useLocation();
-  const { access_token, loading, user } = useSelector((state) => state.auth);
-  const [showAccessModal, setShowAccessModal] = useState(false);
-  // console.log(user)
-  if (loading) return <LoadingSpinner />;
-  console.log(access_token, location, loading);
-
-  // If no permission required, just render children
-  if (!requiredPermission) {
-    return children;
-  }
-
-  // Check if user has the required permission
-  
-  const hasPerm = hasPermission(user,requiredPermission);
-
-  if (!hasPerm) {
-    return (
-      <>
-        <AccessRequestModal
-          isOpen={showAccessModal}
-          onClose={() => setShowAccessModal(false)}
-          permissionKey={requiredPermission}
-        />
-        <PermissionDeniedPage onRequestAccess={() => setShowAccessModal(true)} />
-      </>
-    );
-  }
-
-  return children;
-};
-
-export const AuthRoute = ({ children }) => {
-  const { access_token, loading } = useSelector((state) => state.auth);
-
-  if (loading) return <LoadingSpinner />;
-
-  if (access_token) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return children;
-};
-
-// Helper component for permission denied page
+// ── Permission Denied Page ────────────────────────────────────────────────
 const PermissionDeniedPage = ({ onRequestAccess }) => {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
@@ -110,6 +34,53 @@ const PermissionDeniedPage = ({ onRequestAccess }) => {
       </div>
     </div>
   );
+};
+
+// ── ProtectedRoute (uses Outlet for nested routes) ──────────────────────
+export const ProtectedRoute = ({ requiredPermission }) => {
+  const location = useLocation();
+  const { access_token, loading, user } = useSelector((state) => state.auth);
+  const [showAccessModal, setShowAccessModal] = useState(false);
+
+  if (loading) return <LoadingSpinner />;
+
+  // Not authenticated → redirect to login
+  if (!access_token || !user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // If permission is required, check it
+  if (requiredPermission) {
+    const hasPerm = hasPermission(user, requiredPermission);
+    if (!hasPerm) {
+      return (
+        <>
+          <AccessRequestModal
+            isOpen={showAccessModal}
+            onClose={() => setShowAccessModal(false)}
+            permissionKey={requiredPermission}
+          />
+          <PermissionDeniedPage onRequestAccess={() => setShowAccessModal(true)} />
+        </>
+      );
+    }
+  }
+
+  // All good → render child routes via Outlet
+  return <Outlet />;
+};
+
+// ── AuthRoute (for public routes like login/signup) ──────────────────────
+export const AuthRoute = ({ children }) => {
+  const { access_token, loading } = useSelector((state) => state.auth);
+
+  if (loading) return <LoadingSpinner />;
+
+  if (access_token) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
 };
 
 export default ProtectedRoute;
