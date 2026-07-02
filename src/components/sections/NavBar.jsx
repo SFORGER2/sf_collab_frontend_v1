@@ -17,6 +17,9 @@ import { notificationAPI } from "@/utils/APIs/notificationAPI";
 import { useUnreadCounts } from "@/utils/hooks/useUnreadCounts";
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import { plotCount } from "@/utils/plotCount";
+import { Grid, Search, Plus, Sparkles } from 'lucide-react';
+import AppLauncher from '@/components/app-launcher/AppLauncher';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 // Simple icon components
 const BellIcon = () => (
@@ -51,7 +54,14 @@ const LogoutIcon = () => (
 );
 
 
-const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
+const NavBar = ({
+  isOpen,
+  setIsOpen,
+  isHidden = false,
+  links,                     // added
+  isAIAssistantOpen,         // added
+  toggleAIAssistant,         // added
+}) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const { notifications: notifUnread, messages: msgUnread } = useUnreadCounts();
@@ -187,17 +197,47 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
       <div className="flex items-center h-full gap-3 z-50">
         {user ? (
           <>
-            <WorkspaceSwitcher />
-            <Link to="/chat" className="chat p-2.5 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/10 text-slate-300 hover:text-white hover:from-blue-500/30 hover:to-cyan-500/20 border border-blue-500/20 transition-all duration-200">
-              <div className="relative inline-flex">
-                <IoChatbubbles size={23} />
-                {msgUnread > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full border border-[#0a0a0a]">
-                    {msgUnread > 99 ? '99+' : msgUnread}
-                  </span>
-                )}
-              </div>
-            </Link>
+            
+
+            {/* Search */}
+<div className="relative hidden md:block">
+  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+  <input
+    type="text"
+    placeholder="Search..."
+    className="w-48 pl-8 pr-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-[#262626] text-sm text-white placeholder-slate-400 focus:outline-none focus:border-blue-500/50"
+  />
+</div>
+
+{/* Quick Create */}
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors text-slate-300 hover:text-white">
+      <Plus size={22} />
+    </button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent className="bg-[#1a1a1a] border border-[#262626] rounded-lg">
+    <DropdownMenuItem onClick={() => navigate('/register-startup')} className="text-white hover:bg-white/10">
+      New Startup
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => navigate('/posts')} className="text-white hover:bg-white/10">
+      New Post
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+
+{/* App Launcher */}
+<AppLauncher links={links} />
+
+{/* AI Assistant */}
+<button
+  onClick={toggleAIAssistant}
+  className={`p-2 rounded-lg transition-colors ${
+    isAIAssistantOpen ? 'bg-blue-600/30 text-blue-400' : 'hover:bg-white/10 text-slate-300 hover:text-white'
+  }`}
+>
+  <Sparkles size={22} />
+</button>
             
             <div id="notification-dropdown" className="relative" ref={notificationRef}>
               {/* 🔔 NOTIFICATIONS */}

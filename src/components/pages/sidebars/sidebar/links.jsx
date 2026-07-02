@@ -11,7 +11,7 @@ import { createBuilderLinks } from "../builderSidebar/BuilderLinks";
 import { createFounderLinks } from "../founderSidebar/FounderLinks";
 import { createInfluencerLinks } from "../influencerSidebar/influencerLinks";
 import { BsPeople } from "react-icons/bs";
-import { aiTools, dashboardLink, erpSection, ideation, socialSection, toolsSection } from "../sidebarCommons";
+import { aiTools, dashboardLink, erpSection, ideation, socialSection, toolsSection, filterERPModules} from "../sidebarCommons";
 
 export const CONTEXT_THEME = {
   1:  { pillBg: "bg-blue-600/20",    pillText: "text-blue-200",    activeBg: "bg-white", activeText: "text-gray-950" },
@@ -23,6 +23,7 @@ export const CONTEXT_THEME = {
 };
 
 export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
+  const erp = { ...erpSection(5), subItems: filterERPModules(erpSection(5).subItems, 'general', userRoles) };
   return [
     dashboardLink(userRoles, setActiveRole),
     {
@@ -38,7 +39,7 @@ export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) 
       ],
     },
     ideation(4),
-    erpSection(5),
+    erp,
     socialSection(6),
     {
       id: 7,
