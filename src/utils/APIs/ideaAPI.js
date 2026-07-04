@@ -56,12 +56,20 @@ export const ideaAPI = {
   },
   likeIdea: async (ideaId, accessToken) => {
     const response = await api.post(`/ideas/${ideaId}/like`, {}, {
-      headers: {
-      Authorization: `Bearer ${accessToken}`,
-      },
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     });
-    return response.data;
-    },
+    // Normalise: backend returns { liked, likes } at top level
+    // Wrap in { idea: { hasLiked, likes } } for consistent consumer interface
+    const data = response.data?.data || response.data || {};
+    return {
+      data: {
+        idea: {
+          hasLiked: data.liked ?? data.hasLiked,
+          likes:    data.likes ?? 0,
+        }
+      }
+    };
+  },
 
     addTeamMember: async (ideaId, memberData) => {
     const response = await api.post(`/ideas/${ideaId}/team-members`, memberData);

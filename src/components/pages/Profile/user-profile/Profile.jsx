@@ -20,6 +20,7 @@ import { FaMoneyBill } from 'react-icons/fa6';
 import { formatCurrency } from '@/lib/utils';
 import { API_URL } from '@/utils/config';
 import { RiBillFill } from 'react-icons/ri';
+import UserRatingCard from "@/components/ui/UserRatingCard";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -215,6 +216,18 @@ const Profile = () => {
                   <span className="text-yellow-400">{profileData?.ideas?.length || 0}</span>
                 </div>
               </div>
+            </motion.div>
+
+            {/* Ratings Card */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <UserRatingCard
+                subjectId={viewedUserId || authUser?.id}
+                subjectName={profileData?.fullName || profileData?.firstName || "User"}
+              />
             </motion.div>
 
 

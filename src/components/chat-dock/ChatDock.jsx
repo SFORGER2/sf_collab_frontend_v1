@@ -1036,6 +1036,28 @@ useEffect(() => {
     socket.on("message_read", handleStatusUpdate);
     socket.on("message_delivered", handleStatusUpdate);
 
+    // Handle bulk read confirmation from backend (emitted on mark_read socket event)
+    const handleMessagesRead = (data) => {
+      const cid = String(data?.conversation_id || "");
+      const readAt = data?.timestamp || new Date().toISOString();
+      if (!cid) return;
+      // Mark all messages in this conversation as read
+      setWindows((prev) =>
+        prev.map((w) => {
+          if (String(w.conversationId) !== cid) return w;
+          return {
+            ...w,
+            messages: (w.messages || []).map((m) => {
+              const isOwn = String(m.sender_id) === String(currentUser?.id);
+              if (!isOwn) return m; // only update our own messages
+              return { ...m, status: "read", delivery_status: "read", read_at: readAt };
+            }),
+          };
+        })
+      );
+    };
+    socket.on("messages_read", handleMessagesRead);
+
     // FIX #3b: Listen for backend confirmation that unread count was reset
     const onUnreadCountUpdate = (data) => {
       const cid = String(data?.conversation_id);
@@ -1058,6 +1080,7 @@ useEffect(() => {
       socket.off("message_status_update", handleStatusUpdate);
       socket.off("message_read", handleStatusUpdate);
       socket.off("message_delivered", handleStatusUpdate);
+      socket.off("messages_read", handleMessagesRead);
       socket.off("unread_count_update", onUnreadCountUpdate);
     };
   }, [
@@ -1238,16 +1261,18 @@ useEffect(() => {
         </motion.button>
       )}
 
-      <div className={`fixed ${isMobile ? "inset-0" : "bottom-4 right-4"} z-[9999] flex items-end pointer-events-none`}>
+      <div className={`fixed ${isMobile ? "inset-0" : "bottom-4 right-20"} z-[9999] flex items-end pointer-events-none`}>
         {/* Panel */}
-        <div className="flex flex-col items-end gap-3 pointer-events-auto w-full">
+        <div className="flex flex-row items-end gap-4 pointer-events-auto">
+          <div style={{order: 2}}>
           <AnimatePresence>
             {isPanelOpen && (
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                className={`${isMobile ? "fixed inset-0 rounded-none" : "w-80 rounded-2xl"} bg-zinc-900 border border-zinc-800 shadow-2xl overflow-hidden flex flex-col`}
+                className={`${isMobile ? "fixed inset-0 rounded-none" : "w-[min(320px,calc(100vw-16px))] rounded-2xl"} bg-zinc-900 border border-zinc-800 shadow-2xl flex flex-col`}
+                style={isMobile ? {} : {maxHeight: "min(85vh, 640px)"}}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800 flex-shrink-0">
@@ -1310,7 +1335,7 @@ useEffect(() => {
                 </div>
 
                 {/* Conversations List */}
-                <div className="overflow-y-auto p-2 flex-1" style={{scrollbarWidth:"none",msOverflowStyle:"none"}}>
+                <div className="overflow-y-auto p-2" style={{maxHeight:"min(60vh,420px)",scrollbarWidth:"thin",scrollbarColor:"#3f3f46 transparent"}}>
                   {isLoadingConvos ? (
                     <div className="p-4 text-zinc-500 text-sm">Loading…</div>
                   ) : filteredConversations.length === 0 ? (
@@ -1490,10 +1515,10 @@ useEffect(() => {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+          </div>
 
         {/* Chat Windows */}
-        <div className="flex flex-row-reverse items-end gap-3 pointer-events-none w-full h-full">
+        <div className="flex flex-row-reverse items-end gap-2 pointer-events-none" style={{order: 1}}>
           <AnimatePresence>
             {windows.map((w) => {
               const cid = String(w.conversationId);
@@ -1520,7 +1545,7 @@ useEffect(() => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 50, scale: 0.9 }}
                   transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                  className={`${isMobile ? "fixed inset-0 rounded-none" : "w-[380px] border border-zinc-800 rounded-2xl"} flex flex-col bg-zinc-900 shadow-2xl overflow-hidden pointer-events-auto`}
+                  className={`${isMobile ? "fixed inset-0 rounded-none" : "w-[min(340px,calc(100vw-24px))] border border-zinc-800 rounded-2xl"} flex flex-col bg-zinc-900 shadow-2xl pointer-events-auto`}
                 >
                   {/* Header */}
                   <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-zinc-950 to-zinc-900 border-b border-zinc-800 flex-shrink-0">
@@ -1688,6 +1713,7 @@ useEffect(() => {
               );
             })}
           </AnimatePresence>
+        </div>
         </div>
       </div>
       {conversationToDelete && (

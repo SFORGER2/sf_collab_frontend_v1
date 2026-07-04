@@ -1165,7 +1165,7 @@ useEffect(() => {
       {/* ============================================ */}
       {/* LEFT SIDEBAR: Conversations List */}
       {/* ============================================ */}
-      <div className={`fixed md:static top-16 left-0 z-40 w-full sm:w-80 md:w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col h-[calc(100vh-80px)] md:h-auto transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      <div className={`fixed md:static top-16 left-0 z-40 w-[85vw] sm:w-80 md:w-72 lg:w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col h-[calc(100vh-64px)] md:h-full transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}>
         {/* Header */}
         <div className="p-3 md:p-4">
@@ -1342,7 +1342,7 @@ useEffect(() => {
 
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto max-h-[calc(100vh-200px)] py-2 md:py-4 px-2 md:px-4">
+            <div className="flex-1 overflow-y-auto max-h-[calc(100dvh-180px)] py-2 md:py-4 px-2 md:px-4 overscroll-contain">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-zinc-500">
                   <Avatar

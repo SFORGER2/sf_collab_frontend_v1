@@ -114,6 +114,7 @@ export function createFounderLinks(unreadMessagesCount, userRoles = [], setActiv
     aiTools(6),
     toolsSection(7),
     // Mentorship
+    { id: "section-grow", sectionLabel: "Grow", isSection: true },
     {
       id: 8,
       icon: <GraduationCap size={22} />,
@@ -125,7 +126,8 @@ export function createFounderLinks(unreadMessagesCount, userRoles = [], setActiv
         { id: "my-mentorship-requests", href: "/my-mentorship-requests", label: "My Requests",      icon: <Star size={18} /> },
       ],
     },
-    // Wallet & Store — marketplace lives here
+    { id: "section-earn", sectionLabel: "Earn", isSection: true },
+    // Wallet & Store
     {
       id: 10,
       icon: <Wallet size={22} />,
@@ -138,6 +140,8 @@ export function createFounderLinks(unreadMessagesCount, userRoles = [], setActiv
         { id: "marketplace", href: "/marketplace", label: "Marketplace", icon: <ShoppingCart size={18} /> },
       ],
     },
+    // ── SECTION BREAK: Workspace ──────────────────────────────────────────────
+    { id: "section-workspace", sectionLabel: "Workspace", isSection: true },
     // ERP — founder gets full admin access
     erp,
     sfDriveSection(11),

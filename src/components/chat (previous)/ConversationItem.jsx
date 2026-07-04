@@ -156,10 +156,10 @@ const ConversationItem = ({
             showStatus={isDirect}
           />
           
-          <div className="flex-1 min-w-0 text-left">
+          <div className="flex-1 min-w-0 text-left overflow-hidden">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{conversationName}</p>
+              <div className="flex items-center justify-between gap-1.5 min-w-0 w-full">
+                <p className="text-sm font-semibold text-white truncate flex-1 min-w-0">{conversationName}</p>
                 {conversation.is_pinned && (
                   <Pin size={10} className="text-indigo-400 shrink-0 rotate-45" title="Pinned" />
                 )}

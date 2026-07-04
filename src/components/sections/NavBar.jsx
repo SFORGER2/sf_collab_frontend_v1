@@ -182,19 +182,19 @@ const NavBar = ({
   const calculatedUnreadCount = notifUnread > 0 ? notifUnread : notifications.filter(n => n.unread).length;
 
   return (
-    <nav className={`fixed top-0 z-100 left-0 flex px-6 items-center w-full h-16 justify-between transition-transform duration-300 will-change-transform ${isHidden ? "-translate-y-full" : "translate-y-0"}`}>
+    <nav className={`fixed top-0 z-100 left-0 flex px-3 sm:px-6 items-center w-full h-16 justify-between transition-transform duration-300 will-change-transform overflow-hidden ${isHidden ? "-translate-y-full" : "translate-y-0"}`}>
       <div
         className="absolute inset-0 z-0"
         style={{ background: "radial-gradient(125% 125% at 50% 90%, #000000 40%, #0d1a36 100%)" }}
       />
 
-      <div className="logo h-full z-50 scale-140">
+      <div className="logo h-8 sm:h-full z-50 sm:scale-140 w-20 sm:w-auto">
         <Link to={user?.id ? `/dashboard` : '/'} className="group h-full cursor-pointer flex items-center">
           <img loading="lazy" data-aos="fade-right" data-aos-duration="600" src="/logo_white.svg" className="w-full h-full" alt="sf collab" />
         </Link>
       </div>
 
-      <div className="flex items-center h-full gap-3 z-50">
+      <div className="flex items-center h-full gap-1.5 sm:gap-3 z-50">
         {user ? (
           <>
             

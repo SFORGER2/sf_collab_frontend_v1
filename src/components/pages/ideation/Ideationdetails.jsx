@@ -79,7 +79,7 @@ const VisionDetails = () => {
     if (!ideaId || !access_token) return;
     setCollabRequestsLoading(true);
     try {
-      const res = await axios.get(`${API_URL}/ideas/${ideaId}/collab-requests`, {
+      const res = await axios.get(`/api/ideas/${ideaId}/collab-requests`, {
         headers: { Authorization: `Bearer ${access_token}` },
       });
       setCollabRequests(res.data.data?.collab_requests || []);
@@ -94,7 +94,7 @@ const VisionDetails = () => {
   const fetchMyCollabStatus = useCallback(async () => {
     if (!ideaId || !access_token) return;
     try {
-      const res = await axios.get(`${API_URL}/ideas/${ideaId}/collab-requests/my-status`, {
+      const res = await axios.get(`/api/ideas/${ideaId}/collab-requests/my-status`, {
         headers: { Authorization: `Bearer ${access_token}` },
       });
       const cr = res.data.data?.collab_request;
@@ -113,11 +113,11 @@ const VisionDetails = () => {
   const handleCollabAction = async (requestId, action) => {
     try {
       await axios.post(
-        `${API_URL}/ideas/collab-requests/${requestId}/${action}`,
+        `/api/ideas/collab-requests/${requestId}/${action}`,
         {},
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
-      toast.success(action === "approve" ? "Request approved! They've been added to your team." : "Request rejected.");
+      toast.success(action === "accept" ? "Request accepted! They've been added to your team." : "Request rejected.");
       fetchCollabRequests();
       const res = await ideaAPI.getIdeaById(ideaId, access_token);
       const ideaData = res.data.data?.idea || res.data.idea;
@@ -251,7 +251,7 @@ const VisionDetails = () => {
   const handleJoinSubmit = async () => {
     try {
       const res = await axios.post(
-        `${API_URL}/ideas/${ideaId}/collab-requests`,
+        `/api/ideas/${ideaId}/collab-requests`,
         { message: joinMessage, role: "co-developer" },
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
@@ -273,7 +273,7 @@ const VisionDetails = () => {
     if (!myCollabRequestId) return;
     try {
       await axios.post(
-        `${API_URL}/ideas/collab-requests/${myCollabRequestId}/cancel`,
+        `/api/ideas/collab-requests/${myCollabRequestId}/cancel`,
         {},
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
@@ -288,7 +288,7 @@ const VisionDetails = () => {
   const handleLeaveIdea = async () => {
     try {
       await axios.post(
-        `${API_URL}/ideas/${ideaId}/leave`,
+        `/api/ideas/${ideaId}/leave`,
         {},
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
@@ -1234,7 +1234,7 @@ const VisionDetails = () => {
                             {req.status === 'pending' ? (
                               <div className="flex gap-2 mt-3">
                                 <button
-                                  onClick={() => handleCollabAction(req.id, 'approve')}
+                                  onClick={() => handleCollabAction(req.id, 'accept')}
                                   className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition-all"
                                 >
                                   <Check className="h-3.5 w-3.5" /> Accept

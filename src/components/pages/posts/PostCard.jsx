@@ -10,6 +10,7 @@ import { userSocialAPI } from "@/utils/APIs/socialAPI";
 import { useSelector } from "react-redux";
 import PostActions from "./PostActions";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import { toAbsoluteFileUrl } from "@/utils/toAbsoluteFileUrl";
 
 
 const cardVariants = {
@@ -46,16 +47,17 @@ export default function PostCard({ post, onPostDeleted }) {
     if (Array.isArray(post.mediaItems) && post.mediaItems.length > 0) {
       return post.mediaItems.map((m) => {
         // PostMedia.to_dict() returns camelCase mediaUrl
-        return typeof m === "string" ? m : (m.mediaUrl || m.media_url || m.url || null);
+        const raw = typeof m === "string" ? m : (m.mediaUrl || m.media_url || m.url || null);
+        return raw ? toAbsoluteFileUrl(raw) : null;
       }).filter(Boolean);
     }
     if (Array.isArray(post.media) && post.media.length > 0) {
       return post.media.map((m) =>
-        typeof m === "string" ? m : (m.url || m.media_url || null)
+        (() => { const raw = typeof m === "string" ? m : (m.url || m.media_url || null); return raw ? toAbsoluteFileUrl(raw) : null; })()
       ).filter(Boolean);
     }
     if (post.mediaUrl) {
-      const urls = Array.isArray(post.mediaUrl) ? post.mediaUrl : [post.mediaUrl];
+      const urls = (Array.isArray(post.mediaUrl) ? post.mediaUrl : [post.mediaUrl]).map(u => u ? toAbsoluteFileUrl(u) : u);
       return urls.filter(Boolean);
     }
     return [];

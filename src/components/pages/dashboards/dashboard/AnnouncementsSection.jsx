@@ -160,6 +160,15 @@ export default function AnnouncementsSection({ userRoles }) {
     const stored = localStorage.getItem('preferences:announcementsExpanded');
     return stored === null ? true : stored === 'true';
   });
+  // Track whether the user explicitly minimized — if so, don't auto-pop
+  // until a genuinely NEW announcement arrives
+  const [userMinimized, setUserMinimized] = useState(() =>
+    localStorage.getItem('announcements:userMinimized') === 'true'
+  );
+  // Track the newest announcement id seen so we can detect truly new ones
+  const [lastSeenId, setLastSeenId] = useState(() =>
+    localStorage.getItem('announcements:lastSeenId') || null
+  );
 
   const [activeTab, setActiveTab] = useState('crowdfunding');
   useEffect(() => {
@@ -181,10 +190,22 @@ export default function AnnouncementsSection({ userRoles }) {
   }, [hasUnreadAnnouncements, hasUnreadNewsletter]);
 
   useEffect(() => {
-    if (hasUnreadAnnouncements || hasUnreadNewsletter) {
+    if (!announcements.length) return;
+    const newestId = String(announcements[0]?.id || '');
+    const isNewAnnouncement = newestId && newestId !== lastSeenId;
+
+    if (isNewAnnouncement) {
+      // A brand new broadcast — always pop open, reset user-minimized flag
+      setIsExpanded(true);
+      setUserMinimized(false);
+      localStorage.setItem('announcements:userMinimized', 'false');
+      setLastSeenId(newestId);
+      localStorage.setItem('announcements:lastSeenId', newestId);
+    } else if ((hasUnreadAnnouncements || hasUnreadNewsletter) && !userMinimized) {
+      // Unread content exists and user hasn't explicitly closed it
       setIsExpanded(true);
     }
-  }, [hasUnreadAnnouncements, hasUnreadNewsletter]);
+  }, [announcements, hasUnreadAnnouncements, hasUnreadNewsletter]);
 
   useEffect(() => {
     localStorage.setItem('announcements:activeTab', activeTab);
@@ -193,6 +214,16 @@ export default function AnnouncementsSection({ userRoles }) {
   useEffect(() => {
     localStorage.setItem('preferences:announcementsExpanded', isExpanded);
   }, [isExpanded]);
+
+  const handleToggleExpanded = () => {
+    const next = !isExpanded;
+    setIsExpanded(next);
+    if (!next) {
+      // User explicitly closed — remember this
+      setUserMinimized(true);
+      localStorage.setItem('announcements:userMinimized', 'true');
+    }
+  };
 
   // Counter to force re-render when localStorage read markers change
   const [readVersion, setReadVersion] = useState(0);
@@ -430,7 +461,7 @@ export default function AnnouncementsSection({ userRoles }) {
           )}
         </motion.div>
         <motion.button
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={handleToggleExpanded}
           className="p-2 hover:bg-white/10 rounded-lg transition-colors"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}

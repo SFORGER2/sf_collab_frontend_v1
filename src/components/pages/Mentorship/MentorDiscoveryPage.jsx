@@ -36,7 +36,7 @@ const AREAS_OF_HELP = [
   'GTM strategy', 'Technical architecture', 'Product prioritization',
   'Hiring', 'Fundraising preparation', 'Vision refinement',
   'Readiness improvement', 'Milestone planning', 'Design review',
-  'Marketing strategy', 'Sales process', 'Legal structure',
+  'Marketing strategy', 'Sales process', 'Legal structure', 'Other',
 ];
 
 const getAvatarUrl = (path) => {
@@ -228,7 +228,9 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
       const payload = {
         mentor_id: parseInt(mentor.id),
         message: form.message.trim(),
-        areas_of_help: form.areas_of_help,
+        areas_of_help: form.areas_of_help.includes('Other') && customArea.trim()
+          ? [...form.areas_of_help.filter(a => a !== 'Other'), customArea.trim()]
+          : form.areas_of_help,
         mentorship_mode: form.mentorship_mode,
       };
       if (form.idea_id)    payload.idea_id    = parseInt(form.idea_id);
@@ -406,6 +408,19 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
                 </button>
               ))}
             </div>
+
+            {/* Custom "Other" input — shown when Other is selected */}
+            {form.areas_of_help.includes('Other') && (
+              <input
+                type="text"
+                value={customArea}
+                onChange={e => setCustomArea(e.target.value)}
+                placeholder="Describe what you need help with..."
+                className="mt-2 w-full bg-white/[0.04] border border-white/[0.08] rounded-xl
+                           px-3.5 py-2.5 text-white text-sm focus:outline-none
+                           focus:border-blue-500/50 placeholder-gray-600"
+              />
+            )}
           </div>
 
           {/* Message */}

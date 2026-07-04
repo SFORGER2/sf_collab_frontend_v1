@@ -1,13 +1,14 @@
 import { API_BASE_URL } from "@/utils/config";
 import { Stat } from "./Stats";
 import { MapPin, MoreHorizontal, Rocket } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function StartupCard({ startup, stats }) {
+  const navigate = useNavigate();
   return (
-    <Link
-      to={`/startup-details/${startup.id}`}
-      className="relative rounded-xl bg-gradient-to-br from-purple-900/20 to-slate-900/20 border border-purple-500/20 p-5 hover:border-purple-500/50 transition overflow-hidden group"
+    <div
+      onClick={() => navigate(`/startup-details/${startup.id}`)}
+      className="relative rounded-xl bg-gradient-to-br from-purple-900/20 to-slate-900/20 border border-purple-500/20 p-5 hover:border-purple-500/50 transition overflow-hidden group cursor-pointer"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-purple-500/0 group-hover:from-purple-500/5 group-hover:to-purple-500/10 transition" />
       <div className="relative z-10 space-y-4">
@@ -51,7 +52,6 @@ export default function StartupCard({ startup, stats }) {
           </span>
         </div>
       </div>
-      <Link to={`/startup-details/${startup.id}`} className="absolute inset-0" />
-    </Link>
+    </div>
   );
 }

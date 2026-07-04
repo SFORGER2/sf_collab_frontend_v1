@@ -10,6 +10,7 @@
  */
 
 import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { X, Download, FileText, ExternalLink, Check, CheckCheck, MoreVertical, Edit2, Trash2, Star, Pin, ListTodo, BookmarkCheck } from "lucide-react";
@@ -180,12 +181,27 @@ export default function MessageBubble({
   const [isEditing, setIsEditing] = useState(false);
   const [isLoadingEditing, setIsLoadingEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen,     setMenuOpen]     = useState(false);
+  const [menuAbove,    setMenuAbove]    = useState(true);   // smart: above or below
+  const menuBtnRef = useRef(null);
+
+  const handleMenuToggle = () => {
+    if (!menuOpen && menuBtnRef.current) {
+      const rect = menuBtnRef.current.getBoundingClientRect();
+      setMenuAbove(rect.top > 220);
+    }
+    setMenuOpen(v => !v);
+  };
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const menuRef = useRef(null);
   const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
+  const pickerBtnRef = useRef(null);
+
+  const handlePickerToggle = () => {
+    setReactionPickerOpen(v => !v);
+  };
   const [reactionLoading, setReactionLoading] = useState(false);
   const [showReactionBar, setShowReactionBar] = useState(false);
 
@@ -677,7 +693,7 @@ export default function MessageBubble({
                 <>
                   {/* Message content */}
                   <div className="flex gap-1 items-end">
-                    <div>
+                    <div className="break-words [overflow-wrap:anywhere] min-w-0">
                       {!hideAutoFileText({
                         fileUrl,
                         isImage,
@@ -696,16 +712,28 @@ export default function MessageBubble({
             {conversationId && !isEditing && (
               <div className="relative" ref={menuRef}>
                 <button
+                  ref={menuBtnRef}
                   type="button"
-                  onClick={() => setMenuOpen(!menuOpen)}
+                  onClick={handleMenuToggle}
                   className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 opacity-0 group-hover:opacity-100 transition-opacity"
                   title="More"
                 >
                   <MoreVertical size={16} />
                 </button>
 
-                {menuOpen && (
-                  <div className={`absolute ${isOwn ? 'right-0' : 'left-0'} -top-2 translate-y-[-100%] mt-1 w-44 bg-zinc-800 rounded-lg shadow-lg border border-zinc-700 z-50`}>
+                {menuOpen && createPortal(
+                  <div
+                    className="fixed w-44 bg-zinc-800 rounded-lg shadow-lg border border-zinc-700 z-[9999]"
+                    style={(() => {
+                      if (!menuBtnRef.current) return {};
+                      const r = menuBtnRef.current.getBoundingClientRect();
+                      const above = r.top > window.innerHeight / 2;
+                      return {
+                        ...(above ? { bottom: window.innerHeight - r.top + 4 } : { top: r.bottom + 4 }),
+                        ...(isOwn ? { right: window.innerWidth - r.right } : { left: r.left }),
+                      };
+                    })()}
+                  >
                     {/* Star */}
                     <button
                       type="button"
@@ -763,7 +791,7 @@ export default function MessageBubble({
                       </>
                     )}
                   </div>
-                )}
+                , document.body)}
               </div>
             )}
           </div>
@@ -800,20 +828,33 @@ export default function MessageBubble({
                 <div className="relative">
                   <button
                     type="button"
-                    onClick={() => setReactionPickerOpen(v => !v)}
+                    ref={pickerBtnRef}
+                    onClick={handlePickerToggle}
                     className="flex items-center justify-center w-6 h-6 rounded-full bg-zinc-800 border border-zinc-700 hover:border-zinc-500 text-zinc-400 hover:text-white transition-all text-sm"
                     title="Add reaction"
                   >
                     +
                   </button>
-                  {reactionPickerOpen && (
+                  {reactionPickerOpen && createPortal(
                     <>
-                      <div className="fixed inset-0 z-40" onClick={() => { setReactionPickerOpen(false); setShowReactionBar(false); }} />
                       <div
-                        className="absolute bottom-full mb-2 left-0 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl z-50 p-2 w-56"
+                        className="fixed inset-0 z-[9998]"
+                        onClick={() => { setReactionPickerOpen(false); setShowReactionBar(false); }}
+                      />
+                      <div
+                        className="fixed z-[9999] bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-3 w-64"
+                        style={(() => {
+                          if (!pickerBtnRef.current) return { bottom: 80, right: 16 };
+                          const r = pickerBtnRef.current.getBoundingClientRect();
+                          const above = r.top > window.innerHeight / 2;
+                          return {
+                            ...(above ? { bottom: window.innerHeight - r.top + 8 } : { top: r.bottom + 8 }),
+                            ...(r.left > window.innerWidth / 2 ? { right: window.innerWidth - r.right } : { left: r.left }),
+                          };
+                        })()}
                         onClick={e => e.stopPropagation()}
                       >
-                        <div className="grid grid-cols-5 gap-1">
+                        <div className="grid grid-cols-6 gap-1">
                           {FULL_REACTIONS.map(emoji => {
                             const isSelected = reactionCounts[emoji]?.hasReacted;
                             return (
@@ -834,7 +875,8 @@ export default function MessageBubble({
                           })}
                         </div>
                       </div>
-                    </>
+                    </>,
+                    document.body
                   )}
                 </div>
               )}
