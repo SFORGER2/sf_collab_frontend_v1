@@ -10,7 +10,7 @@ import {
   FolderOpen,
   HardDrive,
 } from "lucide-react";
-import { aiTools, toolsSection, dashboardLink, socialSection, wallet, ideation } from "../sidebarCommons";
+import { aiTools, toolsSection, dashboardLink, socialSection, wallet, ideation, sfDriveSection, sfMeetSection } from "../sidebarCommons";
 import { FcInvite } from "react-icons/fc";
 
 export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setActiveRole = () => {}, activeRole = 'influencer') {

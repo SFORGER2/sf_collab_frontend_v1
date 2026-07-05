@@ -34,7 +34,9 @@ import {
   socialSection,
   toolsSection,
   erpSection,
-  filterERPModules
+  filterERPModules,
+  sfDriveSection,
+  sfMeetSection
 } from "../sidebarCommons";
 import { FcInvite } from "react-icons/fc";
 
@@ -125,7 +127,7 @@ export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiv
     },
     // ERP
     erp,
-    sfDriveSection(11),
-    sfMeetSection(12),
+    sfDriveSection(12),
+    sfMeetSection(13),
   ];
 }

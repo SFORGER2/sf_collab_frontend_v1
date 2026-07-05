@@ -12,6 +12,7 @@ import AccountandSecurity from "./components/pages/AccountandSecurity.jsx";
 import Login from "./components/auth/Login.jsx";
 import SignUp from "./components/auth/SignUp.jsx";
 import RegisterStartUp from "./components/pages/register-startup/RegisterStartUp.jsx";
+import RegisterExistingStartup from "./components/pages/register-startup/RegisterExistingStartup.jsx";
 import Ideationdetails from "./components/pages/ideation/Ideationdetails.jsx";
 import Knowledgedetails from "./components/detailspage (previous)/Knowledgedetails.jsx";
 import ProjectDetails from "./components/detailspage (previous)/ProjectDetails.jsx";
@@ -342,6 +343,7 @@ export default function App() {
 
                     {/* Startups */}
                     <Route path="register-startup" element={<RegisterStartUp />} />
+                    <Route path="register-existing-startup" element={<RegisterExistingStartup />} />
                     <Route path="discover-startups" element={<DiscoverStartups />} />
                     <Route path="my-startups" element={<DiscoverStartups myStartupsOnly={true} />} />
                     <Route path="startup-details/:id" element={<StartupDetailPage />} />

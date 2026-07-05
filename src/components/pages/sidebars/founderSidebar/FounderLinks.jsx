@@ -144,7 +144,7 @@ export function createFounderLinks(unreadMessagesCount, userRoles = [], setActiv
     { id: "section-workspace", sectionLabel: "Workspace", isSection: true },
     // ERP — founder gets full admin access
     erp,
-    sfDriveSection(11),
-    sfMeetSection(12),
+    sfDriveSection(12),
+    sfMeetSection(13),
   ];
 }

@@ -11,6 +11,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   Search, Star, Users, Briefcase, Clock, CheckCircle,
   X, ChevronRight, Loader2, ArrowLeft, DollarSign,
@@ -160,6 +161,7 @@ const MentorCard = ({ mentor, onClick, currentUserId }) => {
 // ── Request Mentorship Modal ──────────────────────────────────────
 const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
   const { user, access_token } = useSelector(state => state.auth);
+  const navigate = useNavigate();
   const [loading, setLoading]                     = useState(false);
   const [stripeRedirecting, setStripeRedirecting] = useState(false);
   const [myIdeas, setMyIdeas]       = useState([]);
@@ -180,15 +182,20 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
       try {
         const { startupsAPI } = await import('@/utils/APIs/startupsAPI');
 
-        // Load user's startups
-        const startupsRes = await startupsAPI.getAll({ builder: true, per_page: 50 });
+        // Load user's OWN startups (my_startups = created by me).
+        // NOTE: `builder: true` was used before — that filter deliberately
+        // EXCLUDES startups you created (it means "member but not creator"),
+        // so your own startups were never showing up here. my_startups is
+        // the correct filter for "startups I own".
+        const startupsRes = await startupsAPI.getAll({ my_startups: true, per_page: 50 });
         const startups = startupsRes?.startups || startupsRes?.data?.startups || [];
         setMyStartups(startups);
 
-        // Load user's ideas (visions) — use fetch with stored token
+        // Load user's ideas (visions) — filtered to only MY ideas via creator_id.
+        // Without this, /api/ideas returns every vision on the platform.
         try {
           const token = localStorage.getItem('access_token');
-          const res = await fetch('/api/ideas?per_page=50', {
+          const res = await fetch(`/api/ideas?per_page=50&creator_id=${user?.id}`, {
             headers: token ? { Authorization: `Bearer ${token}` } : {}
           });
           const json = await res.json();
@@ -217,10 +224,6 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
   };
 
   const handleSend = async () => {
-    if (!form.idea_id && !form.startup_id) {
-      toast.error('Select a Vision or Startup');
-      return;
-    }
     if (!form.message.trim()) {
       toast.error('Please add a message to the mentor');
       return;
@@ -254,10 +257,6 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
   };
 
   const handleStripeCheckout = async () => {
-    if (!form.idea_id && !form.startup_id) {
-      toast.error('Select a Vision or Startup first');
-      return;
-    }
     if (!form.message.trim()) {
       toast.error('Please add a message to the mentor');
       return;
@@ -345,7 +344,7 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
           {/* Project selector */}
           <div>
             <label className="text-xs text-gray-500 mb-1.5 block">
-              Which project do you need help with? *
+              Which project do you need help with? <span className="text-gray-600">(optional)</span>
             </label>
             {loadingProjects ? (
               <div className="flex items-center gap-2 text-gray-500 text-sm py-2">
@@ -361,10 +360,15 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
                       onChange={e => setForm(f => ({ ...f, idea_id: e.target.value, startup_id: '' }))}
                       className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5
                                  text-white text-sm focus:outline-none focus:border-blue-500/50 appearance-none"
+                      style={{ colorScheme: 'dark' }}
                     >
-                      <option value="">Select a Vision</option>
+                      <option value="" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Select a Vision</option>
                       {myIdeas.map(idea => (
-                        <option key={idea.id} value={idea.id}>
+                        <option
+                          key={idea.id}
+                          value={idea.id}
+                          style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}
+                        >
                           {idea.title} — {Math.round(idea.readinessScore || idea.readiness_score || 0)}% ready
                         </option>
                       ))}
@@ -379,17 +383,32 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
                       onChange={e => setForm(f => ({ ...f, startup_id: e.target.value, idea_id: '' }))}
                       className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5
                                  text-white text-sm focus:outline-none focus:border-blue-500/50 appearance-none"
+                      style={{ colorScheme: 'dark' }}
                     >
-                      <option value="">Select a Startup</option>
+                      <option value="" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Select a Startup</option>
                       {myStartups.map(s => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
+                        <option
+                          key={s.id}
+                          value={s.id}
+                          style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}
+                        >
+                          {s.name}
+                        </option>
                       ))}
                     </select>
                   </div>
                 )}
                 {myIdeas.length === 0 && myStartups.length === 0 && (
-                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3 text-xs text-yellow-300">
-                    You don't have any visions or startups yet. Create one first before requesting mentorship.
+                  <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 text-xs text-gray-500 space-y-2">
+                    <p>You don't have any visions or startups yet — that's fine, this is optional. You can still send your request below.</p>
+                    <button
+                      type="button"
+                      onClick={() => { onClose(); navigate('/ideation'); }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20
+                                 text-blue-400 border border-blue-500/30 hover:bg-blue-600/30 transition-colors"
+                    >
+                      <Plus size={12} /> Create a Vision
+                    </button>
                   </div>
                 )}
               </div>
@@ -449,7 +468,7 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
           {/* CTA — free mentor: single send button; paid mentor: two payment paths */}
           {mentor.is_free ? (
             <motion.button whileTap={{ scale: 0.98 }} onClick={handleSend}
-              disabled={loading || loadingProjects || (!form.idea_id && !form.startup_id)}
+              disabled={loading || loadingProjects}
               className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white
                          font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
               {loading
@@ -461,7 +480,7 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
             <div className="space-y-2">
               {/* Option 1: send request — Balance deducted after session */}
               <motion.button whileTap={{ scale: 0.98 }} onClick={handleSend}
-                disabled={loading || stripeRedirecting || loadingProjects || (!form.idea_id && !form.startup_id)}
+                disabled={loading || stripeRedirecting || loadingProjects}
                 className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white
                            font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
                 {loading
@@ -479,7 +498,7 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
 
               {/* Option 2: Stripe upfront card payment */}
               <motion.button whileTap={{ scale: 0.98 }} onClick={handleStripeCheckout}
-                disabled={loading || stripeRedirecting || loadingProjects || (!form.idea_id && !form.startup_id)}
+                disabled={loading || stripeRedirecting || loadingProjects}
                 className="w-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.10]
                            disabled:opacity-50 text-white font-semibold py-3
                            rounded-xl transition-all flex items-center justify-center gap-2 text-sm">

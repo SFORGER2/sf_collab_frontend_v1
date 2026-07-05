@@ -1248,7 +1248,7 @@ useEffect(() => {
             setIsPanelOpen((v) => !v);
             if (isMobile) callback();
           }}
-          className="fixed w-12 h-12 bottom-4 right-20 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center z-[9998] hover:shadow-xl transition-shadow"
+          className="fixed w-12 h-12 bottom-4 right-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center z-[9998] hover:shadow-xl transition-shadow"
         >
           <MessageCircle size={20} />
           {totalUnread > 0 && (
@@ -1261,7 +1261,7 @@ useEffect(() => {
         </motion.button>
       )}
 
-      <div className={`fixed ${isMobile ? "inset-0" : "bottom-4 right-20"} z-[9999] flex items-end pointer-events-none`}>
+      <div className={`fixed ${isMobile ? "inset-0" : "bottom-4 right-4"} z-[9999] flex items-end pointer-events-none`}>
         {/* Panel */}
         <div className="flex flex-row items-end gap-4 pointer-events-auto">
           <div style={{order: 2}}>

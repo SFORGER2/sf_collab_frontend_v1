@@ -55,6 +55,19 @@ export const startupsAPI = {
     return response.data.data
   },
 
+  // Register an ALREADY-OPERATING startup (lighter flow — no financial
+  // wizard, no roles/tech-stack setup). Content-Type is left undefined
+  // on purpose: the browser sets the multipart boundary automatically
+  // when given a FormData body; hardcoding the string breaks it.
+  registerExisting: async (formData) => {
+    const response = await api.post('/startups/register-existing', formData, {
+      headers: {
+        'Content-Type': undefined,
+      },
+    })
+    return response.data.data
+  },
+
   // Update startup
   update: async (startupId, data) => {
     const response = await api.put(`/startups/${startupId}`, data)
