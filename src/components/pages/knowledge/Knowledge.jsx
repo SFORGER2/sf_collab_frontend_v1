@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useDraft, useModalDraftGuard } from "@/utils/hooks/useDraft";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Eye, Download, ThumbsUp, ArrowUpRight, FileType, Clock,
@@ -56,7 +57,8 @@ const AddResourceModal = ({ isOpen, onClose, onSuccess }) => {
     tags: [],
   };
 
-  const [form, setForm]       = useState(emptyForm);
+  // B5 FIX: auto-save knowledge form draft
+  const [form, setForm, clearKnowledgeDraft, hasKnowledgeDraft] = useDraft("create_knowledge", emptyForm);
   const [tagInput, setTagInput] = useState("");
   const [loading, setLoading] = useState(false);
 

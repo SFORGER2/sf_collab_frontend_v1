@@ -149,6 +149,8 @@ const getNotificationLink = (notification) => {
       return '/dashboard';
     case 'financial':
       return '/crowdfunding';
+    case 'mentorship':
+      return '/mentor-dashboard';
     case 'account':
       return '/setting';
     case 'system':

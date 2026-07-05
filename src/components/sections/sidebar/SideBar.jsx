@@ -25,10 +25,23 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
   };
 
   const SidebarContent = ({ onLinkClick, isMobile = false }) => (
-    <div className="flex flex-col justify-between h-full w-full py-2.5 overflow-y-auto">
+    <div className="flex flex-col justify-between h-full w-full py-1 overflow-y-auto">
       {/* Main navigation */}
       <div className="flex flex-col gap-1 items-center px-1">
         {links.map((link) => {
+          // ── Section divider ──────────────────────────────────────────────
+          if (link.isSection) {
+            return (
+              <div key={link.id} className="w-full">
+                {isMobile ? (
+                  <div className="h-px w-full bg-zinc-800/60 my-0.5" />
+                ) : (
+                  <div className="h-px w-8 mx-auto bg-zinc-800 my-0.5" />
+                )}
+              </div>
+            );
+          }
+
           const isActive = link.id === currentContextId;
           const hasSubItems = link.subItems && link.subItems.length > 0;
 
@@ -38,7 +51,7 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
               <Link
                 to={link.href}
                 onClick={onLinkClick}
-                className={`w-full flex items-center gap-3 px-2 py-3 rounded-lg transition-colors relative ${
+                className={`w-full flex items-center gap-3 px-2 py-1 rounded-lg transition-colors relative ${
                   isActive
                     ? "bg-blue-600/20 text-blue-400"
                     : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
@@ -61,7 +74,7 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
                       key={subItem.id}
                       to={subItem.href}
                       onClick={onLinkClick}
-                      className={`flex items-center px-2 py-2 rounded-md transition-colors ${
+                      className={`flex items-center px-2 py-1 rounded-md transition-colors ${
                         location.pathname === subItem.href
                           ? "bg-blue-600 text-white"
                           : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"
@@ -81,7 +94,7 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
           <Link
             to="/admin"
             onClick={onLinkClick}
-            className={`w-full flex items-center gap-3 px-2 py-3 rounded-lg transition-colors ${
+            className={`w-full flex items-center gap-3 px-2 py-1 rounded-lg transition-colors ${
               location.pathname === "/admin"
                 ? "bg-yellow-600/20 text-yellow-400"
                 : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
@@ -96,7 +109,7 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
       </div>
 
       {/* Bottom links */}
-      <div className="flex flex-col gap-2 items-center">
+      <div className="flex flex-col gap-1 items-center">
         <div className="flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors">
           <SidebarFeedbackCard />
         </div>
@@ -161,6 +174,20 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
               className="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center hover:bg-gray-100 transition-colors"
             >
               <X size={16} />
+            </button>
+          </div>
+
+          {/* Mobile-only: Workspace Switcher + Chat */}
+          <div className="px-3 pb-3 border-b border-zinc-800 mb-2 space-y-2">
+            <WorkspaceSwitcher />
+            <button
+              type="button"
+              onClick={() => { handleMobileLinkClick(); window.location.href = '/chat'; }}
+              className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl
+                         bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 text-sm transition-colors"
+            >
+              <MessageSquare size={16} />
+              Messages
             </button>
           </div>
 

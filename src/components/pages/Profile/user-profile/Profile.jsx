@@ -20,6 +20,7 @@ import { FaMoneyBill } from 'react-icons/fa6';
 import { formatCurrency } from '@/lib/utils';
 import { API_URL } from '@/utils/config';
 import { RiBillFill } from 'react-icons/ri';
+import UserRatingCard from "@/components/ui/UserRatingCard";
 
 // ✅ NEW IMPORTS
 import { FollowButton } from '@/components/FollowButton';

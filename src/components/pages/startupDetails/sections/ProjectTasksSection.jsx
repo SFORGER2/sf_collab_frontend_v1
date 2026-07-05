@@ -13,9 +13,14 @@ import {
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import AddTaskModal from "../modals/AddTasksModal";
-import { tasksAPI } from "@/utils/APIs/startupsAPI";
-import { API_URL } from "@/utils/config";
 import axios from "axios";
+import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "@/utils/APIs/interceptors";
+import { useSelector as _useSelector } from "react-redux";
+
+// B7 FIX: consolidated to /api/erp-tasks — single task system
+const erpTasksApi = axios.create({ baseURL: "/api/erp-tasks" });
+erpTasksApi.interceptors.request.use(requestInterceptor);
+erpTasksApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 import DeleteConfirmationModal from "@/utils/confirm";
 
 const priorityColors = {
@@ -80,23 +85,35 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
   const unassignedCount = useMemo(() => tasks.filter(t => !t.assigned_to).length, [tasks]);
 
   const handleStatusChange = async (taskId, newStatus) => {
+    // Optimistic update
+    setTasks(prevTasks =>
+      prevTasks.map(t => t?.id === taskId ? { ...t, status: newStatus } : t)
+    );
     try {
-      setTasks(prevTasks =>
-        prevTasks.map(t => t?.id === taskId ? { ...t, status: newStatus } : t)
-      );
-      const response = await tasksAPI.update(taskId, { status: newStatus }, access_token);
-      if (!response.success) throw new Error("Failed to update task status");
+      // B7 FIX: use unified erp-tasks endpoint
+      // Map legacy status strings to erp-tasks enum values
+      const statusMap = { completed: "done", in_progress: "in_progress", today: "todo", overdue: "todo" };
+      const mappedStatus = statusMap[newStatus] || newStatus;
+      await erpTasksApi.patch("/update", {
+        workspace_id: user?.active_workspace_id || 1,
+        task_id: parseInt(taskId),
+        status: mappedStatus,
+      });
       toast.success("Task status updated");
     } catch (err) {
       toast.error("Error updating task status");
       console.error(err);
+      // Rollback
+      setTasks(prevTasks =>
+        prevTasks.map(t => t?.id === taskId ? { ...t, status: t.status } : t)
+      );
     }
   };
 
   const handleDeleteTask = async (taskId) => {
+    setTasks(prevTasks => prevTasks.filter(t => t?.id !== taskId));
     try {
-      setTasks(prevTasks => prevTasks.filter(t => t?.id !== taskId));
-      await tasksAPI.delete(taskId, access_token);
+      await erpTasksApi.delete(`/delete/${taskId}`);
       toast.success("Task deleted successfully");
     } catch (err) {
       toast.error("Error deleting task");
@@ -127,15 +144,12 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
         )
       );
 
-      const response = await axios.post(
-        `${API_URL}/tasks/${task.id}/claim`,
-        {},
-        { headers: { Authorization: `Bearer ${access_token}` } }
-      );
-      if (!response.data?.success) throw new Error(response.data?.error || "Failed to claim task");
-
-      // Sync with server response if available
-      const serverTask = response.data?.data?.task;
+      const response = await erpTasksApi.patch("/update", {
+        workspace_id: user?.active_workspace_id || 1,
+        task_id: parseInt(task.id),
+        assigned_to: user.id,
+      });
+      const serverTask = response?.data?.data?.task || response?.data?.task;
       if (serverTask) {
         setTasks(prev => prev.map(t => t.id === task.id ? { ...t, ...serverTask } : t));
       }

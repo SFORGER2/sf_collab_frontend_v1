@@ -34,8 +34,8 @@ const MODES = {
     headerTitle: 'Discover Your Next',
     headerSubtitle: 'Career Adventure',
     subtitle: 'Join thousands of innovators building the future at fast-growing startups. From pre-seed to Series C, find your perfect match.',
-    ctaButton: 'Add Startup',
-    ctaRoute: '/register-startup',
+    ctaButton: 'Create a Vision',
+    ctaRoute: '/ideation',
     cardCta: 'View Details',
     stats: [],
     emptyState: {
@@ -47,13 +47,13 @@ const MODES = {
     headerTitle: 'My',
     headerSubtitle: 'Startups',
     subtitle: 'Manage and grow your startup portfolio. Monitor your companies, edit details, and track performance.',
-    ctaButton: 'Create New Startup',
-    ctaRoute: '/register-startup',
+    ctaButton: 'New Vision',
+    ctaRoute: '/ideation',
     cardCta: 'Manage',
     stats: null,
     emptyState: {
       title: "You haven't created any startups yet",
-      message: 'Create your first startup to get started. Build something amazing and find the right talent.'
+      message: 'Start by creating a Vision. Once your Vision reaches readiness, you can activate it as a Startup.'
     }
   }
 };

@@ -142,6 +142,15 @@ export default function AnnouncementsSection({ userRoles }) {
     const stored = localStorage.getItem('preferences:announcementsExpanded');
     return stored === null ? true : stored === 'true';
   });
+  // Track whether the user explicitly minimized — if so, don't auto-pop
+  // until a genuinely NEW announcement arrives
+  const [userMinimized, setUserMinimized] = useState(() =>
+    localStorage.getItem('announcements:userMinimized') === 'true'
+  );
+  // Track the newest announcement id seen so we can detect truly new ones
+  const [lastSeenId, setLastSeenId] = useState(() =>
+    localStorage.getItem('announcements:lastSeenId') || null
+  );
 
   // Active tab stored in localStorage (UI preference)
   const [activeTab, setActiveTab] = useState('crowdfunding');
@@ -379,7 +388,7 @@ export default function AnnouncementsSection({ userRoles }) {
           )}
         </motion.div>
         <motion.button
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={handleToggleExpanded}
           className="p-2 hover:bg-white/10 rounded-lg transition-colors"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}

@@ -315,15 +315,16 @@ const handleDeclineInvitation = async () => {
       const userId = user?.id || user?.userId || user?.user_id;
       
       // Check 1: Is user the startup creator?
-      const isStartupCreator = startup?.creator?.id === userId;
+      // FIX: use == not === to handle string/int type mismatch from API
+      const isStartupCreator = String(startup?.creator?.id) === String(userId);
       console.log("Checking members for userId:", userId, "Members list:", members);
       // Check 2: Is user a member with creator/founder role?
-      const isMemberWithRole = members.find(m => m.userId === userId && (['creator', 'founder'].includes(m.role) || m.admin));
+      const isMemberWithRole = members.find(m => String(m.userId) === String(userId) && (['creator', 'founder', 'owner'].includes(m.role) || m.admin));
     
       // User is creator if they are the startup creator OR have member founder role
       const isAdminUser = isStartupCreator || !!isMemberWithRole;
       setIsAdmin(isAdminUser);
-      setIsFounder(isStartupCreator || (isMemberWithRole && ['creator', 'founder'].includes(isMemberWithRole.role)));
+      setIsFounder(isStartupCreator || (isMemberWithRole && ['creator', 'founder', 'owner'].includes(isMemberWithRole.role)));
     }
   }, [members, user, startup]);
 
@@ -878,7 +879,4 @@ const Trophy = (props) => (
       <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
     </svg>
   );
-
-
-
 export default StartupDetailPage;

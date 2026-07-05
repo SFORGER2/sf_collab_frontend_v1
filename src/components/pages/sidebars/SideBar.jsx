@@ -4,6 +4,8 @@ import { X } from "lucide-react";
 import { getAllRoutes, getCurrentContext } from "./sidebar/links";
 import DesktopSidebarContent from "./DesktopSidebarContent";
 import MobileSidebarContent from "./MobileSidebarContent";
+import { filterOutLauncherApps } from '@/utils/appLauncherUtils';
+
 
 export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmin, links = [] }) {
   const location = useLocation();
@@ -38,14 +40,15 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
     return getAllRoutes(link).includes(location.pathname);
   };
 
-
+  // Inside the component, before using links
+  const filteredLinks = filterOutLauncherApps(links);
 
   return (
     <>
       {/* Desktop Sidebar - BELOW navbar (top-16), lower z-index (30) */}
       
         <DesktopSidebarContent
-          links={links}
+          links={filterOutLauncherApps(links)}
           currentContextId={currentContextId}
           expandedItems={expandedItems}
           toggleExpand={toggleExpand}

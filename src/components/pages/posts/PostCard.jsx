@@ -10,6 +10,9 @@ import { userSocialAPI } from "@/utils/APIs/socialAPI";
 import { useSelector } from "react-redux";
 import PostActions from "./PostActions";
 import { getAvatarUrl, getMediaUrl } from "@/utils/getMediaUrl";
+import { getProfilePicture } from "@/utils/getProfilePicture";
+import { toAbsoluteFileUrl } from "@/utils/toAbsoluteFileUrl";
+
 
 const cardVariants = {
   hidden:   { opacity: 0, y: 20 },

@@ -1,6 +1,7 @@
 // src/components/sections/WorkspaceSwitcher.jsx
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { ChevronDown, Plus, Check, Building2, X, Trash2 } from "lucide-react";
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
@@ -11,6 +12,7 @@ import { fetchUserProfile } from '../../services/auth/authThunks';
 
 const WorkspaceSwitcher = () => {
   const dispatch = useDispatch();
+  const navigate  = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const currentWorkspaceId = user?.active_workspace_id;
   const [workspaces, setWorkspaces] = useState([]);
@@ -60,7 +62,9 @@ const WorkspaceSwitcher = () => {
       await workspaceAPI.switchWorkspace(workspaceId);
       const userData = await dispatch(fetchUserProfile()).unwrap();
       dispatch(setUser(userData));
-      window.location.reload();
+      setIsOpen(false);
+      // Navigate to the workspace dashboard instead of a full reload
+      navigate('/erp-dashboard');
     } catch (err) {
       console.error('Failed to switch workspace:', err);
       setError('Failed to switch workspace');
@@ -88,7 +92,7 @@ const WorkspaceSwitcher = () => {
       setShowCreateModal(false);
       setNewWorkspaceName('');
       setNewWorkspaceSlug('');
-      window.location.reload();
+      navigate('/erp-dashboard');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create workspace');
     } finally {

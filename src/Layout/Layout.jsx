@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
@@ -21,9 +21,6 @@ import { useChatContacts } from "@/context/ChatContactsProvider";
 import useSocket from "@/components/pages/chat/useSocket";
 import { toast } from "react-toastify";
 
-// import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
-// import { SOCKET_API_URL } from "@/utils/config";
-
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { isUserProfileComplete } from "@/utils/getUserComplete";
@@ -31,6 +28,12 @@ import EmailVerifyPopUp from "./emailVerifyPopUp";
 import CompleteProfilePopUp from "./CompleteEmailPopUp";
 import AIAssistant from "./AIAssistant";
 import Tutorial from "./DashboardTutorial";
+import { createLinks } from '@/components/pages/sidebars/sidebar/links';
+import { createFounderLinks } from '@/components/pages/sidebars/founderSidebar/FounderLinks';
+import { createBuilderLinks } from '@/components/pages/sidebars/builderSidebar/BuilderLinks';
+import { createInfluencerLinks } from '@/components/pages/sidebars/influencerSidebar/influencerLinks';
+import { createInvestorLinks } from '@/components/pages/sidebars/investorSidebar/InvestorLinks';
+
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const location = useLocation();
@@ -57,7 +60,8 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [disableNavbar, setDisableNavbar] = useState(false);
   const [isCompletePopupVisible, setIsCompletePopupVisible] = useState(false);
-
+  const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+  const toggleAIAssistant = useCallback(() => setIsAIAssistantOpen(prev => !prev), []);
 
   useEffect(() => {
     AOS.init({ duration: 800, easing: "ease-out", once: false });
@@ -97,7 +101,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           <p className="font-semibold">New Connection Request</p>
           <p className="text-sm opacity-90">{senderName} wants to connect with you</p>
         </div>,
-        { 
+        {
           onClick: () => navigate("/connections?tab=incoming"),
           autoClose: 5000,
         }
@@ -113,7 +117,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           <p className="font-semibold">Connection Accepted!</p>
           <p className="text-sm opacity-90">{accepterName} accepted your connection request</p>
         </div>,
-        { 
+        {
           onClick: () => navigate(`/user-profile?userId=${data.accepter_id || data.accepter?.id}`),
           autoClose: 5000,
         }
@@ -148,42 +152,6 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     };
   }, [socket, isConnected, user]);
 
-  // Raw WebSocket client
-  // useEffect(() => {
-  //   const userId = user?.id;
-  //   if (!userId) return;
-
-  //   const client = new ChatWebSocketClient(SOCKET_API_URL, userId);
-
-  //   client.on("new_message", (data) => {
-  //     toast.info("New message received");
-  //     window.dispatchEvent(new CustomEvent("chat:new_message", { detail: data }));
-  //   });
-
-  //   client.on("user_online", (data) => toast.success(`${data?.user_name || "User"} is online`));
-  //   client.on("user_offline", (data) => toast.info(`${data?.user_name || "User"} went offline`));
-
-  //   client.on("connection_request", (data) => {
-  //     const senderName = data.sender_name || 'Someone';
-  //     toast.info(`${senderName} wants to connect with you`, {
-  //       onClick: () => navigate("/connections?tab=incoming"),
-  //     });
-  //     window.dispatchEvent(new CustomEvent('connection:new_request', { detail: data }));
-  //   });
-
-  //   client.on("connection_accepted", (data) => {
-  //     const accepterName = data.accepter_name || 'Someone';
-  //     toast.success(`${accepterName} accepted your connection request!`);
-  //     window.dispatchEvent(new CustomEvent('connection:request_accepted', { detail: data }));
-  //   });
-
-  //   client.on("error", () => toast.error("Realtime connection error"));
-
-  //   client.connect();
-
-  //   return () => client.disconnect();
-  // }, [user?.id]);
-
   // Profile completion reminder
   useEffect(() => {
     if (!user) return;
@@ -196,9 +164,34 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
     checkProfileCompletion();
   }, [user, location]);
+
+  const links = useMemo(() => {
+    const unread = 0;
+    switch (activeRole) {
+      case 'founder':
+        return createFounderLinks(unread, userRoles, setActiveRole, activeRole);
+      case 'builder':
+        return createBuilderLinks(unread, userRoles, setActiveRole, activeRole);
+      case 'influencer':
+        return createInfluencerLinks(unread, userRoles, setActiveRole, activeRole);
+      case 'investor':
+        return createInvestorLinks(unread, userRoles, setActiveRole, activeRole);
+      default:
+        return createLinks(unread, userRoles, setActiveRole);
+    }
+  }, [activeRole, userRoles, setActiveRole]);
+
   // Sidebar resolver
   const SideBar = () => {
-    const props = { unreadMessagesCount, setIsOpen, isOpen, isAdmin, userRoles, setActiveRole };
+    const props = {
+      unreadMessagesCount,
+      setIsOpen,
+      isOpen,
+      isAdmin,
+      userRoles,
+      setActiveRole,
+      links,
+    };
 
     switch (activeRole) {
       case "founder":
@@ -215,25 +208,21 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   };
 
   const handleNavAreaEnter = () => !isRootPath && setIsOptionsVisible(true);
-
   const handleNavAreaLeave = (e) => {
     if (isRootPath) return;
-
     const nextEl = e.relatedTarget;
-
     if (!nextEl || !(nextEl instanceof Node)) {
       setIsOptionsVisible(false);
       return;
     }
-
     if (optionsRef.current && optionsRef.current.contains(nextEl)) return;
     if (nextEl.closest?.(".options-container")) return;
-
     setIsOptionsVisible(false);
   };
 
   const isMobile = useMemo(() => window.matchMedia("(max-width: 1024px)").matches, []);
 
+  // ── Regular application layout ──────────────────────────────────────────
   return (
     <>
       {location.pathname === "/dashboard" && <Tutorial activeRole={activeRole} />}
@@ -256,8 +245,6 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
         {!isRootPath && !disableNavbar && (
           <div
             ref={navContainerRef}
-            // onMouseEnter={handleNavAreaEnter}
-            // onMouseLeave={handleNavAreaLeave}
             className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${isNavHidden ? "h-0" : "h-[60px]"}`}
           >
             <NavBar
@@ -268,6 +255,9 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
               activeRole={activeRole}
               setActiveRole={setActiveRole}
               userRoles={userRoles}
+              links={links}
+              isAIAssistantOpen={isAIAssistantOpen}
+              toggleAIAssistant={toggleAIAssistant}
             />
           </div>
         )}
@@ -278,23 +268,6 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
           {/* Main content area */}
           <div className="text-white relative flex flex-col items-center w-full overflow-hidden lg:ml-0">
-            {/* Options bar: never show on chat or connections */}
-            {/* {!isRootPath && !isChatRoute && !isConnectionsRoute && (
-              <div
-                ref={optionsRef}
-                className={`transition-all mb-4 pointer-events-auto duration-300 px-4 absolute m-auto flex justify-center top-2 ${isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"}`}
-                style={{ zIndex: 10 }}
-                onMouseEnter={() => setIsOptionsVisible(true)}
-                onMouseLeave={() => setIsOptionsVisible(false)}
-              >
-                <Options
-                  isHidden={isNavHidden}
-                  unreadMessagesCount={unreadMessagesCount}
-                  isAdmin={isAdmin}
-                />
-              </div>
-            )} */}
-
             <div
               className={`relative w-full h-full overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
               onScroll={isRootPath ? undefined : onScroll}
@@ -304,21 +277,23 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           </div>
         </motion.div>
       </div>
+
       {/* Chat docks */}
-      {
-  (location.pathname !== "/chat") &&
-  <>
-    <AIAssistant callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} isMobile={isMobile} />
-
-    <ChatDock
-      maxWindows={isMobile ? 1 : 2}
-      isMobile={isMobile}
-      callback={() => (isMobile ? setDisableNavbar(!disableNavbar) : null)}
-    />
-  </>
-}
-
-      {/* )} */}
+      {(location.pathname !== "/chat") && (
+        <>
+          <AIAssistant
+            isOpen={isAIAssistantOpen}
+            onClose={() => setIsAIAssistantOpen(false)}
+            isMobile={isMobile}
+            callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null}
+          />
+          <ChatDock
+            maxWindows={isMobile ? 1 : 2}
+            isMobile={isMobile}
+            callback={() => (isMobile ? setDisableNavbar(!disableNavbar) : null)}
+          />
+        </>
+      )}
     </>
   );
 };

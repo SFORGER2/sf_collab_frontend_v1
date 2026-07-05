@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useDraft, useModalDraftGuard } from "@/utils/hooks/useDraft";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +13,9 @@ import { Briefcase, Users, Sparkles } from "lucide-react";
 
 const ApplyToStartupModal = ({ isOpen, onClose, startup, roleSelected }) => {
   const [role, setRole] = useState(roleSelected);
-  const [message, setMessage] = useState("");
+  // B5 FIX: save application draft
+  const [{ message }, setDraftForm, clearAppDraft] = useDraft("apply_startup", { message: "" });
+  const setMessage = (val) => setDraftForm(prev => ({ ...prev, message: val }));
   const [links, setLinks] = useState({
     portfolio: "",
     github: "",
@@ -43,6 +46,7 @@ const ApplyToStartupModal = ({ isOpen, onClose, startup, roleSelected }) => {
         toast.success("🚀 Application sent!");
         onClose();
         setMessage("");
+      clearAppDraft();
         setLinks({ portfolio: "", github: "", linkedin: "" });
         setRole("member");
       } else {

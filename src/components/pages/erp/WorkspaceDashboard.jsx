@@ -8,6 +8,10 @@ const revenueApi = axios.create({ baseURL: "/api/revenue-pool" });
 revenueApi.interceptors.request.use(requestInterceptor);
 revenueApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
+const startupsApi = axios.create({ baseURL: "/api/startups" });
+startupsApi.interceptors.request.use(requestInterceptor);
+startupsApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
+
 const tasksApi = axios.create({ baseURL: "/api/erp-tasks" });
 tasksApi.interceptors.request.use(requestInterceptor);
 tasksApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
@@ -18,11 +22,29 @@ userApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor)
 
 export default function WorkspaceDashboard() {
   const { user } = useSelector((s) => s.auth);
-  const workspaceId = user?.active_workspace_id || 1;
+  // B8 FIX: founders can switch between their startups
+  const [myStartups,       setMyStartups]       = useState([]);
+  const [selectedWorkspace, setSelectedWorkspace] = useState(user?.active_workspace_id || 1);
+  const workspaceId = selectedWorkspace;
   const [latestPool, setLatestPool] = useState(null);
   const [totalPoints, setTotalPoints] = useState(0);
   const [contributors, setContributors] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Fetch founder's startups for the switcher
+  useEffect(() => {
+    if (!user?.id) return;
+    startupsApi.get(`/user/${user.id}`, { params: { per_page: 50 } })
+      .then(res => {
+        const list = res?.data?.data?.startups || res?.data?.startups || [];
+        setMyStartups(list);
+        // If user has a preferred active_workspace_id, use it
+        if (list.length > 0 && !selectedWorkspace) {
+          setSelectedWorkspace(list[0].id);
+        }
+      })
+      .catch(() => {});
+  }, [user?.id]);
 
   const loadData = useCallback(async () => {
     if (!workspaceId) return;
@@ -83,8 +105,30 @@ export default function WorkspaceDashboard() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Workspace Dashboard</h1>
-        <p className="text-zinc-400 mb-8">Executive overview of your workspace</p>
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Workspace Dashboard</h1>
+            <p className="text-zinc-400 mt-1">Executive overview of your workspace</p>
+          </div>
+          {/* B8 FIX: startup switcher for founders with multiple startups */}
+          {myStartups.length > 1 && (
+            <select
+              value={selectedWorkspace}
+              onChange={e => setSelectedWorkspace(parseInt(e.target.value))}
+              className="bg-zinc-900 border border-zinc-700 text-white text-sm rounded-xl px-4 py-2.5
+                focus:outline-none focus:border-zinc-500"
+            >
+              {myStartups.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          )}
+          {myStartups.length === 1 && (
+            <span className="text-sm text-zinc-500 bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-xl">
+              {myStartups[0]?.name}
+            </span>
+          )}
+        </div>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
