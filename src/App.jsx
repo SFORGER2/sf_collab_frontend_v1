@@ -143,6 +143,9 @@ import WorkspaceDashboard from "./components/pages/erp/WorkspaceDashboard";
 import { WarningActionsPage } from "./components/pages/erp/WarningActionsPage";
 import { FlagsPage } from "./components/pages/erp/FlagsPage";
 import { AuditLogsPage } from "./components/pages/erp/AuditLogsPage";
+import { AnnouncementProvider } from "./contexts/AnnouncementContext";
+import { NewsletterProvider } from "./contexts/NewsletterContext";
+
 import { ERPLayout } from "./components/erp/layout/ERPLayout";
 
 export default function App() {
@@ -191,6 +194,8 @@ export default function App() {
         <ChatNotificationProvider>
           <ChatContactsProvider token={access_token}>
             <NotificationProvider>
+              <AnnouncementProvider>
+                <NewsletterProvider>
               <ScrollToTop />
               <Routes>
                 {/* ────── Public Routes ────── */}
@@ -451,6 +456,8 @@ export default function App() {
                 style={{ bottom: "20px" }}
               />
               <ToastNotification />
+              </NewsletterProvider>
+              </AnnouncementProvider>
             </NotificationProvider>
           </ChatContactsProvider>
         </ChatNotificationProvider>

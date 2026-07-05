@@ -27,16 +27,17 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
 
   
 
-  const handleImage = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    uploadProfilePicture(file).then(url => {
-      setFormData(prev => ({ ...prev, profile: { ...prev.profile, picture: url } }));
-      toast.success("Image uploaded successfully");
-    }).catch(() => {
-      toast.error("Failed to upload image");
-    });
-  };
+  const handleImage = async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  try {
+    const url = await uploadProfilePicture(file);
+    setFormData(prev => ({ ...prev, profile: { ...prev.profile, picture: url } }));
+    toast.success("Image uploaded successfully");
+  } catch (error) {
+    toast.error("Failed to upload image");
+  }
+};
 
   const handleAutoDetectTimezone = () => {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;

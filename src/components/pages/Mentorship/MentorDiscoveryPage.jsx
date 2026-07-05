@@ -36,7 +36,8 @@ const AREAS_OF_HELP = [
   'GTM strategy', 'Technical architecture', 'Product prioritization',
   'Hiring', 'Fundraising preparation', 'Vision refinement',
   'Readiness improvement', 'Milestone planning', 'Design review',
-  'Marketing strategy', 'Sales process', 'Legal structure', 'Other',
+  'Marketing strategy', 'Sales process', 'Legal structure',
+  'Other',
 ];
 
 const getAvatarUrl = (path) => {
@@ -165,12 +166,13 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
   const [myStartups, setMyStartups] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [form, setForm] = useState({
-    idea_id: '',
-    startup_id: '',
-    message: '',
-    areas_of_help: [],
-    mentorship_mode: mentor.is_free ? 'free_community' : 'paid_session',
-  });
+  idea_id: '',
+  startup_id: '',
+  message: '',
+  areas_of_help: [],
+  otherHelpText: '',   // <-- new
+  mentorship_mode: mentor.is_free ? 'free_community' : 'paid_session',
+});
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -226,13 +228,13 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
     setLoading(true);
     try {
       const payload = {
-        mentor_id: parseInt(mentor.id),
-        message: form.message.trim(),
-        areas_of_help: form.areas_of_help.includes('Other') && customArea.trim()
-          ? [...form.areas_of_help.filter(a => a !== 'Other'), customArea.trim()]
-          : form.areas_of_help,
-        mentorship_mode: form.mentorship_mode,
-      };
+  mentor_id: parseInt(mentor.id),
+  message: form.message.trim(),
+  areas_of_help: form.areas_of_help.includes('Other') && form.otherHelpText.trim()
+    ? [...form.areas_of_help.filter(a => a !== 'Other'), form.otherHelpText.trim()]
+    : form.areas_of_help,
+  mentorship_mode: form.mentorship_mode,
+};
       if (form.idea_id)    payload.idea_id    = parseInt(form.idea_id);
       if (form.startup_id) payload.startup_id = parseInt(form.startup_id);
 
@@ -395,33 +397,31 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
           </div>
 
           {/* Areas of help */}
-          <div>
-            <label className="text-xs text-gray-500 mb-1.5 block">What do you need help with?</label>
-            <div className="flex flex-wrap gap-2">
-              {AREAS_OF_HELP.map(area => (
-                <button key={area} onClick={() => toggleArea(area)}
-                  className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors
-                    ${form.areas_of_help.includes(area)
-                      ? 'bg-blue-600/20 text-blue-400 border-blue-500/40'
-                      : 'bg-white/[0.03] text-gray-500 border-white/[0.06] hover:border-white/[0.12]'}`}>
-                  {area}
-                </button>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-2">
+  {AREAS_OF_HELP.map(area => (
+    <button key={area} onClick={() => toggleArea(area)}
+      className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors
+        ${form.areas_of_help.includes(area)
+          ? 'bg-blue-600/20 text-blue-400 border-blue-500/40'
+          : 'bg-white/[0.03] text-gray-500 border-white/[0.06] hover:border-white/[0.12]'}`}>
+      {area}
+    </button>
+  ))}
+</div>
 
-            {/* Custom "Other" input — shown when Other is selected */}
-            {form.areas_of_help.includes('Other') && (
-              <input
-                type="text"
-                value={customArea}
-                onChange={e => setCustomArea(e.target.value)}
-                placeholder="Describe what you need help with..."
-                className="mt-2 w-full bg-white/[0.04] border border-white/[0.08] rounded-xl
-                           px-3.5 py-2.5 text-white text-sm focus:outline-none
-                           focus:border-blue-500/50 placeholder-gray-600"
-              />
-            )}
-          </div>
+{/* Show text input when "Other" is selected */}
+{form.areas_of_help.includes('Other') && (
+  <div className="mt-2">
+    <input
+      type="text"
+      placeholder="Describe your specific need..."
+      value={form.otherHelpText || ''}
+      onChange={(e) => setForm(f => ({ ...f, otherHelpText: e.target.value }))}
+      className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5
+                 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-blue-500/50"
+    />
+  </div>
+)}
 
           {/* Message */}
           <div>
@@ -900,8 +900,8 @@ const MentorDiscoveryPage = () => {
   const [pagination, setPagination] = useState({ total: 0, pages: 1, page: 1 });
 
   const [filters, setFilters] = useState({
-    sector: '', is_free: '', available: 'true', sort: 'rating', search: '',
-  });
+  sector: '', is_free: '', available: '', sort: 'rating', search: '',
+});
 
   const loadMentors = useCallback(async (page = 1) => {
     setLoading(true);

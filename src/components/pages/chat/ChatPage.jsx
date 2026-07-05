@@ -281,6 +281,7 @@ const ChatPage = () => {
     
     try {
       const data = await chatAPI.getAllChats();
+      console.log("Conversations from backend:", data.conversations);
       console.log("data:", data);
 
       const convos = Array.isArray(data?.conversations)
@@ -777,35 +778,59 @@ useEffect(() => {
   // ============================================
 
   // Select a conversation
-  const handleSelectConversation = (conversation) => {
-    if (activeConversation?.id !== conversation.id) {
-      // ─── Feature 3: save draft for the conversation we're leaving ────────
-      if (activeConversation) {
-        try {
-          if (messageInput && messageInput.trim()) localStorage.setItem('chatPage:draft:' + String(activeConversation.id), messageInput);
-          else localStorage.removeItem('chatPage:draft:' + String(activeConversation.id));
-        } catch {}
-      }
-      // Leave previous room
-      if (socket && activeConversation) {
-        socket.emit('leave_conversation', { conversation_id: activeConversation.id });
-      }
-      
-      setActiveConversation(conversation);
-      setMessages([]);
-      setTypingUsers([]);
-      fetchMessages(conversation.id);
-
-      // ─── Feature 3: restore draft for the conversation we're entering ────
-      let restoredDraft = '';
-      try { restoredDraft = localStorage.getItem('chatPage:draft:' + String(conversation.id)) || ''; } catch {}
-      setMessageInput(restoredDraft);
-
-      // ─── Feature 2: clear unread count for this conversation ─────────────
-      socket?.emit('mark_read', { conversation_id: conversation.id });
-      setConversations(prev => prev.map(c => String(c.id) === String(conversation.id) ? { ...c, unread_count: 0 } : c));
+ const handleSelectConversation = useCallback(async (conversation) => {
+  if (activeConversation?.id !== conversation.id) {
+    // Save draft for the conversation we're leaving
+    if (activeConversation) {
+      try {
+        if (messageInput && messageInput.trim()) {
+          localStorage.setItem('chatPage:draft:' + String(activeConversation.id), messageInput);
+        } else {
+          localStorage.removeItem('chatPage:draft:' + String(activeConversation.id));
+        }
+      } catch {}
     }
-  };
+    
+    // Leave previous room
+    if (socket && activeConversation) {
+      socket.emit('leave_conversation', { conversation_id: activeConversation.id });
+    }
+    
+    setActiveConversation(conversation);
+    setMessages([]);
+    setTypingUsers([]);
+
+    // ─── FIX: Clear the unread count IMMEDIATELY (optimistic) ────────────
+    setConversations(prev => prev.map(c =>
+      String(c.id) === String(conversation.id) ? { ...c, unread_count: 0 } : c
+    ));
+
+    // ─── Call the API to persist the read state ──────────────────────────
+    try {
+      await chatAPI.markConversationAsRead(conversation.id);
+      // Refresh global badge after a short delay to sync with server
+    } catch (error) {
+      console.error('Failed to mark conversation as read:', error);
+      // The badge is already cleared optimistically, so we don't revert.
+    }
+
+    fetchMessages(conversation.id);
+
+    // Restore draft for the conversation we're entering
+    let restoredDraft = '';
+    try {
+      restoredDraft = localStorage.getItem('chatPage:draft:' + String(conversation.id)) || '';
+    } catch {}
+    setMessageInput(restoredDraft);
+
+    // Emit socket mark_read
+    socket?.emit('mark_read', { conversation_id: conversation.id });
+    // One more local update to be safe
+    setConversations(prev => prev.map(c =>
+      String(c.id) === String(conversation.id) ? { ...c, unread_count: 0 } : c
+    ));
+  }
+},  [activeConversation, messageInput, socket, fetchMessages]);
 
   // Open chat with a friend (from sidebar)
   const handleOpenChatWithFriend = async (friend) => {
@@ -1223,7 +1248,20 @@ useEffect(() => {
                 >
                   {tab.label}
                   {count > 0 && (
-                    <span className="absolute -top-1.5 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center">
+                    <span
+className="absolute -top-1.5 -right-1
+min-w-[14px]
+h-[14px]
+px-0.5
+rounded-full
+bg-red-500
+text-white
+text-[8px]
+font-bold
+flex
+items-center
+justify-center
+animate-pulse">
                       {count > 99 ? '99+' : count}
                     </span>
                   )}

@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import { useMemo, useState } from "react";
+import { getAvatarUrl } from '@/utils/getMediaUrl';
 
 export default function UserCard({
   user,
@@ -27,15 +28,9 @@ export default function UserCard({
   return (
     <Card
       onClick={onClick}
-      className={`
-        p-3 my-2 sm:p-5 
-        bg-slate-800/50 border-slate-700 
-        cursor-pointer transition
-        ${isLoading ? "opacity-60" : ""}
-      `}
+      className={`p-3 my-2 sm:p-5 bg-slate-800/50 border-slate-700 cursor-pointer transition ${isLoading ? "opacity-60" : ""}`}
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-        {/* Avatar */}
         <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0">
           {showImage ? (
             <img
@@ -45,34 +40,15 @@ export default function UserCard({
               onError={() => setImageError(true)}
             />
           ) : (
-            <span className="text-base sm:text-lg">
-              {initials || "?"}
-            </span>
+            <span className="text-base sm:text-lg">{initials || "?"}</span>
           )}
         </div>
-
-        {/* Name + subtitle */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-white truncate text-sm sm:text-base">
-            {fullName}
-          </h3>
-          {subtitle && (
-            <p className="text-xs sm:text-sm text-slate-400 truncate">
-              {subtitle}
-            </p>
-          )}
+          <h3 className="font-semibold text-white truncate text-sm sm:text-base">{fullName}</h3>
+          {subtitle && <p className="text-xs sm:text-sm text-slate-400 truncate">{subtitle}</p>}
         </div>
-
-        {/* Actions */}
         {actions && (
-          <div
-            className="
-              flex flex-wrap gap-2 
-              sm:flex-nowrap 
-              sm:ml-auto
-            "
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:ml-auto" onClick={(e) => e.stopPropagation()}>
             {actions}
           </div>
         )}

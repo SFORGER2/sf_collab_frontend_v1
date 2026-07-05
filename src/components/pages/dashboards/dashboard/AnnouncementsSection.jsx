@@ -12,6 +12,8 @@ import { Link } from "react-router-dom";
 import { plotCount } from "@/utils/plotCount";
 import { formatFriendlyDate } from "@/utils/formatFriendlyDate";
 import DeleteConfirmationModal from "@/utils/confirm";
+import { useAnnouncements } from '@/contexts/AnnouncementContext';
+import { useNewsletter } from '@/contexts/NewsletterContext';
 
 // Edit Modal Component
 function EditAnnouncementModal({ isOpen, onClose, announcement, onSave }) {
@@ -111,51 +113,31 @@ function EditAnnouncementModal({ isOpen, onClose, announcement, onSave }) {
 export default function AnnouncementsSection({ userRoles }) {
   const { user } = useSelector((state) => state.auth);
   const isAdmin = useMemo(() => user?.role === 'admin', [user]);
-  const [announcements, setAnnouncements] = useState([]);
+
+  // Contexts for announcements and newsletters
+  const {
+    announcements,
+    unreadCount: announcementsUnread,
+    markAllAsRead: markAnnouncementsRead,
+    refresh: refreshAnnouncements,
+  } = useAnnouncements();
+
+  const {
+    newsletters,
+    unreadCount: newsletterUnread,
+    markAllAsRead: markNewsletterRead,
+    refresh: refreshNewsletter,
+  } = useNewsletter();
+
+  // Local UI state (filters, modals, expansion, tabs)
   const [announcementFilter, setAnnouncementFilter] = useState('all');
+  const [newsletterFilter, setNewsletterFilter] = useState('all');
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, type: null, id: null });
   const [editModal, setEditModal] = useState({ isOpen: false, announcement: null });
+  const [hideInfluencerInfo, setHideInfluencerInfo] = useState(false);
+  const [hideShowJobApplication, setHideJobApplication] = useState(false);
 
-  useEffect(() => {
-    const fetchAnnouncements = async () => {
-      try {
-        const response = await notificationAPI.getAnnouncements();
-        const filtered = response.announcements.filter(a => {
-          return !a?.data?.startupId;
-        });
-        setAnnouncements(filtered);
-      } catch (error) {
-        console.error('Failed to fetch announcements', error);
-      }
-    };
-
-    fetchAnnouncements();
-  }, []);
-
-  const [newsletter, setNewsletter] = useState([]);
-  const [newsletterFilter, setNewsletterFilter] = useState('all');
-
-  useEffect(() => {
-    const fetchNewsletter = async () => {
-      try {
-        const response = await notificationAPI.getNewsletter();
-        setNewsletter(response.newsletter || []);
-      } catch (error) {
-        console.error('Failed to fetch newsletter', error);
-      }
-    };
-
-    fetchNewsletter();
-  }, []);
-
-  const hasUnreadAnnouncements = useMemo(() =>
-    announcements.some(a => localStorage.getItem(`announcement:${a.id}:read`) !== 'true'),
-    [announcements]
-  );
-  const hasUnreadNewsletter = useMemo(() =>
-    newsletter.some(n => localStorage.getItem(`newsletter:${n.id}:read`) !== 'true'),
-    [newsletter]
-  );
+  // Expansion state stored in localStorage (UI preference)
   const [isExpanded, setIsExpanded] = useState(() => {
     const stored = localStorage.getItem('preferences:announcementsExpanded');
     return stored === null ? true : stored === 'true';
@@ -170,67 +152,20 @@ export default function AnnouncementsSection({ userRoles }) {
     localStorage.getItem('announcements:lastSeenId') || null
   );
 
+  // Active tab stored in localStorage (UI preference)
   const [activeTab, setActiveTab] = useState('crowdfunding');
-  useEffect(() => {
-    const setActiveTabBasedOnUnread = () => {
-      if (hasUnreadAnnouncements) {
-        setActiveTab('announcements');
-        return
-      } else if (hasUnreadNewsletter) {
-        setActiveTab('newsletter');
-        return
-      }
-      const stored = localStorage.getItem('announcements:activeTab');
-      if (stored) {
-        setActiveTab(stored);
-        return
-      }
-    }
-    setActiveTabBasedOnUnread();
-  }, [hasUnreadAnnouncements, hasUnreadNewsletter]);
 
-  useEffect(() => {
-    if (!announcements.length) return;
-    const newestId = String(announcements[0]?.id || '');
-    const isNewAnnouncement = newestId && newestId !== lastSeenId;
-
-    if (isNewAnnouncement) {
-      // A brand new broadcast — always pop open, reset user-minimized flag
-      setIsExpanded(true);
-      setUserMinimized(false);
-      localStorage.setItem('announcements:userMinimized', 'false');
-      setLastSeenId(newestId);
-      localStorage.setItem('announcements:lastSeenId', newestId);
-    } else if ((hasUnreadAnnouncements || hasUnreadNewsletter) && !userMinimized) {
-      // Unread content exists and user hasn't explicitly closed it
-      setIsExpanded(true);
-    }
-  }, [announcements, hasUnreadAnnouncements, hasUnreadNewsletter]);
-
-  useEffect(() => {
-    localStorage.setItem('announcements:activeTab', activeTab);
-  }, [activeTab]);
-
-  useEffect(() => {
-    localStorage.setItem('preferences:announcementsExpanded', isExpanded);
-  }, [isExpanded]);
-
-  const handleToggleExpanded = () => {
-    const next = !isExpanded;
-    setIsExpanded(next);
-    if (!next) {
-      // User explicitly closed — remember this
-      setUserMinimized(true);
-      localStorage.setItem('announcements:userMinimized', 'true');
-    }
-  };
-
-  // Counter to force re-render when localStorage read markers change
-  const [readVersion, setReadVersion] = useState(0);
+  // Visited tabs (localStorage) – not essential but kept
+  const [visitedTabs, setVisitedTabs] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('announcements:visitedTabs')) || {};
+    } catch { return {}; }
+  });
 
   // Server-side unread counts for Waitlist / Crowdfunding / Applications
   const [serverUnread, setServerUnread] = useState({ waitlist: 0, crowdfunding: 0, applications: 0 });
 
+  // Fetch server unread counts for other tabs
   useEffect(() => {
     const fetchServerUnread = async () => {
       try {
@@ -255,60 +190,37 @@ export default function AnnouncementsSection({ userRoles }) {
     fetchServerUnread();
   }, []);
 
-  // Helper to mark all items in a tab as read
-  const markTabItemsAsRead = async (tabId) => {
-    let changed = false;
-    if (tabId === 'announcements') {
-      announcements.forEach(ann => {
-        if (localStorage.getItem(`announcement:${ann.id}:read`) !== 'true') {
-          localStorage.setItem(`announcement:${ann.id}:read`, 'true');
-          changed = true;
-        }
-      });
-      if (changed) setReadVersion(v => v + 1);
-    } else if (tabId === 'newsletter') {
-      newsletter.forEach(nl => {
-        if (localStorage.getItem(`newsletter:${nl.id}:read`) !== 'true') {
-          localStorage.setItem(`newsletter:${nl.id}:read`, 'true');
-          changed = true;
-        }
-      });
-      if (changed) setReadVersion(v => v + 1);
-    } else if (tabId === 'waitlist') {
-      try { await notificationAPI.markAllRead('access'); } catch (e) { /* ignore */ }
-      setServerUnread(prev => ({ ...prev, waitlist: 0 }));
-    } else if (tabId === 'crowdfunding') {
-      try { await notificationAPI.markAllRead('funding'); } catch (e) { /* ignore */ }
-      setServerUnread(prev => ({ ...prev, crowdfunding: 0 }));
-    } else if (tabId === 'applications') {
-      try { await notificationAPI.markAllRead('application'); } catch (e) { /* ignore */ }
-      setServerUnread(prev => ({ ...prev, applications: 0 }));
-    }
-  };
-
-  // Automatically mark as read after a short delay when expanded/tab switches
+  // Persist expansion state and active tab to localStorage
   useEffect(() => {
-    if (isExpanded) {
-      const timer = setTimeout(() => markTabItemsAsRead(activeTab), 100);
-      return () => clearTimeout(timer);
+    localStorage.setItem('preferences:announcementsExpanded', isExpanded);
+  }, [isExpanded]);
+
+  useEffect(() => {
+    localStorage.setItem('announcements:activeTab', activeTab);
+  }, [activeTab]);
+
+  // Auto‑expand if there are unread announcements or newsletters
+  useEffect(() => {
+    if (announcementsUnread > 0 || newsletterUnread > 0) {
+      setIsExpanded(true);
     }
-  }, [activeTab, isExpanded, announcements, newsletter]);
+  }, [announcementsUnread, newsletterUnread]);
 
-  // Handle tab click: switch tab and rely on useEffect to mark as read
-  const handleTabClick = (newTabId) => {
-    setActiveTab(newTabId);
-  };
+  // Auto‑switch to the tab that has unread items on mount
+  useEffect(() => {
+    if (announcementsUnread > 0) {
+      setActiveTab('announcements');
+    } else if (newsletterUnread > 0) {
+      setActiveTab('newsletter');
+    } else {
+      const stored = localStorage.getItem('announcements:activeTab');
+      if (stored) {
+        setActiveTab(stored);
+      }
+    }
+  }, [announcementsUnread, newsletterUnread]);
 
-  const [hideInfluencerInfo, setHideInfluencerInfo] = useState(false);
-  const [hideShowJobApplication, setHideJobApplication] = useState(false);
-
-  // Track which tabs the user has visited (localStorage-based)
-  const [visitedTabs, setVisitedTabs] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('announcements:visitedTabs')) || {};
-    } catch { return {}; }
-  });
-
+  // Mark a tab as visited
   const markTabVisited = (tabId) => {
     setVisitedTabs(prev => {
       const next = { ...prev, [tabId]: true };
@@ -317,31 +229,48 @@ export default function AnnouncementsSection({ userRoles }) {
     });
   };
 
-  // Mark the active tab as visited whenever it changes
-  useEffect(() => {
-    if (!visitedTabs[activeTab]) {
-      markTabVisited(activeTab);
-    }
-  }, [activeTab]);
+  // Handle tab click: switch tab and mark all as read for announcements/newsletter
+  const handleTabClick = (newTabId) => {
+    setActiveTab(newTabId);
+    markTabVisited(newTabId);
 
+    if (newTabId === 'announcements') {
+      markAnnouncementsRead(); // optimistic mark all read
+    } else if (newTabId === 'newsletter') {
+      markNewsletterRead();
+    } else if (newTabId === 'waitlist') {
+      notificationAPI.markAllRead('access').catch(() => {});
+      setServerUnread(prev => ({ ...prev, waitlist: 0 }));
+    } else if (newTabId === 'crowdfunding') {
+      notificationAPI.markAllRead('funding').catch(() => {});
+      setServerUnread(prev => ({ ...prev, crowdfunding: 0 }));
+    } else if (newTabId === 'applications') {
+      notificationAPI.markAllRead('application').catch(() => {});
+      setServerUnread(prev => ({ ...prev, applications: 0 }));
+    }
+  };
+
+  // Tabs definition with badge counts
   const tabs = useMemo(() => [
-    { id: 'announcements', label: 'Announcements', icon: Megaphone, badge: announcements.filter(a => localStorage.getItem(`announcement:${a.id}:read`) !== 'true').length },
-    { id: 'newsletter', label: 'Newsletter', icon: Mail, badge: newsletter.filter(n => localStorage.getItem(`newsletter:${n.id}:read`) !== 'true').length },
+    { id: 'announcements', label: 'Announcements', icon: Megaphone, badge: announcementsUnread },
+    { id: 'newsletter', label: 'Newsletter', icon: Mail, badge: newsletterUnread },
     { id: 'waitlist', label: 'Waitlist', icon: Bell, badge: serverUnread.waitlist },
     { id: 'crowdfunding', label: 'Crowdfunding', icon: Zap, badge: serverUnread.crowdfunding },
     { id: 'applications', label: 'Applications', icon: FileText, badge: serverUnread.applications },
-  ], [announcements, newsletter, visitedTabs, readVersion, serverUnread]);
+  ], [announcementsUnread, newsletterUnread, serverUnread]);
 
+  // Filtering (by priority) – keep as before
   const filteredAnnouncements = useMemo(() => {
     if (announcementFilter === 'all' || announcementFilter === '') return announcements;
     return announcements.filter(a => a.priority === announcementFilter);
   }, [announcements, announcementFilter]);
 
   const filteredNewsletter = useMemo(() => {
-    if (newsletterFilter === 'all') return newsletter;
-    return newsletter.filter(n => n.priority === newsletterFilter);
-  }, [newsletter, newsletterFilter]);
+    if (newsletterFilter === 'all') return newsletters;
+    return newsletters.filter(n => n.priority === newsletterFilter);
+  }, [newsletters, newsletterFilter]);
 
+  // Group by month
   const groupByMonth = (items) => {
     const grouped = {};
     items.forEach(item => {
@@ -358,11 +287,11 @@ export default function AnnouncementsSection({ userRoles }) {
   const announcementsByMonth = useMemo(() => groupByMonth(filteredAnnouncements), [filteredAnnouncements]);
   const newsletterByMonth = useMemo(() => groupByMonth(filteredNewsletter), [filteredNewsletter]);
 
-  // Delete handlers
+  // Admin handlers – update context after changes
   const handleDeleteAnnouncement = async (id) => {
     try {
       await notificationAPI.deleteAnnouncement(id);
-      setAnnouncements(announcements.filter(a => a.id !== id));
+      refreshAnnouncements(); // reload from server
       setDeleteModal({ isOpen: false, type: null, id: null });
     } catch (error) {
       console.error('Failed to delete announcement', error);
@@ -372,7 +301,7 @@ export default function AnnouncementsSection({ userRoles }) {
   const handleDeleteNewsletter = async (id) => {
     try {
       await notificationAPI.deleteNewsletter(id);
-      setNewsletter(newsletter.filter(n => n.id !== id));
+      refreshNewsletter();
       setDeleteModal({ isOpen: false, type: null, id: null });
     } catch (error) {
       console.error('Failed to delete newsletter', error);
@@ -383,10 +312,10 @@ export default function AnnouncementsSection({ userRoles }) {
     try {
       if (type === 'announcements') {
         await notificationAPI.clearAllAnnouncements();
-        setAnnouncements([]);
+        refreshAnnouncements();
       } else if (type === 'newsletter') {
         await notificationAPI.clearAllNewsletters();
-        setNewsletter([]);
+        refreshNewsletter();
       }
       setDeleteModal({ isOpen: false, type: null, id: null });
     } catch (error) {
@@ -394,20 +323,18 @@ export default function AnnouncementsSection({ userRoles }) {
     }
   };
 
-  // Edit handler
   const handleEditAnnouncement = async (formData) => {
     try {
       await notificationAPI.updateAnnouncement(editModal.announcement.id, formData);
-      setAnnouncements(announcements.map(a =>
-        a.id === editModal.announcement.id
-          ? { ...a, ...formData }
-          : a
-      ));
+      refreshAnnouncements();
       setEditModal({ isOpen: false, announcement: null });
     } catch (error) {
       console.error('Failed to update announcement', error);
     }
   };
+
+  // Compute total unread for header badge
+  const totalUnread = announcementsUnread + newsletterUnread;
 
   return (
     <div className="rounded-xl bg-white/[0.03] border border-white/10 shadow-lg overflow-hidden">
@@ -448,14 +375,14 @@ export default function AnnouncementsSection({ userRoles }) {
           <h2 className="text-xl font-semibold text-white">
             Announcements
           </h2>
-          {(hasUnreadAnnouncements || hasUnreadNewsletter) && (
+          {totalUnread > 0 && (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               className="px-2 py-1 bg-white/10 rounded-full"
             >
               <span className="text-xs font-semibold text-white">
-                {plotCount(announcements.filter(a => localStorage.getItem(`announcement:${a.id}:read`) !== 'true').length + newsletter.filter(n => localStorage.getItem(`newsletter:${n.id}:read`) !== 'true').length)}
+                {plotCount(totalUnread)}
               </span>
             </motion.div>
           )}
@@ -565,7 +492,7 @@ export default function AnnouncementsSection({ userRoles }) {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: idx * 0.05 }}
-                                    className={`p-5 rounded-lg border transition-all hover:border-white/30 ${localStorage.getItem(`announcement:${announcement.id}:read`) === 'true'
+                                    className={`p-5 rounded-lg border transition-all hover:border-white/30 ${announcement.is_read
                                       ? 'bg-white/[0.03] border-white/10'
                                       : 'bg-white/[0.07] border-white/20 shadow-xl shadow-blue-500/5'
                                       }`}
@@ -627,7 +554,7 @@ export default function AnnouncementsSection({ userRoles }) {
                           onChange={(e) => setNewsletterFilter(e.target.value)}
                           className="flex-1 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition"
                         />
-                        {isAdmin && newsletter.length > 0 && (
+                        {isAdmin && newsletters.length > 0 && (
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -654,7 +581,7 @@ export default function AnnouncementsSection({ userRoles }) {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: idx * 0.05 }}
-                                    className={`p-5 rounded-lg border transition-all hover:border-white/30 ${localStorage.getItem(`newsletter:${item.id}:read`) === 'true'
+                                    className={`p-5 rounded-lg border transition-all hover:border-white/30 ${item.is_read
                                       ? 'bg-white/[0.03] border-white/10'
                                       : 'bg-white/[0.07] border-white/20 shadow-xl shadow-purple-500/5'
                                       }`}

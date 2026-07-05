@@ -1,8 +1,7 @@
-// ProfileSettings.jsx
+// src/components/settings/ProfileSettings.jsx
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { Eye, EyeOff } from "lucide-react";
-import { ArrowLeft, Save, User, Bell, Shield, Palette, Globe, Bookmark, ExternalLink, Trash2, Share2 } from 'lucide-react';
+import { ArrowLeft, Save, User, Bell, Shield } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import NotificationSection from './NotificationSection';
 import PrivacySection from './PrivacySection';
@@ -10,48 +9,26 @@ import AppearanceSection from './AppearanceSection';
 import PreferencesSection from './PreferencesSection';
 import SavedSection from './SavedSection';
 import AccountSecurity from './AccountSecurity';
-import ProfileSection from './profileSection';
-import axios from 'axios';
-import { API_URL } from '@/utils/config';
+import ProfileSection from './ProfileSection';
 import { updateUser as updateUserSlice } from '@/services/auth/authSlice';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { usersAPI } from '@/utils/APIs/userAPI';
 import { authAPI } from '@/utils/APIs/authAPI';
-/**
- * Updated Settings UI wired to backend routes:
-  - GET /auth/me
-  - PUT /users/:id
-  - DELETE /users/:id
-  - POST /auth/logout
- */
-
-
+import { useNavigate } from 'react-router-dom';
 
 const ProfileSettings = ({ back, activeSection: initialActiveSection }) => {
   const navigate = useNavigate();
-  const [queryParams] = useSearchParams()
-  const page = queryParams.get('page')
-  const [activeSection, setActiveSection] = useState(initialActiveSection || page || 'profile');
-  useEffect(() => {
-    if (activeSection === 'settings') {
-      setActiveSection('profile');
-    }
-  }, [activeSection]);
+  const [activeSection, setActiveSection] = useState(initialActiveSection || 'profile');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { user, access_token } = useSelector((state) => state.auth);
-  const getAuthHeaders = (json = true) => ({
-    ...(json ? { "Content-Type": "application/json" } : {}),
-    Authorization: `Bearer ${access_token}`,
-  });
-  // Unified formData that mirrors backend models:
-  const [formData, setFormData] = useState({});
-  // Initialize formData with default values from user data
+  const dispatch = useDispatch();
 
-useEffect(() => {
-  if (user) {
-    setFormData(prev => ({
-      ...prev,
+  const [formData, setFormData] = useState({});
+
+  // ── Initialize formData from user ────────────────────────────────
+  useEffect(() => {
+    if (!user) return;
+    setFormData({
       firstName: user.firstName || '',
       lastName: user.lastName || '',
       email: user.email || '',
@@ -62,7 +39,9 @@ useEffect(() => {
         picture: user.profile?.picture || null,
         bio: user.profile?.bio || '',
         company: user.profile?.company || '',
-        socialLinks: user.profile?.socialLinks || {}
+        socialLinks: user.profile?.socialLinks || {},
+        country: user.profile?.country || '',
+        city: user.profile?.city || '',
       },
       preferences: {
         emailNotifications: user.preferences?.emailNotifications ?? true,
@@ -71,7 +50,7 @@ useEffect(() => {
         language: user.preferences?.language || 'en',
         timezone: user.preferences?.timezone || 'UTC',
         theme: user.preferences?.theme || 'light',
-        builderPreferences: user.preferences?.builderPreferences || ''
+        builderPreferences: user.preferences?.builderPreferences || '',
       },
       notificationSettings: {
         newComments: user.notificationSettings?.newComments ?? true,
@@ -82,222 +61,150 @@ useEffect(() => {
         storyViews: user.notificationSettings?.storyViews ?? true,
         postEngagement: user.notificationSettings?.postEngagement ?? true,
         emailDigest: user.notificationSettings?.emailDigest || 'weekly',
-        quietHours: user.notificationSettings?.quietHours || { enabled: false, start: '22:00', end: '08:00' }
+        quietHours: user.notificationSettings?.quietHours || { enabled: false, start: '22:00', end: '08:00' },
       },
       account: {
         isEmailVerified: user.isEmailVerified || false,
         createdAt: user.createdAt || null,
-        lastLogin: user.lastLogin || null
-      }
-    }));
+        lastLogin: user.lastLogin || null,
+      },
+    });
     setLoading(false);
-  }
-}, [user]);
+  }, [user]);
+
+  // ── Sidebar sections ──────────────────────────────────────────────
   const sections = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'accountSecurity', label: 'Account & Security', icon: Shield },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    // { id: 'privacy', label: 'Privacy', icon: Shield },
-    // { id: 'appearance', label: 'Appearance', icon: Palette },
-    // { id: 'preferences', label: 'Preferences', icon: Globe },
-    // { id: 'saved', label: 'Saved Items', icon: Bookmark }
   ];
 
-  // Initial load (for now with local == no race condition)
-  // useEffect(() => {
-  //   async function loadAll() {
-  //     setLoading(true);
-  //     try {
+  // ── API update helper ─────────────────────────────────────────────
+  // In ProfileSettings.jsx
+const updateUser = async (payload, isMultipart = false) => {
+  const contentType = isMultipart ? 'multipart/form-data' : 'application/json';
+  try {
+    const response = await usersAPI.updateProfile(user.id, payload, access_token, contentType);
+    // response might be: { data: { user: ... } } or { success: true, data: { user: ... } }
+    const result = response.data || response; // unwrap if needed
 
-  //       const response = await fetch(`${API_URL}/auth/me`, {
-  //         headers: {
-  //           ...getAuthHeaders()
-  //         }
-  //       });
+    // If there's an error flag, throw it
+    if (result.error) {
+      throw new Error(result.error);
+    }
+    if (result.success === false) {
+      throw new Error(result.message || 'Update failed');
+    }
 
-  //       if (response.ok) {
-  //         const p = await response.json();
-  //         // server returns { profile: { firstName,lastName,email, profile, createdAt,... } }
-  //         const serverProfile = p.user || {};
+    // Extract user from either structure
+    const updatedUser = result.user || result.data?.user || null;
+    if (updatedUser) {
+      dispatch(updateUserSlice(updatedUser));
+    } else {
+      console.warn('No user object in response, but update may have succeeded.');
+    }
+    return result;
+  } catch (error) {
+    // rethrow so the caller can handle it
+    throw error;
+  }
+};
 
-  //         setFormData(prev => ({
-  //           ...prev,
-  //           firstName: serverProfile.firstName || '',
-  //           lastName: serverProfile.lastName || '',
-  //           email: serverProfile.email || prev.email,
-  //           profile: {
-  //             picture: (serverProfile.profile && serverProfile.profile.picture) || prev.profile.picture,
-  //             bio: (serverProfile.profile && serverProfile.profile.bio) || '',
-  //             company: (serverProfile.profile && serverProfile.profile.company) || '',
-  //             socialLinks: (serverProfile.profile && serverProfile.profile.socialLinks) || {}
-  //           }
-  //         }));
-  //       }
-  //     } catch (err) {
-  //       console.error('Load settings error', err);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadAll();
-  // }, [access_token]);
+  // ── Profile picture upload ────────────────────────────────────────
+  const uploadProfilePicture = async (file) => {
+  const form = new FormData();
+  form.append('profile_picture', file);
+  try {
+    const result = await updateUser(form, true);
+    // Extract updated picture URL from the result
+    const updatedUser = result.user || result.data?.user || null;
+    const pictureUrl = updatedUser?.profile?.picture || updatedUser?.profile_picture;
+    if (pictureUrl) {
+      setFormData(prev => ({
+        ...prev,
+        profile: { ...prev.profile, picture: pictureUrl },
+      }));
+    }
+    toast.success('Profile picture updated');
+    return pictureUrl;
+  } catch (e) {
+    toast.error(e.message || 'Failed to upload picture');
+    throw e;
+  }
+};
 
+  // ── Save Profile ──────────────────────────────────────────────────
+  const saveProfile = async () => {
+    setSaving(true);
+    try {
+      if (!formData.firstName) throw new Error('First name is required');
+      if (!formData.email) throw new Error('Email is required');
+      if ((formData.profile.bio || '').length > 300) throw new Error('Bio cannot exceed 300 characters');
+      if (formData.roles.length === 0) throw new Error('At least one role must be selected');
+      if (!formData.profile.country || !formData.preferences.timezone) {
+        throw new Error('Location must be set (country & timezone)');
+      }
 
+      let requiresInfluencerApplication = false;
+      if (formData.roles.includes('influencer') && !user?.roles?.includes('influencer')) {
+        requiresInfluencerApplication = true;
+        formData.roles = formData.roles.filter(r => r !== 'influencer');
+      }
+      if (formData.roles.includes('builder') && !formData.preferences.builderPreferences) {
+        toast.error('You must set up your Builder preferences');
+        return;
+      }
 
+      await updateUser(formData, false);
+      toast.success('Profile updated');
 
+      if (requiresInfluencerApplication) {
+        toast.info('Please fill out the Influencer Application Form.', { autoClose: 6000 });
+        navigate('/apply-influencer');
+        return;
+      }
+
+      back(); // go back to profile page
+      // Do NOT reload – Redux state is already updated
+    } catch (e) {
+      toast.error(e.message || 'Update failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ── Save Notifications ────────────────────────────────────────────
   const saveNotificationSettings = async () => {
     setSaving(true);
     try {
       await updateUser({ notificationSettings: formData.notificationSettings });
       toast.success('Notification settings updated');
     } catch (err) {
-      console.error(err);
-      toast.error('Failed to update notifications');
+      toast.error(err.message || 'Failed to update notifications');
     } finally {
       setSaving(false);
     }
   };
 
-
-  /* -----------------------------------------
-     Load user into form (ONCE)
-  ----------------------------------------- */
-  useEffect(() => {
-    if (!user) return;
-
-    setFormData((prev) => ({
-      ...prev,
-      firstName: user.firstName || "",
-      lastName: user.lastName || "",
-      email: user.email || "",
-      role: user.role || "",
-      roles: user.roles || [],
-      profile: {
-        ...prev.profile,
-        ...(user.profile || {}),
-      },
-      preferences: {
-        ...prev.preferences,
-        ...(user.preferences || {}),
-      },
-      notificationSettings: {
-        ...prev.notificationSettings,
-        ...(user.notificationSettings || {}),
-      },
-    }));
-  }, [user]);
-
-  /* -----------------------------------------
-     Core update helper
-  ----------------------------------------- */
-  const dispatch = useDispatch();
-  const updateUser = async (payload, isMultipart = false) => {
-    // FIX: for FormData, don't set Content-Type — axios must add boundary automatically
-    const contentType = isMultipart ? undefined : 'application/json';
-    const data = await usersAPI.updateProfile(user.id, payload, access_token, contentType);
-
-    if (!data.success) {
-      throw new Error(data.error || "Update failed");
-    }
-    const updatedUser = data?.data?.user || data?.user || data;
-    if (updatedUser?.id) dispatch(updateUserSlice(updatedUser));
-    return data;
-  };
-
-  /* -----------------------------------------
-     Handlers
-  ----------------------------------------- */
-
-  const saveProfile = async () => {
-    setSaving(true);
+  // ── Account Security actions ──────────────────────────────────────
+  const changePassword = async (currentPassword, newPassword) => {
     try {
-      if (!formData.firstName) {
-        throw new Error("First name is required");
-      }
-      if (!formData.email) {
-        throw new Error("Email is required");
-      }
-      if ((formData?.profile?.bio || '').length > 300) {
-        throw new Error("Bio cannot exceed 300 characters");
-      }
-      if (formData.roles.length === 0) {
-        throw new Error("At least one role must be selected");
-      }
-      if (!formData.profile.country || !formData.preferences.timezone) {
-        throw new Error("Location must be set");
-      }
-      let requiresInfluencerApplication = false;
-      if (formData.roles.includes('influencer') && !user?.roles?.includes('influencer')) {
-        requiresInfluencerApplication = true;
-        formData.roles = formData.roles.filter(role => role !== 'influencer');
-      }
-      if (formData.roles.includes('builder') && !formData.preferences.builderPreferences) {
-        toast.error(
-          "You must set up your Builder preferences"
-        )
-        return
-      }
-      await updateUser(formData, false);
-      toast.success("Profile updated");
-
-      if (requiresInfluencerApplication) {
-        toast.info("Please fill out the Influencer Application Form to complete your request.", { autoClose: 6000 });
-        navigate("/apply-influencer");
-        return;
-      }
-
-      back();
-      window.location.reload();
-
-    } catch (e) {
-      toast.error(e.error);
-    } finally {
-      setSaving(false);
+      await updateUser({ currentPassword, password: newPassword });
+      toast.success('Password updated successfully');
+    } catch (err) {
+      toast.error(err.message || 'Failed to change password');
     }
   };
 
-  const savePreferences = async () => {
-    setSaving(true);
+  const changeEmail = async (newEmail, password) => {
     try {
-      await updateUser({ preferences: formData.preferences });
-      toast.success("Preferences updated");
-    } catch (e) {
-      toast.error(e.error);
-    } finally {
-      setSaving(false);
+      await updateUser({ email: newEmail, currentPassword: password });
+      toast.success('Email updated. Please verify your new email.');
+    } catch (err) {
+      toast.error(err.message || 'Failed to change email');
     }
   };
 
-
-  const uploadProfilePicture = async (file) => {
-    const form = new FormData();
-    form.append("profile_picture", file);
-
-    try {
-      await updateUser(form, true);
-      toast.success("Profile picture updated");
-    } catch (e) {
-      toast.error(e.message);
-    }
-  };
-
-  // const changeEmail = async (newEmail, password) => {
-  //   try {
-  //     const res = await updateUser({
-  //       newEmail,
-  //       password
-  //     });
-  //     if (!res.ok) {
-  //       const err = await res.json().catch(() => ({}));
-  //       throw new Error(err.message || 'Change email failed');
-  //     }
-  //     toast.success('Email changed — verify your new email');
-  //     // optionally refresh profile
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error(err.message || 'Failed to change email');
-  //   }
-  // };
   const [confirmedDelete, setConfirmedDelete] = useState(false);
   const deleteAccount = async () => {
     if (!confirmedDelete) {
@@ -306,42 +213,36 @@ useEffect(() => {
     }
     try {
       const res = await usersAPI.delete(user.id, access_token);
-      if (!res.success) {
-        throw new Error(res.message || 'Delete account failed');
-      }
+      if (!res.success) throw new Error(res.error || 'Delete failed');
       toast.success('Account deletion submitted');
-      const logoutResponse = await authAPI.logoutRequest(access_token);
-      if (logoutResponse.success) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refreshToken');
-        // Clear local auth state - adjust as needed for your auth management
-        window.location.href = '/login'; // Redirect to login or homepage
-      }
-      // optionally redirect / logout
+      await authAPI.logoutRequest(access_token);
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refreshToken');
+      window.location.href = '/login';
     } catch (err) {
-      console.error(err);
-      toast.error(err.error || 'Failed to delete account');
+      toast.error(err.message || 'Failed to delete account');
     }
   };
 
-  // Helper: global Save based on active section
+  // ── Global Save handler ───────────────────────────────────────────
   const handleSave = async () => {
     if (saving) return;
-    if (activeSection === 'profile') await saveProfile();
-    else if (activeSection === 'preferences') await savePreferences();
-    else if (activeSection === 'notifications') await saveNotificationSettings();
-    else if (activeSection === 'accountSecurity') {
-      // no-op here; password/email/delete use their own buttons inside section
-      toast.info('Use the specific actions inside Account & Security to update password/email/delete account.');
-    } else {
-      // other sections - no server persistence currently
-      toast.info('Nothing to save for this section (handled locally).');
+    switch (activeSection) {
+      case 'profile':
+        await saveProfile();
+        break;
+      case 'notifications':
+        await saveNotificationSettings();
+        break;
+      case 'accountSecurity':
+        toast.info('Use the specific actions inside Account & Security to update password/email/delete account.');
+        break;
+      default:
+        toast.info('Nothing to save for this section.');
     }
   };
 
-  if (loading) {
-    return <div className="p-8 text-gray-300">Loading settings...</div>;
-  }
+  if (loading) return <div className="p-8 text-gray-300">Loading settings...</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white">
@@ -376,16 +277,13 @@ useEffect(() => {
 
           <div className="lg:col-span-3">
             <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-2 md:p-8">
-              {/* Render sections */}
               {activeSection === 'profile' && (
                 <ProfileSection
                   formData={formData}
                   setFormData={setFormData}
                   uploadProfilePicture={uploadProfilePicture}
-
                 />
               )}
-
               {activeSection === 'accountSecurity' && (
                 <AccountSecurity
                   formData={formData}
@@ -393,28 +291,28 @@ useEffect(() => {
                   confirmedDelete={confirmedDelete}
                   setConfirmedDelete={setConfirmedDelete}
                   deleteAccount={deleteAccount}
+                  changePassword={changePassword}
+                  changeEmail={changeEmail}
+                />
+              )}
+              {activeSection === 'notifications' && (
+                <NotificationSection
+                  formData={formData}
+                  onChange={(patch) =>
+                    setFormData(prev => ({
+                      ...prev,
+                      notificationSettings: { ...(prev.notificationSettings || {}), ...patch },
+                    }))
+                  }
                 />
               )}
 
-              {activeSection === 'notifications' && (
-                <NotificationSection formData={formData}  onChange={(patch) => setFormData(prev => ({ ...prev, notificationSettings: { ...(prev.notifications || {}), ...patch } }))} />
-              )}
-
-              {activeSection === 'privacy' && (
-                <PrivacySection formData={formData} onChange={(patch) => setFormData(prev => ({ ...prev, privacySettings: { ...(prev.privacySettings || {}), ...patch } }))} />
-              )}
-
-              {activeSection === 'appearance' && (
-                <AppearanceSection formData={formData} onChange={(patch) => setFormData(prev => ({ ...prev, preferences: { ...(prev.preferences || {}), ...patch } }))} />
-              )}
-
-              {activeSection === 'preferences' && (
-                <PreferencesSection formData={formData} onChange={(patch) => setFormData(prev => ({ ...prev, preferences: { ...(prev.preferences || {}), ...patch } }))} />
-              )}
-
+              {/* Hidden sections – kept for compatibility, but not shown in sidebar */}
+              {activeSection === 'privacy' && <PrivacySection formData={formData} onChange={(patch) => setFormData(prev => ({ ...prev, privacySettings: patch }))} />}
+              {activeSection === 'appearance' && <AppearanceSection formData={formData} onChange={(patch) => setFormData(prev => ({ ...prev, preferences: { ...prev.preferences, ...patch } }))} />}
+              {activeSection === 'preferences' && <PreferencesSection formData={formData} onChange={(patch) => setFormData(prev => ({ ...prev, preferences: { ...prev.preferences, ...patch } }))} />}
               {activeSection === 'saved' && <SavedSection formData={formData} setFormData={setFormData} />}
 
-              {/* Global Save Button */}
               <div className="flex justify-end mt-6 pt-6 border-t border-gray-700">
                 <button onClick={handleSave} className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
                   <Save className="w-4 h-4" />
