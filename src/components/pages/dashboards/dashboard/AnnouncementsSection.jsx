@@ -250,6 +250,20 @@ export default function AnnouncementsSection({ userRoles }) {
     }
   };
 
+  const handleToggleExpanded = () => {
+  setIsExpanded((prev) => {
+    const next = !prev;
+
+    setUserMinimized(!next);
+    localStorage.setItem(
+      'announcements:userMinimized',
+      String(!next)
+    );
+
+    return next;
+  });
+};
+
   // Tabs definition with badge counts
   const tabs = useMemo(() => [
     { id: 'announcements', label: 'Announcements', icon: Megaphone, badge: announcementsUnread },

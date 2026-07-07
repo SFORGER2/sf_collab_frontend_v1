@@ -214,7 +214,7 @@ export default function SignUp() {
       });
       console.log(response);
 
-      if (response.data.success) {
+      if (response.success) {
         // Registration succeeded — now log in automatically to get tokens
         const loginResponse = await authAPI.loginRequest({
           email: formData.email,
@@ -236,7 +236,7 @@ export default function SignUp() {
 
         if (!user.isEmailVerified) {
           const verificationResponse = await authAPI.sendVerificationCodeRequest(access_token);
-          navigate(`/verify-email?token=${verificationResponse.data.verification_token}`);
+          navigate(`/verify-email?token=${verificationResponse.verification_token}`);
           toast.info("Verification code sent to your email, continue to verify.");
         } else {
           navigate('/dashboard');
