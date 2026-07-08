@@ -32,4 +32,8 @@ export const workspaceAPI = {
     return response.data;
   },
 
+  updateWorkspace: async (workspaceId, data) => {
+    const response = await apiClient.patch(`/workspaces/${workspaceId}`, data);
+    return response.data;
+  },
 };
