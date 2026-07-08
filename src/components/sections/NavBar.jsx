@@ -233,13 +233,37 @@ const NavBar = ({
 <button
   onClick={toggleAIAssistant}
   className={`p-2 rounded-lg transition-colors ${
-    isAIAssistantOpen ? 'bg-blue-600/30 text-blue-400' : 'hover:bg-white/10 text-slate-300 hover:text-white'
+    isAIAssistantOpen
+      ? 'bg-blue-600/30 text-blue-400'
+      : 'hover:bg-white/10 text-slate-300 hover:text-white'
   }`}
 >
   <Sparkles size={22} />
 </button>
-            
-            <div id="notification-dropdown" className="relative" ref={notificationRef}>
+
+{/* Chat */}
+<Tippy content="Chat" placement="bottom">
+  <button
+    type="button"
+    onClick={() => navigate('/chat')}
+    className={`relative p-2 rounded-lg transition-colors ${
+      location.pathname === '/chat'
+        ? 'bg-blue-600/30 text-blue-400'
+        : 'hover:bg-white/10 text-slate-300 hover:text-white'
+    }`}
+    aria-label="Open chat"
+  >
+    <IoChatbubbles size={22} />
+
+    {msgUnread > 0 && (
+      <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full border border-[#0a0a0a]">
+        {msgUnread > 99 ? '99+' : msgUnread}
+      </span>
+    )}
+  </button>
+</Tippy>
+
+<div id="notification-dropdown" className="relative" ref={notificationRef}>
               {/* 🔔 NOTIFICATIONS */}
               <Tippy
                 content={

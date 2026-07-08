@@ -19,6 +19,9 @@ import { useSelector } from 'react-redux';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 import { chatAPI } from '@/utils/APIs/chatApi';
 import { resolveUserId } from '@/utils/resolveUserId';
+import AddMemberModal from '@/components/chat (previous)/AddMemberModal';
+import { toast } from 'react-toastify'; // if not already imported
+
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -215,6 +218,12 @@ const ChatPage = () => {
   const [searchParams] = useSearchParams();
   const currentUserId = useMemo(() => String(resolveUserId(currentUser) ?? ""), [currentUser]);
 
+  const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
+  const [messageOffset, setMessageOffset] = useState(0);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const messagesContainerRef = useRef(null);
+
   // ─── Feature 1: Persisted tab (per-user, survives refresh + multi-tab) ──
   const tabKey = currentUserId ? getTabKey(currentUserId) : null;
   const [activeTab, setActiveTab] = useState(() => {
@@ -328,22 +337,22 @@ const ChatPage = () => {
   }, [token, currentUserId]);
 
   // Fetch messages for a conversation
-  const fetchMessages = useCallback(async (conversationId) => {
-    if (!token) return;
-    
-    try {
-      const data = await chatAPI.getMessages(conversationId, 100, 0);
-      const messagesPayload = Array.isArray(data?.messages)
-        ? data.messages
-        : Array.isArray(data?.data?.messages)
-          ? data.data.messages
-          : [];
-      setMessages(messagesPayload.map(normalizeMessage));
-      socket?.emit('mark_read', { conversation_id: conversationId });
-    } catch (error) {
-      console.error('Failed to fetch messages:', error);
-    }
-  }, [token, socket]);
+  const fetchMessages = useCallback(async (conversationId, offset = 0, append = false) => {
+  if (!token) return;
+  try {
+    const data = await chatAPI.getMessages(conversationId, 50, offset);
+    const messagesPayload = Array.isArray(data?.messages)
+      ? data.messages
+      : Array.isArray(data?.data?.messages)
+        ? data.data.messages
+        : [];
+    const normalized = messagesPayload.map(normalizeMessage);
+    setMessages(prev => append ? [...normalized, ...prev] : normalized);
+    setHasMoreMessages(normalized.length === 50); // if less than limit, no more
+  } catch (error) {
+    console.error('Failed to fetch messages:', error);
+  }
+}, [token]);
 
   // Sync with ChatDock events
 useEffect(() => {
@@ -778,59 +787,137 @@ useEffect(() => {
   // ============================================
 
   // Select a conversation
- const handleSelectConversation = useCallback(async (conversation) => {
-  if (activeConversation?.id !== conversation.id) {
-    // Save draft for the conversation we're leaving
-    if (activeConversation) {
-      try {
-        if (messageInput && messageInput.trim()) {
-          localStorage.setItem('chatPage:draft:' + String(activeConversation.id), messageInput);
-        } else {
-          localStorage.removeItem('chatPage:draft:' + String(activeConversation.id));
-        }
-      } catch {}
-    }
-    
-    // Leave previous room
-    if (socket && activeConversation) {
-      socket.emit('leave_conversation', { conversation_id: activeConversation.id });
-    }
-    
-    setActiveConversation(conversation);
-    setMessages([]);
-    setTypingUsers([]);
+  const handleSelectConversation = useCallback(async (conversation) => {
+  if (!conversation?.id) return;
 
-    // ─── FIX: Clear the unread count IMMEDIATELY (optimistic) ────────────
-    setConversations(prev => prev.map(c =>
-      String(c.id) === String(conversation.id) ? { ...c, unread_count: 0 } : c
-    ));
+  const conversationId = conversation.id;
 
-    // ─── Call the API to persist the read state ──────────────────────────
-    try {
-      await chatAPI.markConversationAsRead(conversation.id);
-      // Refresh global badge after a short delay to sync with server
-    } catch (error) {
-      console.error('Failed to mark conversation as read:', error);
-      // The badge is already cleared optimistically, so we don't revert.
-    }
+  // If clicking the currently open conversation, reload its messages.
+  if (
+    activeConversation &&
+    String(activeConversation.id) === String(conversationId)
+  ) {
+    setMessageOffset(0);
+    setHasMoreMessages(true);
 
-    fetchMessages(conversation.id);
-
-    // Restore draft for the conversation we're entering
-    let restoredDraft = '';
-    try {
-      restoredDraft = localStorage.getItem('chatPage:draft:' + String(conversation.id)) || '';
-    } catch {}
-    setMessageInput(restoredDraft);
-
-    // Emit socket mark_read
-    socket?.emit('mark_read', { conversation_id: conversation.id });
-    // One more local update to be safe
-    setConversations(prev => prev.map(c =>
-      String(c.id) === String(conversation.id) ? { ...c, unread_count: 0 } : c
-    ));
+    await fetchMessages(conversationId, 0, false);
+    return;
   }
-},  [activeConversation, messageInput, socket, fetchMessages]);
+
+  // Save draft for the conversation we're leaving.
+  if (activeConversation) {
+    try {
+      if (messageInput && messageInput.trim()) {
+        localStorage.setItem(
+          "chatPage:draft:" + String(activeConversation.id),
+          messageInput
+        );
+      } else {
+        localStorage.removeItem(
+          "chatPage:draft:" + String(activeConversation.id)
+        );
+      }
+    } catch {}
+  }
+
+  // Leave previous socket room.
+  if (socket && activeConversation) {
+    socket.emit("leave_conversation", {
+      conversation_id: activeConversation.id,
+    });
+  }
+
+  // Change active conversation and clear old state.
+  setActiveConversation(conversation);
+  setMessages([]);
+  setTypingUsers([]);
+
+  // Reset pagination for the newly selected conversation.
+  setMessageOffset(0);
+  setHasMoreMessages(true);
+
+  // Clear unread count immediately.
+  setConversations((prev) =>
+    prev.map((c) =>
+      String(c.id) === String(conversationId)
+        ? { ...c, unread_count: 0 }
+        : c
+    )
+  );
+
+  // IMPORTANT:
+  // Load persisted messages from the backend.
+  try {
+    await fetchMessages(conversationId, 0, false);
+  } catch (error) {
+    console.error("Failed to load conversation messages:", error);
+  }
+
+  // Mark conversation as read.
+  try {
+    await chatAPI.markConversationAsRead(conversationId);
+  } catch (error) {
+    console.error("Failed to mark conversation as read:", error);
+  }
+
+  // Restore draft.
+  let restoredDraft = "";
+
+  try {
+    restoredDraft =
+      localStorage.getItem(
+        "chatPage:draft:" + String(conversationId)
+      ) || "";
+  } catch {}
+
+  setMessageInput(restoredDraft);
+
+  // Socket read event.
+  socket?.emit("mark_read", {
+    conversation_id: conversationId,
+  });
+}, [
+  activeConversation,
+  messageInput,
+  socket,
+  fetchMessages,
+]);
+
+  useEffect(() => {
+  const container = messagesContainerRef.current;
+  if (!container) return;
+
+  const handleScroll = () => {
+    if (
+      container.scrollTop === 0 &&
+      hasMoreMessages &&
+      !loadingMore &&
+      activeConversation
+    ) {
+      setLoadingMore(true);
+
+      const newOffset = messageOffset + 50;
+
+      fetchMessages(activeConversation.id, newOffset, true)
+        .finally(() => {
+          setLoadingMore(false);
+          setMessageOffset(newOffset);
+        });
+    }
+  };
+
+  container.addEventListener('scroll', handleScroll);
+
+  return () => {
+    container.removeEventListener('scroll', handleScroll);
+  };
+}, [
+  activeConversation,
+  hasMoreMessages,
+  loadingMore,
+  messageOffset,
+  fetchMessages,
+]);
 
   // Open chat with a friend (from sidebar)
   const handleOpenChatWithFriend = async (friend) => {
@@ -1362,6 +1449,7 @@ animate-pulse">
                 onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
                 setSidebarOpen={() => setSidebarOpen(true)}
                 isMobile={isMobile}
+                onAddMember={() => setAddMemberModalOpen(true)}
               />
             </div>
             
@@ -1375,12 +1463,21 @@ animate-pulse">
                 onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
                 setSidebarOpen={() => setSidebarOpen(true)}
                 isMobile={isMobile}
+                onAddMember={() => setAddMemberModalOpen(true)}
               />
             </div>
 
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto max-h-[calc(100dvh-180px)] py-2 md:py-4 px-2 md:px-4 overscroll-contain">
+            <div
+  ref={messagesContainerRef}
+  className="flex-1 overflow-y-auto max-h-[calc(100dvh-180px)] py-2 md:py-4 px-2 md:px-4 overscroll-contain"
+>
+  {loadingMore && (
+    <div className="text-center py-2">
+      <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto" />
+    </div>
+  )}
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-zinc-500">
                   <Avatar
@@ -1391,13 +1488,12 @@ animate-pulse">
                     size="xl"
                     showStatus={false}
                   />
-
                   <p className="mt-4 font-medium text-white">
                     {otherParticipant?.firstName} {otherParticipant?.lastName}
                   </p>
                   <p className="text-sm text-zinc-500">Start a conversation</p>
                 </div>
-              ) : (
+              ) : ( 
                 messages.map((message, index) => {
                   const prevMessage = index > 0 ? messages[index - 1] : null;
                   // Use String() comparison to avoid type mismatch

@@ -17,6 +17,7 @@ const ChatHeader = ({
   conversation,
   currentUserId,
   onAvatarClick,
+  onAddMember,
   setSidebarOpen = () => {},
   isMobile,
   onLeaveGroup = null,
@@ -169,6 +170,17 @@ const ChatHeader = ({
                   <Users size={16} />
                   Members ({conversation.participants?.length || 0})
                 </button>
+                <button
+  type="button"
+  onClick={() => {
+    setOptionsMenuOpen(false);
+    onAddMember?.();
+  }}
+  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-zinc-200 hover:bg-zinc-800/70 transition-colors"
+>
+  <Users size={16} />
+  Add Member
+</button>
                 <button type="button"
                   onClick={() => { setOptionsMenuOpen(false); setLeaveModalOpen(true); }}
                   className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/20 transition-colors">

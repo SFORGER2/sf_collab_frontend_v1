@@ -151,13 +151,14 @@ getTotalUnreadCount: async () => {
   },
 
   // Participants
-  addParticipant: async (conversationId, userId, role = "member") => {
-    const response = await api.post(`/chat/conversations/${conversationId}/participants`, {
-      user_id: userId,
-      role
-    });
-    return response.data;
-  },
+  addParticipant: async (conversationId, userId, role = "member", historyVisibility = "show") => {
+  const response = await api.post(`/chat/conversations/${conversationId}/participants`, {
+    user_id: userId,
+    role,
+    history_visibility: historyVisibility, // "show" | "hide"
+  });
+  return response.data;
+},
 
   removeParticipant: async (conversationId, userId) => {
     const response = await api.delete(`/chat/conversations/${conversationId}/participants/${userId}`);

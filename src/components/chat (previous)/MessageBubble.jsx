@@ -19,6 +19,9 @@ import { getProfilePicture } from "@/utils/getProfilePicture";
 import { chatAPI } from "@/utils/APIs/chatApi";
 import { resolveUserId } from "@/utils/resolveUserId";
 
+// At the top of MessageBubble.jsx, after other imports
+const DELETE_TIMEOUT_HOURS = 2;
+
 // Helper to reduce text length
 const reduceText = (text, maxLength = 20) => {
   if (!text) return '';
@@ -185,13 +188,17 @@ export default function MessageBubble({
   const [menuAbove,    setMenuAbove]    = useState(true);   // smart: above or below
   const menuBtnRef = useRef(null);
 
-  const handleMenuToggle = () => {
-    if (!menuOpen && menuBtnRef.current) {
-      const rect = menuBtnRef.current.getBoundingClientRect();
-      setMenuAbove(rect.top > 220);
-    }
-    setMenuOpen(v => !v);
-  };
+  const handleMenuToggle = (e) => {
+  e?.preventDefault();
+  e?.stopPropagation();
+
+  if (!menuOpen && menuBtnRef.current) {
+    const rect = menuBtnRef.current.getBoundingClientRect();
+    setMenuAbove(rect.top > 220);
+  }
+
+  setMenuOpen((prev) => !prev);
+};
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
@@ -320,13 +327,43 @@ export default function MessageBubble({
     message?.message_type === "image";
 
   // Check if message can be deleted for everyone (within 1 hour)
-  const canDeleteForEveryone = useMemo(() => {
-    if (!ts) return true; // If no timestamp, allow it
-    const messageTime = new Date(ts);
-    const now = new Date();
-    const diffHours = (now - messageTime) / (1000 * 60 * 60);
-    return diffHours <= 1;
-  }, [ts]);
+  // Inside MessageBubble component
+  const canDelete = useMemo(() => {
+  // Only the sender can delete the message.
+  if (!isOwn) return false;
+
+  // Newly sent message may temporarily have no timestamp.
+  // Backend still enforces the real timeout.
+  if (!ts) return true;
+
+  const timestamp = String(ts);
+
+  const hasTimezone =
+    timestamp.endsWith("Z") ||
+    /[+-]\d{2}:\d{2}$/.test(timestamp);
+
+  const normalizedTimestamp = hasTimezone
+    ? timestamp
+    : `${timestamp}Z`;
+
+  const messageTime = new Date(normalizedTimestamp);
+
+  if (Number.isNaN(messageTime.getTime())) {
+    console.error("Invalid message timestamp:", ts);
+    return true;
+  }
+
+  const diffMilliseconds =
+    Date.now() - messageTime.getTime();
+
+  const deleteWindowMilliseconds =
+    DELETE_TIMEOUT_HOURS * 60 * 60 * 1000;
+
+  return (
+    diffMilliseconds >= 0 &&
+    diffMilliseconds <= deleteWindowMilliseconds
+  );
+}, [ts, isOwn]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -348,44 +385,62 @@ export default function MessageBubble({
   }, [message.content, message.original_content]);
 
   const handleSaveEdit = useCallback(async () => {
-    if (!editContent.trim() || !conversationId) return;
+  const trimmedContent = editContent.trim();
 
-    try {
-      setIsLoadingEditing(true);
-      await chatAPI.editMessage(conversationId, message.id, editContent.trim());
+  if (!trimmedContent || !conversationId || !message?.id) {
+    return;
+  }
 
-      if (setMessages) {
-        const updatedMessage = {
-          ...message,
-          original_content: editContent.trim(),
-          content: editContent.trim(),
-          is_edited: true,
-        };
+  try {
+    setIsLoadingEditing(true);
+    setDeleteError(null);
 
-        setMessages((prev) =>
-          prev.map((m) =>
-            String(m.id) === String(message.id) ? updatedMessage : m
-          )
-        );
-      }
+    const data = await chatAPI.editMessage(
+      conversationId,
+      message.id,
+      trimmedContent
+    );
 
-      if (onMessageUpdated) {
-        onMessageUpdated({
-          ...message,
-          original_content: editContent.trim(),
-          content: editContent.trim(),
-          is_edited: true,
-        });
-      }
+    const updatedMessage = data?.data?.message;
 
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Edit failed:", error);
-      setDeleteError("Failed to edit message");
-    } finally {
-      setIsLoadingEditing(false);
+    if (!data?.success || !updatedMessage?.id) {
+      throw new Error(data?.message || "Backend did not return updated message");
     }
-  }, [editContent, conversationId, message, setMessages, onMessageUpdated]);
+
+    if (setMessages) {
+      setMessages((prev) =>
+        prev.map((item) =>
+          String(item.id) === String(updatedMessage.id)
+            ? updatedMessage
+            : item
+        )
+      );
+    }
+
+    if (onMessageUpdated) {
+      onMessageUpdated(updatedMessage);
+    }
+
+    setIsEditing(false);
+    setEditContent("");
+  } catch (error) {
+    console.error("Edit failed:", error);
+
+    setDeleteError(
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to edit message"
+    );
+  } finally {
+    setIsLoadingEditing(false);
+  }
+}, [
+  editContent,
+  conversationId,
+  message?.id,
+  setMessages,
+  onMessageUpdated,
+]);
 
   const handleCancelEdit = useCallback(() => {
     setIsEditing(false);
@@ -393,41 +448,66 @@ export default function MessageBubble({
   }, []);
 
   // Delete handler - supports delete for everyone or just me
-  const handleDelete = useCallback(async (deleteType) => {
-    if (!conversationId || !message.id) return;
+  const handleDelete = useCallback(async (deleteType = "everyone") => {
+  if (!conversationId || !message?.id) {
+    return;
+  }
 
-    try {
-      setDeleting(true);
-      setDeleteError(null);
+  try {
+    setDeleting(true);
+    setDeleteError(null);
 
-      await chatAPI.deleteMessage(conversationId, message.id, deleteType);
+    const data = await chatAPI.deleteMessage(
+      conversationId,
+      message.id,
+      deleteType
+    );
 
-      if (setMessages) {
-        if (deleteType === 'everyone') {
-          // Mark as deleted for everyone - show "This message was deleted"
-          setMessages((prev) =>
-            prev.map((m) =>
-              String(m.id) === String(message.id)
-                ? { ...m, is_deleted: true, content: "This message was deleted" }
-                : m
-            )
-          );
-        } else {
-          // Remove from local view only (delete for me)
-          setMessages((prev) => prev.filter((m) => String(m.id) !== String(message.id)));
-        }
-      }
-
-      setDeleteModalOpen(false);
-      setMenuOpen(false);
-    } catch (error) {
-      console.error('Delete failed:', error);
-      const errorMsg = error?.response?.data?.error || "Failed to delete message";
-      setDeleteError(errorMsg);
-    } finally {
-      setDeleting(false);
+    if (!data?.success) {
+      throw new Error(data?.message || "Failed to delete message");
     }
-  }, [conversationId, message.id, setMessages]);
+
+    if (setMessages) {
+      if (deleteType === "everyone") {
+        setMessages((prev) =>
+          prev.map((item) =>
+            String(item.id) === String(message.id)
+              ? {
+                  ...item,
+                  is_deleted: true,
+                  original_content: "This message was deleted",
+                  content: "This message was deleted",
+                }
+              : item
+          )
+        );
+      } else {
+        setMessages((prev) =>
+          prev.filter(
+            (item) => String(item.id) !== String(message.id)
+          )
+        );
+      }
+    }
+
+    setDeleteModalOpen(false);
+    setMenuOpen(false);
+  } catch (error) {
+    console.error("Delete failed:", error);
+
+    setDeleteError(
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to delete message"
+    );
+  } finally {
+    setDeleting(false);
+  }
+}, [
+  conversationId,
+  message?.id,
+  setMessages,
+]);
 
   // ─── Feature 3: Star handler ───────────────────────────────────────────────
   const handleStar = useCallback(async () => {
@@ -723,6 +803,7 @@ export default function MessageBubble({
 
                 {menuOpen && createPortal(
                   <div
+                    ref={menuRef}
                     className="fixed w-44 bg-zinc-800 rounded-lg shadow-lg border border-zinc-700 z-[9999]"
                     style={(() => {
                       if (!menuBtnRef.current) return {};
@@ -779,15 +860,26 @@ export default function MessageBubble({
                           <Edit2 size={14} />
                           Edit
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => { setDeleteModalOpen(true); setMenuOpen(false); }}
-                          disabled={deleting}
-                          className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left text-red-400 hover:bg-red-500/20 disabled:opacity-50"
-                        >
-                          <Trash2 size={14} />
-                          Delete
-                        </button>
+                        {canDelete && (
+      <button
+        type="button"
+        onClick={(e) => {
+  e.preventDefault();
+  e.stopPropagation();
+
+  console.log("DELETE MENU CLICKED");
+
+  setMenuOpen(false);
+  setDeleteError(null);
+  setDeleteModalOpen(true);
+}}
+        disabled={deleting}
+        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left text-red-400 hover:bg-red-500/20 disabled:opacity-50"
+      >
+        <Trash2 size={14} />
+        Delete
+      </button>
+                        )}
                       </>
                     )}
                   </div>
@@ -906,29 +998,19 @@ export default function MessageBubble({
 
               <div className="space-y-2">
                 {/* Delete for Everyone - only if within 1 hour */}
-                {canDeleteForEveryone && (
+                {canDelete && (
                   <button
                     type="button"
                     onClick={() => handleDelete('everyone')}
                     disabled={deleting}
                     className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 rounded-xl text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {deleting ? "Deleting..." : "Delete for everyone"}
+                    {deleting ? "Deleting..." : "Delete"}
                   </button>
                 )}
 
-                {/* Delete Message - always available */}
-                <button
-                  type="button"
-                  onClick={() => handleDelete('me')}
-                  disabled={deleting}
-                  className="w-full px-4 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-zinc-200 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {deleting ? "Deleting..." : "Delete Message"}
-                </button>
-
                 {/* Info text if can't delete for everyone */}
-                {!canDeleteForEveryone && (
+                {!canDelete && (
                   <p className="text-xs text-zinc-500 text-center mt-2">
                   </p>
                 )}
