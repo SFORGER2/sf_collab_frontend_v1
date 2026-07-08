@@ -13,7 +13,7 @@ import React, { useMemo, useState, useCallback, useRef, useEffect } from "react"
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { X, Download, FileText, ExternalLink, Check, CheckCheck, MoreVertical, Edit2, Trash2, Star, Pin, ListTodo, BookmarkCheck } from "lucide-react";
+import { X, Download, FileText, ExternalLink, Check, CheckCheck, MoreVertical, Edit2, Trash2, Star, Pin, ListTodo, BookmarkCheck, Reply as ReplyIcon, Copy as CopyIcon, Link as LinkIcon, Forward as ForwardIcon, Flag, CheckSquare, Square } from "lucide-react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import { chatAPI } from "@/utils/APIs/chatApi";
@@ -176,8 +176,17 @@ export default function MessageBubble({
   onMessageUpdated = null,
   conversationId = null,
   conversationType = "direct",
+  isGroupAdmin = false,
   currentUserId = null,
-  variant = "page" // "page" or "dock"
+  variant = "page", // "page" or "dock"
+  // New: reply / view-replies
+  allMessages = [],
+  onReply = null,
+  // New: multi-select mode
+  selectMode = false,
+  isSelected = false,
+  onToggleSelect = null,
+  onEnterSelectMode = null,
 }) {
   const navigate = useNavigate();
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -203,6 +212,15 @@ export default function MessageBubble({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const menuRef = useRef(null);
+  // FIX: the actual menu is rendered via createPortal straight into
+  // document.body (so it isn't clipped by scrolling ancestors) -- but that
+  // means its DOM nodes are NOT inside menuRef's subtree. The outside-click
+  // handler below only checked menuRef, so it treated every click on any
+  // menu item as an "outside click" and closed the menu on mousedown,
+  // a moment before the item's own onClick could fire. This made every
+  // single button in the menu look broken at once. menuContentRef covers
+  // the portaled content too, so real menu clicks are recognized.
+  const menuContentRef = useRef(null);
   const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
   const pickerBtnRef = useRef(null);
 
@@ -211,6 +229,30 @@ export default function MessageBubble({
   };
   const [reactionLoading, setReactionLoading] = useState(false);
   const [showReactionBar, setShowReactionBar] = useState(false);
+
+  // New: view-replies expand state
+  const [repliesExpanded, setRepliesExpanded] = useState(false);
+
+  // New: copy feedback ("Copied!" tooltip)
+  const [copyFeedback, setCopyFeedback] = useState(null); // 'text' | 'link' | null
+
+  // (Translate option removed per request)
+
+  // New: forward modal
+  const [forwardModalOpen, setForwardModalOpen] = useState(false);
+  const [forwardConversations, setForwardConversations] = useState([]);
+  const [forwardLoading, setForwardLoading] = useState(false);
+  // New: multi-select forwarding -- a Set of conversation ids instead of a
+  // single target, so a message can be forwarded to several chats at once.
+  const [forwardTargetIds, setForwardTargetIds] = useState(new Set());
+  const [forwardSending, setForwardSending] = useState(false);
+  const [forwardDone, setForwardDone] = useState(false);
+
+  // New: report modal
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportSending, setReportSending] = useState(false);
+  const [reportDone, setReportDone] = useState(false);
 
   // Quick reaction emojis shown in the hover bar
   const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "😡", "👍", "👎", "🔥", "🎉", "💯"];
@@ -240,8 +282,8 @@ export default function MessageBubble({
   }, [message?.reactions, currentUserId]);
 
   const handleReact = useCallback(async (emoji) => {
-    // Cannot react to your own messages
-    if (isOwn) return;
+    // FIX: Telegram lets you react to your own messages too -- removed the
+    // isOwn block that silently no-op'd this before.
     if (!conversationId || !message?.id || reactionLoading) return;
     setReactionPickerOpen(false);
     setShowReactionBar(false);
@@ -326,49 +368,31 @@ export default function MessageBubble({
     (message?.file_type && (String(message.file_type) === "image" || String(message.file_type).startsWith("image/"))) ||
     message?.message_type === "image";
 
-  // Check if message can be deleted for everyone (within 1 hour)
-  // Inside MessageBubble component
-  const canDelete = useMemo(() => {
-  // Only the sender can delete the message.
-  if (!isOwn) return false;
+  // FIX: WhatsApp-style window is 3 hours, not 1. This only governs the
+  // SENDER's own "delete for everyone" option -- admin moderation of
+  // someone else's message (below) is never time-limited.
+  const canDeleteForEveryone = useMemo(() => {
+    if (!ts) return true; // If no timestamp, allow it
+    const messageTime = new Date(ts);
+    const now = new Date();
+    const diffHours = (now - messageTime) / (1000 * 60 * 60);
+    return diffHours <= 3;
+  }, [ts]);
 
-  // Newly sent message may temporarily have no timestamp.
-  // Backend still enforces the real timeout.
-  if (!ts) return true;
+  // New: can this user delete this message at all, and is it via admin
+  // moderation (deleting someone else's message in a group) rather than
+  // as the sender? Regular members can never delete others' messages;
+  // direct-message participants can never delete each other's messages
+  // either, since only group conversations have an admin role.
+  const isAdminModeration = !isOwn && isGroupAdmin && conversationType === "group";
+  const canDelete = isOwn || isAdminModeration;
 
-  const timestamp = String(ts);
-
-  const hasTimezone =
-    timestamp.endsWith("Z") ||
-    /[+-]\d{2}:\d{2}$/.test(timestamp);
-
-  const normalizedTimestamp = hasTimezone
-    ? timestamp
-    : `${timestamp}Z`;
-
-  const messageTime = new Date(normalizedTimestamp);
-
-  if (Number.isNaN(messageTime.getTime())) {
-    console.error("Invalid message timestamp:", ts);
-    return true;
-  }
-
-  const diffMilliseconds =
-    Date.now() - messageTime.getTime();
-
-  const deleteWindowMilliseconds =
-    DELETE_TIMEOUT_HOURS * 60 * 60 * 1000;
-
-  return (
-    diffMilliseconds >= 0 &&
-    diffMilliseconds <= deleteWindowMilliseconds
-  );
-}, [ts, isOwn]);
-
-  // Close menu when clicking outside
+  // Close menu when clicking outside (including the portaled content)
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
+      const insideButton = menuRef.current && menuRef.current.contains(e.target);
+      const insideMenu = menuContentRef.current && menuContentRef.current.contains(e.target);
+      if (!insideButton && !insideMenu) {
         setMenuOpen(false);
       }
     };
@@ -574,14 +598,144 @@ export default function MessageBubble({
     openInNewTab(fileUrl, token);
   }, [fileUrl, token]);
 
+  // ─── New: Reply ─────────────────────────────────────────────────────────
+  const handleReplyClick = useCallback(() => {
+    setMenuOpen(false);
+    if (onReply) onReply(message);
+  }, [onReply, message]);
+
+  // ─── New: View replies (messages in this conversation whose reply_to_id
+  // points at this one -- computed locally from the already-loaded list) ──
+  const replies = useMemo(() => {
+    if (!message?.id || !Array.isArray(allMessages)) return [];
+    return allMessages.filter(
+      (m) => String(m.reply_to_id) === String(message.id)
+    );
+  }, [allMessages, message?.id]);
+
+  // ─── New: Copy message text ─────────────────────────────────────────────
+  const handleCopy = useCallback(async () => {
+    setMenuOpen(false);
+    const text = message.content || message.original_content || "";
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyFeedback("text");
+      setTimeout(() => setCopyFeedback(null), 1500);
+    } catch (e) {
+      console.error("Copy failed:", e);
+    }
+  }, [message.content, message.original_content]);
+
+  // ─── New: Copy message link ─────────────────────────────────────────────
+  const handleCopyLink = useCallback(async () => {
+    setMenuOpen(false);
+    if (!conversationId || !message?.id) return;
+    const link = `${window.location.origin}/chat?conversation=${conversationId}&message=${message.id}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopyFeedback("link");
+      setTimeout(() => setCopyFeedback(null), 1500);
+    } catch (e) {
+      console.error("Copy link failed:", e);
+    }
+  }, [conversationId, message?.id]);
+
+  // (Translate handler removed per request)
+
+  // ─── New: Forward ───────────────────────────────────────────────────────
+  const handleForwardOpen = useCallback(async () => {
+    setMenuOpen(false);
+    setForwardModalOpen(true);
+    setForwardDone(false);
+    setForwardTargetIds(new Set());
+    setForwardLoading(true);
+    try {
+      const res = await chatAPI.getAllChats();
+      const list = res?.data?.conversations || res?.conversations || res?.data || [];
+      setForwardConversations(Array.isArray(list) ? list : []);
+    } catch (e) {
+      console.error("Failed to load conversations for forwarding:", e);
+      setForwardConversations([]);
+    } finally {
+      setForwardLoading(false);
+    }
+  }, []);
+
+  const handleToggleForwardTarget = useCallback((conversationIdToToggle) => {
+    setForwardTargetIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(conversationIdToToggle)) next.delete(conversationIdToToggle);
+      else next.add(conversationIdToToggle);
+      return next;
+    });
+  }, []);
+
+  // New: forwards to every selected conversation in a single action
+  // (all requests fired together, like WhatsApp's multi-chat forward).
+  const handleForwardSend = useCallback(async () => {
+    if (forwardTargetIds.size === 0 || forwardSending) return;
+    setForwardSending(true);
+    try {
+      const results = await Promise.allSettled(
+        Array.from(forwardTargetIds).map((id) => chatAPI.forwardMessage(id, message))
+      );
+      const failed = results.filter((r) => r.status === "rejected");
+      if (failed.length > 0) {
+        console.error(`Forward failed for ${failed.length} of ${results.length} chats:`, failed);
+      }
+      setForwardDone(true);
+      setTimeout(() => {
+        setForwardModalOpen(false);
+        setForwardTargetIds(new Set());
+        setForwardDone(false);
+      }, 900);
+    } catch (e) {
+      console.error("Forward failed:", e);
+    } finally {
+      setForwardSending(false);
+    }
+  }, [forwardTargetIds, forwardSending, message]);
+
+  // ─── New: Report ────────────────────────────────────────────────────────
+  const handleReportOpen = useCallback(() => {
+    setMenuOpen(false);
+    setReportModalOpen(true);
+    setReportDone(false);
+    setReportReason("");
+  }, []);
+
+  const handleReportSend = useCallback(async () => {
+    if (!reportReason.trim() || reportSending || !conversationId || !message?.id) return;
+    setReportSending(true);
+    try {
+      await chatAPI.reportMessage(conversationId, message.id, reportReason.trim());
+      setReportDone(true);
+      setTimeout(() => setReportModalOpen(false), 1200);
+    } catch (e) {
+      console.error("Report failed:", e);
+    } finally {
+      setReportSending(false);
+    }
+  }, [reportReason, reportSending, conversationId, message?.id]);
+
+  // ─── New: Select ────────────────────────────────────────────────────────
+  const handleSelectClick = useCallback(() => {
+    setMenuOpen(false);
+    if (selectMode) {
+      if (onToggleSelect) onToggleSelect(message.id);
+    } else if (onEnterSelectMode) {
+      onEnterSelectMode(message.id);
+    }
+  }, [selectMode, onToggleSelect, onEnterSelectMode, message.id]);
+
   // If message is deleted, show deleted placeholder
   if (message?.is_deleted) {
     return (
       <div
         className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}
-        onMouseEnter={() => !isOwn && setShowReactionBar(true)}
+        onMouseEnter={() => setShowReactionBar(true)}
         onMouseLeave={() => { if (!reactionPickerOpen) setShowReactionBar(false); }}
-        onTouchStart={() => !isOwn && setShowReactionBar(true)}
+        onTouchStart={() => setShowReactionBar(true)}
       >
         <div className="w-8 shrink-0" />
         <div className={`flex flex-col max-w-[65%] ${isOwn ? "items-end" : "items-start"}`}>
@@ -639,14 +793,28 @@ export default function MessageBubble({
       )}
 
       <div
-        className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}
-        onMouseEnter={() => !isOwn && setShowReactionBar(true)}
+        className={`group flex gap-1 px-1 py-0.5 mb-1 rounded-lg ${isOwn ? "flex-row-reverse" : ""} ${selectMode && isSelected ? "bg-indigo-500/10" : ""}`}
+        onMouseEnter={() => setShowReactionBar(true)}
         onMouseLeave={() => { if (!reactionPickerOpen) setShowReactionBar(false); }}
-        onTouchStart={() => !isOwn && setShowReactionBar(true)}
+        onTouchStart={() => setShowReactionBar(true)}
+        onClick={() => { if (selectMode && onToggleSelect) onToggleSelect(message.id); }}
       >
+        {/* Selection checkbox (select mode only) */}
+        {selectMode && (
+          <div className="w-6 shrink-0 flex items-center justify-center cursor-pointer">
+            {isSelected ? (
+              <CheckSquare size={18} className="text-indigo-400" />
+            ) : (
+              <Square size={18} className="text-zinc-500" />
+            )}
+          </div>
+        )}
+
         {/* Avatar column */}
         <div
-          onClick={() => {
+          onClick={(e) => {
+            if (selectMode) return;
+            e.stopPropagation();
             const targetId = resolveUserId(message?.sender);
             if (!targetId) return;
             navigate(`/user-profile?userId=${targetId}`);
@@ -771,6 +939,24 @@ export default function MessageBubble({
                 </div>
               ) : (
                 <>
+                  {/* New: "Forwarded" label, preserved forwarding metadata */}
+                  {message?.is_forwarded && (
+                    <div className={`flex items-center gap-1 mb-1 text-xs italic ${isOwn ? "text-white/60" : "text-zinc-500"}`}>
+                      <ForwardIcon size={11} />
+                      Forwarded
+                    </div>
+                  )}
+
+                  {/* Quoted reply preview, if this message is a reply to another */}
+                  {message?.reply_to && (
+                    <div className={`mb-1.5 pl-2 border-l-2 text-xs rounded ${isOwn ? "border-white/40 text-white/70" : "border-zinc-500 text-zinc-400"}`}>
+                      <div className="font-medium truncate">
+                        {message.reply_to.sender_id ? "Reply" : ""}
+                      </div>
+                      <div className="truncate opacity-80">{message.reply_to.content}</div>
+                    </div>
+                  )}
+
                   {/* Message content */}
                   <div className="flex gap-1 items-end">
                     <div className="break-words [overflow-wrap:anywhere] min-w-0">
@@ -784,6 +970,19 @@ export default function MessageBubble({
                       {message.is_edited && <span className="text-xs opacity-60 ml-1">(edited)</span>}
                     </div>
                   </div>
+
+                  {/* (Translated text display removed along with Translate option) */}
+
+                  {/* New: Expanded replies list (from "View N Replies") */}
+                  {repliesExpanded && replies.length > 0 && (
+                    <div className={`mt-2 pt-2 border-t space-y-1.5 ${isOwn ? "border-white/20" : "border-zinc-700"}`}>
+                      {replies.map((r) => (
+                        <div key={r.id} className="text-xs opacity-80 truncate">
+                          {r.sender?.firstName || r.sender_name || "Someone"}: {r.content || r.original_content}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -803,8 +1002,8 @@ export default function MessageBubble({
 
                 {menuOpen && createPortal(
                   <div
-                    ref={menuRef}
-                    className="fixed w-44 bg-zinc-800 rounded-lg shadow-lg border border-zinc-700 z-[9999]"
+                    ref={menuContentRef}
+                    className="fixed w-56 max-h-[80vh] overflow-y-auto bg-zinc-800 rounded-lg shadow-lg border border-zinc-700 z-[9999]"
                     style={(() => {
                       if (!menuBtnRef.current) return {};
                       const r = menuBtnRef.current.getBoundingClientRect();
@@ -815,6 +1014,94 @@ export default function MessageBubble({
                       };
                     })()}
                   >
+                    {/* Reply */}
+                    <button
+                      type="button"
+                      onClick={handleReplyClick}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700"
+                    >
+                      <ReplyIcon size={14} />
+                      Reply
+                    </button>
+
+                    {/* View N Replies */}
+                    {replies.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => { setMenuOpen(false); setRepliesExpanded(v => !v); }}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700"
+                      >
+                        <ReplyIcon size={14} className="rotate-180" />
+                        {repliesExpanded ? "Hide" : "View"} {replies.length} {replies.length === 1 ? "Reply" : "Replies"}
+                      </button>
+                    )}
+
+                    {/* Copy */}
+                    <button
+                      type="button"
+                      onClick={handleCopy}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700"
+                    >
+                      <CopyIcon size={14} />
+                      Copy
+                    </button>
+
+                    {/* (Translate menu item removed per request) */}
+
+                    {/* Copy Message Link */}
+                    <button
+                      type="button"
+                      onClick={handleCopyLink}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700"
+                    >
+                      <LinkIcon size={14} />
+                      Copy Message Link
+                    </button>
+
+                    {/* Download (only if this message has an attachment) */}
+                    {fileUrl && (
+                      <button
+                        type="button"
+                        onClick={() => { setMenuOpen(false); onDownload(); }}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700"
+                      >
+                        <Download size={14} />
+                        Download
+                      </button>
+                    )}
+
+                    {/* Forward */}
+                    <button
+                      type="button"
+                      onClick={handleForwardOpen}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700"
+                    >
+                      <ForwardIcon size={14} />
+                      Forward
+                    </button>
+
+                    {/* Report */}
+                    <button
+                      type="button"
+                      onClick={handleReportOpen}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left text-orange-400 hover:bg-orange-500/10"
+                    >
+                      <Flag size={14} />
+                      Report
+                    </button>
+
+                    {/* Select */}
+                    <button
+                      type="button"
+                      onClick={handleSelectClick}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700"
+                    >
+                      {isSelected ? <CheckSquare size={14} /> : <Square size={14} />}
+                      Select
+                    </button>
+
+                    <div className="border-t border-zinc-700 my-1" />
+
                     {/* Star */}
                     <button
                       type="button"
@@ -847,7 +1134,7 @@ export default function MessageBubble({
                       {isTask ? 'Remove Task' : 'Add to Tasks'}
                     </button>
 
-                    {/* Edit / Delete — own messages only */}
+                    {/* Edit — own messages only */}
                     {isOwn && (
                       <>
                         <div className="border-t border-zinc-700 my-1" />
@@ -860,26 +1147,22 @@ export default function MessageBubble({
                           <Edit2 size={14} />
                           Edit
                         </button>
-                        {canDelete && (
-      <button
-        type="button"
-        onClick={(e) => {
-  e.preventDefault();
-  e.stopPropagation();
-
-  console.log("DELETE MENU CLICKED");
-
-  setMenuOpen(false);
-  setDeleteError(null);
-  setDeleteModalOpen(true);
-}}
-        disabled={deleting}
-        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left text-red-400 hover:bg-red-500/20 disabled:opacity-50"
-      >
-        <Trash2 size={14} />
-        Delete
-      </button>
-                        )}
+                      </>
+                    )}
+                    {/* Delete — own messages, OR any message in a group if
+                        the current user is a group admin (moderation) */}
+                    {canDelete && (
+                      <>
+                        {!isOwn && <div className="border-t border-zinc-700 my-1" />}
+                        <button
+                          type="button"
+                          onClick={() => { setDeleteModalOpen(true); setMenuOpen(false); }}
+                          disabled={deleting}
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left text-red-400 hover:bg-red-500/20 disabled:opacity-50"
+                        >
+                          <Trash2 size={14} />
+                          {isAdminModeration ? "Remove Message (Admin)" : "Delete"}
+                        </button>
                       </>
                     )}
                   </div>
@@ -892,23 +1175,28 @@ export default function MessageBubble({
           <span className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1">
             <span>{formatTime(ts)}</span>
             {isOwn && <ReadReceipt status={getMsgStatus(message)} size={12} />}
+            {copyFeedback && (
+              <span className="text-indigo-400 font-medium">
+                {copyFeedback === "link" ? "Link copied!" : "Copied!"}
+              </span>
+            )}
           </span>
 
           {/* Reactions row — pills always visible, + button on hover/tap */}
-          {(Object.keys(reactionCounts).length > 0 || (!isOwn && showReactionBar)) && (
+          {(Object.keys(reactionCounts).length > 0 || showReactionBar) && (  // FIX: reactions now allowed on own messages too
             <div className={`flex flex-wrap items-center gap-1 mt-1 ${isOwn ? "justify-end" : "justify-start"}`}>
               {/* Existing reaction pills */}
               {Object.entries(reactionCounts).map(([emoji, data]) => (
                 <button
                   key={emoji}
                   type="button"
-                  onClick={() => !isOwn && handleReact(emoji)}
-                  title={isOwn ? undefined : (data.hasReacted ? "Remove reaction" : `React with ${emoji}`)}
+                  onClick={() => handleReact(emoji)}
+                  title={data.hasReacted ? "Remove reaction" : `React with ${emoji}`}
                   className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border transition-all ${
                     data.hasReacted
                       ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-300"
                       : "bg-zinc-800 border-zinc-700 text-zinc-300"
-                  } ${!isOwn ? "hover:border-zinc-500 cursor-pointer" : "cursor-default"}`}
+                  } hover:border-zinc-500 cursor-pointer`}
                 >
                   <span>{emoji}</span>
                   {data.count > 1 && <span className="font-medium ml-0.5">{data.count}</span>}
@@ -916,7 +1204,7 @@ export default function MessageBubble({
               ))}
 
               {/* Add reaction button — only for OTHER users' messages */}
-              {!isOwn && (
+              {true && ( // FIX: reaction "+" button now shown on own messages too
                 <div className="relative">
                   <button
                     type="button"
@@ -988,7 +1276,9 @@ export default function MessageBubble({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-5">
-              <h3 className="text-lg font-semibold text-white mb-3">Delete message?</h3>
+              <h3 className="text-lg font-semibold text-white mb-3">
+                {isAdminModeration ? "Remove this message?" : "Delete message?"}
+              </h3>
 
               {deleteError && (
                 <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm">
@@ -997,22 +1287,50 @@ export default function MessageBubble({
               )}
 
               <div className="space-y-2">
-                {/* Delete for Everyone - only if within 1 hour */}
-                {canDelete && (
+                {isAdminModeration ? (
+                  // Admin moderating another member's message: a single,
+                  // unambiguous action -- always removes it for everyone,
+                  // with no time limit.
                   <button
                     type="button"
                     onClick={() => handleDelete('everyone')}
                     disabled={deleting}
                     className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 rounded-xl text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {deleting ? "Deleting..." : "Delete"}
+                    {deleting ? "Removing..." : "Remove for Everyone"}
                   </button>
-                )}
+                ) : (
+                  <>
+                    {/* Delete for Everyone - only within the 3-hour window */}
+                    {canDeleteForEveryone && (
+                      <button
+                        type="button"
+                        onClick={() => handleDelete('everyone')}
+                        disabled={deleting}
+                        className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 rounded-xl text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {deleting ? "Deleting..." : "Delete for everyone"}
+                      </button>
+                    )}
 
-                {/* Info text if can't delete for everyone */}
-                {!canDelete && (
-                  <p className="text-xs text-zinc-500 text-center mt-2">
-                  </p>
+                    {/* Delete Message - always available to the sender */}
+                    <button
+                      type="button"
+                      onClick={() => handleDelete('me')}
+                      disabled={deleting}
+                      className="w-full px-4 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-zinc-200 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {deleting ? "Deleting..." : "Delete Message"}
+                    </button>
+
+                    {/* FIX: 3-hour window (was 1 hour) -- info text so it's
+                        clear why "Delete for everyone" isn't shown. */}
+                    {!canDeleteForEveryone && (
+                      <p className="text-xs text-zinc-500 text-center mt-2">
+                        It's been more than 3 hours since this message was sent, so it can only be deleted for you.
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -1037,6 +1355,122 @@ export default function MessageBubble({
         onClose={() => setTaskModalOpen(false)}
         onSave={handleSaveTask}
       />
+
+      {/* New: Forward modal (multi-select, WhatsApp-style) */}
+      {forwardModalOpen && (
+        <div
+          className="fixed inset-0 z-[10001] bg-black/60 flex items-center justify-center p-4"
+          onClick={() => !forwardSending && setForwardModalOpen(false)}
+        >
+          <div
+            className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-sm border border-zinc-800 p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-base font-semibold text-white mb-3">
+              Forward message{forwardTargetIds.size > 0 ? ` (${forwardTargetIds.size})` : ""}
+            </h3>
+            {forwardDone ? (
+              <p className="text-sm text-emerald-400 py-4 text-center">
+                Forwarded to {forwardTargetIds.size} {forwardTargetIds.size === 1 ? "chat" : "chats"}!
+              </p>
+            ) : (
+              <>
+                <div className="max-h-64 overflow-y-auto space-y-1 mb-4">
+                  {forwardLoading ? (
+                    <p className="text-sm text-zinc-500 text-center py-4">Loading chats…</p>
+                  ) : forwardConversations.length === 0 ? (
+                    <p className="text-sm text-zinc-500 text-center py-4">No conversations found</p>
+                  ) : (
+                    forwardConversations.map((c) => {
+                      const selected = forwardTargetIds.has(c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => handleToggleForwardTarget(c.id)}
+                          className={`w-full flex items-center gap-2 text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                            selected
+                              ? "bg-indigo-500/20 border border-indigo-500/50 text-indigo-300"
+                              : "hover:bg-zinc-800 text-zinc-200 border border-transparent"
+                          }`}
+                        >
+                          {selected ? (
+                            <CheckSquare size={16} className="shrink-0" />
+                          ) : (
+                            <Square size={16} className="shrink-0 text-zinc-500" />
+                          )}
+                          <span className="truncate">
+                            {c.name || c.other_participant?.firstName || `Chat #${c.id}`}
+                          </span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setForwardModalOpen(false)}
+                    className="flex-1 py-2 rounded-xl bg-zinc-700 hover:bg-zinc-600 text-sm text-zinc-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleForwardSend}
+                    disabled={forwardTargetIds.size === 0 || forwardSending}
+                    className="flex-1 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-sm text-white transition-colors disabled:opacity-50"
+                  >
+                    {forwardSending ? "Sending…" : `Forward${forwardTargetIds.size > 0 ? ` (${forwardTargetIds.size})` : ""}`}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* New: Report modal */}
+      {reportModalOpen && (
+        <div
+          className="fixed inset-0 z-[10001] bg-black/60 flex items-center justify-center p-4"
+          onClick={() => !reportSending && setReportModalOpen(false)}
+        >
+          <div
+            className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-sm border border-zinc-800 p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-base font-semibold text-white mb-3">Report message</h3>
+            {reportDone ? (
+              <p className="text-sm text-emerald-400 py-4 text-center">Thanks — this has been reported.</p>
+            ) : (
+              <>
+                <textarea
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  rows={3}
+                  placeholder="Why are you reporting this message?"
+                  className="w-full px-3 py-2 bg-zinc-800 rounded-xl text-sm text-white resize-none focus:outline-none focus:ring-1 focus:ring-orange-500 mb-4"
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setReportModalOpen(false)}
+                    className="flex-1 py-2 rounded-xl bg-zinc-700 hover:bg-zinc-600 text-sm text-zinc-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleReportSend}
+                    disabled={!reportReason.trim() || reportSending}
+                    className="flex-1 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-sm text-white transition-colors disabled:opacity-50"
+                  >
+                    {reportSending ? "Reporting…" : "Report"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

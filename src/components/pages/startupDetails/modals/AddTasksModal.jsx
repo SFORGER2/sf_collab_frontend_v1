@@ -63,7 +63,7 @@ export default function AddTaskModal({
         description:     task.description     || "",
         priority:        task.priority        || "medium",
         status:          task.status          || "in_progress",
-        due_date:        task.due_date ? task.due_date.split("T")[0] : "",
+        due_date:        (task.deadline || task.due_date) ? (task.deadline || task.due_date).split("T")[0] : "",
         estimated_hours: task.estimated_hours || "",
         assigned_to:     task.assigned_to     || null,
         visible_by:      task.visible_by      || "team",

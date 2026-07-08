@@ -48,10 +48,13 @@ const FounderManageTasks = () => {
 
   const statuses = [
     { id: 'all', label: 'All Tasks', filterFn: () => true },
-    { id: 'in_progress', label: 'In Progress', filterFn: (task) => task.status === 'in_progress' || task.status === 'in-progress' },
+    { id: 'in_progress', label: 'In Progress', filterFn: (task) => task.status === 'in_progress' },
     { id: 'overdue', label: 'Overdue', filterFn: (task) => task.is_overdue },
-    { id: 'completed', label: 'Completed', filterFn: (task) => task.status === 'completed' },
-    { id: 'to_do', label: 'To Do', filterFn: (task) => task.status === 'to_do' },
+    // FIX: real task status values are 'todo' / 'done' (see app/models/erp_task.py) —
+    // this previously checked 'completed' / 'to_do', which never matched any
+    // real task, so these two tabs always showed an empty list.
+    { id: 'completed', label: 'Completed', filterFn: (task) => task.status === 'done' },
+    { id: 'to_do', label: 'To Do', filterFn: (task) => task.status === 'todo' },
   ];
 
   // Fetch startups with their tasks
@@ -98,8 +101,11 @@ const FounderManageTasks = () => {
   // Handle task completion toggle
   const handleCompleteTask = async (taskId, currentStatus) => {
     try {
-      if (currentStatus === 'completed') {
-        await tasksAPI.update(taskId, { status: 'to_do' });
+      // FIX: 'completed' / 'to_do' aren't real status values (see statuses
+      // list above) — using them here meant "un-complete" silently failed
+      // validation server-side. Real values are 'done' / 'todo'.
+      if (currentStatus === 'done') {
+        await tasksAPI.update(taskId, { status: 'todo' });
       } else {
         await tasksAPI.completeTask(taskId);
       }
@@ -149,7 +155,7 @@ const FounderManageTasks = () => {
   // Calculate stats from all tasks
   useEffect(() => {
     const allTasks = startups.flatMap(s => s.tasks);
-    const completed = allTasks.filter((t) => t.status === 'completed').length;
+    const completed = allTasks.filter((t) => t.status === 'done').length;
     const inProgress = allTasks.filter((t) => t.status === 'in_progress' || t.status === 'in-progress').length;
     const overdue = allTasks.filter((t) => t.is_overdue).length;
     const total = allTasks.length;
@@ -429,7 +435,7 @@ const FounderManageTasks = () => {
               const filteredTasks = getFilteredTasksForStartup(startup.tasks);
               const startupTaskStats = {
                 total: startup.tasks.length,
-                completed: startup.tasks.filter(t => t.status === 'completed').length,
+                completed: startup.tasks.filter(t => t.status === 'done').length,
                 inProgress: startup.tasks.filter(t => t.status === 'in_progress' || t.status === 'in-progress').length,
                 overdue: startup.tasks.filter(t => t.is_overdue).length,
               };
@@ -524,13 +530,13 @@ const FounderManageTasks = () => {
 
                               <div className="flex flex-wrap gap-2">
                                 <Badge className={`text-xs border ${
-                                  task.status === 'completed' ? 'bg-green-500/20 text-green-400 border-green-500/30' : ''
+                                  task.status === 'done' ? 'bg-green-500/20 text-green-400 border-green-500/30' : ''
                                 } ${
                                   task.status === 'in_progress' || task.status === 'in-progress' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : ''
                                 } ${
                                   task.is_overdue ? 'bg-red-500/20 text-red-400 border-red-500/30' : ''
                                 } ${
-                                  task.status === 'to_do' ? 'bg-gray-500/20 text-gray-400 border-gray-500/30' : ''
+                                  task.status === 'todo' ? 'bg-gray-500/20 text-gray-400 border-gray-500/30' : ''
                                 }`}>
                                   {task.is_overdue ? 'OVERDUE' : snakeToText(task.status)}
                                 </Badge>
@@ -553,13 +559,13 @@ const FounderManageTasks = () => {
                                   whileTap={{ scale: 0.95 }}
                                   onClick={() => handleCompleteTask(task.id, task.status)}
                                   className={`flex-1 px-3 py-2 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-1 ${
-                                    task.status === 'completed'
+                                    task.status === 'done'
                                       ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
                                       : 'bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30'
                                   }`}
                                 >
                                   <CheckCircle className="w-4 h-4" />
-                                  {task.status === 'completed' ? 'Incomplete' : 'Complete'}
+                                  {task.status === 'done' ? 'Incomplete' : 'Complete'}
                                 </motion.button>
                                 <motion.button
                                   whileHover={{ scale: 1.05 }}

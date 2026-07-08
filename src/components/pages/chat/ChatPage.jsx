@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Edit3, MessageCircle, HamburgerIcon, Menu, Archive, ChevronRight, ChevronDown } from 'lucide-react';
+import { Search, Edit3, MessageCircle, HamburgerIcon, Menu, Archive, ChevronRight, ChevronDown, X } from 'lucide-react';
 
 // Import chat components
 import Avatar from '@/components/chat (previous)/Avatar';
@@ -218,11 +218,24 @@ const ChatPage = () => {
   const [searchParams] = useSearchParams();
   const currentUserId = useMemo(() => String(resolveUserId(currentUser) ?? ""), [currentUser]);
 
+<<<<<<< HEAD
+  // New: is the current user an admin of the active conversation (only
+  // meaningful for group conversations -- used to allow admin-moderated
+  // deletion of other members' messages).
+  const isGroupAdmin = useMemo(() => {
+    if (!activeConversation || activeConversation.conversation_type !== 'group') return false;
+    const me = activeConversation.participants?.find(
+      (p) => String(p.id) === String(currentUserId)
+    );
+    return me?.role === 'admin';
+  }, [activeConversation, currentUserId]);
+=======
   const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
   const [messageOffset, setMessageOffset] = useState(0);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const messagesContainerRef = useRef(null);
+>>>>>>> d8822b17f152769192442def2707d347e9adf2e1
 
   // ─── Feature 1: Persisted tab (per-user, survives refresh + multi-tab) ──
   const tabKey = currentUserId ? getTabKey(currentUserId) : null;
@@ -269,6 +282,73 @@ const ChatPage = () => {
   // ─── Feature 5: Archive state ───────────────────────────────────────────
   const [archivedConversations, setArchivedConversations] = useState([]);
   const [pinnedConversations, setPinnedConversations] = useState(new Set()); // Feature 6: Set of pinned IDs
+
+  // New: reply-in-progress state, kept PER CONVERSATION so switching chats
+  // never leaks one conversation's reply draft into another. Keyed by
+  // conversation id; replyingTo below is always derived fresh from
+  // whichever conversation is currently active.
+  const [replyDrafts, setReplyDrafts] = useState({}); // { [conversationId]: message }
+  const replyingTo = activeConversation ? (replyDrafts[activeConversation.id] || null) : null;
+
+  // New: multi-select mode for messages (Telegram-style "Select" action).
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedMessageIds, setSelectedMessageIds] = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  // New: scroll-to and briefly highlight a message when arriving via a
+  // "Copy Message Link" URL (?message=<id>).
+  const [highlightedMessageId, setHighlightedMessageId] = useState(null);
+
+  const handleReply = useCallback((message) => {
+    if (!activeConversation) return;
+    setReplyDrafts((prev) => ({ ...prev, [activeConversation.id]: message }));
+  }, [activeConversation]);
+
+  const handleCancelReply = useCallback(() => {
+    if (!activeConversation) return;
+    setReplyDrafts((prev) => {
+      const next = { ...prev };
+      delete next[activeConversation.id];
+      return next;
+    });
+  }, [activeConversation]);
+
+  const handleEnterSelectMode = useCallback((messageId) => {
+    setSelectMode(true);
+    setSelectedMessageIds(new Set([messageId]));
+  }, []);
+
+  const handleToggleSelect = useCallback((messageId) => {
+    setSelectedMessageIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(messageId)) next.delete(messageId);
+      else next.add(messageId);
+      return next;
+    });
+  }, []);
+
+  const handleCancelSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelectedMessageIds(new Set());
+  }, []);
+
+  const handleBulkDelete = useCallback(async () => {
+    if (!activeConversation || selectedMessageIds.size === 0 || bulkDeleting) return;
+    setBulkDeleting(true);
+    try {
+      await Promise.all(
+        Array.from(selectedMessageIds).map((id) =>
+          chatAPI.deleteMessage(activeConversation.id, id, 'me').catch((e) => {
+            console.error('Bulk delete failed for message', id, e);
+          })
+        )
+      );
+      setMessages((prev) => prev.filter((m) => !selectedMessageIds.has(m.id)));
+    } finally {
+      setBulkDeleting(false);
+      handleCancelSelectMode();
+    }
+  }, [activeConversation, selectedMessageIds, bulkDeleting, handleCancelSelectMode]);
 
 
   // ============================================
@@ -517,7 +597,14 @@ useEffect(() => {
 
       if (isActive && !isOwn) {
         setMessages((prev) => [...prev, normalizeMessage(data.message)]);
-        socket.emit("mark_read", { conversation_id: activeConversation.id });
+        // FIX: backend's socket handler is registered for "mark_as_read"
+        // (app/socket_events.py, @socketio.on("mark_as_read")) -- this was
+        // emitting "mark_read" instead. Socket.IO event names must match
+        // exactly, so this silently did nothing every time, which is why
+        // read receipts never updated in real time: the backend's
+        // otherwise fully correct message_status_update broadcast to the
+        // sender was never triggered.
+        socket.emit("mark_as_read", { conversation_id: activeConversation.id });
       } else if (isActive && isOwn) {
         // FIX #1b: Replace the optimistic message with the real server message
         // (which has a proper ID, status, etc.). If no optimistic exists, add it
@@ -1034,8 +1121,25 @@ useEffect(() => {
   };
 
   // Send a message - FIX #1: Optimistic update so message appears instantly
+  // New: "Copy Message Link" support -- if the URL has ?message=<id>, scroll
+  // to that message once it's loaded and briefly highlight it.
+  useEffect(() => {
+    const targetId = searchParams.get('message');
+    if (!targetId || messages.length === 0) return;
+    const el = document.querySelector(`[data-message-id="${targetId}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setHighlightedMessageId(targetId);
+      const timer = setTimeout(() => setHighlightedMessageId(null), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, messages]);
+
   const handleSendMessage = async (content) => {
     if (!content || !activeConversation) return;
+    const replyToId = replyingTo?.id && !String(replyingTo.id).startsWith('optimistic-')
+      ? replyingTo.id
+      : null;
 
     // Build an optimistic message shown immediately, before socket echo
     const optimisticId = `optimistic-${Date.now()}`;
@@ -1052,14 +1156,27 @@ useEffect(() => {
       created_at: new Date().toISOString(),
       conversation_id: activeConversation.id,
       status: 'sending',
+      reply_to_id: replyToId,
+      reply_to: replyingTo ? {
+        id: replyingTo.id,
+        content: replyingTo.content || replyingTo.original_content,
+        sender_id: replyingTo.sender_id,
+      } : undefined,
     });
 
     // Show it immediately
     setMessages((prev) => [...prev, optimisticMsg]);
+    // FIX: clear the draft for THIS conversation only, so replying in one
+    // chat can never affect another conversation's draft.
+    setReplyDrafts((prev) => {
+      const next = { ...prev };
+      delete next[activeConversation.id];
+      return next;
+    });
 
     try {
       // Persist first through REST so the message survives refresh.
-      const response = await chatAPI.sendMessage(activeConversation.id, content);
+      const response = await chatAPI.sendMessage(activeConversation.id, content, replyToId);
       const serverMessage = response?.data?.message || response?.message || null;
 
       if (serverMessage) {
@@ -1507,19 +1624,33 @@ animate-pulse">
                       )}
                       
                       {/* Message bubble */}
-                      <MessageBubble
-                        message={message}
-                        isOwn={isOwn}
-                        showAvatar={shouldShowAvatar(message, index)}
-                        currentUserId={currentUserId}
-                        conversationId={activeConversation?.id}
-                        conversationType={activeConversation?.conversation_type}
-                        setMessages={setMessages}
-                        showSenderName={
-                          activeConversation?.conversation_type !== "direct" &&
-                          shouldShowSenderName(messages, index)
-                        }
-                      />
+                      <div
+                        data-message-id={message.id}
+                        className={`rounded-xl transition-colors duration-500 ${
+                          String(highlightedMessageId) === String(message.id) ? 'bg-indigo-500/20' : ''
+                        }`}
+                      >
+                        <MessageBubble
+                          message={message}
+                          isOwn={isOwn}
+                          showAvatar={shouldShowAvatar(message, index)}
+                          currentUserId={currentUserId}
+                          conversationId={activeConversation?.id}
+                          conversationType={activeConversation?.conversation_type}
+                          isGroupAdmin={isGroupAdmin}
+                          setMessages={setMessages}
+                          allMessages={messages}
+                          onReply={handleReply}
+                          selectMode={selectMode}
+                          isSelected={selectedMessageIds.has(message.id)}
+                          onToggleSelect={handleToggleSelect}
+                          onEnterSelectMode={handleEnterSelectMode}
+                          showSenderName={
+                            activeConversation?.conversation_type !== "direct" &&
+                            shouldShowSenderName(messages, index)
+                          }
+                        />
+                      </div>
 
                     </React.Fragment>
                   );
@@ -1532,6 +1663,52 @@ animate-pulse">
               {/* Scroll anchor */}
               <div ref={messagesEndRef} />
             </div>
+
+            {/* Select-mode toolbar (Telegram-style multi-select) */}
+            {selectMode && (
+              <div className="border-t border-zinc-800 bg-zinc-900 px-4 py-2 flex items-center justify-between">
+                <span className="text-sm text-zinc-300">{selectedMessageIds.size} selected</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCancelSelectMode}
+                    className="px-3 py-1.5 text-sm text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBulkDelete}
+                    disabled={selectedMessageIds.size === 0 || bulkDeleting}
+                    className="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 rounded-lg hover:bg-red-500/10 disabled:opacity-50"
+                  >
+                    {bulkDeleting ? 'Deleting…' : 'Delete'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Reply preview banner */}
+            {replyingTo && !selectMode && (
+              <div className="border-t border-zinc-800 bg-zinc-900 px-4 py-2 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1 border-l-2 border-indigo-500 pl-2">
+                  <p className="text-xs text-indigo-400 font-medium">
+                    Replying to {String(replyingTo.sender_id) === String(currentUserId) ? 'yourself' : (replyingTo.sender_name || replyingTo?.sender?.firstName || 'message')}
+                  </p>
+                  <p className="text-xs text-zinc-400 truncate">
+                    {replyingTo.content || replyingTo.original_content}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCancelReply}
+                  className="text-zinc-500 hover:text-white p-1 rounded-full hover:bg-zinc-800 shrink-0"
+                  title="Cancel reply"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
 
             {/* Chat Input - with file upload support */}
             <div className="border-t border-zinc-800">

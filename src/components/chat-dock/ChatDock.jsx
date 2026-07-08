@@ -531,7 +531,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
           // but we still emit mark_read so the backend DB and other participants sync.
           if (consideredActive) {
             clearUnread(cid);
-            socket?.emit?.("mark_read", { conversation_id: cid });
+            socket?.emit?.("mark_as_read", { conversation_id: cid });
           }
         } else {
           setWindows((prev) =>
@@ -607,7 +607,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
       // Backend will emit unread_count_update back via socket confirming the reset
       clearUnread(cid);
       socket?.emit?.("join_conversation", { conversation_id: cid });
-      socket?.emit?.("mark_read", { conversation_id: cid });
+      socket?.emit?.("mark_as_read", { conversation_id: cid });
       // Also call REST endpoint so DB is updated and socket event fires
       try {
         if (token) {
@@ -737,7 +737,7 @@ useEffect(() => {
     windows.forEach((w) => {
       if (!w.minimized) {
         clearUnread(w.conversationId);
-        socket?.emit?.("mark_read", { conversation_id: String(w.conversationId) });
+        socket?.emit?.("mark_as_read", { conversation_id: String(w.conversationId) });
       }
     });
   }, [consideredActive, windows, clearUnread, socket]);
@@ -963,7 +963,7 @@ useEffect(() => {
           }
         } else {
           clearUnread(cid);
-          socket.emit("mark_read", { conversation_id: cid });
+          socket.emit("mark_as_read", { conversation_id: cid });
         }
       }
 
@@ -1133,7 +1133,7 @@ useEffect(() => {
 
       if (consideredActive && !isConvMinimized(cid)) {
         clearUnread(cid);
-        socket.emit("mark_read", { conversation_id: cid });
+        socket.emit("mark_as_read", { conversation_id: cid });
       }
     },
     [socket, consideredActive, isConvMinimized, clearUnread]

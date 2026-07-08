@@ -60,7 +60,8 @@ const WorkspaceSwitcher = () => {
       const userData = await dispatch(fetchUserProfile()).unwrap();
       dispatch(setUser(userData));
       setIsOpen(false);
-      navigate('/erp-dashboard');
+      // Navigate to the workspace dashboard instead of a full reload
+      navigate('/erp');
     } catch (err) {
       console.error('Failed to switch workspace:', err);
       setError('Failed to switch workspace');
@@ -88,7 +89,7 @@ const WorkspaceSwitcher = () => {
       setShowCreateModal(false);
       setNewWorkspaceName('');
       setNewWorkspaceSlug('');
-      navigate('/erp-dashboard');
+      navigate('/erp');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create workspace');
     } finally {

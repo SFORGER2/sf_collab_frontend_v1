@@ -130,6 +130,57 @@ getTotalUnreadCount: async () => {
     return response.data;
   },
 
+  // FIX: MessageBubble.jsx already called these six methods, but they were
+  // never defined here -- Star/Pin/Task buttons in the message menu threw
+  // "chatAPI.starMessage is not a function" the moment anyone clicked them.
+  // The backend routes already existed; only these client wrappers were missing.
+  starMessage: async (conversationId, messageId) => {
+    const response = await api.post(`/chat/conversations/${conversationId}/messages/${messageId}/star`);
+    return response.data;
+  },
+  unstarMessage: async (conversationId, messageId) => {
+    const response = await api.delete(`/chat/conversations/${conversationId}/messages/${messageId}/star`);
+    return response.data;
+  },
+  pinMessage: async (conversationId, messageId) => {
+    const response = await api.post(`/chat/conversations/${conversationId}/messages/${messageId}/pin`);
+    return response.data;
+  },
+  unpinMessage: async (conversationId, messageId) => {
+    const response = await api.delete(`/chat/conversations/${conversationId}/messages/${messageId}/pin`);
+    return response.data;
+  },
+  saveMessageAsTask: async (conversationId, messageId, dueDate = null, note = null) => {
+    const response = await api.post(`/chat/conversations/${conversationId}/messages/${messageId}/task`, {
+      due_date: dueDate,
+      note,
+    });
+    return response.data;
+  },
+  removeMessageTask: async (conversationId, messageId) => {
+    const response = await api.delete(`/chat/conversations/${conversationId}/messages/${messageId}/task`);
+    return response.data;
+  },
+
+  // New: Report a message (moderation)
+  reportMessage: async (conversationId, messageId, reason) => {
+    const response = await api.post(`/chat/conversations/${conversationId}/messages/${messageId}/report`, {
+      reason,
+    });
+    return response.data;
+  },
+
+  // New: Forward a message -- reuses the existing sendMessage endpoint against
+  // a different conversation, tagged so the UI can show "Forwarded".
+  forwardMessage: async (targetConversationId, originalMessage) => {
+    const response = await api.post(`/chat/conversations/${targetConversationId}/messages`, {
+      content: originalMessage.content || originalMessage.original_content || '',
+      message_type: 'text',
+      forwarded_from_message_id: originalMessage.id,
+    });
+    return response.data;
+  },
+
   // Files
   uploadFile: async (conversationId, file, content = "") => {
     const formData = new FormData();
