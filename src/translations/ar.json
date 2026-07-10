@@ -1,0 +1,12 @@
+{
+  "login": "تسجيل الدخول",
+  "register": "إنشاء حساب",
+  "forgot_password": "نسيت كلمة المرور",
+  "dashboard": "لوحة التحكم",
+  "tasks": "المهام",
+  "create_task": "إنشاء مهمة",
+  "notifications": "الإشعارات",
+  "profile": "الملف الشخصي",
+  "settings": "الإعدادات",
+  "language": "اللغة"
+}

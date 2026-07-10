@@ -1,3 +1,4 @@
+import { translate } from "../../utils/translation";
 import { useState, useEffect, useRef } from "react"
 import { Eye, EyeOff } from "lucide-react"
 import { useNavigate } from "react-router-dom"
@@ -21,7 +22,8 @@ const API_URL = import.meta.env.VITE_API_URL_AUTH || '/api/auth';
 export default function Login() {
   const navigate = useNavigate();
   const dispatch=useDispatch();
-  
+    const language = localStorage.getItem("language") || "en";
+
   // const { login, loginWithGoogle } = useAuth();
   const [showPassword, setShowPassword] = useState(false)
   const [loaderState, setLoaderState] = useState(false)

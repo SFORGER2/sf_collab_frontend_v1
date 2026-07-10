@@ -167,7 +167,7 @@ const ConnectWithUsers = () => {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {Array.from({ length: itemsPerPage }).map((_, i) => (
-              <UserCardSkeleton key={i} />
+                <UserCardSkeleton key={i} />
             ))}
           </motion.div>
         ) : users.length > 0 ? (
@@ -237,15 +237,27 @@ const ConnectWithUsers = () => {
               </motion.div>
             )}
           </>
-        ) : (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24">
-            <div className="inline-flex p-4 rounded-2xl bg-slate-800/50 border border-slate-700 mb-6">
-              <Users className="w-12 h-12 text-slate-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-slate-300 mb-2">No users found</h3>
-            <p className="text-slate-500">Try adjusting your search criteria</p>
-          </motion.div>
-        )}
+) : (
+  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24">
+    <div className="inline-flex p-4 rounded-2xl bg-slate-800/50 border border-slate-700 mb-6">
+      <Users className="w-12 h-12 text-slate-600" />
+    </div>
+
+    <h3 className="text-2xl font-semibold text-slate-300 mb-4">
+      No suitable collaborators found.
+    </h3>
+
+    <p className="text-slate-400 mb-4">
+      Try updating:
+    </p>
+
+    <div className="text-slate-500 space-y-2">
+      <p>• Required Roles</p>
+      <p>• Industry</p>
+      <p>• Technology Stack</p>
+    </div>
+  </motion.div>
+)}
       </div>
     </div>
   );

@@ -1,3 +1,6 @@
+import PitchDeckHome from "../components/pages/pitch-deck/PitchDeckHome.jsx";
+import PitchDeckCreate from "../components/pages/pitch-deck/PitchDeckCreate.jsx";
+import MyDecks from "../components/pages/pitch-deck/MyDecks.jsx";
 import { createBrowserRouter } from "react-router-dom";
 import Home from "../components/pages/Home.jsx";
 import Layout from "../Layout/Layout.jsx";
@@ -136,6 +139,20 @@ export const router = createBrowserRouter([
         element: <Dashboard />,
       },
       
+      {
+  path: "/pitch-deck",
+  element: <PitchDeckHome />,
+},
+
+{
+  path: "/pitch-deck/create",
+  element: <PitchDeckCreate />,
+},
+
+{
+  path: "/pitch-deck/my-decks",
+  element: <MyDecks />,
+},
       //!fixed
       // {
       //   path: "/startup",
