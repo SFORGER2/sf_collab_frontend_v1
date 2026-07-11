@@ -4,14 +4,16 @@ import { Check, X } from "lucide-react"
 import React, { useState, useEffect } from "react"
 
 export default function Preferences() {
-  const [language, setLanguage] = useState("English")
+  const [language, setLanguage] = useState(() => {
+  return localStorage.getItem("language") || "English";
+});
   const [timeZone, setTimeZone] = useState("UTC+")
   const [defaultHomepage, setDefaultHomepage] = useState("Dashboard")
   const [showLanguageOptions, setShowLanguageOptions] = useState(false)
   const [showTimeZoneOptions, setShowTimeZoneOptions] = useState(false)
   const [showHomepageOptions, setShowHomepageOptions] = useState(false)
 
-  const languages = ["English", "Spanish", "French", "German"]
+  const languages = ["English", "Spanish", "French"]
   const timeZones = [
     { value: "UTC+", label: "UTC+" },
     { value: "UTC-5", label: "UTC-5 (EST)" },
@@ -20,7 +22,6 @@ export default function Preferences() {
     { value: "UTC+9", label: "UTC+9 (JST)" }
   ]
   const homepages = ["Dashboard", "Analytics", "Projects", "Settings"]
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showLanguageOptions || showTimeZoneOptions || showHomepageOptions) {
@@ -108,10 +109,23 @@ export default function Preferences() {
                         <div
                           key={lang}
                           onClick={(e) => {
-                            e.stopPropagation()
-                            setLanguage(lang)
-                            setShowLanguageOptions(false)
-                          }}
+  e.stopPropagation();
+
+  setLanguage(lang);
+  localStorage.setItem("language", lang);
+  if (lang === "Arabic") {
+  document.documentElement.dir = "rtl";
+} else {
+  document.documentElement.dir = "ltr";
+}
+
+setShowLanguageOptions(false);
+document.documentElement.dir =
+  lang === "Arabic" ? "rtl" : "ltr";
+
+setShowLanguageOptions(false);
+  setShowLanguageOptions(false);
+}}
                           className="p-2.5 cursor-pointer hover:bg-[#232323]"
                         >
                           {lang}

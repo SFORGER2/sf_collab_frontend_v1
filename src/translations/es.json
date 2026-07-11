@@ -1,0 +1,11 @@
+{
+  "login": "Iniciar sesión",
+  "register": "Registrarse",
+  "forgot_password": "Olvidé mi contraseña",
+  "tasks": "Tareas",
+  "create_task": "Crear tarea",
+  "notifications": "Notificaciones",
+  "profile": "Perfil",
+  "settings": "Configuración",
+  "language": "Idioma"
+}

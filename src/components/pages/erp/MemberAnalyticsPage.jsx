@@ -14,7 +14,7 @@ const tasksApi = axios.create({ baseURL: "/api/erp-tasks" });
 tasksApi.interceptors.request.use(requestInterceptor);
 tasksApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
-const updatesApi = axios.create({ baseURL: "/api/daily-updates-new" });
+const updatesApi = axios.create({ baseURL: "/api/daily-update" });
 updatesApi.interceptors.request.use(requestInterceptor);
 updatesApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 

@@ -50,13 +50,10 @@ import { ConversationsCardSkeleton, MessagesSkeleton } from './Skeletons';
 import { API_BASE_URL, SOCKET_API_URL } from '@/utils/config';
 import { chatAPI } from '@/utils/APIs/chatApi';
 import { usersAPI } from '@/utils/api/userAPI';
+import MessageBubble from './MessageBubble';
 import { notificationAPI } from '@/utils/api/notificationAPI';
 
 import { toAbsoluteFileUrl } from "@/utils/toAbsoluteFileUrl";
-
-
-
-
 
 
 async function downloadViaBlob(url, filename) {
@@ -76,7 +73,15 @@ async function downloadViaBlob(url, filename) {
   window.URL.revokeObjectURL(blobUrl);
 }
 
+const DELETE_TIMEOUT_HOURS = Number(import.meta.env.VITE_MESSAGE_DELETE_TIMEOUT_HOURS) || 1;
 
+const canDeleteMessage = (message) => {
+  if (!message?.created_at) return true; // fallback
+  const msgTime = new Date(message.created_at);
+  const now = new Date();
+  const diffHours = (now - msgTime) / (1000 * 60 * 60);
+  return diffHours <= DELETE_TIMEOUT_HOURS;
+};
 //component for reusability
 const RightSidebarContent = ({ 
     selectedConversation, 
@@ -1057,41 +1062,43 @@ const ChatComponent = () => {
     
   //! LOAD USER MESSAGES FOR CHOSEN CONVERSATION:
   const loadMessages = async (conversationId) => {
-    if (initialMessagesLoad) {
-      setLoadingMessages(true);
-    }
-      
-    const token = access_token;
-      
-    if (!token) {
-      console.error('No access token found');
-      setLoadingMessages(false);
-      setInitialMessagesLoad(false);
-      return;
-    }
-      
-    try {
-      // ✅ USING CENTRALIZED API
-      const data = await chatAPI.getMessages(conversationId, 50, 0);
-          
-      if (data.success && data.data?.messages) {
-        setMessages(data.data.messages);
-        // console.log('Loaded Messages:', data.data.messages);
-        loadConversationFiles(conversationId);
-      } else {
-        setMessages([]);
-      }
-    } catch (error) {
-      console.error('Error loading messages:', error);
-      setMessages([]);
-    } finally {
-      setLoadingMessages(false);
-      if (initialMessagesLoad) {
-        setInitialMessagesLoad(false);
-      }
-    }
-  };
+  if (!conversationId) return;
 
+  console.log("LOADING MESSAGES FOR:", conversationId);
+
+  setLoadingMessages(true);
+
+  try {
+    const data = await chatAPI.getMessages(
+      conversationId,
+      50,
+      0
+    );
+
+    console.log("GET MESSAGES RESPONSE:", data);
+
+    if (
+      data?.success &&
+      Array.isArray(data?.data?.messages)
+    ) {
+      // Backend returns newest -> oldest.
+      // Reverse once for chronological chat rendering.
+      setMessages([...data.data.messages].reverse());
+    } else {
+      console.error("INVALID MESSAGES RESPONSE:", data);
+      setMessages([]);
+    }
+  } catch (error) {
+    console.error("GET MESSAGES FAILED:", error);
+    setMessages([]);
+    toast.error("Failed to load messages");
+  } finally {
+    setLoadingMessages(false);
+    setInitialMessagesLoad(false);
+  }
+};
+
+  
     
   //! LOAD FILES FOR CHOSEN CONVERSATION:
   const loadConversationFiles = async (conversationId) => {
@@ -1119,14 +1126,27 @@ const ChatComponent = () => {
     
   //! load messages and files when selected conversation changes:
   useEffect(() => {
-    if (selectedConversation) {
-      loadMessages(selectedConversation.id);
-      loadConversationFiles(selectedConversation.id);
-      if (wsClient) {
-        wsClient.joinConversation(selectedConversation.id);
-      }
-    }
-  }, [selectedConversation]);
+  const conversationId = selectedConversation?.id;
+
+  if (!conversationId) {
+    setMessages([]);
+    setConversationFiles([]);
+    return;
+  }
+
+  console.log(
+    "SELECTED CONVERSATION CHANGED:",
+    conversationId
+  );
+
+  loadMessages(conversationId);
+  loadConversationFiles(conversationId);
+
+  if (wsClient) {
+    wsClient.joinConversation(conversationId);
+  }
+
+}, [selectedConversation?.id]);
     
   //! scroll to bottom on new message:
   useEffect(() => {
@@ -1292,32 +1312,16 @@ const ChatComponent = () => {
 
     
   //! handle selected conversation:
-  const handleSelectConversation = async (conversation) => {
-    // Reset initial messages load when switching to a different conversation
-    if (selectedConversation?.id !== conversation.id) {
-      setInitialMessagesLoad(true);
-    }
-      
-    setSelectedConversation(conversation);
-      
-    // Mark conversation as read when selected
-    if (conversation && conversation.id) {
-      try {
-        await markConversationAsRead(conversation.id);
-        // // Safely dispatch Redux action
-        // await dispatch(fetchUserProfile()).catch(err => {
-        //   console.error("Error updating user profile after marking read:", err);
-        // });
-        // Update local state to reflect read status
-        setReadConversations(prev => new Set([...prev, conversation.id]));
-              
-        // Reload conversations to update unread counts
-        loadConversations();
-      } catch (error) {
-        console.error('Error marking conversation as read:', error);
-      }
-    }
-  };
+const handleSelectConversation = (conversation) => {
+  if (!conversation?.id) return;
+
+  console.log("CLICKED CONVERSATION:", conversation.id);
+
+  setMessages([]);
+  setConversationFiles([]);
+  setInitialMessagesLoad(true);
+  setSelectedConversation(conversation);
+};
     
   //! handle notification:
   const handleCreateNotification = async (title = "", msg = "", type = "system", isRead = false, user_id = null) => {
@@ -1347,72 +1351,70 @@ const ChatComponent = () => {
     
   //! handle send message:
   const handleSendMessage = async (messageContent, file = null) => {
-    if ((!messageContent?.trim() && !file) || !selectedConversation) return;
-        
-    setLoading(true);
-    const token = access_token;
-        
-    if (!token) {
-      console.error('No access token found');
-      setLoading(false);
-      return;
+  const conversationId = selectedConversation?.id;
+
+  if (!conversationId) {
+    toast.error("Select a conversation first");
+    return;
+  }
+
+  if (!file && !messageContent?.trim()) {
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    let data;
+
+    if (file) {
+      data = await chatAPI.uploadFile(
+        conversationId,
+        file,
+        messageContent?.trim() || "Sent a file"
+      );
+    } else {
+      data = await chatAPI.sendMessage(
+        conversationId,
+        messageContent.trim()
+      );
     }
-        
-    try {
-      if (file) {
-        // Handle file upload
-        const formData = new FormData();
-        formData.append('sender_id', userId);
-        formData.append('content', messageContent || 'Sent a file');
-        formData.append('message_type', 'file');
-        formData.append('file', file);
-                
-        // ✅ USING CENTRALIZED API
-        const data = await chatAPI.uploadFile(selectedConversation.id, file, messageContent || 'Sent a file');
-                
-        if (data.success && data.data?.message) {
-          const msg = formatMessageContent(data.data?.message?.content)
-          handleCreateNotification(
-            `You have new message from ${user?.firstName} ${user?.lastName}`,
-            msg,
-            "system",
-            false,
-            selectedConversation.participants?.find(u => u.id !== userId)?.id
-          );
-          setMessages(prev => [...prev, data.data.message]);
-          loadConversations();
-          loadConversationFiles(selectedConversation.id);
-        } else {
-          throw new Error(data.message || "Failed to send message");
-        }
-      } else {
-        // Handle text message
-        // ✅ USING CENTRALIZED API
-        const data = await chatAPI.sendMessage(selectedConversation.id, messageContent);
-                
-        if (data.success && data.data?.message) {
-          const msg = formatT(data.data?.message?.content)
-          handleCreateNotification(
-            `You have new message from ${user?.firstName} ${user?.lastName}`,
-            msg,
-            "system",
-            false,
-            selectedConversation.participants?.find(u => u.id !== userId)?.id
-          );
-          setMessages(prev => [...prev, data.data.message]);
-          loadConversations();
-        } else {
-          throw new Error(data.message || "Failed to send message");
-        }
+
+    const savedMessage = data?.data?.message;
+
+    if (!data?.success || !savedMessage?.id) {
+      throw new Error(data?.message || "Backend did not return the saved message");
+    }
+
+    setMessages((prev) => {
+      const exists = prev.some(
+        (message) => String(message.id) === String(savedMessage.id)
+      );
+
+      if (exists) {
+        return prev;
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      // Show error alert
-      toast.error(error.message || 'Failed to send message. Please try again.');
-    } finally {
-      setLoading(false);
+
+      return [...prev, savedMessage];
+    });
+
+    await loadConversations();
+
+    if (file) {
+      await loadConversationFiles(conversationId);
     }
-  };
+  } catch (error) {
+    console.error("Error sending message:", error);
+
+    toast.error(
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to send message"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
 
   //! handle typing:
@@ -2450,163 +2452,48 @@ const ChatComponent = () => {
                     </div>
                   </div>
                 ) : (
-                  messages.map(message => (
-                    <div key={message.id} className="space-y-1">
-                      <div
-                        className={`flex ${message.sender_id === userId ? 'justify-end' : 'justify-start'}`}
-                        onMouseEnter={() => setHoveredMessageId(message.id)}
-                        onMouseLeave={() => setHoveredMessageId(null)}
-                      >
-                        <div className={`max-w-[85%] md:max-w-[70%] ${message.sender_id === userId ? 'items-end' : 'items-start'} flex flex-col`}>
-                          <div className={`${message.sender_id === userId ? 'flex-row-reverse flex gap-2 mb-1 px-1 items-center' : 'flex items-center gap-2 mb-1 px-1'}`}>
-                            <span className="text-xs text-gray-600">
-                              {formatMessageTime(
-                                message.created_at,
-                                message.sender_timezone,
-                                getCurrentUserTimezone()
-                              )}
-                            </span>
-                            <span className="text-xs font-semibold text-gray-500">
-                              {message.sender?.firstName || message.sender?.first_name} {message.sender?.lastName || message.sender?.last_name}
-                            </span>
-                            {message.sender_id === userId && hoveredMessageId === message.id && editingMessageId !== message.id && (
-                              <div className="flex items-center gap-1">
-                                <Tippy content="Edit message" placement="bottom">
-                                  <button
-                                    onClick={() => startEditMessage(message)}
-                                    className="p-1 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400"
-                                  >
-                                    <Edit2 size={12} />
-                                  </button>
-                                </Tippy>
-                                <Tippy content="Delete message" placement="bottom">
-                                  <button
-                                    onClick={() => deleteMessage(message)}
-                                    className="p-1 rounded-full bg-red-800/70 hover:bg-red-700/70 text-gray-400"
-                                  >
-                                    <RiDeleteBin6Line size={12} />
-                                  </button>
-                                </Tippy>
-                              </div>
-                            )}
-                          </div>
-                                
-                          {editingMessageId === message.id ? (
-                            <div className="w-full max-w-[350px] bg-[#1a1a1a] rounded-2xl border border-gray-800 p-4 shadow-lg">
-                              <textarea
-                                value={editingContent}
-                                onChange={(e) => setEditingContent(e.target.value)}
-                                className="w-full px-4 py-3 bg-[#0f0f0f] border border-gray-800 rounded-xl text-white focus:outline-none focus:border-blue-400 transition-all duration-300 resize-none"
-                                rows={3}
-                                autoFocus
-                              />
-                              <div className="flex gap-2 mt-3">
-                                <button
-                                  onClick={cancelEditMessage}
-                                  className="flex-1 p-2 rounded-md bg-red-800 hover:shadow-[0px_0px_10px_red] text-gray-300"
-                                >
-                                  <X size={16} />
-                                </button>
-                                <button
-                                  onClick={() => saveEditMessage(message.id)}
-                                  disabled={!editingContent.trim()}
-                                  style={{ background: 'linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)' }}
-                                  className="flex-1 p-2 rounded-md hover:shadow-[0px_0px_10px_blue] text-black disabled:opacity-50"
-                                >
-                                  <Check size={16} />
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className={`${message.sender_id === userId ? 'flex-row-reverse flex gap-2' : 'flex gap-2'}`}>
-                              <Avatar className="size-8 md:size-10 border border-blue-400 flex-shrink-0">
-                                <AvatarImage src={message?.sender?.profilePicture || "/default-user.jpeg"} alt="@shadcn" />
-                                <AvatarFallback>
-                                  {(message.sender?.firstName || message.sender?.first_name)?.[0]}
-                                  {(message.sender?.lastName || message.sender?.last_name)?.[0]}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className={`px-4 py-3 rounded-2xl shadow-lg max-w-full ${message.sender_id === userId
-                                ? 'bg-white text-black'
-                                : 'bg-[#1a1a1a] text-white border border-gray-800'
-                                }`}>
-    
-                                {message.file_url && (
-                                  <div className="mb-2">
-                                    {message.file_type?.startsWith('image/') ? (
-                                      <button
-                                        type="button"
-                                        className="block"
-                                        onClick={() =>
-                                          setImagePreview({
-                                            url: toAbsoluteFileUrl(message.file_url),
-                                            name: message.file_name || "image",
-                                          })
-                                        }
-                                      >
-                                        <img
-                                          src={toAbsoluteFileUrl(message.file_url)}
-                                          alt={message.file_name || "image"}
-                                          className="max-w-full rounded-lg max-h-60 object-contain"
-                                        />
-                                      </button>
+                  {messages.map((message, index) => {
+  const senderId =
+    message.sender_id ??
+    message.sender?.id;
 
-                                    ) : (
-                                      <div className="flex items-center gap-2 bg-black/20 p-2 rounded-lg">
-                                        {getFileIcon(message.file_type)}
-                                        <div className="flex-1 min-w-0">
-                                          <div className="font-semibold text-sm truncate">{message.file_name}</div>
-                                          <div className="text-xs opacity-70">{formatFileSize(message.file_size)}</div>
-                                        </div>
-                                        <a
-                                          href={toAbsoluteFileUrl(message.file_url)}
-                                          download
-                                          className="p-1 rounded-lg hover:bg-black/20"
-                                        >
-                                          <Download size={16} />
-                                        </a>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                                {!(message.file_url && message.content === message.file_name) && (
-                                  <div className="break-words whitespace-pre-wrap">
-                                    {formatMessageContent(message.content)}
-                                  </div>
-                                )}
+  const previousMessage = messages[index - 1];
 
-                                {message.is_edited && (
-                                  <div className="mt-1 text-xs opacity-70 italic">
-                                    (edited)
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className={`flex mt-1 ${message.sender_id === userId ? 'justify-end' : 'justify-start'} px-2`}>
-                        <div className="flex gap-2">
-                          {(likedMessages.has(message.id) || dislikedMessages.has(message.id)) && (
-                            <div className="flex gap-1 mb-2">
-                              {likedMessages.has(message.id) && (
-                                <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                  <ThumbsUpIcon size={10} />
-                                  Liked
-                                </span>
-                              )}
-                              {dislikedMessages.has(message.id) && (
-                                <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                  <ThumbsDownIcon size={10} />
-                                  Disliked
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))
+  const previousSenderId =
+    previousMessage?.sender_id ??
+    previousMessage?.sender?.id;
+
+  const isOwn =
+    String(senderId) === String(userId);
+
+  const showAvatar =
+    index === 0 ||
+    String(previousSenderId) !== String(senderId);
+
+  return (
+    <MessageBubble
+      key={message.id}
+      message={message}
+      isOwn={isOwn}
+      showAvatar={showAvatar}
+      showSenderName={selectedConversation?.conversation_type === "group"}
+      setMessages={setMessages}
+      conversationId={selectedConversation.id}
+      conversationType={selectedConversation.conversation_type}
+      currentUserId={userId}
+      onMessageUpdated={(updatedMessage) => {
+        setMessages((prev) =>
+          prev.map((item) =>
+            String(item.id) === String(updatedMessage.id)
+              ? updatedMessage
+              : item
+          )
+        );
+      }}
+      variant="page"
+    />
+  );
+})}
                 )}
                 <div ref={messagesEndRef} />
                       

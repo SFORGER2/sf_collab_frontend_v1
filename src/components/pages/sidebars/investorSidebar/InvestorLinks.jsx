@@ -12,20 +12,10 @@ import {
   HardDrive
 } from "lucide-react";
 import { FcDocument, FcInvite } from "react-icons/fc";
-import {
-  aiTools,
-  toolsSection,
-  dashboardLink,
-  socialSection,
-  ideation,
-  wallet,
-} from "../sidebarCommons";
+import { aiTools, toolsSection, dashboardLink, socialSection, ideation, wallet, sfDriveSection, sfMeetSection } from "../sidebarCommons";
 
-export function createInvestorLinks(
-  unreadMessagesCount,
-  userRoles = [],
-  setActiveRole,
-) {
+
+export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActiveRole = () => {}, activeRole = 'investor') {
   return [
     dashboardLink(userRoles, setActiveRole),
     {
@@ -75,12 +65,7 @@ export function createInvestorLinks(
     aiTools(8),
     toolsSection(9),
     wallet(10),
-    {
-      id: 11,
-      icon: <FolderOpen size={22} />,
-      href: "/sf-drive",
-      label: "SF Drive",
-      subItems: [],
-    },
+    sfMeetSection(11),
+    sfDriveSection(12),
   ];
 }

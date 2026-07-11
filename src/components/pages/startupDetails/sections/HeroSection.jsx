@@ -115,7 +115,7 @@ export default function HeroSection({
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3 mt-6 lg:mt-0">
             <Button
-              onClick={(!joinRequest || !isMember) && onJoinClick}
+              onClick={(!joinRequest || !isMember) ? onJoinClick : undefined}
               className={`${joinRequest?.isPending ? 'bg-green-600 hover:bg-green-700' :
                   isMember ? 'bg-green-600 hover:bg-green-700' :
                     'bg-blue-600 hover:bg-blue-700'

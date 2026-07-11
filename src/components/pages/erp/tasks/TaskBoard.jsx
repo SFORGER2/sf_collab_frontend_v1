@@ -18,9 +18,28 @@ import {
 } from "@dnd-kit/sortable";
 
 import { CSS } from "@dnd-kit/utilities";
-import { Terminal } from "lucide-react";
+import { Terminal, Loader2 } from "lucide-react";
 import TaskCard from "./TaskCard";
 import { cn } from "../../../../lib/utils";
+import axios from "axios";
+import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "@/utils/APIs/interceptors";
+import { useSelector } from "react-redux";
+import { useCallback } from "react";
+
+// B7 FIX: API client for /api/erp-tasks — single source of truth for all task boards
+const erpTasksApi = axios.create({ baseURL: "/api/erp-tasks" });
+erpTasksApi.interceptors.request.use(requestInterceptor);
+erpTasksApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
+
+// Map kanban column IDs ↔ backend status strings
+const COL_TO_STATUS = { todo: "todo", inprogress: "in_progress", done: "done" };
+const STATUS_TO_COL = {
+  todo: "todo", in_progress: "inprogress", done: "done",
+  approved: "done", rejected: "done",
+  // legacy display values from mock data
+  "To Do": "todo", "In Progress": "inprogress",
+  "Done": "done", "Approved": "done", "Rejected": "done",
+};
 
 /* =========================
    Sortable Task
@@ -117,12 +136,28 @@ const TaskBoard = ({
   onTaskClick,
   className,
 }) => {
-  const [tasks, setTasks] = useState(initialTasks);
+  const { user } = useSelector(s => s.auth);
+  const workspaceId = user?.active_workspace_id || 1;
+  const [tasks,    setTasks]    = useState([]);
   const [activeId, setActiveId] = useState(null);
+  const [loading,  setLoading]  = useState(true);
 
-  useEffect(() => {
-    setTasks(initialTasks);
-  }, [initialTasks]);
+  // B7 FIX: load real tasks from /api/erp-tasks on mount
+  const loadTasks = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await erpTasksApi.get("/list", { params: { workspace_id: workspaceId } });
+      const raw = res?.data?.data?.tasks || res?.data?.tasks || [];
+      setTasks(raw.map(t => ({ ...t, id: String(t.id) })));
+    } catch {
+      // fall back to any tasks passed as props
+      setTasks(initialTasks.map(t => ({ ...t, id: String(t.id) })));
+    } finally {
+      setLoading(false);
+    }
+  }, [workspaceId]);
+
+  useEffect(() => { loadTasks(); }, [loadTasks]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -132,51 +167,58 @@ const TaskBoard = ({
   );
 
   const columns = {
-    todo: {
-      title: "Queue / Pending",
-      tasks: tasks.filter((t) => t.status === "To Do"),
-    },
-    inprogress: {
-      title: "Active Execution",
-      tasks: tasks.filter((t) => t.status === "In Progress"),
-    },
-    done: {
-      title: "Verification",
-      tasks: tasks.filter((t) =>
-        ["Done", "Approved", "Rejected"].includes(t.status),
-      ),
-    },
+    todo:       { title: "Queue / Pending",  tasks: tasks.filter(t => STATUS_TO_COL[t.status] === "todo") },
+    inprogress: { title: "Active Execution", tasks: tasks.filter(t => STATUS_TO_COL[t.status] === "inprogress") },
+    done:       { title: "Verification",     tasks: tasks.filter(t => STATUS_TO_COL[t.status] === "done") },
   };
 
   const handleDragStart = (event) => setActiveId(event.active.id);
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = async (event) => {
     const { active, over } = event;
     setActiveId(null);
     if (!over) return;
 
-    const activeTask = tasks.find((t) => t.id === active.id);
+    const activeTask = tasks.find(t => t.id === active.id);
     if (!activeTask) return;
 
-    let newStatus = activeTask.status;
-
+    let targetCol = null;
     if (["todo", "inprogress", "done"].includes(over.id)) {
-      if (over.id === "todo") newStatus = "To Do";
-      if (over.id === "inprogress") newStatus = "In Progress";
-      if (over.id === "done") newStatus = "Done";
+      targetCol = over.id;
     } else {
-      const overTask = tasks.find((t) => t.id === over.id);
-      if (overTask) newStatus = overTask.status;
+      const overTask = tasks.find(t => t.id === over.id);
+      if (overTask) targetCol = STATUS_TO_COL[overTask.status];
     }
+    if (!targetCol) return;
 
+    const newStatus = COL_TO_STATUS[targetCol];
     if (newStatus === activeTask.status) return;
 
-    const updatedTasks = tasks.map((task) =>
-      task.id === active.id ? { ...task, status: newStatus } : task,
-    );
-    setTasks(updatedTasks);
+    // Optimistic update
+    setTasks(prev => prev.map(t => t.id === active.id ? { ...t, status: newStatus } : t));
+
+    // B7 FIX: persist to backend
+    try {
+      await erpTasksApi.patch("/update", {
+        workspace_id: workspaceId,
+        task_id: parseInt(active.id),
+        status: newStatus,
+      });
+    } catch (err) {
+      console.error("Task status update failed:", err);
+      loadTasks(); // roll back on error
+    }
+
     if (onTaskUpdate) onTaskUpdate(active.id, newStatus);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64 gap-2 text-slate-500 text-sm">
+        <Loader2 className="w-4 h-4 animate-spin" /> Loading tasks…
+      </div>
+    );
+  }
 
   return (
     <div className={cn("flex flex-col h-full overflow-hidden", className)}>

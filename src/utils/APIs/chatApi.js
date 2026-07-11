@@ -50,10 +50,16 @@ export const chatAPI = {
     return response.data;
   },
 
-  markConversationRead: async (conversationId) => {
-    const response = await api.post(`/chat/conversations/${conversationId}/mark-read`);
-    return response.data;
-  },
+  // chatApi.js
+markConversationAsRead: async (conversationId) => {
+  const response = await api.post(`/chat/conversations/${conversationId}/mark-read`);
+  return response.data;
+},
+
+getTotalUnreadCount: async () => {
+  const response = await api.get('/chat/unread-count');
+  return response.data.count;   // adapt to your response structure
+},
   deleteConversation: async (conversationId) => {
     const response = await api.delete(`/chat/conversations/${conversationId}`);
     return response.data;
@@ -124,6 +130,57 @@ export const chatAPI = {
     return response.data;
   },
 
+  // FIX: MessageBubble.jsx already called these six methods, but they were
+  // never defined here -- Star/Pin/Task buttons in the message menu threw
+  // "chatAPI.starMessage is not a function" the moment anyone clicked them.
+  // The backend routes already existed; only these client wrappers were missing.
+  starMessage: async (conversationId, messageId) => {
+    const response = await api.post(`/chat/conversations/${conversationId}/messages/${messageId}/star`);
+    return response.data;
+  },
+  unstarMessage: async (conversationId, messageId) => {
+    const response = await api.delete(`/chat/conversations/${conversationId}/messages/${messageId}/star`);
+    return response.data;
+  },
+  pinMessage: async (conversationId, messageId) => {
+    const response = await api.post(`/chat/conversations/${conversationId}/messages/${messageId}/pin`);
+    return response.data;
+  },
+  unpinMessage: async (conversationId, messageId) => {
+    const response = await api.delete(`/chat/conversations/${conversationId}/messages/${messageId}/pin`);
+    return response.data;
+  },
+  saveMessageAsTask: async (conversationId, messageId, dueDate = null, note = null) => {
+    const response = await api.post(`/chat/conversations/${conversationId}/messages/${messageId}/task`, {
+      due_date: dueDate,
+      note,
+    });
+    return response.data;
+  },
+  removeMessageTask: async (conversationId, messageId) => {
+    const response = await api.delete(`/chat/conversations/${conversationId}/messages/${messageId}/task`);
+    return response.data;
+  },
+
+  // New: Report a message (moderation)
+  reportMessage: async (conversationId, messageId, reason) => {
+    const response = await api.post(`/chat/conversations/${conversationId}/messages/${messageId}/report`, {
+      reason,
+    });
+    return response.data;
+  },
+
+  // New: Forward a message -- reuses the existing sendMessage endpoint against
+  // a different conversation, tagged so the UI can show "Forwarded".
+  forwardMessage: async (targetConversationId, originalMessage) => {
+    const response = await api.post(`/chat/conversations/${targetConversationId}/messages`, {
+      content: originalMessage.content || originalMessage.original_content || '',
+      message_type: 'text',
+      forwarded_from_message_id: originalMessage.id,
+    });
+    return response.data;
+  },
+
   // Files
   uploadFile: async (conversationId, file, content = "") => {
     const formData = new FormData();
@@ -145,13 +202,14 @@ export const chatAPI = {
   },
 
   // Participants
-  addParticipant: async (conversationId, userId, role = "member") => {
-    const response = await api.post(`/chat/conversations/${conversationId}/participants`, {
-      user_id: userId,
-      role
-    });
-    return response.data;
-  },
+  addParticipant: async (conversationId, userId, role = "member", historyVisibility = "show") => {
+  const response = await api.post(`/chat/conversations/${conversationId}/participants`, {
+    user_id: userId,
+    role,
+    history_visibility: historyVisibility, // "show" | "hide"
+  });
+  return response.data;
+},
 
   removeParticipant: async (conversationId, userId) => {
     const response = await api.delete(`/chat/conversations/${conversationId}/participants/${userId}`);

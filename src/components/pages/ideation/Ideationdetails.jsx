@@ -79,7 +79,7 @@ const VisionDetails = () => {
     if (!ideaId || !access_token) return;
     setCollabRequestsLoading(true);
     try {
-      const res = await axios.get(`${API_URL}/ideas/${ideaId}/collab-requests`, {
+      const res = await axios.get(`/api/ideas/${ideaId}/collab-requests`, {
         headers: { Authorization: `Bearer ${access_token}` },
       });
       setCollabRequests(res.data.data?.collab_requests || []);
@@ -94,7 +94,7 @@ const VisionDetails = () => {
   const fetchMyCollabStatus = useCallback(async () => {
     if (!ideaId || !access_token) return;
     try {
-      const res = await axios.get(`${API_URL}/ideas/${ideaId}/collab-requests/my-status`, {
+      const res = await axios.get(`/api/ideas/${ideaId}/collab-requests/my-status`, {
         headers: { Authorization: `Bearer ${access_token}` },
       });
       const cr = res.data.data?.collab_request;
@@ -113,11 +113,11 @@ const VisionDetails = () => {
   const handleCollabAction = async (requestId, action) => {
     try {
       await axios.post(
-        `${API_URL}/ideas/collab-requests/${requestId}/${action}`,
+        `/api/ideas/collab-requests/${requestId}/${action}`,
         {},
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
-      toast.success(action === "approve" ? "Request approved! They've been added to your team." : "Request rejected.");
+      toast.success(action === "accept" ? "Request accepted! They've been added to your team." : "Request rejected.");
       fetchCollabRequests();
       const res = await ideaAPI.getIdeaById(ideaId, access_token);
       const ideaData = res.data.data?.idea || res.data.idea;
@@ -251,7 +251,7 @@ const VisionDetails = () => {
   const handleJoinSubmit = async () => {
     try {
       const res = await axios.post(
-        `${API_URL}/ideas/${ideaId}/collab-requests`,
+        `/api/ideas/${ideaId}/collab-requests`,
         { message: joinMessage, role: "co-developer" },
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
@@ -273,7 +273,7 @@ const VisionDetails = () => {
     if (!myCollabRequestId) return;
     try {
       await axios.post(
-        `${API_URL}/ideas/collab-requests/${myCollabRequestId}/cancel`,
+        `/api/ideas/collab-requests/${myCollabRequestId}/cancel`,
         {},
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
@@ -288,7 +288,7 @@ const VisionDetails = () => {
   const handleLeaveIdea = async () => {
     try {
       await axios.post(
-        `${API_URL}/ideas/${ideaId}/leave`,
+        `/api/ideas/${ideaId}/leave`,
         {},
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
@@ -401,6 +401,44 @@ const VisionDetails = () => {
     }
   }
   const isCreator = useMemo(() => user?.id && idea?.creator?.id && user.id === idea.creator.id, [user, idea]);
+
+  // B8c FIX: Vision → Startup activation
+  const [activating,    setActivating]    = useState(false);
+  const [eligibility,   setEligibility]   = useState(null);
+
+  const checkEligibility = async () => {
+    if (!idea?.id) return;
+    try {
+      const token = localStorage.getItem('access_token');
+      const res = await fetch(`/api/activation/ideas/${idea.id}/eligibility`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setEligibility(data);
+    } catch { setEligibility(null); }
+  };
+
+  const handleActivate = async () => {
+    if (!idea?.id || activating) return;
+    setActivating(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const res = await fetch(`/api/activation/ideas/${idea.id}/activate`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Vision activated as a Startup!');
+        if (data.startup?.id) navigate(`/startup-details/${data.startup.id}`);
+      } else {
+        toast.error(data.error || 'Activation failed');
+      }
+    } catch { toast.error('Activation failed'); }
+    finally { setActivating(false); }
+  };
+
+  useEffect(() => { if (isCreator && idea) checkEligibility(); }, [isCreator, idea?.id]);
 
   if (loading) {
     return (
@@ -541,6 +579,25 @@ const VisionDetails = () => {
               </motion.div>
             </motion.button>
 
+            {isCreator && eligibility?.eligible && (
+              <motion.button
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+                onClick={handleActivate}
+                disabled={activating}
+                className="px-3 py-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10
+                  hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold transition-all flex items-center gap-1.5"
+                title="Vision meets all requirements — activate as Startup"
+              >
+                🚀 {activating ? 'Activating...' : 'Activate as Startup'}
+              </motion.button>
+            )}
+            {isCreator && eligibility && !eligibility.eligible && (
+              <div className="text-[10px] text-zinc-500 px-2 py-1 rounded border border-zinc-800 bg-zinc-900">
+                {eligibility.next_requirement || 'Build readiness to activate'}
+              </div>
+            )}
             {isCreator && (
               <motion.button
                 variants={buttonVariants}
@@ -1177,7 +1234,7 @@ const VisionDetails = () => {
                             {req.status === 'pending' ? (
                               <div className="flex gap-2 mt-3">
                                 <button
-                                  onClick={() => handleCollabAction(req.id, 'approve')}
+                                  onClick={() => handleCollabAction(req.id, 'accept')}
                                   className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition-all"
                                 >
                                   <Check className="h-3.5 w-3.5" /> Accept

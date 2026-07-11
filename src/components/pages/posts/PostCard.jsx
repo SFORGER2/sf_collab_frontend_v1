@@ -9,7 +9,9 @@ import { postAPI } from "@/utils/APIs/postAPI";
 import { userSocialAPI } from "@/utils/APIs/socialAPI";
 import { useSelector } from "react-redux";
 import PostActions from "./PostActions";
+import { getAvatarUrl, getMediaUrl } from "@/utils/getMediaUrl";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import { toAbsoluteFileUrl } from "@/utils/toAbsoluteFileUrl";
 
 
 const cardVariants = {
@@ -27,7 +29,6 @@ export default function PostCard({ post, onPostDeleted }) {
   const [editedCaption,  setEditedCaption]  = useState(post.caption || post.content || "");
   const [showComments,   setShowComments]   = useState(false);
   const [comments,       setComments]       = useState(
-    // pre-populate from the post object if backend sent them inline
     Array.isArray(post.comments) ? post.comments : []
   );
   const [newComment,       setNewComment]       = useState("");
@@ -42,23 +43,25 @@ export default function PostCard({ post, onPostDeleted }) {
 
   // ── Media helpers ─────────────────────────────────────────────────────────
   const getMediaUrls = () => {
-    // FIX: resolve root-relative paths to absolute (backend runs on :5001, not :5173)
+    let urls = [];
     if (Array.isArray(post.mediaItems) && post.mediaItems.length > 0) {
-      return post.mediaItems.map((m) => {
-        // PostMedia.to_dict() returns camelCase mediaUrl
-        return typeof m === "string" ? m : (m.mediaUrl || m.media_url || m.url || null);
+      urls = post.mediaItems.map((m) => {
+        const raw = typeof m === "string" ? m : (m.mediaUrl || m.media_url || m.url || null);
+        return raw ? getMediaUrl(raw) : null;
       }).filter(Boolean);
+    } else if (Array.isArray(post.media) && post.media.length > 0) {
+      urls = post.media.map((m) => {
+        const raw = typeof m === "string" ? m : (m.url || m.media_url || null);
+        return raw ? getMediaUrl(raw) : null;
+      }).filter(Boolean);
+    } else if (post.mediaUrl) {
+      const rawUrls = Array.isArray(post.mediaUrl) ? post.mediaUrl : [post.mediaUrl];
+      urls = rawUrls.map(u => u ? getMediaUrl(u) : null).filter(Boolean);
     }
-    if (Array.isArray(post.media) && post.media.length > 0) {
-      return post.media.map((m) =>
-        typeof m === "string" ? m : (m.url || m.media_url || null)
-      ).filter(Boolean);
-    }
-    if (post.mediaUrl) {
-      const urls = Array.isArray(post.mediaUrl) ? post.mediaUrl : [post.mediaUrl];
-      return urls.filter(Boolean);
-    }
-    return [];
+
+    // Debug log to see the resolved URLs
+    console.log('PostCard media URLs:', urls);
+    return urls;
   };
 
   const mediaUrls      = getMediaUrls();
@@ -67,16 +70,9 @@ export default function PostCard({ post, onPostDeleted }) {
   const primaryUrl     = mediaUrls[0];
 
   // ── Author avatar ─────────────────────────────────────────────────────────
-  // FIX: post.author.avatar and post.author.picture don't exist in backend response.
-  // Backend returns profilePicture (from to_dict). Use getProfilePicture for safety.
-  const authorAvatarSrc = (() => {
-    const a = post.author;
-    if (!a) return "/default-user.jpeg";
-    const raw = a.profilePicture || a.profile_picture || a.avatar || a.picture;
-    return raw || "/default-user.jpeg";
-  })();
+  const authorAvatarSrc = getAvatarUrl(post.author);
 
-  // ── Actions ───────────────────────────────────────────────────────────────
+  // ── Actions (unchanged) ──────────────────────────────────────────────────
 
   const handleDeletePost = async () => {
     if (!window.confirm("Delete this post?")) return;
@@ -113,14 +109,10 @@ export default function PostCard({ post, onPostDeleted }) {
     }
   };
 
-  // FIX: was calling postsAPI from socialAPI.js which had unlike pointing to
-  // the same URL as like (/posts/:id/like). Changed to use postAPI (postAPI.js)
-  // which has the correct /unlike endpoint.
   const handleLikeClick = async () => {
     if (!currentUser) return;
     const postId    = post.id ?? post._id;
     const toLiked   = !liked;
-    // Optimistic update
     setLiked(toLiked);
     setLikesCount((c) => toLiked ? c + 1 : Math.max(0, c - 1));
     try {
@@ -130,7 +122,6 @@ export default function PostCard({ post, onPostDeleted }) {
         await postAPI.unlike(postId);
       }
     } catch (err) {
-      // Revert on failure
       setLiked(!toLiked);
       setLikesCount((c) => !toLiked ? c + 1 : Math.max(0, c - 1));
       console.error("Like failed:", err);
@@ -143,7 +134,6 @@ export default function PostCard({ post, onPostDeleted }) {
     try {
       const postId = post.id ?? post._id;
       const res    = await postAPI.getComments(postId, { page: 1, per_page: 50 });
-      // FIX: res = { success, data: { comments, pagination } } after axios unwrap
       const list = res?.data?.comments ?? res?.comments ?? [];
       setComments(list);
       setShowComments(true);
@@ -163,12 +153,10 @@ export default function PostCard({ post, onPostDeleted }) {
         author_first_name: currentUser.firstName || currentUser.first_name,
         author_last_name:  currentUser.lastName  || currentUser.last_name,
       });
-      // FIX: res = { success, data: { comment } } — must read res.data.comment
       const created = res?.data?.comment ?? res?.comment;
       if (created) {
         setComments((prev) => [...prev, created]);
       } else {
-        // Optimistic fallback
         setComments((prev) => [...prev, {
           id:               Date.now(),
           content:          newComment.trim(),
@@ -182,7 +170,6 @@ export default function PostCard({ post, onPostDeleted }) {
         }]);
       }
       setNewComment("");
-      // Auto-open comments section if it was closed
       setShowComments(true);
     } catch (err) {
       console.error("Comment failed:", err);
@@ -211,7 +198,6 @@ export default function PostCard({ post, onPostDeleted }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10 ring-2 ring-blue-400/50">
-                {/* FIX: backend sends profilePicture not avatar/picture */}
                 <AvatarImage src={authorAvatarSrc} />
                 <AvatarFallback>
                   {(post.author?.firstName || post.author?.first_name || "U")[0]}
@@ -241,7 +227,6 @@ export default function PostCard({ post, onPostDeleted }) {
                   </Button>
                 </>
               )}
-
             </div>
           </div>
         </CardHeader>
@@ -269,13 +254,29 @@ export default function PostCard({ post, onPostDeleted }) {
                   <div className="grid grid-cols-2 gap-2">
                     {mediaUrls.slice(0, 4).map((url, i) => (
                       <div key={i} className="relative rounded-lg overflow-hidden h-[200px]">
-                        <img src={url} alt={`media ${i}`} className="w-full h-full object-cover" />
+                        <img
+                          src={url}
+                          alt={`media ${i}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.error(`Failed to load image ${i}:`, url);
+                            e.target.style.display = 'none';
+                          }}
+                        />
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="relative rounded-xl overflow-hidden">
-                    <img src={primaryUrl} alt="Post" className="w-full h-auto max-h-[500px] object-cover rounded-xl" />
+                    <img
+                      src={primaryUrl}
+                      alt="Post"
+                      className="w-full h-auto max-h-[500px] object-cover rounded-xl"
+                      onError={(e) => {
+                        console.error('Failed to load primary image:', primaryUrl);
+                        e.target.style.display = 'none';
+                      }}
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <Eye size={20} className="text-white" />
                     </div>
@@ -318,7 +319,7 @@ export default function PostCard({ post, onPostDeleted }) {
                     const cName    = comment.author?.firstName || comment.author_first_name || "User";
                     const cContent = comment.content ?? comment.text ?? "";
                     const cDate    = comment.createdAt || comment.created_at;
-                    const cAvatar  = comment.author?.profilePicture || comment.author?.profile_picture;
+                    const cAvatar  = getAvatarUrl(comment.author);
                     return (
                       <div key={cId} className="bg-zinc-800/30 rounded p-2 text-sm flex gap-2 items-start">
                         <Avatar className="w-7 h-7 shrink-0">
@@ -345,7 +346,7 @@ export default function PostCard({ post, onPostDeleted }) {
               {/* Add comment */}
               <div className="flex gap-2">
                 <Avatar className="w-7 h-7 shrink-0">
-                  <AvatarImage src={getProfilePicture(currentUser)} />
+                  <AvatarImage src={getAvatarUrl(currentUser)} />
                   <AvatarFallback>{(currentUser?.firstName || currentUser?.first_name || "?")[0]}</AvatarFallback>
                 </Avatar>
                 <input

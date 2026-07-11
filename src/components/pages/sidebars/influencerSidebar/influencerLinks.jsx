@@ -10,21 +10,10 @@ import {
   FolderOpen,
   HardDrive,
 } from "lucide-react";
-import {
-  aiTools,
-  toolsSection,
-  dashboardLink,
-  socialSection,
-  wallet,
-  ideation,
-} from "../sidebarCommons";
+import { aiTools, toolsSection, dashboardLink, socialSection, wallet, ideation, sfDriveSection, sfMeetSection } from "../sidebarCommons";
 import { FcInvite } from "react-icons/fc";
 
-export function createInfluencerLinks(
-  unreadMessagesCount,
-  userRoles = [],
-  setActiveRole,
-) {
+export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setActiveRole = () => {}, activeRole = 'influencer') {
   return [
     dashboardLink(userRoles, setActiveRole),
     {
@@ -103,13 +92,8 @@ export function createInfluencerLinks(
     // wallet(8),
     aiTools(9),
     toolsSection(10),
-   {
-      id: 11,
-      icon: <FolderOpen size={22} />,
-      href: "/sf-drive",
-      label: "SF Drive",
-      subItems: [],
-    },
+   sfDriveSection(11),
+   sfMeetSection(12),
   ];
 }
 

@@ -20,7 +20,7 @@ import {
 import ShinyText from "../../ui/ShinyText";
 import VoiceInput from './VoiceInput';
 import { aiAPI } from '@/utils/APIs/aiAPI';
-import { AIAPI } from '@/services/auth/AIAPI';
+
 import { useSelector } from 'react-redux';
 import ResponsePrompt from './ResponsePrompt';
 import { API_BASE_URL_NO_API } from '@/utils/config';
@@ -106,19 +106,27 @@ export default function BusinessIdeaGenerator() {
     try {
       setIsLoading(true);
 
-      const response = await AIAPI.generateBusinessPlan(body, access_token)
+      const response = await aiAPI.generateBusinessIdeas({
+        contentType: mode === 'ideas' ? 'business_ideas' : 'business_plan',
+        maxTokens: mode === 'ideas' ? 2048 : 4096,
+        metadata: {
+          business_idea: formData.businessIdea,
+          industry: formData.industry,
+          budget: formData.budget,
+          location: formData.location,
+          tech: formData.tech
+        }
+      });
       if (!response?.success) {
-        throw new Error(response?.message || "Generation failed");
+        throw new Error(response?.error || 'Generation failed');
       }
-      console.log(response);
       setResults({
         type: mode,
         content: `Generated ${mode === 'ideas' ? 'Business Ideas' : 'Business Plan'} based on your inputs...`,
-        response: response?.data.response || '',
-        pdfLink: response?.data.download_links.pdf || '',
-        mdLink: response?.data.download_links.md || ''
+        response: response?.data?.response || '',
+        pdfLink: '',
+        mdLink: response?.data?.download_links?.md || ''
       });
-      console.log(response);
     } catch (error) {
       toast.error("Error generating content: " + error.message);
 
@@ -398,14 +406,26 @@ export default function BusinessIdeaGenerator() {
                 ))}
               </div>
           
-              {/* Generate Button */}
+              {/* Credit gate */}
+              {credits < (mode === 'ideas' ? 5 : 10) && (
+                <div className="mb-4 flex flex-col items-center gap-2 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center">
+                  <p className="text-amber-400 text-sm font-medium">
+                    You need {mode === 'ideas' ? 5 : 10} credits to generate a {mode === 'ideas' ? 'Business Ideas' : 'Business Plan'}
+                  </p>
+                  <a href="/store" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition-colors">
+                    Buy Credits
+                  </a>
+                </div>
+              )}
+
+        {/* Generate Button */}
               <div className="relative group">
                 {/* Button Glow Effect */}
                 <div className="absolute -inset-1 bg-linear-to-r from-amber-500 via-purple-500 to-blue-500 rounded-2xl blur opacity-30 group-hover:opacity-70 transition duration-1000 group-hover:duration-200" />
                 
                 <button
                   onClick={handleSubmit}
-                  disabled={isLoading}
+                  disabled={isLoading || credits < (mode === 'ideas' ? 5 : 10)}
                   className="relative w-full bg-linear-to-r from-slate-900 to-slate-800 border border-white/10 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-3 group/btn"
                 >
                   {/* Animated Gradient Overlay */}

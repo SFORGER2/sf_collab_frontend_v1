@@ -11,6 +11,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   Search, Star, Users, Briefcase, Clock, CheckCircle,
   X, ChevronRight, Loader2, ArrowLeft, DollarSign,
@@ -37,6 +38,7 @@ const AREAS_OF_HELP = [
   'Hiring', 'Fundraising preparation', 'Vision refinement',
   'Readiness improvement', 'Milestone planning', 'Design review',
   'Marketing strategy', 'Sales process', 'Legal structure',
+  'Other',
 ];
 
 const getAvatarUrl = (path) => {
@@ -62,7 +64,7 @@ const StarRating = ({ rating, count, size = 14 }) => (
 );
 
 // ── Mentor Card ───────────────────────────────────────────────────────────────
-const MentorCard = ({ mentor, onClick }) => {
+const MentorCard = ({ mentor, onClick, currentUserId }) => {
   const user    = mentor.user;
   const initials = user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'M';
 
@@ -159,18 +161,20 @@ const MentorCard = ({ mentor, onClick }) => {
 // ── Request Mentorship Modal ──────────────────────────────────────
 const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
   const { user, access_token } = useSelector(state => state.auth);
+  const navigate = useNavigate();
   const [loading, setLoading]                     = useState(false);
   const [stripeRedirecting, setStripeRedirecting] = useState(false);
   const [myIdeas, setMyIdeas]       = useState([]);
   const [myStartups, setMyStartups] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [form, setForm] = useState({
-    idea_id: '',
-    startup_id: '',
-    message: '',
-    areas_of_help: [],
-    mentorship_mode: mentor.is_free ? 'free_community' : 'paid_session',
-  });
+  idea_id: '',
+  startup_id: '',
+  message: '',
+  areas_of_help: [],
+  otherHelpText: '',   // <-- new
+  mentorship_mode: mentor.is_free ? 'free_community' : 'paid_session',
+});
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -178,16 +182,28 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
       try {
         const { startupsAPI } = await import('@/utils/APIs/startupsAPI');
 
-        // Load user's startups
-        const startupsRes = await startupsAPI.getAll({ builder: true, per_page: 50 });
+        // Load user's OWN startups (my_startups = created by me).
+        // NOTE: `builder: true` was used before — that filter deliberately
+        // EXCLUDES startups you created (it means "member but not creator"),
+        // so your own startups were never showing up here. my_startups is
+        // the correct filter for "startups I own".
+        const startupsRes = await startupsAPI.getAll({ my_startups: true, per_page: 50 });
         const startups = startupsRes?.startups || startupsRes?.data?.startups || [];
         setMyStartups(startups);
 
-        // Load user's ideas via the same axios instance as the rest of the app
-        const { default: api } = await import('@/utils/APIs/mentorshipAPI');
-        const ideasRes = await api.get('/ideas?per_page=50').catch(() => null);
-        const ideas = ideasRes?.data?.ideas || ideasRes?.data?.data?.ideas || [];
-        setMyIdeas(ideas);
+        // Load user's ideas (visions) — filtered to only MY ideas via creator_id.
+        // Without this, /api/ideas returns every vision on the platform.
+        try {
+          const token = localStorage.getItem('access_token');
+          const res = await fetch(`/api/ideas?per_page=50&creator_id=${user?.id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+          });
+          const json = await res.json();
+          const ideas = json?.data?.ideas || json?.ideas || [];
+          setMyIdeas(ideas);
+        } catch {
+          setMyIdeas([]);
+        }
 
       } catch (e) {
         console.error('Failed to load projects', e);
@@ -208,10 +224,6 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
   };
 
   const handleSend = async () => {
-    if (!form.idea_id && !form.startup_id) {
-      toast.error('Select a Vision or Startup');
-      return;
-    }
     if (!form.message.trim()) {
       toast.error('Please add a message to the mentor');
       return;
@@ -219,11 +231,13 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
     setLoading(true);
     try {
       const payload = {
-        mentor_id: parseInt(mentor.id),
-        message: form.message.trim(),
-        areas_of_help: form.areas_of_help,
-        mentorship_mode: form.mentorship_mode,
-      };
+  mentor_id: parseInt(mentor.id),
+  message: form.message.trim(),
+  areas_of_help: form.areas_of_help.includes('Other') && form.otherHelpText.trim()
+    ? [...form.areas_of_help.filter(a => a !== 'Other'), form.otherHelpText.trim()]
+    : form.areas_of_help,
+  mentorship_mode: form.mentorship_mode,
+};
       if (form.idea_id)    payload.idea_id    = parseInt(form.idea_id);
       if (form.startup_id) payload.startup_id = parseInt(form.startup_id);
 
@@ -243,10 +257,6 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
   };
 
   const handleStripeCheckout = async () => {
-    if (!form.idea_id && !form.startup_id) {
-      toast.error('Select a Vision or Startup first');
-      return;
-    }
     if (!form.message.trim()) {
       toast.error('Please add a message to the mentor');
       return;
@@ -334,7 +344,7 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
           {/* Project selector */}
           <div>
             <label className="text-xs text-gray-500 mb-1.5 block">
-              Which project do you need help with? *
+              Which project do you need help with? <span className="text-gray-600">(optional)</span>
             </label>
             {loadingProjects ? (
               <div className="flex items-center gap-2 text-gray-500 text-sm py-2">
@@ -350,10 +360,15 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
                       onChange={e => setForm(f => ({ ...f, idea_id: e.target.value, startup_id: '' }))}
                       className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5
                                  text-white text-sm focus:outline-none focus:border-blue-500/50 appearance-none"
+                      style={{ colorScheme: 'dark' }}
                     >
-                      <option value="">Select a Vision</option>
+                      <option value="" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Select a Vision</option>
                       {myIdeas.map(idea => (
-                        <option key={idea.id} value={idea.id}>
+                        <option
+                          key={idea.id}
+                          value={idea.id}
+                          style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}
+                        >
                           {idea.title} — {Math.round(idea.readinessScore || idea.readiness_score || 0)}% ready
                         </option>
                       ))}
@@ -368,17 +383,32 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
                       onChange={e => setForm(f => ({ ...f, startup_id: e.target.value, idea_id: '' }))}
                       className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5
                                  text-white text-sm focus:outline-none focus:border-blue-500/50 appearance-none"
+                      style={{ colorScheme: 'dark' }}
                     >
-                      <option value="">Select a Startup</option>
+                      <option value="" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Select a Startup</option>
                       {myStartups.map(s => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
+                        <option
+                          key={s.id}
+                          value={s.id}
+                          style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}
+                        >
+                          {s.name}
+                        </option>
                       ))}
                     </select>
                   </div>
                 )}
                 {myIdeas.length === 0 && myStartups.length === 0 && (
-                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3 text-xs text-yellow-300">
-                    You don't have any visions or startups yet. Create one first before requesting mentorship.
+                  <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 text-xs text-gray-500 space-y-2">
+                    <p>You don't have any visions or startups yet — that's fine, this is optional. You can still send your request below.</p>
+                    <button
+                      type="button"
+                      onClick={() => { onClose(); navigate('/ideation'); }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20
+                                 text-blue-400 border border-blue-500/30 hover:bg-blue-600/30 transition-colors"
+                    >
+                      <Plus size={12} /> Create a Vision
+                    </button>
                   </div>
                 )}
               </div>
@@ -386,20 +416,31 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
           </div>
 
           {/* Areas of help */}
-          <div>
-            <label className="text-xs text-gray-500 mb-1.5 block">What do you need help with?</label>
-            <div className="flex flex-wrap gap-2">
-              {AREAS_OF_HELP.map(area => (
-                <button key={area} onClick={() => toggleArea(area)}
-                  className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors
-                    ${form.areas_of_help.includes(area)
-                      ? 'bg-blue-600/20 text-blue-400 border-blue-500/40'
-                      : 'bg-white/[0.03] text-gray-500 border-white/[0.06] hover:border-white/[0.12]'}`}>
-                  {area}
-                </button>
-              ))}
-            </div>
-          </div>
+          <div className="flex flex-wrap gap-2">
+  {AREAS_OF_HELP.map(area => (
+    <button key={area} onClick={() => toggleArea(area)}
+      className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors
+        ${form.areas_of_help.includes(area)
+          ? 'bg-blue-600/20 text-blue-400 border-blue-500/40'
+          : 'bg-white/[0.03] text-gray-500 border-white/[0.06] hover:border-white/[0.12]'}`}>
+      {area}
+    </button>
+  ))}
+</div>
+
+{/* Show text input when "Other" is selected */}
+{form.areas_of_help.includes('Other') && (
+  <div className="mt-2">
+    <input
+      type="text"
+      placeholder="Describe your specific need..."
+      value={form.otherHelpText || ''}
+      onChange={(e) => setForm(f => ({ ...f, otherHelpText: e.target.value }))}
+      className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5
+                 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-blue-500/50"
+    />
+  </div>
+)}
 
           {/* Message */}
           <div>
@@ -427,7 +468,7 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
           {/* CTA — free mentor: single send button; paid mentor: two payment paths */}
           {mentor.is_free ? (
             <motion.button whileTap={{ scale: 0.98 }} onClick={handleSend}
-              disabled={loading || loadingProjects || (!form.idea_id && !form.startup_id)}
+              disabled={loading || loadingProjects}
               className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white
                          font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
               {loading
@@ -439,7 +480,7 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
             <div className="space-y-2">
               {/* Option 1: send request — Balance deducted after session */}
               <motion.button whileTap={{ scale: 0.98 }} onClick={handleSend}
-                disabled={loading || stripeRedirecting || loadingProjects || (!form.idea_id && !form.startup_id)}
+                disabled={loading || stripeRedirecting || loadingProjects}
                 className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white
                            font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
                 {loading
@@ -457,7 +498,7 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
 
               {/* Option 2: Stripe upfront card payment */}
               <motion.button whileTap={{ scale: 0.98 }} onClick={handleStripeCheckout}
-                disabled={loading || stripeRedirecting || loadingProjects || (!form.idea_id && !form.startup_id)}
+                disabled={loading || stripeRedirecting || loadingProjects}
                 className="w-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.10]
                            disabled:opacity-50 text-white font-semibold py-3
                            rounded-xl transition-all flex items-center justify-center gap-2 text-sm">
@@ -480,7 +521,7 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
 
 
 // ── Mentor Profile Modal ──────────────────────────────────────────────────────
-const MentorProfileModal = ({ mentor, onClose, onRequest }) => {
+const MentorProfileModal = ({ mentor, onClose, onRequest, onDelete, currentUserId }) => {
   const user     = mentor.user;
   const initials = user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'M';
 
@@ -633,7 +674,17 @@ const MentorProfileModal = ({ mentor, onClose, onRequest }) => {
             )}
 
             {/* CTA */}
-            {mentor.is_available ? (
+            {String(mentor.user_id) === String(currentUserId) ? (
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => onDelete(mentor)}
+                className="w-full bg-red-600/20 hover:bg-red-600/40 border border-red-500/30
+                           text-red-300 font-semibold py-3.5 rounded-xl transition-colors
+                           flex items-center justify-center gap-2"
+              >
+                Delete My Listing
+              </motion.button>
+            ) : mentor.is_available ? (
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onRequest(mentor)}
@@ -868,8 +919,8 @@ const MentorDiscoveryPage = () => {
   const [pagination, setPagination] = useState({ total: 0, pages: 1, page: 1 });
 
   const [filters, setFilters] = useState({
-    sector: '', is_free: '', available: 'true', sort: 'rating', search: '',
-  });
+  sector: '', is_free: '', available: '', sort: 'rating', search: '',
+});
 
   const loadMentors = useCallback(async (page = 1) => {
     setLoading(true);
@@ -1033,6 +1084,22 @@ const MentorDiscoveryPage = () => {
             mentor={selectedMentor}
             onClose={() => setSelectedMentor(null)}
             onRequest={(m) => { setSelectedMentor(null); setRequestMentor(m); }}
+            onDelete={async (m) => {
+              if (!window.confirm('Delete your mentor listing? This cannot be undone.')) return;
+              try {
+                const token = localStorage.getItem('access_token');
+                const res = await fetch(`/api/mentorship/mentors/${m.id}`, {
+                  method: 'DELETE',
+                  headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
+                if (res.ok) {
+                  toast.success('Mentor listing deleted');
+                  setMentors(prev => prev.filter(x => x.id !== m.id));
+                  setSelectedMentor(null);
+                } else { toast.error('Failed to delete listing'); }
+              } catch { toast.error('Failed to delete listing'); }
+            }}
+            currentUserId={user?.id}
           />
         )}
         {requestMentor && (

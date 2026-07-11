@@ -10,6 +10,7 @@ import {
   Volume2, VolumeX, Smile
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useDraft, useModalDraftGuard } from "@/utils/hooks/useDraft"
 import { meetAPI } from "@/utils/APIs/meetAPI"
 import { useSelector as useReduxSelector } from "react-redux"
 
@@ -328,44 +329,169 @@ export default function MeetingRoom() {
 
   useEffect(() => { load() }, [load])
 
-  // ── Socket ──────────────────────────────────────────────────────────────
+  // ── Socket + WebRTC Signaling (B3 FIX) ─────────────────────────────────
+  // peerConnections maps sid → RTCPeerConnection
+  const peerConnectionsRef = useRef({})
+  const localStreamRef     = useRef(null)
+
+  const getOrCreatePC = useCallback((remoteSid, socket) => {
+    if (peerConnectionsRef.current[remoteSid]) return peerConnectionsRef.current[remoteSid]
+
+    const pc = new RTCPeerConnection({
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+      ],
+    })
+
+    // Send ICE candidates to the remote peer
+    pc.onicecandidate = ({ candidate }) => {
+      if (candidate) {
+        socket.emit("meet_ice_candidate", {
+          to_sid:     remoteSid,
+          candidate,
+          meeting_id: meetingId,
+        })
+      }
+    }
+
+    // When we receive a remote track, attach it to a video element
+    pc.ontrack = ({ streams }) => {
+      const stream = streams[0]
+      if (!stream) return
+      // Find or create a video element for this peer
+      const videoId = `remote-video-${remoteSid}`
+      let el = document.getElementById(videoId)
+      if (!el) {
+        el = document.createElement("video")
+        el.id = videoId
+        el.autoplay = true
+        el.playsInline = true
+        el.className = "absolute inset-0 w-full h-full object-cover rounded-xl"
+        const container = document.getElementById(`tile-${remoteSid}`)
+        if (container) container.appendChild(el)
+      }
+      el.srcObject = stream
+    }
+
+    // Add local tracks to this peer connection
+    localStreamRef.current?.getTracks().forEach(track => {
+      pc.addTrack(track, localStreamRef.current)
+    })
+
+    peerConnectionsRef.current[remoteSid] = pc
+    return pc
+  }, [meetingId])
+
   useEffect(() => {
     if (!meetingId || !access_token) return
     let socket, hb
-    try {
-      const { io } = require("socket.io-client")
-      socket = io(window.location.origin, { transports: ["websocket"], withCredentials: true })
-      socketRef.current = socket
 
-      socket.emit("meet_join", { token: access_token, meeting_id: meetingId })
+    // Get local camera+mic stream first
+    const startMedia = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        localStreamRef.current = stream
+        // Attach to local video element
+        const localEl = document.getElementById("local-video")
+        if (localEl) { localEl.srcObject = stream; localEl.muted = true }
+      } catch (e) {
+        console.warn("[MeetRoom] Media access denied:", e.message)
+      }
+    }
 
-      socket.on("meet_participant_list", ({ participants: list }) => {
-        if (Array.isArray(list)) setParticipants(list)
-      })
-      socket.on("meet_participant_joined", (data) => {
-        setParticipants(prev => {
-          if (prev.find(p => String(p.user_id) === String(data.user_id))) return prev
-          return [...prev, { user_id: data.user_id, name: data.name, avatar: data.avatar, attendance_status: "attended" }]
+    startMedia().then(() => {
+      try {
+        const { io } = require("socket.io-client")
+        socket = io(window.location.origin, { transports: ["websocket"], withCredentials: true })
+        socketRef.current = socket
+
+        // Join the meeting room
+        socket.emit("meet_join", { token: access_token, meeting_id: meetingId })
+
+        // ── Presence ────────────────────────────────────────────────────
+        socket.on("meet_participant_list", ({ participants: list }) => {
+          if (Array.isArray(list)) setParticipants(list)
         })
-      })
-      socket.on("meet_participant_left", ({ user_id }) => {
-        setParticipants(prev => prev.filter(p => String(p.user_id) !== String(user_id)))
-      })
-      socket.on("meet_notes_delta", (data) => {
-        if (String(data.user_id) === String(user?.id)) return
-        const text = data.delta?.ops?.map(op => op.insert || "").join("") || ""
-        if (text) setNotes(text)
-      })
+        socket.on("meet_participant_joined", (data) => {
+          setParticipants(prev => {
+            if (prev.find(p => String(p.user_id) === String(data.user_id))) return prev
+            return [...prev, { user_id: data.user_id, name: data.name, avatar: data.avatar, attendance_status: "attended" }]
+          })
+        })
+        socket.on("meet_participant_left", ({ user_id }) => {
+          setParticipants(prev => prev.filter(p => String(p.user_id) !== String(user_id)))
+        })
 
-      hb = setInterval(() => socket.emit("meet_heartbeat", { meeting_id: meetingId }), 30000)
-    } catch (e) { console.warn("[MeetRoom] Socket:", e.message) }
+        // ── WebRTC: new peer joined → we initiate an offer ───────────
+        socket.on("meet_peer_joined", async ({ user_id: remoteUserId }) => {
+          const remoteSid = remoteUserId // server sends socket sid in production; user_id used here for simplicity
+          const pc = getOrCreatePC(remoteSid, socket)
+          try {
+            const offer = await pc.createOffer()
+            await pc.setLocalDescription(offer)
+            socket.emit("meet_offer", { to_sid: remoteSid, offer, meeting_id: meetingId })
+          } catch (e) { console.warn("[WebRTC] Offer failed:", e) }
+        })
+
+        // ── WebRTC: receive offer → send answer ─────────────────────
+        socket.on("meet_offer", async ({ from_sid, offer }) => {
+          const pc = getOrCreatePC(from_sid, socket)
+          try {
+            await pc.setRemoteDescription(new RTCSessionDescription(offer))
+            const answer = await pc.createAnswer()
+            await pc.setLocalDescription(answer)
+            socket.emit("meet_answer", { to_sid: from_sid, answer, meeting_id: meetingId })
+          } catch (e) { console.warn("[WebRTC] Answer failed:", e) }
+        })
+
+        // ── WebRTC: receive answer ────────────────────────────────────
+        socket.on("meet_answer", async ({ from_sid, answer }) => {
+          const pc = peerConnectionsRef.current[from_sid]
+          if (!pc) return
+          try { await pc.setRemoteDescription(new RTCSessionDescription(answer)) }
+          catch (e) { console.warn("[WebRTC] setRemoteDescription failed:", e) }
+        })
+
+        // ── WebRTC: ICE candidate ─────────────────────────────────────
+        socket.on("meet_ice_candidate", async ({ from_sid, candidate }) => {
+          const pc = peerConnectionsRef.current[from_sid]
+          if (!pc) return
+          try { await pc.addIceCandidate(new RTCIceCandidate(candidate)) }
+          catch (e) { console.warn("[WebRTC] addIceCandidate failed:", e) }
+        })
+
+        // ── Peer left → cleanup ───────────────────────────────────────
+        socket.on("meet_peer_left", ({ user_id: remoteSid }) => {
+          const pc = peerConnectionsRef.current[remoteSid]
+          if (pc) { pc.close(); delete peerConnectionsRef.current[remoteSid] }
+          const el = document.getElementById(`remote-video-${remoteSid}`)
+          el?.remove()
+        })
+
+        // ── Notes ─────────────────────────────────────────────────────
+        socket.on("meet_notes_delta", (data) => {
+          if (String(data.user_id) === String(user?.id)) return
+          const text = data.delta?.ops?.map(op => op.insert || "").join("") || ""
+          if (text) setNotes(text)
+        })
+
+        hb = setInterval(() => socket.emit("meet_heartbeat", { meeting_id: meetingId }), 30000)
+      } catch (e) { console.warn("[MeetRoom] Socket:", e.message) }
+    })
 
     return () => {
       clearInterval(hb)
+      // Close all peer connections
+      Object.values(peerConnectionsRef.current).forEach(pc => pc.close())
+      peerConnectionsRef.current = {}
+      // Stop local media
+      localStreamRef.current?.getTracks().forEach(t => t.stop())
+      localStreamRef.current = null
       socketRef.current?.emit("meet_leave", { meeting_id: meetingId })
       socketRef.current?.disconnect()
     }
-  }, [meetingId, access_token, user?.id])
+  }, [meetingId, access_token, user?.id, getOrCreatePC])
 
   useEffect(() => { aiEndRef.current?.scrollIntoView({ behavior: "smooth" }) }, [aiMessages])
 
@@ -560,7 +686,13 @@ export default function MeetingRoom() {
               const initials = name.split(" ").map(w => w[0] || "").join("").toUpperCase().slice(0, 2) || "?"
               return (
                 <div key={p.user_id || i}
+                  id={isMe ? "local-tile" : `tile-${p.user_id}`}
                   className="relative rounded-xl overflow-hidden bg-zinc-900 border border-white/[0.06] flex items-center justify-center min-h-[120px]">
+                  {/* Local video element — hidden behind avatar until stream attaches */}
+                  {isMe && (
+                    <video id="local-video" autoPlay playsInline muted
+                      className="absolute inset-0 w-full h-full object-cover rounded-xl" />
+                  )}
                   <div className={cn("w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold", COLORS[i % COLORS.length])}>
                     {initials}
                   </div>

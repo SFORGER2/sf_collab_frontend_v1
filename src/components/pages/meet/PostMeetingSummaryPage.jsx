@@ -4,17 +4,22 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Bot, CheckSquare, Zap, Mic,
-  HardDrive, AlertTriangle, FileText, Plus
+  HardDrive, AlertTriangle, Plus
 } from "lucide-react";
 import { meetAPI } from "@/utils/APIs/meetAPI";
-import SaveToDriveModal from "./SaveToDriveModal";
 import axios from "axios";
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "@/utils/APIs/interceptors";
 import { useSelector } from "react-redux";
 
-const tasksApi = axios.create({ baseURL: "/api" });
-tasksApi.interceptors.request.use(requestInterceptor);
-tasksApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
+// B7 FIX: unified /api/erp-tasks endpoint
+const erpTasksApi = axios.create({ baseURL: "/api/erp-tasks" });
+erpTasksApi.interceptors.request.use(requestInterceptor);
+erpTasksApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
+
+// SF Drive upload API
+const driveApi = axios.create({ baseURL: "/api/drive" });
+driveApi.interceptors.request.use(requestInterceptor);
+driveApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 const PRIORITY_COLORS = {
   urgent: "bg-red-500/20 text-red-300 border-red-500/30",
@@ -35,15 +40,20 @@ export default function PostMeetingSummaryPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [meeting, setMeeting]         = useState(null);
-  const [decisions, setDecisions]     = useState([]);
+  const { user } = useSelector(s => s.auth);
+  const workspaceId = user?.active_workspace_id || 1;
+
+  const [meeting,     setMeeting]     = useState(null);
+  const [decisions,   setDecisions]   = useState([]);
   const [actionItems, setActionItems] = useState([]);
-  const [memory, setMemory]           = useState(null);
-  const [loading, setLoading]         = useState(true);
-  const [showSaveDrive, setShowSaveDrive] = useState(false);
-  const [processingAI, setProcessingAI]  = useState(false);
+  const [memory,      setMemory]      = useState(null);
+  const [loading,     setLoading]     = useState(true);
+
+  const [processingAI,  setProcessingAI]  = useState(false);
   const [creatingTasks, setCreatingTasks] = useState(false);
-  const [tasksDone, setTasksDone]         = useState(false);
+  const [tasksDone,     setTasksDone]     = useState(false);
+  const [savingDrive,   setSavingDrive]   = useState(false);
+  const [driveSaved,    setDriveSaved]    = useState(false);
 
   useEffect(() => { fetchAll(); }, [id]);
 
@@ -56,9 +66,9 @@ export default function PostMeetingSummaryPage() {
         meetAPI.getActionItems(id),
         meetAPI.getMeetingMemory(id),
       ]);
-      if (mRes.status === "fulfilled")  setMeeting(mRes.value.data);
-      if (dRes.status === "fulfilled")  setDecisions(dRes.value.data?.decisions || dRes.value.data || []);
-      if (aRes.status === "fulfilled")  setActionItems(aRes.value.data?.action_items || aRes.value.data || []);
+      if (mRes.status   === "fulfilled") setMeeting(mRes.value.data);
+      if (dRes.status   === "fulfilled") setDecisions(dRes.value.data?.decisions || dRes.value.data || []);
+      if (aRes.status   === "fulfilled") setActionItems(aRes.value.data?.action_items || aRes.value.data || []);
       if (memRes.status === "fulfilled") {
         const mems = memRes.value.data?.memories || [];
         setMemory(mems.find(m => m.memory_type === "episodic") || null);
@@ -72,28 +82,99 @@ export default function PostMeetingSummaryPage() {
     try {
       await meetAPI.getProcessPipeline(id);
       await meetAPI.triggerMemoryUpdate(id);
-      await new Promise(r => setTimeout(r, 1500)); // wait for background
+      await new Promise(r => setTimeout(r, 1500));
       fetchAll();
     } catch (e) { console.error(e); }
     finally { setProcessingAI(false); }
   }
 
+  // B6 FIX: actually upload a real file to SF Drive
+  async function handleSaveAllToDrive() {
+    if (!meeting) return;
+    setSavingDrive(true);
+    try {
+      const cleanDecs = decisions.filter(d => !d.decision_statement?.includes("[BLOCKER]"));
+      const blockers  = decisions.filter(d =>  d.decision_statement?.includes("[BLOCKER]"));
+
+      const lines = [
+        "MEETING SUMMARY",
+        `Title: ${meeting.title}`,
+        `Date:  ${formatDateTime(meeting.actual_end_at || meeting.scheduled_start_at)}`,
+        `Type:  ${(meeting.meeting_type || "").replace(/_/g, " ")}`,
+        "",
+        `=== DECISIONS (${cleanDecs.length}) ===`,
+        ...cleanDecs.map((d, i) =>
+          `${i + 1}. ${d.decision_statement}${d.rationale ? "\n   Rationale: " + d.rationale : ""}`
+        ),
+        "",
+        `=== ACTION ITEMS (${actionItems.length}) ===`,
+        ...actionItems.map((a, i) =>
+          `${i + 1}. [${a.status === "done" ? "X" : " "}] ${a.title} (${a.priority || "medium"})${a.due_at ? " - Due: " + new Date(a.due_at).toLocaleDateString() : ""}`
+        ),
+        "",
+        `=== BLOCKERS (${blockers.length}) ===`,
+        ...blockers.map((b, i) =>
+          `${i + 1}. ${b.decision_statement.replace("[BLOCKER]", "").trim()}`
+        ),
+      ].join("\n");
+
+      const blob     = new Blob([lines], { type: "text/plain" });
+      const filename = `Meeting Summary - ${meeting.title} - ${new Date().toLocaleDateString()}.txt`;
+      const fd       = new FormData();
+      fd.append("file",              blob, filename);
+      fd.append("visibility_scope",  "private");
+      fd.append("sensitivity_level", "internal");
+
+      // Upload to SF Drive — returns a real DriveFile record
+      const res    = await driveApi.post("/files/upload", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const fileId = res?.data?.data?.id || res?.data?.id || null;
+
+      // Link the uploaded file back to this meeting as an artifact
+      if (fileId) {
+        try {
+          await meetAPI.saveArtifact(meeting.id, {
+            artifact_type: "summary",
+            drive_file_id: String(fileId),
+            destination:   "personal",
+          });
+        } catch {}
+      }
+
+      setDriveSaved(true);
+    } catch (e) {
+      console.error("Save to Drive failed:", e);
+      alert("Failed to save to SF Drive. Please try again.");
+    } finally {
+      setSavingDrive(false);
+    }
+  }
+
+  // B7 FIX: create tasks in the unified /api/erp-tasks system
   async function handleCreateTasks() {
     if (actionItems.length === 0) return;
     setCreatingTasks(true);
+    let allOk = true;
     try {
       for (const item of actionItems) {
-        await tasksApi.post("/tasks", {
-          title:       item.title,
-          description: item.description || "",
-          priority:    item.priority || "medium",
-          status:      "to_do",
-          due_date:    item.due_at || null,
-        });
+        try {
+          await erpTasksApi.post("/create", {
+            workspace_id: workspaceId,
+            title:        item.title,
+            description:  item.description || `Action item from meeting: ${meeting?.title || ""}`,
+            status:       "todo",
+            deadline:     item.due_at || null,
+          });
+        } catch (e) {
+          console.error(`Failed to create task "${item.title}":`, e);
+          allOk = false;
+        }
       }
-      setTasksDone(true);
-    } catch (e) { console.error("Failed to create tasks:", e); }
-    finally { setCreatingTasks(false); }
+      if (allOk) setTasksDone(true);
+    } finally {
+      setCreatingTasks(false);
+    }
   }
 
   if (loading) {
@@ -104,8 +185,8 @@ export default function PostMeetingSummaryPage() {
     );
   }
 
-  const openItems    = actionItems.filter(i => i.status !== "done");
-  const blockers     = decisions.filter(d => d.decision_statement?.includes("[BLOCKER]"));
+  const openItems      = actionItems.filter(i => i.status !== "done");
+  const blockers       = decisions.filter(d =>  d.decision_statement?.includes("[BLOCKER]"));
   const cleanDecisions = decisions.filter(d => !d.decision_statement?.includes("[BLOCKER]"));
 
   return (
@@ -156,29 +237,38 @@ export default function PostMeetingSummaryPage() {
 
         {/* Action buttons */}
         <div className="flex flex-wrap gap-2 mt-4">
+
+          {/* Save All to Drive — uploads real file to SF Drive */}
           <button
-            onClick={() => setShowSaveDrive(true)}
+            onClick={handleSaveAllToDrive}
+            disabled={savingDrive || driveSaved}
             className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500
-              rounded-xl text-sm font-semibold text-white transition-colors shadow-lg shadow-blue-500/20"
+              rounded-xl text-sm font-semibold text-white transition-colors
+              shadow-lg shadow-blue-500/20 disabled:opacity-60"
           >
-            <HardDrive size={14} />
-            Save All to Drive
+            <HardDrive size={14} className={savingDrive ? "animate-pulse" : ""} />
+            {driveSaved ? "✓ Saved to Drive" : savingDrive ? "Saving..." : "Save All to Drive"}
           </button>
+
+          {/* Create Tasks — posts to unified /api/erp-tasks */}
           <button
             onClick={handleCreateTasks}
             disabled={creatingTasks || tasksDone || actionItems.length === 0}
             className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700
-              border border-zinc-700 rounded-xl text-sm text-zinc-300 disabled:opacity-50 transition-colors"
+              border border-zinc-700 rounded-xl text-sm text-zinc-300
+              disabled:opacity-50 transition-colors"
           >
             <Plus size={14} />
             {tasksDone ? "✓ Tasks Created" : creatingTasks ? "Creating..." : "Create Tasks"}
           </button>
+
           {!memory && (
             <button
               onClick={handleGenerateAI}
               disabled={processingAI}
               className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700
-                border border-zinc-700 rounded-xl text-sm text-zinc-300 disabled:opacity-50 transition-colors"
+                border border-zinc-700 rounded-xl text-sm text-zinc-300
+                disabled:opacity-50 transition-colors"
             >
               <Bot size={14} className={processingAI ? "animate-spin" : ""} />
               {processingAI ? "Processing..." : "Generate AI Summary"}
@@ -308,7 +398,7 @@ export default function PostMeetingSummaryPage() {
         )}
       </motion.div>
 
-      {/* Transcript preview */}
+      {/* Transcript */}
       {meeting?.transcript_file_id && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -326,21 +416,10 @@ export default function PostMeetingSummaryPage() {
             </p>
           </div>
           <p className="text-xs text-zinc-600 mt-2">
-            Full transcript stored in SF Drive. Fetch via your Drive service using the ID above.
+            Full transcript stored in SF Drive.
           </p>
         </motion.div>
       )}
-
-      {/* Save to Drive Modal */}
-      <AnimatePresence>
-        {showSaveDrive && (
-          <SaveToDriveModal
-            meetingId={id}
-            meeting={meeting}
-            onClose={() => setShowSaveDrive(false)}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

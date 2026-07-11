@@ -33,14 +33,15 @@ import {
   ideation,
   socialSection,
   toolsSection,
+  erpSection,
+  filterERPModules,
+  sfDriveSection,
+  sfMeetSection
 } from "../sidebarCommons";
 import { FcInvite } from "react-icons/fc";
 
-export function createBuilderLinks(
-  unreadMessagesCount,
-  userRoles = [],
-  setActiveRole,
-) {
+export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiveRole = () => {}, activeRole = 'builder') {
+  const erp = { ...erpSection(11), subItems: filterERPModules(erpSection(11).subItems, activeRole, userRoles) };
   return [
     dashboardLink(userRoles, setActiveRole),
     {
@@ -125,39 +126,8 @@ export function createBuilderLinks(
       ],
     },
     // ERP
-    {
-      id: 11,
-      icon: <Building2 size={22} />,
-      href: "/erp-dashboard",
-      label: "ERP",
-      subItems: [
-        { id: "erp-dashboard",    href: "/erp-dashboard",    label: "Dashboard",    icon: <Building2 size={18} /> },
-        { id: "erp-attendance",   href: "/erp/attendance",   label: "Attendance",   icon: <CalendarClock size={18} /> },
-        { id: "erp-tasks",        href: "/erp/tasks",        label: "Tasks",        icon: <ClipboardList size={18} /> },
-        { id: "erp-updates",      href: "/erp/updates",      label: "Updates",      icon: <FileStack size={18} /> },
-        { id: "erp-documents",    href: "/erp/documents",    label: "Documents",    icon: <FileTerminal size={18} /> },
-        { id: "erp-alerts",       href: "/erp/alerts",       label: "Alerts",       icon: <Bell size={18} /> },
-        { id: "erp-analytics",    href: "/erp/analytics",    label: "Analytics",    icon: <BarChart3 size={18} /> },
-        { id: "erp-payouts",      href: "/erp/payouts",      label: "Payouts",      icon: <DollarSign size={18} /> },
-        { id: "erp-my-analytics", href: "/erp/my-analytics", label: "My Analytics", icon: <BarChart2 size={18} /> },
-        { id: "erp-settings",     href: "/erp/settings",     label: "Settings",     icon: <Settings size={18} /> },
-      ],
-    },
-    {
-      id: 13,
-      icon: <Video size={22} />,
-      href: "/meet",
-      label: "SF Meet",
-      subItems: [
-        { id: "meet-all",    href: "/meet",    label: "All Meetings", icon: <Video size={18} /> },
-      ],
-    },
-    {
-      id: 12,
-      icon: <FolderOpen size={22} />,
-      href: "/sf-drive",
-      label: "SF Drive",
-      subItems: [],
-    },
+    erp,
+    sfDriveSection(12),
+    sfMeetSection(13),
   ];
 }

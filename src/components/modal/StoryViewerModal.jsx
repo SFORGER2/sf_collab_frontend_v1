@@ -1,21 +1,5 @@
 /**
- * StoryViewerModal.jsx — fixed
- *
- * FIXES:
- * 1. Viewer shows "User" with "U" avatar — backend returns viewer data
- *    nested as { user: { firstName, lastName, profilePicture } }
- *    but the modal read v.firstName directly (wrong level).
- *    Now backend flattens it (story_routes fix), and modal reads both
- *    levels as fallback.
- *
- * 2. Story owner appears in their own viewer list — backend now excludes
- *    the owner's view server-side (story_routes.py). Frontend also
- *    filters as a safety net.
- *
- * 3. Clicking a viewer navigates to their profile page.
- *
- * 4. All existing features preserved: per-story progress bars, author
- *    overlay, prev/next navigation, video/image support.
+ * StoryViewerModal.jsx — fixed with getMediaUrl/getAvatarUrl
  */
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
@@ -24,7 +8,7 @@ import { Eye, X, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { postAPI } from "@/utils/APIs/postAPI";
 import { toast } from "react-toastify";
-import { getProfilePicture } from "@/utils/getProfilePicture";
+import { getAvatarUrl, getMediaUrl } from "@/utils/getMediaUrl";  // CHANGED
 
 const IMAGE_DURATION = 5000;
 const VIDEO_DURATION = 30000;
@@ -51,14 +35,11 @@ const StoryViewerModal = ({ isOpen, stories = [], startIndex = 0, onClose }) => 
     }
   }, [isOpen, startIndex]);
 
-  // Record view + load viewers when story changes
   useEffect(() => {
     if (!isOpen || !currentStory) return;
 
-    // Record view (fire-and-forget)
     postAPI.viewStory(currentStory.id).catch(() => {});
 
-    // Load viewer list only for own stories
     const storyOwnerId = String(currentStory.userId ?? currentStory.user_id);
     const myId         = String(user?.id ?? "");
 
@@ -66,8 +47,6 @@ const StoryViewerModal = ({ isOpen, stories = [], startIndex = 0, onClose }) => 
       postAPI.getStoryViewers(currentStory.id)
         .then((res) => {
           const raw = res?.data?.viewers ?? res?.viewers ?? [];
-          // FIX: backend now flattens viewer data, but keep fallback for both shapes
-          // Also filter out own views as safety net (backend already does this)
           const others = raw.filter((v) => {
             const vid = String(v.user_id ?? v.userId ?? v.id ?? "");
             return vid !== myId;
@@ -81,7 +60,6 @@ const StoryViewerModal = ({ isOpen, stories = [], startIndex = 0, onClose }) => 
     }
   }, [isOpen, currentStory?.id]);
 
-  // Progress bar timer
   const startTimer = useCallback(() => {
     clearInterval(intervalRef.current);
     setProgress(0);
@@ -156,9 +134,10 @@ const StoryViewerModal = ({ isOpen, stories = [], startIndex = 0, onClose }) => 
   const isOwnStory = user &&
     String(currentStory.userId ?? currentStory.user_id) === String(user.id);
 
-  // Vite proxies /api → localhost:5001, so root-relative paths work as-is.
-  // Use thumbnail (set in Stories.jsx) or fall back to raw mediaUrl — both are fine.
-  const mediaSrc = currentStory.thumbnail ?? currentStory.mediaUrl ?? currentStory.media_url ?? null;
+  // FIX: Use getMediaUrl for the media source
+  const mediaSrc = getMediaUrl(
+    currentStory.thumbnail ?? currentStory.mediaUrl ?? currentStory.media_url
+  );
 
   const authorFirstName = currentStory.author?.firstName ?? currentStory.author_first_name ?? "";
   const authorLastName  = currentStory.author?.lastName  ?? currentStory.author_last_name  ?? "";
@@ -167,7 +146,7 @@ const StoryViewerModal = ({ isOpen, stories = [], startIndex = 0, onClose }) => 
   const authorAvatar    = currentStory.avatar ??
                           currentStory.author?.profilePicture ??
                           currentStory.author?.profile_picture ??
-                          getProfilePicture(currentStory.author);
+                          getAvatarUrl(currentStory.author);
 
   return createPortal(
     <div
@@ -178,7 +157,7 @@ const StoryViewerModal = ({ isOpen, stories = [], startIndex = 0, onClose }) => 
         className="relative w-full max-w-sm h-[85vh] bg-black rounded-2xl overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Per-story progress bars */}
+        {/* Progress bars */}
         <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 p-2">
           {stories.map((_, i) => (
             <div key={i} className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
@@ -296,12 +275,11 @@ const StoryViewerModal = ({ isOpen, stories = [], startIndex = 0, onClose }) => 
                 ) : (
                   viewers.map((v, i) => {
                     const uid = v.user_id ?? v.userId ?? v.id ?? i;
-                    // FIX: backend now flattens user info to top level.
-                    // Read directly, with fallback to nested v.user shape.
                     const vFirst = v.firstName ?? v.first_name ?? v.user?.firstName ?? v.user?.first_name ?? "";
                     const vLast  = v.lastName  ?? v.last_name  ?? v.user?.lastName  ?? v.user?.last_name  ?? "";
                     const vName  = [vFirst, vLast].filter(Boolean).join(" ") || v.name || "User";
                     const vPic   = v.profilePicture ?? v.profile_picture ?? v.user?.profilePicture ?? v.avatar;
+                    const vPicUrl = getMediaUrl(vPic);
 
                     return (
                       <div
@@ -309,9 +287,9 @@ const StoryViewerModal = ({ isOpen, stories = [], startIndex = 0, onClose }) => 
                         className="flex items-center gap-2 rounded p-1.5 cursor-pointer hover:bg-zinc-800/60 transition"
                         onClick={(e) => handleViewerClick(e, v)}
                       >
-                        {vPic ? (
+                        {vPicUrl ? (
                           <img
-                            src={vPic}
+                            src={vPicUrl}
                             alt={vName}
                             className="w-8 h-8 rounded-full object-cover shrink-0"
                           />

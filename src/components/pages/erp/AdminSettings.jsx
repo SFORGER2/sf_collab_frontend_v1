@@ -142,7 +142,7 @@ const AdminSettings = () => {
 
   // Save workspace changes (name & slug)
   // Note: Backend does not have a PUT endpoint yet. We'll show a warning.
-  const handleSaveWorkspace = async () => {
+const handleSaveWorkspace = async () => {
   if (!workspaceName.trim()) {
     alert("Workspace name is required");
     return;
@@ -154,8 +154,7 @@ const AdminSettings = () => {
       slug: workspaceSlug,
     });
     alert("Workspace updated successfully");
-    // Optionally reload or update Redux user state
-    loadWorkspaceDetails(); // refresh the displayed data
+    loadWorkspaceDetails(); // refresh displayed data
   } catch (err) {
     alert(err?.response?.data?.error || "Failed to update workspace");
   } finally {

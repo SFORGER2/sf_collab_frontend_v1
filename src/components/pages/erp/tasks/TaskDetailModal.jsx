@@ -15,6 +15,13 @@ import { cn } from "../../../lib/utils";
 import { Button } from "../../../ui/button";
 import ProofUploader from "../proof/ProofUploader";
 import ProofReviewer from "../proof/ProofReviewer";
+import axios from "axios";
+import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "@/utils/APIs/interceptors";
+import { useSelector } from "react-redux";
+
+const erpTasksApi = axios.create({ baseURL: "/api/erp-tasks" });
+erpTasksApi.interceptors.request.use(requestInterceptor);
+erpTasksApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 const useTaskAuthorization = (task, initialQuality) => {
   const [quality, setQuality] = useState(initialQuality || "Accepted");
@@ -52,6 +59,9 @@ const TaskDetailModal = ({
   );
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setForm] = useState(task || {});
+  const [saving, setSaving] = useState(false);
+  const { user } = useSelector(s => s.auth);
+  const workspaceId = user?.active_workspace_id || 1;
 
   const pointsRef = useRef(null);
   const displayPointsRef = useRef(0);
@@ -83,24 +93,51 @@ const TaskDetailModal = ({
   const isApproved = task.status === "Approved";
   const isRejected = task.status === "Rejected";
 
-  const handleSaveEdits = () => {
-    onUpdate(task.id, editForm);
-    setIsEditing(false);
+  const handleSaveEdits = async () => {
+    setSaving(true);
+    try {
+      // Persist to backend
+      await erpTasksApi.patch("/update", {
+        workspace_id: workspaceId,
+        task_id:      parseInt(task.id),
+        title:        editForm.title,
+        description:  editForm.description,
+        deadline:     editForm.deadline || null,
+        status:       editForm.status,
+      });
+      onUpdate(task.id, editForm);
+      setIsEditing(false);
+    } catch (e) {
+      console.error("Failed to save task edits:", e);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const updateField = (key, val) =>
     setForm((prev) => ({ ...prev, [key]: val }));
 
-  const handleApprove = () => {
-    onUpdate(task.id, {
-      status: "Approved",
-      qualityRating: quality,
-      points: projectedPoints,
-    });
+  const handleApprove = async () => {
+    try {
+      await erpTasksApi.patch("/update", {
+        workspace_id:    workspaceId,
+        task_id:         parseInt(task.id),
+        status:          "done",
+        approved_points: projectedPoints,
+      });
+    } catch (e) { console.error("Approve failed:", e); }
+    onUpdate(task.id, { status: "Approved", qualityRating: quality, points: projectedPoints });
     onClose();
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
+    try {
+      await erpTasksApi.patch("/update", {
+        workspace_id: workspaceId,
+        task_id:      parseInt(task.id),
+        status:       "rejected",
+      });
+    } catch (e) { console.error("Reject failed:", e); }
     onUpdate(task.id, { status: "Rejected" });
     onClose();
   };
@@ -302,6 +339,7 @@ const TaskDetailModal = ({
             {isEditing ? (
               <Button
                 onClick={handleSaveEdits}
+                disabled={saving}
                 className="w-full h-11 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-medium rounded-lg shadow-lg shadow-blue-500/20 transition-all border border-blue-400/20 mt-4"
               >
                 Save Changes

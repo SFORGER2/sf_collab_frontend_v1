@@ -182,10 +182,10 @@ const NotificationBell = () => {
             if (!prev && next) {
               // ─── Feature 4: reset chat badge on open ──────────────────
               if (resetChatUnreadCount) resetChatUnreadCount();
-              // NOTE: We do NOT call markAllAsRead() here.
-              // Individual notifications are marked read when clicked.
-              // The notification page marks all read when you navigate away.
-              // This preserves the unread highlights so users can see what's new.
+              // Clear the notification badge as soon as the dropdown opens.
+              // This also marks the notifications themselves as read, so the
+              // blue "unread" dots clear too — same as Gmail/Facebook.
+              if (markAllAsRead) markAllAsRead();
             }
             return next;
           });

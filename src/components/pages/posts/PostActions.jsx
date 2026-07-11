@@ -71,7 +71,7 @@ export default function PostActions({
 }) {
   const postId = post?.id ?? post?._id;
 
-  const likesCount = Number(post.likes || 0) + (liked ? 0 : 0); // count from backend
+  const likesCount = Number(post.likes_count ?? post.likes ?? 0);
   const commentsCount = Array.isArray(post.comments)
     ? post.comments.length
     : Number(post.commentsCount ?? post.comments_count ?? post.comments ?? 0);

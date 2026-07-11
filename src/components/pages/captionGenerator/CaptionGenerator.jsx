@@ -26,7 +26,7 @@ const CaptionGenerator = () => {
   const [error, setError] = useState('');
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(200);
-  const [selectedModel, setSelectedModel] = useState('openai/gpt-oss-20b');
+  const [selectedModel, setSelectedModel] = useState('qwen/qwen3-32b');
   const [imagePreview, setImagePreview] = useState(null);
 
   const credits = useGetCredits();
@@ -74,16 +74,14 @@ const CaptionGenerator = () => {
         tone: formData.tone,
         temperature,
         maxTokens,
-        image: formData.image
       });
-      console.log('Caption generation response:', response);
       if (!response.success) {
         throw new Error(response.error || 'Failed to generate captions');
       }
 
       setCaptions(prev => [...prev, {
         id: Date.now(),
-        caption: response.data.response,
+        caption: response.data?.response || response.data || '',
         platform: formData.platform,
         timestamp: new Date(),
         tone: formData.tone
@@ -298,23 +296,32 @@ const CaptionGenerator = () => {
                   </div>
 
                   {/* Submit Button */}
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold h-11"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Generate Caption
-                      </>
-                    )}
-                  </Button>
+                  {credits < costPerCaption ? (
+                    <div className="w-full flex flex-col items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center">
+                      <p className="text-amber-400 text-sm font-medium">You need {costPerCaption} credits to generate a caption</p>
+                      <a href="/store" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition-colors">
+                        Buy Credits
+                      </a>
+                    </div>
+                  ) : (
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold h-11"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Generate Caption
+                        </>
+                      )}
+                    </Button>
+                  )}
 
                   {error && (
                     <Alert className="bg-red-900/30 border-red-700/50 text-red-200">

@@ -27,7 +27,7 @@ function FounderStats({ totals, user, startups }) {
             Welcome back, {user?.firstName || "Founder"}
           </p>
         </div>
-        <Link className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3">
           <Link
             to={startups.length === 1 ? `/startup-details/${startups[0].startup.id}` : "/my-startups"}
             className="flex h-full gap-3 items-center transition">
@@ -38,17 +38,17 @@ function FounderStats({ totals, user, startups }) {
             <QuickStat label="Team Members" value={totals.members - startups.length} icon={Users} />
           </Link>
           <Link 
-          to="/founder/manage-tasks">
+          to="/erp/tasks">
           <QuickStat
             
             label="Open Tasks" value={totals.tasks} icon={CheckSquare} />
           </Link>
-        </Link>
+        </div>
       </div>
     </header>
 
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
-      <QuickAction label="Create Startup" href="/register-startup" icon={Plus} />
+      <QuickAction label="Create Vision" href="/ideation" icon={Plus} />
       <QuickAction label="Ideation" href="/ideation" icon={Lightbulb} />
       <QuickAction label="Find Builders" href="/discover-users" icon={Users} />
       <QuickAction label="AI Tools" href="/ai-dashboard" icon={BrainCircuit} />

@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import BottomLinks from "./BottomLinks";
 import { Crown, Lock, ChevronDown } from "lucide-react";
 import { getAllRoutes } from "./sidebar/links";
@@ -52,6 +52,12 @@ export default function DesktopSidebarContent({
       >
         <div className="flex flex-col gap-1 overflow-y-auto px-2.5">
           {links.map((link) => {
+            // Section divider entries (e.g. { isSection: true, sectionLabel: "Grow" })
+            // are not real nav items — skip them so they don't create a gap or label.
+            if (link.isSection) {
+              return null;
+            }
+
             // FIX: removed duplicate declarations; expandedId → expandedItems[link.id]
             const isActive   = getAllRoutes(link).includes(location.pathname);
             const showSubs   = expandedItems[link.id] ?? false;
@@ -114,12 +120,10 @@ export default function DesktopSidebarContent({
                 </button>
 
                 {/* Sub Items */}
-                <AnimatePresence>
-                  {showSubs && isHovered && (
+                {isHovered && showSubs && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2 }}
                       className="flex flex-col gap-0.5 mt-1 ml-4 pl-3 border-l border-zinc-700/50 overflow-hidden"
                     >
@@ -157,8 +161,7 @@ export default function DesktopSidebarContent({
                         );
                       })}
                     </motion.div>
-                  )}
-                </AnimatePresence>
+                )}
               </div>
             );
           })}

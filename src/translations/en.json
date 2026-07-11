@@ -1,0 +1,12 @@
+{
+  "login": "Login",
+  "register": "Register",
+  "forgot_password": "Forgot Password",
+  "dashboard": "Dashboard",
+  "tasks": "Tasks",
+  "create_task": "Create Task",
+  "notifications": "Notifications",
+  "profile": "Profile",
+  "settings": "Settings",
+  "language": "Language"
+}

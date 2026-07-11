@@ -226,6 +226,49 @@ const QwenChat = () => {
     'Help me plan a fun day out'
   ];
 
+
+  const sendQuickPrompt = async (promptText) => {
+    if (loading) return;
+    const token = access_token;
+    if (!token) { setError('Please log in to use the chat'); return; }
+
+    const userMessage = { id: messages.length + 1, role: 'user', content: promptText, timestamp: new Date() };
+    setMessages(prev => [...prev, userMessage]);
+    setLoading(true);
+    setError('');
+
+    try {
+      const apiMessages = [];
+      if (systemPrompt.trim()) apiMessages.push({ role: 'system', content: systemPrompt });
+      messages.slice(-10).forEach(msg => { if (msg.role !== 'system') apiMessages.push({ role: msg.role, content: msg.content }); });
+      apiMessages.push({ role: 'user', content: promptText });
+
+      const response = await aiAPI.generateContent({
+        prompt: apiMessages,
+        model: 'qwen/qwen3-32b',
+        temperature,
+        maxTokens,
+        contentType: 'chat',
+        outputFormat: 'text'
+      });
+      if (!response.success) throw new Error(response.error || 'Unknown error');
+
+      setMessages(prev => [...prev, {
+        id: prev.length + 1,
+        role: 'assistant',
+        content: response.data.response,
+        timestamp: new Date(),
+        model: response.data.model
+      }]);
+    } catch (err) {
+      const msg = 'Sorry, I am having trouble responding right now. Please try again.';
+      setError(msg);
+      setMessages(prev => [...prev, { id: prev.length + 1, role: 'assistant', content: msg, timestamp: new Date(), isError: true }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 py-8 px-4">
@@ -386,10 +429,7 @@ const QwenChat = () => {
                     {quickPrompts.map((prompt, index) => (
                       <button
                         key={index}
-                        onClick={() => {
-                          setInput(prompt);
-                          handleSubmit(new Event('submit'));
-                        }}
+                        onClick={() => sendQuickPrompt(prompt)}
                         disabled={loading}
                         className="w-full text-left p-3 rounded-xl bg-gray-900/30 border border-gray-700/50 hover:border-blue-500/50 hover:bg-blue-500/10 transition-all text-sm text-gray-300 hover:text-white disabled:opacity-50"
                       >

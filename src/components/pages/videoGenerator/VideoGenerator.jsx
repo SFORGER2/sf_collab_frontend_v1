@@ -123,7 +123,15 @@ const VideoGenerator = () => {
         throw new Error(response.error || 'Failed to generate video');
       }
 
-      setGeneratedVideos([...generatedVideos, response.data]);
+      const videoData = response.data || {};
+      setGeneratedVideos([...generatedVideos, {
+        url: videoData.video_url || '',
+        filename: videoData.video_url ? videoData.video_url.split('/').pop() : '',
+        mode: videoData.mode || mode,
+        duration: videoData.duration || duration,
+        remaining: videoData.remaining_today,
+        generated_at: videoData.generated_at || new Date().toISOString()
+      }]);
       setPrompt('');
       setUploadedFiles([]);
     } catch (err) {
@@ -387,23 +395,32 @@ const VideoGenerator = () => {
                         </Alert>
                       )}
 
-                      <Button
-                        type="submit"
-                        disabled={loading || credits < totalCost}
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-6 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Generating Video...
-                          </>
-                        ) : (
-                          <>
-                            <Play className="h-4 w-4 mr-2" />
-                            Generate Video
-                          </>
-                        )}
-                      </Button>
+                      {credits < totalCost ? (
+                        <div className="w-full flex flex-col items-center gap-2 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center">
+                          <p className="text-amber-400 text-sm font-medium">You need {totalCost} SF Coins to generate a video</p>
+                          <a href="/store" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition-colors">
+                            Buy SF Coins
+                          </a>
+                        </div>
+                      ) : (
+                        <Button
+                          type="submit"
+                          disabled={loading}
+                          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-6 rounded-xl transition-all"
+                        >
+                          {loading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Generating Video...
+                            </>
+                          ) : (
+                            <>
+                              <Play className="h-4 w-4 mr-2" />
+                              Generate Video
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </form>
                   </div>
                 </div>
@@ -439,11 +456,14 @@ const VideoGenerator = () => {
 
                     <div className="relative z-10 space-y-4">
                       <div className="aspect-video bg-neutral-800/50 rounded-xl flex items-center justify-center border border-neutral-700/50">
-                        <video
-                          src={video.url}
-                          controls
-                          className="w-full h-full rounded-lg"
-                        />
+                        {video.url ? (
+                          <video src={video.url} controls className="w-full h-full rounded-lg" />
+                        ) : (
+                          <div className="text-center p-6">
+                            <Film className="h-12 w-12 text-neutral-600 mx-auto mb-3" />
+                            <p className="text-neutral-400 text-sm">Video generated — URL pending server config</p>
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-2">

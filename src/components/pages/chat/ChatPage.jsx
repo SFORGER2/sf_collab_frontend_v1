@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Edit3, MessageCircle, HamburgerIcon, Menu, Archive, ChevronRight, ChevronDown } from 'lucide-react';
+import { Search, Edit3, MessageCircle, HamburgerIcon, Menu, Archive, ChevronRight, ChevronDown, X } from 'lucide-react';
 
 // Import chat components
 import Avatar from '@/components/chat (previous)/Avatar';
@@ -19,6 +19,9 @@ import { useSelector } from 'react-redux';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 import { chatAPI } from '@/utils/APIs/chatApi';
 import { resolveUserId } from '@/utils/resolveUserId';
+import AddMemberModal from '@/components/chat (previous)/AddMemberModal';
+import { toast } from 'react-toastify'; // if not already imported
+
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -215,6 +218,25 @@ const ChatPage = () => {
   const [searchParams] = useSearchParams();
   const currentUserId = useMemo(() => String(resolveUserId(currentUser) ?? ""), [currentUser]);
 
+<<<<<<< HEAD
+  // New: is the current user an admin of the active conversation (only
+  // meaningful for group conversations -- used to allow admin-moderated
+  // deletion of other members' messages).
+  const isGroupAdmin = useMemo(() => {
+    if (!activeConversation || activeConversation.conversation_type !== 'group') return false;
+    const me = activeConversation.participants?.find(
+      (p) => String(p.id) === String(currentUserId)
+    );
+    return me?.role === 'admin';
+  }, [activeConversation, currentUserId]);
+=======
+  const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
+  const [messageOffset, setMessageOffset] = useState(0);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const messagesContainerRef = useRef(null);
+>>>>>>> d8822b17f152769192442def2707d347e9adf2e1
+
   // ─── Feature 1: Persisted tab (per-user, survives refresh + multi-tab) ──
   const tabKey = currentUserId ? getTabKey(currentUserId) : null;
   const [activeTab, setActiveTab] = useState(() => {
@@ -261,6 +283,73 @@ const ChatPage = () => {
   const [archivedConversations, setArchivedConversations] = useState([]);
   const [pinnedConversations, setPinnedConversations] = useState(new Set()); // Feature 6: Set of pinned IDs
 
+  // New: reply-in-progress state, kept PER CONVERSATION so switching chats
+  // never leaks one conversation's reply draft into another. Keyed by
+  // conversation id; replyingTo below is always derived fresh from
+  // whichever conversation is currently active.
+  const [replyDrafts, setReplyDrafts] = useState({}); // { [conversationId]: message }
+  const replyingTo = activeConversation ? (replyDrafts[activeConversation.id] || null) : null;
+
+  // New: multi-select mode for messages (Telegram-style "Select" action).
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedMessageIds, setSelectedMessageIds] = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  // New: scroll-to and briefly highlight a message when arriving via a
+  // "Copy Message Link" URL (?message=<id>).
+  const [highlightedMessageId, setHighlightedMessageId] = useState(null);
+
+  const handleReply = useCallback((message) => {
+    if (!activeConversation) return;
+    setReplyDrafts((prev) => ({ ...prev, [activeConversation.id]: message }));
+  }, [activeConversation]);
+
+  const handleCancelReply = useCallback(() => {
+    if (!activeConversation) return;
+    setReplyDrafts((prev) => {
+      const next = { ...prev };
+      delete next[activeConversation.id];
+      return next;
+    });
+  }, [activeConversation]);
+
+  const handleEnterSelectMode = useCallback((messageId) => {
+    setSelectMode(true);
+    setSelectedMessageIds(new Set([messageId]));
+  }, []);
+
+  const handleToggleSelect = useCallback((messageId) => {
+    setSelectedMessageIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(messageId)) next.delete(messageId);
+      else next.add(messageId);
+      return next;
+    });
+  }, []);
+
+  const handleCancelSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelectedMessageIds(new Set());
+  }, []);
+
+  const handleBulkDelete = useCallback(async () => {
+    if (!activeConversation || selectedMessageIds.size === 0 || bulkDeleting) return;
+    setBulkDeleting(true);
+    try {
+      await Promise.all(
+        Array.from(selectedMessageIds).map((id) =>
+          chatAPI.deleteMessage(activeConversation.id, id, 'me').catch((e) => {
+            console.error('Bulk delete failed for message', id, e);
+          })
+        )
+      );
+      setMessages((prev) => prev.filter((m) => !selectedMessageIds.has(m.id)));
+    } finally {
+      setBulkDeleting(false);
+      handleCancelSelectMode();
+    }
+  }, [activeConversation, selectedMessageIds, bulkDeleting, handleCancelSelectMode]);
+
 
   // ============================================
   // REFS
@@ -281,6 +370,7 @@ const ChatPage = () => {
     
     try {
       const data = await chatAPI.getAllChats();
+      console.log("Conversations from backend:", data.conversations);
       console.log("data:", data);
 
       const convos = Array.isArray(data?.conversations)
@@ -327,22 +417,22 @@ const ChatPage = () => {
   }, [token, currentUserId]);
 
   // Fetch messages for a conversation
-  const fetchMessages = useCallback(async (conversationId) => {
-    if (!token) return;
-    
-    try {
-      const data = await chatAPI.getMessages(conversationId, 100, 0);
-      const messagesPayload = Array.isArray(data?.messages)
-        ? data.messages
-        : Array.isArray(data?.data?.messages)
-          ? data.data.messages
-          : [];
-      setMessages(messagesPayload.map(normalizeMessage));
-      socket?.emit('mark_read', { conversation_id: conversationId });
-    } catch (error) {
-      console.error('Failed to fetch messages:', error);
-    }
-  }, [token, socket]);
+  const fetchMessages = useCallback(async (conversationId, offset = 0, append = false) => {
+  if (!token) return;
+  try {
+    const data = await chatAPI.getMessages(conversationId, 50, offset);
+    const messagesPayload = Array.isArray(data?.messages)
+      ? data.messages
+      : Array.isArray(data?.data?.messages)
+        ? data.data.messages
+        : [];
+    const normalized = messagesPayload.map(normalizeMessage);
+    setMessages(prev => append ? [...normalized, ...prev] : normalized);
+    setHasMoreMessages(normalized.length === 50); // if less than limit, no more
+  } catch (error) {
+    console.error('Failed to fetch messages:', error);
+  }
+}, [token]);
 
   // Sync with ChatDock events
 useEffect(() => {
@@ -507,7 +597,14 @@ useEffect(() => {
 
       if (isActive && !isOwn) {
         setMessages((prev) => [...prev, normalizeMessage(data.message)]);
-        socket.emit("mark_read", { conversation_id: activeConversation.id });
+        // FIX: backend's socket handler is registered for "mark_as_read"
+        // (app/socket_events.py, @socketio.on("mark_as_read")) -- this was
+        // emitting "mark_read" instead. Socket.IO event names must match
+        // exactly, so this silently did nothing every time, which is why
+        // read receipts never updated in real time: the backend's
+        // otherwise fully correct message_status_update broadcast to the
+        // sender was never triggered.
+        socket.emit("mark_as_read", { conversation_id: activeConversation.id });
       } else if (isActive && isOwn) {
         // FIX #1b: Replace the optimistic message with the real server message
         // (which has a proper ID, status, etc.). If no optimistic exists, add it
@@ -777,35 +874,137 @@ useEffect(() => {
   // ============================================
 
   // Select a conversation
-  const handleSelectConversation = (conversation) => {
-    if (activeConversation?.id !== conversation.id) {
-      // ─── Feature 3: save draft for the conversation we're leaving ────────
-      if (activeConversation) {
-        try {
-          if (messageInput && messageInput.trim()) localStorage.setItem('chatPage:draft:' + String(activeConversation.id), messageInput);
-          else localStorage.removeItem('chatPage:draft:' + String(activeConversation.id));
-        } catch {}
-      }
-      // Leave previous room
-      if (socket && activeConversation) {
-        socket.emit('leave_conversation', { conversation_id: activeConversation.id });
-      }
-      
-      setActiveConversation(conversation);
-      setMessages([]);
-      setTypingUsers([]);
-      fetchMessages(conversation.id);
+  const handleSelectConversation = useCallback(async (conversation) => {
+  if (!conversation?.id) return;
 
-      // ─── Feature 3: restore draft for the conversation we're entering ────
-      let restoredDraft = '';
-      try { restoredDraft = localStorage.getItem('chatPage:draft:' + String(conversation.id)) || ''; } catch {}
-      setMessageInput(restoredDraft);
+  const conversationId = conversation.id;
 
-      // ─── Feature 2: clear unread count for this conversation ─────────────
-      socket?.emit('mark_read', { conversation_id: conversation.id });
-      setConversations(prev => prev.map(c => String(c.id) === String(conversation.id) ? { ...c, unread_count: 0 } : c));
+  // If clicking the currently open conversation, reload its messages.
+  if (
+    activeConversation &&
+    String(activeConversation.id) === String(conversationId)
+  ) {
+    setMessageOffset(0);
+    setHasMoreMessages(true);
+
+    await fetchMessages(conversationId, 0, false);
+    return;
+  }
+
+  // Save draft for the conversation we're leaving.
+  if (activeConversation) {
+    try {
+      if (messageInput && messageInput.trim()) {
+        localStorage.setItem(
+          "chatPage:draft:" + String(activeConversation.id),
+          messageInput
+        );
+      } else {
+        localStorage.removeItem(
+          "chatPage:draft:" + String(activeConversation.id)
+        );
+      }
+    } catch {}
+  }
+
+  // Leave previous socket room.
+  if (socket && activeConversation) {
+    socket.emit("leave_conversation", {
+      conversation_id: activeConversation.id,
+    });
+  }
+
+  // Change active conversation and clear old state.
+  setActiveConversation(conversation);
+  setMessages([]);
+  setTypingUsers([]);
+
+  // Reset pagination for the newly selected conversation.
+  setMessageOffset(0);
+  setHasMoreMessages(true);
+
+  // Clear unread count immediately.
+  setConversations((prev) =>
+    prev.map((c) =>
+      String(c.id) === String(conversationId)
+        ? { ...c, unread_count: 0 }
+        : c
+    )
+  );
+
+  // IMPORTANT:
+  // Load persisted messages from the backend.
+  try {
+    await fetchMessages(conversationId, 0, false);
+  } catch (error) {
+    console.error("Failed to load conversation messages:", error);
+  }
+
+  // Mark conversation as read.
+  try {
+    await chatAPI.markConversationAsRead(conversationId);
+  } catch (error) {
+    console.error("Failed to mark conversation as read:", error);
+  }
+
+  // Restore draft.
+  let restoredDraft = "";
+
+  try {
+    restoredDraft =
+      localStorage.getItem(
+        "chatPage:draft:" + String(conversationId)
+      ) || "";
+  } catch {}
+
+  setMessageInput(restoredDraft);
+
+  // Socket read event.
+  socket?.emit("mark_read", {
+    conversation_id: conversationId,
+  });
+}, [
+  activeConversation,
+  messageInput,
+  socket,
+  fetchMessages,
+]);
+
+  useEffect(() => {
+  const container = messagesContainerRef.current;
+  if (!container) return;
+
+  const handleScroll = () => {
+    if (
+      container.scrollTop === 0 &&
+      hasMoreMessages &&
+      !loadingMore &&
+      activeConversation
+    ) {
+      setLoadingMore(true);
+
+      const newOffset = messageOffset + 50;
+
+      fetchMessages(activeConversation.id, newOffset, true)
+        .finally(() => {
+          setLoadingMore(false);
+          setMessageOffset(newOffset);
+        });
     }
   };
+
+  container.addEventListener('scroll', handleScroll);
+
+  return () => {
+    container.removeEventListener('scroll', handleScroll);
+  };
+}, [
+  activeConversation,
+  hasMoreMessages,
+  loadingMore,
+  messageOffset,
+  fetchMessages,
+]);
 
   // Open chat with a friend (from sidebar)
   const handleOpenChatWithFriend = async (friend) => {
@@ -922,8 +1121,25 @@ useEffect(() => {
   };
 
   // Send a message - FIX #1: Optimistic update so message appears instantly
+  // New: "Copy Message Link" support -- if the URL has ?message=<id>, scroll
+  // to that message once it's loaded and briefly highlight it.
+  useEffect(() => {
+    const targetId = searchParams.get('message');
+    if (!targetId || messages.length === 0) return;
+    const el = document.querySelector(`[data-message-id="${targetId}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setHighlightedMessageId(targetId);
+      const timer = setTimeout(() => setHighlightedMessageId(null), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, messages]);
+
   const handleSendMessage = async (content) => {
     if (!content || !activeConversation) return;
+    const replyToId = replyingTo?.id && !String(replyingTo.id).startsWith('optimistic-')
+      ? replyingTo.id
+      : null;
 
     // Build an optimistic message shown immediately, before socket echo
     const optimisticId = `optimistic-${Date.now()}`;
@@ -940,14 +1156,27 @@ useEffect(() => {
       created_at: new Date().toISOString(),
       conversation_id: activeConversation.id,
       status: 'sending',
+      reply_to_id: replyToId,
+      reply_to: replyingTo ? {
+        id: replyingTo.id,
+        content: replyingTo.content || replyingTo.original_content,
+        sender_id: replyingTo.sender_id,
+      } : undefined,
     });
 
     // Show it immediately
     setMessages((prev) => [...prev, optimisticMsg]);
+    // FIX: clear the draft for THIS conversation only, so replying in one
+    // chat can never affect another conversation's draft.
+    setReplyDrafts((prev) => {
+      const next = { ...prev };
+      delete next[activeConversation.id];
+      return next;
+    });
 
     try {
       // Persist first through REST so the message survives refresh.
-      const response = await chatAPI.sendMessage(activeConversation.id, content);
+      const response = await chatAPI.sendMessage(activeConversation.id, content, replyToId);
       const serverMessage = response?.data?.message || response?.message || null;
 
       if (serverMessage) {
@@ -1165,7 +1394,7 @@ useEffect(() => {
       {/* ============================================ */}
       {/* LEFT SIDEBAR: Conversations List */}
       {/* ============================================ */}
-      <div className={`fixed md:static top-16 left-0 z-40 w-full sm:w-80 md:w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col h-[calc(100vh-80px)] md:h-auto transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      <div className={`fixed md:static top-16 left-0 z-40 w-[85vw] sm:w-80 md:w-72 lg:w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col h-[calc(100vh-64px)] md:h-full transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}>
         {/* Header */}
         <div className="p-3 md:p-4">
@@ -1223,7 +1452,20 @@ useEffect(() => {
                 >
                   {tab.label}
                   {count > 0 && (
-                    <span className="absolute -top-1.5 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center">
+                    <span
+className="absolute -top-1.5 -right-1
+min-w-[14px]
+h-[14px]
+px-0.5
+rounded-full
+bg-red-500
+text-white
+text-[8px]
+font-bold
+flex
+items-center
+justify-center
+animate-pulse">
                       {count > 99 ? '99+' : count}
                     </span>
                   )}
@@ -1324,6 +1566,7 @@ useEffect(() => {
                 onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
                 setSidebarOpen={() => setSidebarOpen(true)}
                 isMobile={isMobile}
+                onAddMember={() => setAddMemberModalOpen(true)}
               />
             </div>
             
@@ -1337,12 +1580,21 @@ useEffect(() => {
                 onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
                 setSidebarOpen={() => setSidebarOpen(true)}
                 isMobile={isMobile}
+                onAddMember={() => setAddMemberModalOpen(true)}
               />
             </div>
 
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto max-h-[calc(100vh-200px)] py-2 md:py-4 px-2 md:px-4">
+            <div
+  ref={messagesContainerRef}
+  className="flex-1 overflow-y-auto max-h-[calc(100dvh-180px)] py-2 md:py-4 px-2 md:px-4 overscroll-contain"
+>
+  {loadingMore && (
+    <div className="text-center py-2">
+      <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto" />
+    </div>
+  )}
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-zinc-500">
                   <Avatar
@@ -1353,13 +1605,12 @@ useEffect(() => {
                     size="xl"
                     showStatus={false}
                   />
-
                   <p className="mt-4 font-medium text-white">
                     {otherParticipant?.firstName} {otherParticipant?.lastName}
                   </p>
                   <p className="text-sm text-zinc-500">Start a conversation</p>
                 </div>
-              ) : (
+              ) : ( 
                 messages.map((message, index) => {
                   const prevMessage = index > 0 ? messages[index - 1] : null;
                   // Use String() comparison to avoid type mismatch
@@ -1373,19 +1624,33 @@ useEffect(() => {
                       )}
                       
                       {/* Message bubble */}
-                      <MessageBubble
-                        message={message}
-                        isOwn={isOwn}
-                        showAvatar={shouldShowAvatar(message, index)}
-                        currentUserId={currentUserId}
-                        conversationId={activeConversation?.id}
-                        conversationType={activeConversation?.conversation_type}
-                        setMessages={setMessages}
-                        showSenderName={
-                          activeConversation?.conversation_type !== "direct" &&
-                          shouldShowSenderName(messages, index)
-                        }
-                      />
+                      <div
+                        data-message-id={message.id}
+                        className={`rounded-xl transition-colors duration-500 ${
+                          String(highlightedMessageId) === String(message.id) ? 'bg-indigo-500/20' : ''
+                        }`}
+                      >
+                        <MessageBubble
+                          message={message}
+                          isOwn={isOwn}
+                          showAvatar={shouldShowAvatar(message, index)}
+                          currentUserId={currentUserId}
+                          conversationId={activeConversation?.id}
+                          conversationType={activeConversation?.conversation_type}
+                          isGroupAdmin={isGroupAdmin}
+                          setMessages={setMessages}
+                          allMessages={messages}
+                          onReply={handleReply}
+                          selectMode={selectMode}
+                          isSelected={selectedMessageIds.has(message.id)}
+                          onToggleSelect={handleToggleSelect}
+                          onEnterSelectMode={handleEnterSelectMode}
+                          showSenderName={
+                            activeConversation?.conversation_type !== "direct" &&
+                            shouldShowSenderName(messages, index)
+                          }
+                        />
+                      </div>
 
                     </React.Fragment>
                   );
@@ -1398,6 +1663,52 @@ useEffect(() => {
               {/* Scroll anchor */}
               <div ref={messagesEndRef} />
             </div>
+
+            {/* Select-mode toolbar (Telegram-style multi-select) */}
+            {selectMode && (
+              <div className="border-t border-zinc-800 bg-zinc-900 px-4 py-2 flex items-center justify-between">
+                <span className="text-sm text-zinc-300">{selectedMessageIds.size} selected</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCancelSelectMode}
+                    className="px-3 py-1.5 text-sm text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBulkDelete}
+                    disabled={selectedMessageIds.size === 0 || bulkDeleting}
+                    className="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 rounded-lg hover:bg-red-500/10 disabled:opacity-50"
+                  >
+                    {bulkDeleting ? 'Deleting…' : 'Delete'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Reply preview banner */}
+            {replyingTo && !selectMode && (
+              <div className="border-t border-zinc-800 bg-zinc-900 px-4 py-2 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1 border-l-2 border-indigo-500 pl-2">
+                  <p className="text-xs text-indigo-400 font-medium">
+                    Replying to {String(replyingTo.sender_id) === String(currentUserId) ? 'yourself' : (replyingTo.sender_name || replyingTo?.sender?.firstName || 'message')}
+                  </p>
+                  <p className="text-xs text-zinc-400 truncate">
+                    {replyingTo.content || replyingTo.original_content}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCancelReply}
+                  className="text-zinc-500 hover:text-white p-1 rounded-full hover:bg-zinc-800 shrink-0"
+                  title="Cancel reply"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
 
             {/* Chat Input - with file upload support */}
             <div className="border-t border-zinc-800">
