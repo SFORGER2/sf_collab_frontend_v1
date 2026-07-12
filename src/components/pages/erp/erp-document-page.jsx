@@ -195,6 +195,7 @@ const DocumentsPage = () => {
     }
     return current;
   };
+
   const handleOpenFolder = (folder) => {
     setModalPath([folder.name]);
     const folderData = getFolderByPath([folder.name]);

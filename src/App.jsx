@@ -1,6 +1,7 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { FolderExplorerUI } from "./components/explorer/FolderExplorerUI";
+import { AutoTranslateProvider } from "./components/AutoTranslateProvider.jsx";
 import Layout from "./Layout/Layout.jsx";
 import Project from "./components/pages/Project.jsx";
 import Ideation from "./components/pages/ideation/Ideation.jsx";
@@ -59,6 +60,7 @@ import VerifyEmail from "./components/pages/verifyEmail/VerifyEmail.jsx";
 import JoinSF from "./components/pages/joinSF/JoinSF.jsx";
 import Influencer from "./components/pages/influencer/Influencer.jsx";
 import ProfileSetup from "./components/pages/ProfileSetup.jsx";
+import GlobalLanguageSelector from "./components/GlobalLanguageSelector.jsx";
 import { useSelector } from "react-redux";
 import { useEffect, useState, useLayoutEffect } from "react";
 import { usersAPI } from "./utils/APIs/userAPI.js";
@@ -191,6 +193,15 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <AutoTranslateProvider>
+        <SocketProvider token={access_token}>
+          <ChatNotificationProvider>
+            <ChatContactsProvider token={access_token}>
+              <NotificationProvider>
+                <GlobalLanguageSelector />
+                <ScrollToTop />
+                <Routes>
+                {/* Public Routes */}
       <SocketProvider token={access_token}>
         <ChatNotificationProvider>
           <ChatContactsProvider token={access_token}>
@@ -464,6 +475,7 @@ export default function App() {
           </ChatContactsProvider>
         </ChatNotificationProvider>
       </SocketProvider>
-    </BrowserRouter>
+    </AutoTranslateProvider>
+  </BrowserRouter>
   );
 }
