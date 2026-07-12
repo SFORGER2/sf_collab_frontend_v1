@@ -110,6 +110,32 @@ export function createFounderLinks(unreadMessagesCount, userRoles = [], setActiv
     },
     socialSection(5),
     aiTools(6),
+    {
+  id: 61,
+  icon: <FileStack size={22} />,
+  href: "/pitch-deck",
+  label: "Pitch Deck Generator",
+  subItems: [
+    {
+      id: "pitch-deck-home",
+      href: "/pitch-deck",
+      label: "Home",
+      icon: <FileStack size={18} />,
+    },
+    {
+      id: "pitch-deck-create",
+      href: "/pitch-deck/create",
+      label: "Create Deck",
+      icon: <PlusSquare size={18} />,
+    },
+    {
+      id: "pitch-deck-my-decks",
+      href: "/pitch-deck/my-decks",
+      label: "My Decks",
+      icon: <FolderOpen size={18} />,
+    },
+  ],
+},
     toolsSection(7),
     // Mentorship
     { id: "section-grow", sectionLabel: "Grow", isSection: true },
