@@ -499,6 +499,19 @@ const handleDeclineInvitation = async () => {
                   </Button>
                   {
                     isFounder && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/startup-workspace/${startup?.id}`)}
+                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 border border-blue-500/20"
+                      >
+                        <BarChart3 className="w-4 h-4 mr-1" />
+                        Startup Workspace
+                      </Button>
+                    )
+                  }
+                  {
+                    isFounder && (
                   
                       <Button
                         variant="destructive"

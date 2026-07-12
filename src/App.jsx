@@ -1,6 +1,7 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { FolderExplorerUI } from "./components/explorer/FolderExplorerUI";
+import { AutoTranslateProvider } from "./components/AutoTranslateProvider.jsx";
 import Layout from "./Layout/Layout.jsx";
 import Project from "./components/pages/Project.jsx";
 import Ideation from "./components/pages/ideation/Ideation.jsx";
@@ -59,6 +60,7 @@ import VerifyEmail from "./components/pages/verifyEmail/VerifyEmail.jsx";
 import JoinSF from "./components/pages/joinSF/JoinSF.jsx";
 import Influencer from "./components/pages/influencer/Influencer.jsx";
 import ProfileSetup from "./components/pages/ProfileSetup.jsx";
+import GlobalLanguageSelector from "./components/GlobalLanguageSelector.jsx";
 import { useSelector } from "react-redux";
 import { useEffect, useState, useLayoutEffect } from "react";
 import { usersAPI } from "./utils/APIs/userAPI.js";
@@ -79,6 +81,19 @@ import Crowdfunding from "./components/pages/crowdfunding/Crowdfunding.jsx";
 import Checkout from "./components/pages/checkout/Checkout.jsx";
 import ReturnPage from "./components/pages/checkout/CheckoutReturnPage.jsx";
 import Donate from "./components/pages/donate/Donate.jsx";
+
+// Vision & Startup Workspace (Vision -> Startup progression system)
+import VisionWorkspacePage from "./components/pages/vision/VisionWorkspacePage.jsx";
+import StartupWorkspaceLayout from "./components/pages/startupWorkspace/StartupWorkspaceLayout.jsx";
+import StartupWorkspaceDashboard from "./components/pages/startupWorkspace/StartupWorkspaceDashboard.jsx";
+import StartupScoringPage from "./components/pages/startupWorkspace/StartupScoringPage.jsx";
+import FinancialManagementPage from "./components/pages/startupWorkspace/FinancialManagementPage.jsx";
+import CRMPage from "./components/pages/startupWorkspace/CRMPage.jsx";
+import HiringPage from "./components/pages/startupWorkspace/HiringPage.jsx";
+import InvestorPortalPage from "./components/pages/startupWorkspace/InvestorPortalPage.jsx";
+import BusinessIntelligencePage from "./components/pages/startupWorkspace/BusinessIntelligencePage.jsx";
+import AutomationPage from "./components/pages/startupWorkspace/AutomationPage.jsx";
+import IntegrationsPage from "./components/pages/startupWorkspace/IntegrationsPage.jsx";
 
 // SF Meet
 import MeetingRoom from "./components/ui/meeting-room.jsx";
@@ -144,6 +159,11 @@ import WorkspaceDashboard from "./components/pages/erp/WorkspaceDashboard";
 import { WarningActionsPage } from "./components/pages/erp/WarningActionsPage";
 import { FlagsPage } from "./components/pages/erp/FlagsPage";
 import { AuditLogsPage } from "./components/pages/erp/AuditLogsPage";
+
+// Pitch Deck Generator
+import PitchDeckHome from "./components/pages/pitch-deck/PitchDeckHome";
+import PitchDeckCreate from "./components/pages/pitch-deck/PitchDeckCreate";
+import MyDecks from "./components/pages/pitch-deck/MyDecks";
 import { AnnouncementProvider } from "./contexts/AnnouncementContext";
 import { NewsletterProvider } from "./contexts/NewsletterContext";
 
@@ -191,16 +211,18 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <SocketProvider token={access_token}>
-        <ChatNotificationProvider>
-          <ChatContactsProvider token={access_token}>
-            <NotificationProvider>
-              <AnnouncementProvider>
-                <NewsletterProvider>
-              <ScrollToTop />
-              <Routes>
-                {/* ────── Public Routes ────── */}
-                <Route path="/" element={<LandingPage />} />
+      <AutoTranslateProvider>
+        <SocketProvider token={access_token}>
+          <ChatNotificationProvider>
+            <ChatContactsProvider token={access_token}>
+              <NotificationProvider>
+                <AnnouncementProvider>
+                  <NewsletterProvider>
+                    <GlobalLanguageSelector />
+                    <ScrollToTop />
+                    <Routes>
+                      {/* ────── Public Routes ────── */}
+                      <Route path="/" element={<LandingPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/team" element={<TeamPage />} />
                 <Route path="/contact" element={<ContactPage />} />
@@ -347,6 +369,10 @@ export default function App() {
                     <Route path="discover-startups" element={<DiscoverStartups />} />
                     <Route path="my-startups" element={<DiscoverStartups myStartupsOnly={true} />} />
                     <Route path="startup-details/:id" element={<StartupDetailPage />} />
+                    <Route path="vision/:id" element={<VisionWorkspacePage />} />
+                    <Route path="pitch-deck" element={<PitchDeckHome />} />
+                    <Route path="pitch-deck/create" element={<PitchDeckCreate />} />
+                    <Route path="pitch-deck/my-decks" element={<MyDecks />} />
                     <Route path="saved-startups" element={<SavedStartups />} />
                     <Route path="invitations" element={<InviteToStartup />} />
 
@@ -428,6 +454,19 @@ export default function App() {
                     <Route path="flags" element={<FlagsPage />} />
                     <Route path="audit-logs" element={<AuditLogsPage />} />
                   </Route>
+
+                  {/* === Startup Workspace (separate layout, no global navigation) === */}
+                  <Route path="startup-workspace/:id" element={<StartupWorkspaceLayout />}>
+                    <Route index element={<StartupWorkspaceDashboard />} />
+                    <Route path="scoring" element={<StartupScoringPage />} />
+                    <Route path="crm" element={<CRMPage />} />
+                    <Route path="hiring" element={<HiringPage />} />
+                    <Route path="financials" element={<FinancialManagementPage />} />
+                    <Route path="investor-portal" element={<InvestorPortalPage />} />
+                    <Route path="business-intelligence" element={<BusinessIntelligencePage />} />
+                    <Route path="automation" element={<AutomationPage />} />
+                    <Route path="integrations" element={<IntegrationsPage />} />
+                  </Route>
                 </Route>
 
                 {/* ────── 404 ────── */}
@@ -464,6 +503,7 @@ export default function App() {
           </ChatContactsProvider>
         </ChatNotificationProvider>
       </SocketProvider>
-    </BrowserRouter>
+    </AutoTranslateProvider>
+  </BrowserRouter>
   );
 }

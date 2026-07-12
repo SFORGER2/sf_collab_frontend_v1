@@ -218,7 +218,6 @@ const ChatPage = () => {
   const [searchParams] = useSearchParams();
   const currentUserId = useMemo(() => String(resolveUserId(currentUser) ?? ""), [currentUser]);
 
-<<<<<<< HEAD
   // New: is the current user an admin of the active conversation (only
   // meaningful for group conversations -- used to allow admin-moderated
   // deletion of other members' messages).
@@ -229,13 +228,12 @@ const ChatPage = () => {
     );
     return me?.role === 'admin';
   }, [activeConversation, currentUserId]);
-=======
+
   const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
   const [messageOffset, setMessageOffset] = useState(0);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const messagesContainerRef = useRef(null);
->>>>>>> d8822b17f152769192442def2707d347e9adf2e1
 
   // ─── Feature 1: Persisted tab (per-user, survives refresh + multi-tab) ──
   const tabKey = currentUserId ? getTabKey(currentUserId) : null;
