@@ -13,7 +13,7 @@ export function ERPHeader({ workspaceName, onSearch, onNotifications }) {
   const profilePic = getProfilePicture(user);
 
   return (
-    <header className="h-16 border-b border-white/5 bg-[#111827]/80 backdrop-blur-lg flex items-center justify-between px-6 shrink-0">
+    <header className="h-16 border-b border-white/5 bg-black/80 backdrop-blur-lg flex items-center justify-between px-6 shrink-0">
       {/* Left section: App Switcher + Workspace Switcher */}
       <div className="flex items-center gap-2 flex-1">
         <AppSwitcher />

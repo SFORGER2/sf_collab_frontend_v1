@@ -67,17 +67,17 @@ export function ERPSidebar({ modules, workspaceName, collapsed, setCollapsed }) 
 
   return (
     <div className={cn(
-      "h-full bg-[#111827] border-r border-white/5 transition-all duration-300 flex flex-col",
+      "h-full bg-black border-r border-white/5 transition-all duration-300 flex flex-col",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Workspace header */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-white/5 shrink-0">
         {!collapsed && (
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold shrink-0">
+             <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center text-white font-bold shrink-0 border border-white/10">
               {workspaceName?.[0] || 'W'}
             </div>
-            <span className="text-white font-semibold text-sm truncate">{workspaceName || 'Workspace'}</span>
+             <span className="text-white font-semibold text-sm truncate">{workspaceName || 'Workspace'}</span>
           </div>
         )}
         <button onClick={() => setCollapsed(!collapsed)} className="text-zinc-400 hover:text-white transition-colors">
@@ -112,7 +112,7 @@ export function ERPSidebar({ modules, workspaceName, collapsed, setCollapsed }) 
                     to={module.href}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all hover:bg-white/5",
-                      active ? "bg-blue-600/20 text-blue-400" : "text-zinc-400 hover:text-white"
+                      active ? "bg-black text-white" : "text-zinc-400 hover:text-white"
                     )}
                   >
                     <span className="w-5 h-5 flex items-center justify-center shrink-0">
