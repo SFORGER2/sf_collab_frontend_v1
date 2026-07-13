@@ -27,6 +27,8 @@ import {
   Activity,
   ShieldCheck,
   Video,
+  FileStack,
+  FolderOpen
 } from "lucide-react";
 
 import { Lightbulb } from "lucide-react";
