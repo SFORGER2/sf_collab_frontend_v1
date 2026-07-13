@@ -13,11 +13,11 @@ import OskarImg from "@/assets/imgs/Oskar K (Founder & CEO).jpg";
 import FatimaImg from "@/assets/imgs/Fatima Abba (Backend Developer).png";
 import ChinmayImg from "@/assets/imgs/Chinmay Bharadwaj (Developer).jpg";
 import KrystianImg from "@/assets/imgs/Krystian Śledziewski (cybersecurity)_.jpg";
-import RazeenImg from "@/assets/imgs/Razeen Iqbal ( product Manager).jpg";
+import RazeenImg from "@/assets/imgs/RazzinJpeg.jpeg";
 import ShreyImg from "@/assets/imgs/Shrey Dikshant (AI_ML Engineer).jpg";
 import VarunImg from "@/assets/imgs/Varun.png (Frontend Developer & AI researcher).jpg"; // ✅ renamed file
 import IvanImg from "@/assets/imgs/Ivan Gomez (Cloud & Software Developer).jpg";
-import LaurieImg from "@/assets/imgs/Laurie Breton (Management Department).jpg";
+
 gsap.registerPlugin(ScrollTrigger);
 
 // Team Data
@@ -27,12 +27,6 @@ const teamMembers = [
     role: "Founder & CEO",
     img: OskarImg,
     desc: "Driving the company's vision and strategy with a passion for innovation.",
-  },
-  {
-    name: "Laurie Breton",
-    role: "Management Department",
-    img: LaurieImg,
-    desc: "Overseeing operations and ensuring organizational efficiency.",
   },
   {
     name: "Chinmay Bharadwaj",
