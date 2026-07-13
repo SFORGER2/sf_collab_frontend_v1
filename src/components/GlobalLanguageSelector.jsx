@@ -80,7 +80,7 @@ export default function GlobalLanguageSelector() {
   }, []);
 
   return (
-    <div ref={selectorRef} className="fixed bottom-6 right-6 z-[10000] inline-block text-left notranslate" translate="no">
+    <div ref={selectorRef} className="fixed bottom-24 right-6 z-[9997] inline-block text-left notranslate" translate="no">
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -106,7 +106,7 @@ export default function GlobalLanguageSelector() {
         <div
           role="listbox"
           aria-label="Select language"
-          className="absolute right-0 bottom-full mb-2 w-52 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur z-[10001]"
+          className="absolute right-0 bottom-full mb-2 w-52 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur z-[9998]"
         >
           {languages.map((lang) => (
             <button

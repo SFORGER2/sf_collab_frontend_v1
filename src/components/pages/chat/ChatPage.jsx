@@ -218,7 +218,6 @@ const ChatPage = () => {
   const [searchParams] = useSearchParams();
   const currentUserId = useMemo(() => String(resolveUserId(currentUser) ?? ""), [currentUser]);
 
-<<<<<<< HEAD
   // New: is the current user an admin of the active conversation (only
   // meaningful for group conversations -- used to allow admin-moderated
   // deletion of other members' messages).
@@ -229,13 +228,12 @@ const ChatPage = () => {
     );
     return me?.role === 'admin';
   }, [activeConversation, currentUserId]);
-=======
+
   const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
   const [messageOffset, setMessageOffset] = useState(0);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const messagesContainerRef = useRef(null);
->>>>>>> d8822b17f152769192442def2707d347e9adf2e1
 
   // ─── Feature 1: Persisted tab (per-user, survives refresh + multi-tab) ──
   const tabKey = currentUserId ? getTabKey(currentUserId) : null;
@@ -350,6 +348,24 @@ const ChatPage = () => {
     }
   }, [activeConversation, selectedMessageIds, bulkDeleting, handleCancelSelectMode]);
 
+
+  // ─── Add Member (Telegram-style) ────────────────────────────────────────
+  const handleAddMember = useCallback(async (conversationId, userId, historyVisibility) => {
+    try {
+      await chatAPI.addParticipant(conversationId, userId, "member", historyVisibility);
+      toast.success("Member added");
+      await fetchConversations();
+      // Refresh the active conversation's own participant list, if it's the one that changed
+      if (activeConversation && String(activeConversation.id) === String(conversationId)) {
+        const data = await chatAPI.getConversationById(conversationId);
+        const updated = data?.conversation || data?.data?.conversation || null;
+        if (updated) setActiveConversation(updated);
+      }
+    } catch (error) {
+      console.error("Failed to add member:", error);
+      toast.error(error?.response?.data?.error || "Failed to add member");
+    }
+  }, [activeConversation, fetchConversations]);
 
   // ============================================
   // REFS
@@ -960,7 +976,10 @@ useEffect(() => {
   setMessageInput(restoredDraft);
 
   // Socket read event.
-  socket?.emit("mark_read", {
+  // FIX: backend listens for "mark_as_read" (see the matching fix + comment
+  // in the new_message handler above) — this was still emitting the wrong
+  // event name here, so opening a conversation didn't mark it read in real time.
+  socket?.emit("mark_as_read", {
     conversation_id: conversationId,
   });
 }, [
@@ -1813,6 +1832,18 @@ animate-pulse">
         onSelectUser={handleOpenChatWithFriend}
         onCreateGroup={handleCreateGroup}
         token={token}
+        currentUserId={currentUserId}
+      />
+
+      {/* ============================================ */}
+      {/* ADD MEMBER MODAL */}
+      {/* ============================================ */}
+      <AddMemberModal
+        isOpen={addMemberModalOpen}
+        onClose={() => setAddMemberModalOpen(false)}
+        onAdd={handleAddMember}
+        conversationId={activeConversation?.id}
+        conversationType={activeConversation?.conversation_type}
         currentUserId={currentUserId}
       />
     </div>

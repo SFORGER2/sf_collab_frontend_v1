@@ -133,30 +133,6 @@ export default function ERPDashboard() {
     }
   }, [workspaceId]);
 
-  // ── Load tasks separately so task errors don't break the rest ──────────────
-  const loadTasks = useCallback(async () => {
-    if (!workspaceId) return;
-    setTasksLoading(true);
-    try {
-      const res = await tasksApi.get("/list", { params: { workspace_id: workspaceId } });
-      // interceptor returns full axios response; backend uses success_response which wraps in {data: {tasks:[...]}}
-      const payload = res?.data?.data ?? res?.data ?? res;
-      const list = payload?.tasks || [];
-      // Show up to 5 most recent, prioritise overdue + in_progress
-      const sorted = [...list].sort((a, b) => {
-        if (a.is_overdue && !b.is_overdue) return -1;
-        if (!a.is_overdue && b.is_overdue) return 1;
-        const order = { in_progress: 0, todo: 1, done: 2, approved: 3, rejected: 4 };
-        return (order[a.status] ?? 9) - (order[b.status] ?? 9);
-      });
-      setTasks(sorted.slice(0, 5));
-    } catch {
-      setTasks([]);
-    } finally {
-      setTasksLoading(false);
-    }
-  }, [workspaceId]);
-
   const load = useCallback(async () => {
     setLoading(true);
     try {

@@ -1048,6 +1048,19 @@ const VisionDetails = () => {
             }}
           />
 
+          {/* Full Vision Workspace — points, milestones, activity, team, interest */}
+          <Link
+            to={`/vision/${ideaId}`}
+            className="flex items-center justify-between w-full bg-white/5 border border-white/10
+                       rounded-2xl p-4 hover:border-blue-500/30 transition-colors group"
+          >
+            <div>
+              <p className="text-white text-sm font-medium">Open Vision Workspace</p>
+              <p className="text-gray-500 text-xs mt-0.5">Points, milestones, activity & team in one view</p>
+            </div>
+            <TrendingUp className="w-4 h-4 text-blue-400 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+
           {/* Converted Vision notice — shown when this is a demoted startup */}
           {idea.tags?.includes('Converted Vision') && (
             <div className="bg-violet-500/10 border border-violet-500/20 rounded-2xl p-5">

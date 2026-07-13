@@ -14,7 +14,6 @@ import {
   PlusSquare,
   MessageSquareHeart,
   Users,
-  FolderOpen,
   DollarSign,
   ShoppingCart,
   ShoppingBag,
@@ -25,10 +24,11 @@ import {
   Search,
   Star,
   CalendarClock,
-  FileStack,
   Activity,
   ShieldCheck,
   Video,
+  FileStack,
+  FolderOpen
 } from "lucide-react";
 
 import { Lightbulb } from "lucide-react";
