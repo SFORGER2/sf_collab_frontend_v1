@@ -269,13 +269,21 @@ backdrop-filter: blur(10);
     --sidebar-ring: oklch(0.556 0 0);
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-    }
-  body {
-    @apply bg-background text-foreground;
-    }
+/* ============================================
+   White Calendar Icon
+============================================ */
+
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  color-scheme: light;
 }
 
+/* Chrome / Edge / Brave */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
 
