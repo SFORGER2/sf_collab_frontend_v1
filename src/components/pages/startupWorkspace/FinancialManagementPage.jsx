@@ -94,7 +94,7 @@ export default function FinancialManagementPage() {
           <Field label="Funding Round">
             <select value={form.funding_round} onChange={handleChange('funding_round')} className="input-field">
               {FUNDING_ROUNDS.map((r) => (
-                <option key={r} value={r}>{r}</option>
+                <option key={r} value={r} style={{ backgroundColor: '#1f2937', color: '#fff' }}>{r}</option>
               ))}
             </select>
           </Field>

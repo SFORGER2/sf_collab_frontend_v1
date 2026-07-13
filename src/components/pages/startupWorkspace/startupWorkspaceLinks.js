@@ -44,6 +44,7 @@ export const getStartupWorkspaceModules = (startupId) => [
     icon: Building2,
     href: `/erp`,
     internal: false,
+    requiresWorkspaceSwitch: true,
     group: 'Operations',
   },
   {
@@ -92,6 +93,7 @@ export const getStartupWorkspaceModules = (startupId) => [
     icon: BarChart3,
     href: `/erp/admin-analytics`,
     internal: false,
+    requiresWorkspaceSwitch: true,
     group: 'Insights',
   },
   {

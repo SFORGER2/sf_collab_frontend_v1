@@ -98,8 +98,15 @@ export default function HiringPage() {
 
   const handleMoveStage = async (applicant, newStage) => {
     try {
-      await recruitmentAPI.moveStage(applicant.id, newStage);
+      const result = await recruitmentAPI.moveStage(applicant.id, newStage);
       toast.success(`Moved ${applicant.name} to ${STAGE_LABELS[newStage]}`);
+      if (result?.memberAdded) {
+        toast.success(`${applicant.name} was added to the startup team`);
+      } else if (newStage === 'hired' && result?.memberAddError) {
+        toast.error(`Hired, but couldn't add to team: ${result.memberAddError}`);
+      } else if (newStage === 'hired' && !applicant.userId) {
+        toast.info(`${applicant.name} isn't linked to a platform account, so they weren't added as a team member automatically.`);
+      }
       loadBoard(selectedJobId);
     } catch (err) {
       toast.error(err?.response?.data?.error || 'Failed to move applicant');
