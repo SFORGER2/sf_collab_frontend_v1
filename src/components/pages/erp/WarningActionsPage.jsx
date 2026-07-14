@@ -23,7 +23,11 @@ export function WarningActionsPage() {
     try {
       // ✅ Correct URL: /api/warnings?workspace_id=...
       const res = await api.get("/warnings", { params: { workspace_id: workspaceId } });
-      setWarnings(res.data.warnings || []);
+      setWarnings(
+  res.data?.data?.warnings ||
+  res.data?.data?.items ||
+  []
+);
     } catch (err) {
       console.error("Failed to load warnings", err);
       setError("Failed to load warnings");
