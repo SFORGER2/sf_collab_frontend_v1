@@ -108,7 +108,7 @@ export const startupAPI = {
     const response = await api.post(`/startups/${startupId}/documents`, formData, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': undefined, // let the browser set the multipart boundary
       },
     })
     return response.data

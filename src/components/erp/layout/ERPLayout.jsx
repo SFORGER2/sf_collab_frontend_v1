@@ -100,7 +100,7 @@ export function ERPLayout({ activeRole, userRoles, user }) {
 
   // Workspace exists – render full ERP layout
   return (
-    <div className="h-screen flex flex-col bg-[#09090B] text-white overflow-hidden">
+    <div className="h-screen flex flex-col bg-black text-white overflow-hidden">
       <ERPHeader
         workspaceName={workspaceName}
         onSearch={() => {}}

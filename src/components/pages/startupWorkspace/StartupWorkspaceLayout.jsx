@@ -7,30 +7,88 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Outlet, useParams, useNavigate, Link, useLocation } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { ChevronLeft, ChevronRight, Loader2, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import axios from 'axios';
 import { startupsAPI } from '@/utils/APIs/startupsAPI';
+import { workspaceAPI } from '@/services/workspaceAPI';
+import { setUser } from '@/services/auth/authSlice';
+import { fetchUserProfile } from '@/services/auth/authThunks';
 import { getStartupWorkspaceModules, STARTUP_WORKSPACE_GROUP_ORDER } from './startupWorkspaceLinks';
 
 export default function StartupWorkspaceLayout() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [switching, setSwitching] = useState(false);
+
+  const handleExternalModuleClick = async (mod) => {
+    if (!mod.requiresWorkspaceSwitch) {
+      navigate(mod.href);
+      return;
+    }
+    setSwitching(true);
+    try {
+      const res = await axios.get('/api/workspaces/my');
+      const workspaces = res?.data?.data ?? res?.data ?? [];
+      let match = workspaces.find((w) => String(w.startup_id) === String(id));
+
+      if (!match) {
+        // No ERP workspace linked to this startup yet -- create one instead
+        // of sending the user to the manual "Create Workspace" form (or
+        // silently leaving them on whatever workspace was last active).
+        try {
+          const createRes = await axios.post('/api/workspaces/create', {
+            name: startup?.name ? `${startup.name} Workspace` : 'Startup Workspace',
+            startup_id: id,
+          });
+          match = createRes?.data?.data?.workspace ?? createRes?.data?.workspace ?? null;
+        } catch (createErr) {
+          console.error('Failed to auto-create linked workspace:', createErr);
+        }
+      }
+
+      if (match) {
+        await workspaceAPI.switchWorkspace(match.id);
+        const userData = await dispatch(fetchUserProfile()).unwrap();
+        dispatch(setUser(userData));
+      }
+    } catch (err) {
+      console.error('Failed to switch workspace context:', err);
+    } finally {
+      setSwitching(false);
+      navigate(mod.href);
+    }
+  };
 
   const [startup, setStartup] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
+      setError(null);
       try {
         const body = await startupsAPI.getById(id);
         const data = body?.data?.startup ?? body?.startup ?? null;
         if (!cancelled) setStartup(data);
       } catch (err) {
         console.error('Failed to load startup for workspace:', err);
+        if (!cancelled) {
+          const status = err?.response?.status;
+          if (status === 403) {
+            setError("You don't have access to this startup's workspace.");
+          } else if (status === 404) {
+            setError('This startup could not be found.');
+          } else {
+            setError('Something went wrong loading this workspace. Please try again.');
+          }
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -52,6 +110,20 @@ export default function StartupWorkspaceLayout() {
     return (
       <div className="h-screen bg-[#09090B] flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-screen bg-[#09090B] flex flex-col items-center justify-center gap-4 text-white px-6 text-center">
+        <p className="text-gray-300 max-w-md">{error}</p>
+        <button
+          onClick={() => navigate('/discover-startups')}
+          className="text-xs px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 transition-colors"
+        >
+          Back to Discover Startups
+        </button>
       </div>
     );
   }
@@ -113,6 +185,27 @@ export default function StartupWorkspaceLayout() {
                         ? location.pathname === mod.href
                         : false;
                       const Icon = mod.icon;
+
+                      if (mod.requiresWorkspaceSwitch) {
+                        return (
+                          <button
+                            key={mod.id}
+                            onClick={() => handleExternalModuleClick(mod)}
+                            disabled={switching}
+                            className={cn(
+                              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all hover:bg-white/5 text-left disabled:opacity-50',
+                              'text-zinc-400 hover:text-white'
+                            )}
+                            title={`${mod.label} (opens existing module)`}
+                          >
+                            <span className="w-5 h-5 flex items-center justify-center shrink-0">
+                              {switching ? <Loader2 size={16} className="animate-spin" /> : <Icon size={18} />}
+                            </span>
+                            {!collapsed && <span className="truncate">{mod.label}</span>}
+                          </button>
+                        );
+                      }
+
                       return (
                         <Link
                           key={mod.id}

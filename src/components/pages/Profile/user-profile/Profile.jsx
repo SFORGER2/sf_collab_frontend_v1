@@ -287,6 +287,14 @@ const Profile = () => {
                 </div>
               </motion.div>
             )}
+
+            {/* Ratings */}
+            {user?.id && (
+              <UserRatingCard
+                subjectId={user.id}
+                subjectName={[user.first_name, user.last_name].filter(Boolean).join(' ') || 'this user'}
+              />
+            )}
           </div>
 
           {/* Main Content */}

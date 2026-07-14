@@ -27,6 +27,8 @@ export default function StartupCard({
   recommendedRole
 }) {
   const [selectedStartup, setSelectedStartup] = useState(null);
+  const [bannerFailed, setBannerFailed] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
   
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
@@ -97,7 +99,7 @@ export default function StartupCard({
 
           {/* Banner */}
           <div className="relative h-28 w-full shrink-0">
-            {startup?.banner_url ? (
+            {startup?.banner_url && !bannerFailed ? (
               <img
                 src={startup.banner_url.startsWith("http")
                   ? startup.banner_url
@@ -105,6 +107,7 @@ export default function StartupCard({
                 }
                 alt={startup?.name || 'Startup'}
                 className="absolute inset-0 w-full h-full object-cover"
+                onError={() => setBannerFailed(true)}
               />
             ) : (
               <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-700" />
@@ -142,7 +145,7 @@ export default function StartupCard({
           <div className="p-5 flex-1 flex flex-col space-y-4 z-10">
             {/* Image */}
             <div className="-mt-12 flex justify-between items-end">
-              {startup?.logo_url ? (
+              {startup?.logo_url && !logoFailed ? (
                 <img
                   src={startup.logo_url.startsWith("http")
                     ? startup.logo_url
@@ -150,6 +153,7 @@ export default function StartupCard({
                   }
                   alt={startup?.name || 'Logo'}
                   className="h-16 w-16 rounded-lg object-cover border-2 border-gray-900 bg-gray-800 shrink-0"
+                  onError={() => setLogoFailed(true)}
                 />
               ) : (
                 <div className="h-16 w-16 rounded-lg bg-gray-800 flex items-center justify-center border-2 border-gray-900 shrink-0">

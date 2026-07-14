@@ -68,28 +68,126 @@ export default function AdminAnalyticsPage() {
   const [error, setError]               = useState(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = { period };
-      const [ovRes, warnRes, contribRes] = await Promise.all([
-        api.get("/api/attendance/workspace-summary", { params: { workspace_id: user?.id } }),
-        api.get("/api/erp-alerts",                   { params: { workspace_id: user?.id } }),
-        api.get("/api/attendance/workspace",         { params: { workspace_id: user?.id } }),
-      ]);
-      const ovRaw = ovRes.data?.data || ovRes.data || {};
-      setOverview(ovRaw);
-      setWarnings(toArr(warnRes.data, "alerts", "data"));
-      setContributors(toArr(contribRes.data, "members", "attendance", "data"));
-    } catch (e) {
-      setError(e?.response?.data?.error || "Could not load analytics. Routes may not be set up yet.");
-      setOverview(null);
-      setWarnings([]);
-      setContributors([]);
-    } finally {
-      setLoading(false);
+  setLoading(true);
+  setError(null);
+
+  try {
+    const workspaceId = user?.active_workspace_id;
+
+    if (!workspaceId) {
+      throw new Error("No active workspace selected");
     }
-  }, [period]);
+
+    const today = new Date();
+
+    const formatDate = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+
+      return `${year}-${month}-${day}`;
+    };
+
+    let startDate = null;
+    let endDate = formatDate(today);
+
+    if (period === "weekly") {
+      const start = new Date(today);
+
+      // Monday of current week.
+      const day = start.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+
+      start.setDate(start.getDate() + diff);
+
+      startDate = formatDate(start);
+    }
+
+    if (period === "monthly") {
+      const start = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        1
+      );
+
+      startDate = formatDate(start);
+    }
+
+    const params = {
+      workspace_id: workspaceId,
+    };
+
+    // All Time currently sends a very early start date because
+    // the backend requires a concrete date range.
+    if (period === "all") {
+      params.start_date = "2000-01-01";
+      params.end_date = endDate;
+    } else {
+      params.start_date = startDate;
+      params.end_date = endDate;
+    }
+
+    const res = await api.get(
+      "/api/erp-analytics/workspace",
+      { params }
+    );
+
+    const payload = res.data?.data || res.data || {};
+
+    const metrics = payload.metrics || {};
+    const warningTrendData = Array.isArray(payload.warning_trends)
+      ? payload.warning_trends
+      : [];
+
+    const contributorData = Array.isArray(payload.contributors)
+      ? payload.contributors
+      : [];
+
+    const activeWarnings = warningTrendData.reduce(
+      (total, item) => total + Number(item.count || 0),
+      0
+    );
+
+    setOverview({
+      task_completion_rate:
+        metrics.task_completion_rate ?? 0,
+
+      attendance_rate:
+        metrics.attendance_rate ?? 0,
+
+      update_consistency:
+        metrics.update_consistency ?? 0,
+
+      active_users:
+        metrics.active_users ?? {
+          active: 0,
+          total: 0,
+          rate: 0,
+        },
+
+      active_warnings: activeWarnings,
+
+      details: metrics.details || {},
+    });
+
+    setWarnings(warningTrendData);
+    setContributors(contributorData);
+  } catch (e) {
+    console.error("Admin analytics load failed:", e);
+
+    setError(
+      e?.response?.data?.error ||
+        e?.message ||
+        "Could not load analytics."
+    );
+
+    setOverview(null);
+    setWarnings([]);
+    setContributors([]);
+  } finally {
+    setLoading(false);
+  }
+}, [user?.active_workspace_id, period]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -137,24 +235,25 @@ export default function AdminAnalyticsPage() {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-              <KPICard
-                icon={CheckSquare}
-                label="Task Completion Rate"
-                value={overview?.total_present != null ? `${overview.total_present} present` : (overview?.on_time_rate != null ? pct(overview.on_time_rate) : "—")}
-                change={overview?.task_completion_change}
-                accent="#6366f1"
-                description="Tasks completed vs assigned"
-              />
-              <KPICard
-                icon={AlertTriangle}
-                label="Active Warnings"
-                value={overview?.total_absent ?? overview?.late_count ?? "—"}
-                change={overview?.warning_change}
-                accent="#ef4444"
-                invertChange
-                description="Members flagged this period"
-              />
-            </div>
+  <KPICard
+    icon={CheckSquare}
+    label="Task Completion Rate"
+    value={pct(overview?.task_completion_rate)}
+    accent="#6366f1"
+    description={`${overview?.details?.tasks_done ?? 0} completed of ${
+      overview?.details?.tasks_total ?? 0
+    } tasks`}
+  />
+
+  <KPICard
+    icon={AlertTriangle}
+    label="Warnings This Period"
+    value={overview?.active_warnings ?? 0}
+    accent="#ef4444"
+    invertChange
+    description="Warnings created during selected period"
+  />
+</div>
 
             {safeWarnings.length > 0 && (
               <motion.div
@@ -167,7 +266,9 @@ export default function AdminAnalyticsPage() {
                   <h2 className="text-xl font-semibold bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent">
                     Warning Trends
                   </h2>
-                  <span className="text-xs text-zinc-500 uppercase tracking-widest">Last 8 Weeks</span>
+                  <span className="text-xs text-zinc-500 uppercase tracking-widest">
+  Selected Period
+</span>
                 </div>
                 <WarningBarChart data={safeWarnings} />
               </motion.div>
@@ -238,29 +339,69 @@ function KPICard({ icon: Icon, label, value, change, accent, description, invert
 
 function WarningBarChart({ data }) {
   const maxVal = Math.max(...data.map((d) => d.count), 1);
-  const BAR_H  = 120;
+  const BAR_H = 120;
+  const chartWidth = Math.max(data.length * 60, 400);
 
   return (
     <div className="overflow-x-auto">
       <div style={{ minWidth: 400 }}>
-        <svg viewBox={`0 0 ${data.length * 60} ${BAR_H + 32}`} style={{ width: "100%", overflow: "visible" }}>
+        <svg
+          viewBox={`0 0 ${chartWidth} ${BAR_H + 32}`}
+          width="100%"
+          height="170"
+          preserveAspectRatio="xMidYMid meet"
+        >
           {[0, 0.25, 0.5, 0.75, 1].map((f) => {
             const y = BAR_H * (1 - f);
-            return <line key={f} x1={0} y1={y} x2={data.length * 60} y2={y} stroke="#1f2937" strokeWidth={1} />;
+
+            return (
+              <line
+                key={f}
+                x1={0}
+                y1={y}
+                x2={chartWidth}
+                y2={y}
+                stroke="#1f2937"
+                strokeWidth={1}
+              />
+            );
           })}
+
           {data.map((d, i) => {
-            const barH   = (d.count / maxVal) * (BAR_H - 8);
-            const x      = i * 60 + 12;
-            const y      = BAR_H - barH;
+            const barH = (d.count / maxVal) * (BAR_H - 8);
+            const x = i * 60 + 12;
+            const y = BAR_H - barH;
             const isHigh = d.count === maxVal;
+
             return (
               <g key={i}>
-                <rect x={x} y={y} width={36} height={barH} rx={6} fill={isHigh ? "#ef4444" : "#27272a"} />
-                <text x={x + 18} y={y - 6} textAnchor="middle" fontSize={10}
-                  fill={isHigh ? "#fca5a5" : "#6b7280"} fontWeight={isHigh ? "700" : "400"}>
+                <rect
+                  x={x}
+                  y={y}
+                  width={36}
+                  height={barH}
+                  rx={6}
+                  fill={isHigh ? "#ef4444" : "#27272a"}
+                />
+
+                <text
+                  x={x + 18}
+                  y={y - 6}
+                  textAnchor="middle"
+                  fontSize={10}
+                  fill={isHigh ? "#fca5a5" : "#6b7280"}
+                  fontWeight={isHigh ? "700" : "400"}
+                >
                   {d.count}
                 </text>
-                <text x={x + 18} y={BAR_H + 18} textAnchor="middle" fontSize={9} fill="#6b7280">
+
+                <text
+                  x={x + 18}
+                  y={BAR_H + 18}
+                  textAnchor="middle"
+                  fontSize={9}
+                  fill="#6b7280"
+                >
                   {d.week_label}
                 </text>
               </g>

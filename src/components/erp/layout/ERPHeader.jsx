@@ -13,23 +13,12 @@ export function ERPHeader({ workspaceName, onSearch, onNotifications }) {
   const profilePic = getProfilePicture(user);
 
   return (
-    <header className="h-16 border-b border-white/5 bg-[#111827]/80 backdrop-blur-lg flex items-center justify-between px-6 shrink-0">
+    <header className="h-16 border-b border-white/5 bg-black/80 backdrop-blur-lg flex items-center justify-between px-6 shrink-0">
       {/* Left section: App Switcher + Workspace Switcher */}
       <div className="flex items-center gap-2 flex-1">
         <AppSwitcher />
         <div className="w-px h-6 bg-white/10" />
         <WorkspaceSwitcher />
-      </div>
-
-      {/* Center: Search */}
-      <div className="relative max-w-md w-full hidden md:block flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
-        <Input
-          type="text"
-          placeholder="Search in ERP..."
-          className="pl-9 bg-[#1E293B] border-white/5 text-white placeholder:text-zinc-500 focus:border-blue-500/50 h-9"
-          onFocus={onSearch}
-        />
       </div>
 
       {/* Right: Notifications + Avatar */}

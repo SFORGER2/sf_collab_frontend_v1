@@ -29,9 +29,11 @@ export function AppSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-2 hover:bg-white/5 px-3 py-2 rounded-lg transition-colors text-white font-medium text-sm">
-          <span className="font-bold text-blue-400">SFCollab</span>
-          <ChevronDown size={16} className="text-zinc-400" />
-        </button>
+  <span className="font-bold text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.3)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+    SFCollab
+  </span>
+  <ChevronDown size={16} className="text-zinc-400" />
+</button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         className="w-56 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl"

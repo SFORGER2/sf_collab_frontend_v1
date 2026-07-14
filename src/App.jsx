@@ -159,6 +159,11 @@ import WorkspaceDashboard from "./components/pages/erp/WorkspaceDashboard";
 import { WarningActionsPage } from "./components/pages/erp/WarningActionsPage";
 import { FlagsPage } from "./components/pages/erp/FlagsPage";
 import { AuditLogsPage } from "./components/pages/erp/AuditLogsPage";
+
+// Pitch Deck Generator
+import PitchDeckHome from "./components/pages/pitch-deck/PitchDeckHome";
+import PitchDeckCreate from "./components/pages/pitch-deck/PitchDeckCreate";
+import MyDecks from "./components/pages/pitch-deck/MyDecks";
 import { AnnouncementProvider } from "./contexts/AnnouncementContext";
 import { NewsletterProvider } from "./contexts/NewsletterContext";
 
