@@ -351,24 +351,6 @@ const ChatPage = () => {
   }, [activeConversation, selectedMessageIds, bulkDeleting, handleCancelSelectMode]);
 
 
-  // ─── Add Member (Telegram-style) ────────────────────────────────────────
-  const handleAddMember = useCallback(async (conversationId, userId, historyVisibility) => {
-    try {
-      await chatAPI.addParticipant(conversationId, userId, "member", historyVisibility);
-      toast.success("Member added");
-      await fetchConversations();
-      // Refresh the active conversation's own participant list, if it's the one that changed
-      if (activeConversation && String(activeConversation.id) === String(conversationId)) {
-        const data = await chatAPI.getConversationById(conversationId);
-        const updated = data?.conversation || data?.data?.conversation || null;
-        if (updated) setActiveConversation(updated);
-      }
-    } catch (error) {
-      console.error("Failed to add member:", error);
-      toast.error(error?.response?.data?.error || "Failed to add member");
-    }
-  }, [activeConversation, fetchConversations]);
-
   // ============================================
   // API CALLS – MUST BE DEFINED BEFORE ANY HOOKS THAT DEPEND ON THEM
   // ============================================
@@ -420,24 +402,6 @@ const ChatPage = () => {
       setIsLoading(false);
     }
   }, [token, currentUserId]);
-
-  // ─── Add Member (Telegram-style) ────────────────────────────────────────
-  const handleAddMember = useCallback(async (conversationId, userId, historyVisibility) => {
-    try {
-      await chatAPI.addParticipant(conversationId, userId, "member", historyVisibility);
-      toast.success("Member added");
-      await fetchConversations();
-      // Refresh the active conversation's own participant list, if it's the one that changed
-      if (activeConversation && String(activeConversation.id) === String(conversationId)) {
-        const data = await chatAPI.getConversationById(conversationId);
-        const updated = data?.conversation || data?.data?.conversation || null;
-        if (updated) setActiveConversation(updated);
-      }
-    } catch (error) {
-      console.error("Failed to add member:", error);
-      toast.error(error?.response?.data?.error || "Failed to add member");
-    }
-  }, [activeConversation, fetchConversations]);
 
   // ============================================
   // REFS
@@ -493,60 +457,6 @@ const ChatPage = () => {
     },
     [activeConversation, fetchConversations]
   );
-
-  const handleReply = useCallback(
-    (message) => {
-      if (!activeConversation) return;
-      setReplyDrafts((prev) => ({ ...prev, [activeConversation.id]: message }));
-    },
-    [activeConversation]
-  );
-
-  const handleCancelReply = useCallback(() => {
-    if (!activeConversation) return;
-    setReplyDrafts((prev) => {
-      const next = { ...prev };
-      delete next[activeConversation.id];
-      return next;
-    });
-  }, [activeConversation]);
-
-  const handleEnterSelectMode = useCallback((messageId) => {
-    setSelectMode(true);
-    setSelectedMessageIds(new Set([messageId]));
-  }, []);
-
-  const handleToggleSelect = useCallback((messageId) => {
-    setSelectedMessageIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(messageId)) next.delete(messageId);
-      else next.add(messageId);
-      return next;
-    });
-  }, []);
-
-  const handleCancelSelectMode = useCallback(() => {
-    setSelectMode(false);
-    setSelectedMessageIds(new Set());
-  }, []);
-
-  const handleBulkDelete = useCallback(async () => {
-    if (!activeConversation || selectedMessageIds.size === 0 || bulkDeleting) return;
-    setBulkDeleting(true);
-    try {
-      await Promise.all(
-        Array.from(selectedMessageIds).map((id) =>
-          chatAPI.deleteMessage(activeConversation.id, id, 'me').catch((e) => {
-            console.error('Bulk delete failed for message', id, e);
-          })
-        )
-      );
-      setMessages((prev) => prev.filter((m) => !selectedMessageIds.has(m.id)));
-    } finally {
-      setBulkDeleting(false);
-      handleCancelSelectMode();
-    }
-  }, [activeConversation, selectedMessageIds, bulkDeleting, handleCancelSelectMode]);
 
   // ─── Feature 5: Archive / Unarchive ─────────────────────────────────────
   const handleArchive = useCallback(
