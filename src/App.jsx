@@ -167,6 +167,11 @@ import MyDecks from "./components/pages/pitch-deck/MyDecks";
 import { AnnouncementProvider } from "./contexts/AnnouncementContext";
 import { NewsletterProvider } from "./contexts/NewsletterContext";
 
+// Pitch Deck Generator
+import PitchDeckHome from "./components/pages/pitch-deck/PitchDeckHome";
+import PitchDeckCreate from "./components/pages/pitch-deck/PitchDeckCreate";
+import MyDecks from "./components/pages/pitch-deck/MyDecks";
+
 import { ERPLayout } from "./components/erp/layout/ERPLayout";
 
 export default function App() {

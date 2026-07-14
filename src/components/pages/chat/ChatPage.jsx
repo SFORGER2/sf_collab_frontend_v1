@@ -351,6 +351,24 @@ const ChatPage = () => {
   }, [activeConversation, selectedMessageIds, bulkDeleting, handleCancelSelectMode]);
 
 
+  // ─── Add Member (Telegram-style) ────────────────────────────────────────
+  const handleAddMember = useCallback(async (conversationId, userId, historyVisibility) => {
+    try {
+      await chatAPI.addParticipant(conversationId, userId, "member", historyVisibility);
+      toast.success("Member added");
+      await fetchConversations();
+      // Refresh the active conversation's own participant list, if it's the one that changed
+      if (activeConversation && String(activeConversation.id) === String(conversationId)) {
+        const data = await chatAPI.getConversationById(conversationId);
+        const updated = data?.conversation || data?.data?.conversation || null;
+        if (updated) setActiveConversation(updated);
+      }
+    } catch (error) {
+      console.error("Failed to add member:", error);
+      toast.error(error?.response?.data?.error || "Failed to add member");
+    }
+  }, [activeConversation, fetchConversations]);
+
   // ============================================
   // API CALLS – MUST BE DEFINED BEFORE ANY HOOKS THAT DEPEND ON THEM
   // ============================================
