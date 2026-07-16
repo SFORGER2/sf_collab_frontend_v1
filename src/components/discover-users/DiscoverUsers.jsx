@@ -145,7 +145,7 @@ const DiscoverUsers = () => {
   }
   return (
     <div className="min-h-screen">
-      <div className="w-full mx-auto px-2 md:px-4 sm:px-6 py-8">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -345,7 +345,7 @@ const DiscoverUsers = () => {
             </motion.div>
           ) : (
             <motion.div layout className="flex flex-col w-full items-center justify-center">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full">
                 <InfiniteList
                   items={filteredUsers}
                   renderItem={(userItem) => {
