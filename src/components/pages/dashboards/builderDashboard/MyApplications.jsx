@@ -17,12 +17,15 @@ import usePaginatedFetch from "@/utils/hooks/usePaginated";
 import InfiniteList from "@/components/InfiniteList";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import { parseApiError } from "@/utils/APIs/parseApiError";
+import ErrorState from "@/components/common/ErrorState";
 
 const MyApplications = () => {
   const { user, access_token } = useSelector((state) => state.auth);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [error, setError] = useState(null);
+  const [errorInfo, setErrorInfo] = useState(null);
   const [success, setSuccess] = useState(null);
 
   const {
@@ -50,12 +53,17 @@ const MyApplications = () => {
       if (res.success) {
         setApplications((prev) => prev.filter((a) => a.id !== appId));
         setSuccess("Application withdrawn successfully");
+        setError(null);
+        setErrorInfo(null);
         setTimeout(() => setSuccess(null), 2000);
       } else {
         setError("Failed to withdraw application");
+        setErrorInfo({ type: 'unknown', title: 'Action Failed', message: 'Failed to withdraw application. Please try again.' });
       }
-    } catch {
-      setError("Failed to withdraw application");
+    } catch (err) {
+      const parsed = parseApiError(err);
+      setError(parsed.message);
+      setErrorInfo(parsed);
     }
   };
 
@@ -253,14 +261,23 @@ const MyApplications = () => {
         )}
 
         {error && (
-          <motion.div 
-            className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3 text-red-300 backdrop-blur"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span>{error}</span>
-          </motion.div>
+          errorInfo ? (
+            <ErrorState
+              title={errorInfo.title}
+              message={errorInfo.message}
+              type={errorInfo.type}
+              onRetry={() => { setError(null); setErrorInfo(null); }}
+            />
+          ) : (
+            <motion.div
+              className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3 text-red-300 backdrop-blur"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span>{error}</span>
+            </motion.div>
+          )
         )}
 
         {/* Applications List */}

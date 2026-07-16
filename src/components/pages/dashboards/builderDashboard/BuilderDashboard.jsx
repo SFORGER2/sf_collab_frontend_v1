@@ -20,6 +20,8 @@ import WorldClock from "@/components/sections/WorldClock";
 import { dashboardAPI } from "@/utils/APIs/dashboardAPI";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
+import { parseApiError } from "@/utils/APIs/parseApiError";
+import ErrorState from "@/components/common/ErrorState";
 
 export default function BuilderDashboard({
   userRoles,
@@ -30,19 +32,26 @@ export default function BuilderDashboard({
   const { user } = useSelector((state) => state.auth);
   const [startups, setStartups] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [errorInfo, setErrorInfo] = useState(null);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setIsError(false);
+    setErrorInfo(null);
+    try {
+      const res = await dashboardAPI.getBuilderDashboard();
+      setStartups(res.data.startups || []);
+    } catch (err) {
+      console.error("❌ Failed to load builder dashboard", err);
+      setIsError(true);
+      setErrorInfo(parseApiError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await dashboardAPI.getBuilderDashboard();
-        console.log("Builder dashbard:", res);
-        setStartups(res.data.startups || []);
-      } catch (err) {
-        console.error("❌ Failed to load builder dashboard", err);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchData();
   }, []);
   const totals = useMemo(() => {
@@ -64,6 +73,19 @@ export default function BuilderDashboard({
 
   if (loading) {
     return <div className="p-8 text-white/60">Loading builder dashboard…</div>;
+  }
+
+  if (isError) {
+    return (
+      <div className="p-8">
+        <ErrorState
+          title={errorInfo?.title}
+          message={errorInfo?.message}
+          type={errorInfo?.type}
+          onRetry={fetchData}
+        />
+      </div>
+    );
   }
 
   return (
