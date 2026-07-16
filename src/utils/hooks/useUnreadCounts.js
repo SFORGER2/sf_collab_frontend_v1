@@ -28,9 +28,17 @@ export function useUnreadCounts() {
       const n = notifRes.status === "fulfilled"
         ? (notifRes.value?.data?.data?.unread_count ?? notifRes.value?.data?.data?.unreadCount ?? 0)
         : 0;
-      const m = msgRes.status === "fulfilled"
-        ? (msgRes.value?.data?.data?.unread_count ?? msgRes.value?.data?.data?.unreadCount ?? 0)
-        : 0;
+      console.log("========== CHAT API ==========");
+console.log("Full msgRes:", msgRes);
+
+const m = msgRes.status === "fulfilled"
+  ? (msgRes.value?.data?.data?.unread_count ??
+     msgRes.value?.data?.data?.unreadCount ??
+     0)
+  : 0;
+
+console.log("Response data:", msgRes.value?.data);
+console.log("Calculated unread:", m);
       const f = friendRes.status === "fulfilled"
         ? (friendRes.value?.data?.data?.pending_count ?? friendRes.value?.data?.data?.pendingCount ?? 0)
         : 0;
