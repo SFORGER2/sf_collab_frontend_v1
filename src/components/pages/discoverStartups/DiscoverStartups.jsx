@@ -19,6 +19,8 @@ import { startupsAPI } from '@/utils/APIs/startupsAPI';
 import { discoveryFeedAPI } from '@/utils/APIs/discoveryFeedAPI';
 import usePaginatedFetch from '@/utils/hooks/usePaginated';
 import InfiniteList from '@/components/InfiniteList';
+import { parseApiError } from '@/utils/APIs/parseApiError';
+import ErrorState from '@/components/common/ErrorState';
 
 import { parseApiError } from '@/utils/APIs/parseApiError';
 import ErrorState from '@/components/common/ErrorState';
@@ -204,9 +206,17 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
           if (response.success && response.sections) {
             setFeedSections(response.sections);
           }
+//<<<<<<< task-17-error-handling
+        } catch (err) {
+          console.error("Failed to fetch discovery feed:", err);
+          const parsed = parseApiError(err);
+          setError(parsed.message);
+          setErrorInfo(parsed);
+=======
         } catch (error) {
           console.error('Error fetching discovery feed:', error);
           setError('Failed to load discovery feed');
+//>>>>>>> FRONTENDFINAL
         } finally {
           setFeedLoading(false);
         }
