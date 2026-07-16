@@ -1,7 +1,26 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../../ui/dialog';
 import { Card, CardContent } from '../../../ui/card';
-import { CheckCircle2Icon, XIcon } from 'lucide-react';
+import { CheckCircle2Icon, XIcon, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
+const getAiExplanation = (item) => {
+  if (!item) return null;
+  const val = 
+    item.explanation || 
+    item.aiExplanation || 
+    item.ai_explanation || 
+    item.recommendationReason || 
+    item.recommendation_reason || 
+    item.fallbackReason || 
+    item.fallback_reason || 
+    item.reason || 
+    (Array.isArray(item.reasons) ? item.reasons.join(', ') : item.reasons);
+  
+  if (typeof val === 'string' && val.trim() !== '') {
+    return val.trim();
+  }
+  return null;
+};
 
 const ManageJoinRequestsModal = ({
   isOpen,
@@ -102,6 +121,17 @@ const ManageJoinRequestsModal = ({
                           <p className="text-xs text-gray-300 italic bg-white/5 rounded px-2 py-1.5 mb-2">
                             "{message}"
                           </p>
+                        )}
+                        
+                        {/* AI Explanation Section */}
+                        {getAiExplanation(request) && (
+                          <div className="p-2.5 rounded-lg border border-blue-500/20 bg-blue-500/5 flex items-start gap-2 text-xs mb-3">
+                            <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-semibold text-blue-300 mr-1">AI Fit Analysis:</span>
+                              <span className="text-gray-300 leading-relaxed">{getAiExplanation(request)}</span>
+                            </div>
+                          </div>
                         )}
                         
                         <div className="flex items-center justify-between text-xs text-gray-500">

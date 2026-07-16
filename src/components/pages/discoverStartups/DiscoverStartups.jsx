@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -18,6 +19,7 @@ import { startupsAPI } from '@/utils/APIs/startupsAPI';
 import { discoveryFeedAPI } from '@/utils/APIs/discoveryFeedAPI';
 import usePaginatedFetch from '@/utils/hooks/usePaginated';
 import InfiniteList from '@/components/InfiniteList';
+import EmptyState from '../../common/EmptyState';
 
 const FUNDING_RANGES = [
   { label: 'Any', min: null, max: null },
@@ -86,6 +88,8 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   const { user, access_token } = useSelector((state) => state.auth);
   const mode = myStartupsOnly ? 'myStartups' : 'discover';
   const modeConfig = MODES[mode];
+
+
 
   const getFundingRangeValues = () => {
     if (selectedFundingRange === 'Custom') {
@@ -192,8 +196,8 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
             setFeedSections(response.sections);
           }
         } catch (error) {
-          console.error("Failed to fetch discovery feed:", error);
-          setError("Failed to load discovery feed.");
+          console.error('Error fetching discovery feed:', error);
+          setError('Failed to load discovery feed');
         } finally {
           setFeedLoading(false);
         }
@@ -336,33 +340,20 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
           <div className="flex flex-wrap relative gap-8 mt-12">
             {mode === 'discover' ? (
               <div className="flex-1">
-                {feedLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                     {[...Array(6)].map((_, i) => <StartupCardSkeleton key={i} />)}
-                  </div>
+              {feedLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   {[...Array(6)].map((_, i) => <StartupCardSkeleton key={i} />)}
+                </div>
+              ) : (
+                (!feedSections?.visions?.length && !feedSections?.startups?.length && !feedSections?.fastGrowing?.length && !feedSections?.milestones?.length) ? (
+                  <EmptyState
+                    title="No startups found"
+                    description="Try adjusting your filters or search query to discover more opportunities."
+                    buttonText="Clear all filters"
+                    onButtonClick={clearFilters}
+                    icon={Search}
+                  />
                 ) : (
-                  (!feedSections?.visions?.length && !feedSections?.startups?.length && !feedSections?.fastGrowing?.length && !feedSections?.milestones?.length) ? (
-                    <motion.div
-                      className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-2xl backdrop-blur"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                    >
-                      <div className="flex justify-center mb-4">
-                        <div className="p-4 bg-blue-500/20 rounded-full">
-                          <Search className="w-12 h-12 text-blue-400" />
-                        </div>
-                      </div>
-                      <h3 className="text-xl font-semibold text-white mb-2">
-                        No opportunities found
-                      </h3>
-                      <p className="text-gray-400 mb-6 text-center max-w-md">
-                        Try adjusting your filters or search query to discover more opportunities
-                      </p>
-                      <motion.button onClick={clearFilters} className="px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors">
-                        Clear all filters
-                      </motion.button>
-                    </motion.div>
-                  ) : (
                     <div className="space-y-16 mt-4">
                        
                        {/* Section: Trending Now */}
@@ -462,47 +453,13 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                     ))}
                   </div>
                 ) : startups.length === 0 ? (
-                  <motion.div
-                    className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-2xl backdrop-blur"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                  >
-                    <div className="flex justify-center mb-4">
-                      <div className="p-4 bg-blue-500/20 rounded-full">
-                        {mode === 'discover' ? (
-                          <Search className="w-12 h-12 text-blue-400" />
-                        ) : (
-                          <Building2 className="w-12 h-12 text-blue-400" />
-                        )}
-                      </div>
-                    </div>
-                    <h3 className="text-xl font-semibold text-white mb-2">
-                      {modeConfig.emptyState.title}
-                    </h3>
-                    <p className="text-gray-400 mb-6 text-center max-w-md">
-                      {modeConfig.emptyState.message}
-                    </p>
-                    {mode === 'discover' ? (
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={clearFilters}
-                        className="px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors"
-                      >
-                        Clear all filters
-                      </motion.button>
-                    ) : (
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate(modeConfig.ctaRoute)}
-                        className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center gap-2"
-                      >
-                        <Plus className="w-4 h-4" />
-                        {modeConfig.ctaButton}
-                      </motion.button>
-                    )}
-                  </motion.div>
+                  <EmptyState
+                    title={modeConfig.emptyState.title}
+                    description={modeConfig.emptyState.message}
+                    buttonText={mode === 'discover' ? "Clear all filters" : modeConfig.ctaButton}
+                    onButtonClick={mode === 'discover' ? clearFilters : () => navigate(modeConfig.ctaRoute)}
+                    icon={mode === 'discover' ? Search : Building2}
+                  />
                 ) : (
                   <div
                     layout

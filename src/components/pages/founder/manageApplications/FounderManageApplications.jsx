@@ -25,6 +25,27 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 
+const getAiExplanation = (item) => {
+  if (!item) return null;
+  const val = 
+    item.explanation || 
+    item.aiExplanation || 
+    item.ai_explanation || 
+    item.recommendationReason || 
+    item.recommendation_reason || 
+    item.fallbackReason || 
+    item.fallback_reason || 
+    item.reason || 
+    (Array.isArray(item.reasons) ? item.reasons.join(', ') : item.reasons);
+  
+  if (typeof val === 'string' && val.trim() !== '') {
+    return val.trim();
+  }
+  return null;
+};
+
+void motion;
+
 const FounderManageApplications = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
@@ -465,75 +486,88 @@ const FounderManageApplications = () => {
                                       y: -2,
                                       scale: 1.01
                                     }}
-                                    className="group/card relative overflow-hidden flex flex-col md:flex-row justify-between gap-4 items-start md:items-center p-4 rounded-lg bg-slate-800/50 border border-white/10 hover:border-blue-500/30 transition-all cursor-pointer"
+                                    className="group/card relative overflow-hidden flex flex-col justify-between gap-3 items-stretch p-4 rounded-lg bg-slate-800/50 border border-white/10 hover:border-blue-500/30 transition-all cursor-pointer"
                                   >
                                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover/card:from-blue-500/5 group-hover/card:via-blue-500/5 group-hover/card:to-transparent transition-all duration-300" />
                                     
-                                    <div className="relative flex items-center gap-3 flex-1 min-w-0">
-                                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-lg">
-                                        {applicantName.charAt(0).toUpperCase()}
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <p className="font-semibold text-white truncate group-hover/card:text-blue-300 transition-colors">
-                                          {applicantName}
-                                        </p>
-                                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
-                                            {app.role || "Role not specified"}
-                                          </Badge>
-                                          {app.createdAt && (
-                                            <p className="text-xs text-gray-400 flex items-center gap-1">
-                                              <Calendar className="w-3 h-3" />
-                                              {new Date(
-                                                app.createdAt
-                                              ).toLocaleDateString()}
-                                            </p>
-                                          )}
+                                    <div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center w-full">
+                                      <div className="relative flex items-center gap-3 flex-1 min-w-0 w-full">
+                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-lg">
+                                          {applicantName.charAt(0).toUpperCase()}
                                         </div>
+                                        <div className="min-w-0 flex-1">
+                                          <p className="font-semibold text-white truncate group-hover/card:text-blue-300 transition-colors">
+                                            {applicantName}
+                                          </p>
+                                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                            <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
+                                              {app.role || "Role not specified"}
+                                            </Badge>
+                                            {app.createdAt && (
+                                              <p className="text-xs text-gray-400 flex items-center gap-1">
+                                                <Calendar className="w-3 h-3" />
+                                                {new Date(
+                                                  app.createdAt
+                                                ).toLocaleDateString()}
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <div className="relative flex items-center gap-3 flex-shrink-0 w-full md:w-auto">
+                                        <Badge
+                                          className={`flex items-center gap-2 whitespace-nowrap border ${status.class}`}
+                                        >
+                                          {status.icon}
+                                          {status.label}
+                                        </Badge>
+
+                                        {app.status === "pending" && (
+                                          <div className="flex gap-2 ml-auto md:ml-0">
+                                            <motion.button
+                                              whileHover={{ scale: 1.05 }}
+                                              whileTap={{ scale: 0.95 }}
+                                              onClick={(e) => {
+                                                e.preventDefault()
+                                                e.stopPropagation()
+                                                handleReject(startup.id, app.id)
+                                              }
+                                              }
+                                              className="px-3 py-2 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30 hover:border-red-500/50 transition-all font-medium text-sm flex items-center gap-1 whitespace-nowrap"
+                                            >
+                                              <X className="w-4 h-4" />
+                                              Decline
+                                            </motion.button>
+                                            <motion.button
+                                              whileHover={{ scale: 1.05 }}
+                                              whileTap={{ scale: 0.95 }}
+                                              onClick={(e) => {
+                                                e.preventDefault()
+                                                e.stopPropagation()
+                                                handleAccept(startup.id, app.id)
+                                              }
+                                              }
+                                              className="px-3 py-2 rounded-lg bg-green-500/20 border border-green-500/30 text-green-300 hover:bg-green-500/30 hover:border-green-500/50 transition-all font-medium text-sm flex items-center gap-1 whitespace-nowrap"
+                                            >
+                                              <CheckCircle className="w-4 h-4" />
+                                              Accept
+                                            </motion.button>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
 
-                                    <div className="relative flex items-center gap-3 flex-shrink-0 w-full md:w-auto">
-                                      <Badge
-                                        className={`flex items-center gap-2 whitespace-nowrap border ${status.class}`}
-                                      >
-                                        {status.icon}
-                                        {status.label}
-                                      </Badge>
-
-                                      {app.status === "pending" && (
-                                        <div className="flex gap-2 ml-auto md:ml-0">
-                                          <motion.button
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={(e) => {
-                                              e.preventDefault()
-                                              e.stopPropagation()
-                                              handleReject(startup.id, app.id)
-                                            }
-                                            }
-                                            className="px-3 py-2 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30 hover:border-red-500/50 transition-all font-medium text-sm flex items-center gap-1 whitespace-nowrap"
-                                          >
-                                            <X className="w-4 h-4" />
-                                            Decline
-                                          </motion.button>
-                                          <motion.button
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={(e) => {
-                                              e.preventDefault()
-                                              e.stopPropagation()
-                                              handleAccept(startup.id, app.id)
-                                            }
-                                            }
-                                            className="px-3 py-2 rounded-lg bg-green-500/20 border border-green-500/30 text-green-300 hover:bg-green-500/30 hover:border-green-500/50 transition-all font-medium text-sm flex items-center gap-1 whitespace-nowrap"
-                                          >
-                                            <CheckCircle className="w-4 h-4" />
-                                            Accept
-                                          </motion.button>
+                                    {/* AI Explanation Section */}
+                                    {getAiExplanation(app) && (
+                                      <div className="relative z-10 mt-1 p-3 rounded-lg border border-blue-500/20 bg-blue-500/5 flex items-start gap-2 text-xs">
+                                        <Sparkles className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                                        <div>
+                                          <span className="font-semibold text-blue-300 mr-1">AI Fit Analysis:</span>
+                                          <span className="text-gray-300 leading-relaxed">{getAiExplanation(app)}</span>
                                         </div>
-                                      )}
-                                    </div>
+                                      </div>
+                                    )}
                                   </motion.div>
                                 );
                               })}
