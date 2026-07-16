@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, react-hooks/exhaustive-deps */
 /**
  * MentorDiscoveryPage — SF Collab
  * Browse mentors, view profiles, send mentorship requests.
@@ -23,6 +24,7 @@ import { useSelector } from 'react-redux';
 import axios from 'axios';
 import { mentorDiscoveryAPI, mentorRequestAPI } from '@/utils/APIs/mentorshipAPI';
 import { API_BASE_URL } from '@/utils/config';
+import EmptyState from '../../common/EmptyState';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const BACKEND_URL = API_BASE_URL.replace('/api', '');
@@ -1040,19 +1042,13 @@ const MentorDiscoveryPage = () => {
             ))}
           </div>
         ) : mentors.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-20 h-20 bg-white/[0.03] rounded-3xl flex items-center justify-center mb-4">
-              <Users size={36} className="text-gray-600" />
-            </div>
-            <p className="text-white font-semibold text-lg">No mentors found</p>
-            <p className="text-gray-500 text-sm mt-2 max-w-xs">
-              Try adjusting your filters or be the first to join as a mentor.
-            </p>
-            <button onClick={() => setShowBecome(true)}
-              className="mt-4 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2">
-              <Plus size={14} /> Become a Mentor
-            </button>
-          </div>
+          <EmptyState
+            title="No mentors available"
+            description="Try adjusting your filters or be the first to join as a mentor."
+            buttonText="Become a Mentor"
+            onButtonClick={() => setShowBecome(true)}
+            icon={Users}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {mentors.map(m => (
