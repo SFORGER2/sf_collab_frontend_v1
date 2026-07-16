@@ -18,6 +18,8 @@ import { startupsAPI } from '@/utils/APIs/startupsAPI';
 import { discoveryFeedAPI } from '@/utils/APIs/discoveryFeedAPI';
 import usePaginatedFetch from '@/utils/hooks/usePaginated';
 import InfiniteList from '@/components/InfiniteList';
+import { parseApiError } from '@/utils/APIs/parseApiError';
+import ErrorState from '@/components/common/ErrorState';
 
 const FUNDING_RANGES = [
   { label: 'Any', min: null, max: null },
@@ -70,7 +72,8 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [topStartups, setTopStartups] = useState([]);
   const [topStartupsLoading, setTopStartupsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null);       // legacy plain-string errors
+  const [errorInfo, setErrorInfo] = useState(null); // parsed structured error
 
   // New discovery feed state
   const [feedSections, setFeedSections] = useState({
@@ -148,9 +151,11 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   
       if (industriesData.success) setIndustries(industriesData.data.industries);
       if (stagesData.success) setStages(stagesData.data.stages);
-    } catch (error) {
-      console.error('Error fetching filters:', error);
-      setError('Failed to load filters');
+    } catch (err) {
+      console.error('Error fetching filters:', err);
+      const parsed = parseApiError(err);
+      setError(parsed.message);
+      setErrorInfo(parsed);
     }
   };
 
@@ -158,13 +163,16 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
     try {
       setTopStartupsLoading(true);
       setError(null);
+      setErrorInfo(null);
       const data = await startupsAPI.getTopStartups();
       if (data.success) {
         setTopStartups(data.data.startups || []);
       }
-    } catch (error) {
-      console.error('Error fetching top startups:', error);
-      setError('Failed to load trending startups');
+    } catch (err) {
+      console.error('Error fetching top startups:', err);
+      const parsed = parseApiError(err);
+      setError(parsed.message);
+      setErrorInfo(parsed);
     } finally {
       setTopStartupsLoading(false);
     }
@@ -186,14 +194,15 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
           const response = await discoveryFeedAPI.getFeed({
             sector: selectedIndustry !== 'All' ? selectedIndustry : '',
             search: searchQuery,
-            // role could be added if filter UI supported it
           }, access_token);
           if (response.success && response.sections) {
             setFeedSections(response.sections);
           }
-        } catch (error) {
-          console.error("Failed to fetch discovery feed:", error);
-          setError("Failed to load discovery feed.");
+        } catch (err) {
+          console.error("Failed to fetch discovery feed:", err);
+          const parsed = parseApiError(err);
+          setError(parsed.message);
+          setErrorInfo(parsed);
         } finally {
           setFeedLoading(false);
         }
@@ -296,7 +305,19 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
           <StartupsHeader mode={mode} modeConfig={modeConfig} />
 
           {/* Error Message */}
-          {error && (
+          {errorInfo ? (
+            <ErrorState
+              title={errorInfo.title}
+              message={errorInfo.message}
+              type={errorInfo.type}
+              onRetry={() => {
+                setError(null);
+                setErrorInfo(null);
+                fetchFilters();
+              }}
+              className="mb-8"
+            />
+          ) : error ? (
             <motion.div
               className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3 text-red-300 backdrop-blur mb-8"
               initial={{ opacity: 0, y: -10 }}
@@ -305,7 +326,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span>{error}</span>
             </motion.div>
-          )}
+          ) : null}
 
           {/* Hidden Trending Now block, replaced via Feed Sections below filters */}
 
