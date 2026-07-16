@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -92,18 +91,6 @@ const formatMetaValue = (value) => {
 
 function MatchCard({ match, className, compact = false }) {
   const [avatarFailed, setAvatarFailed] = useState(false);
-  const navigate = useNavigate();
-
-  const handleCardClick = () => {
-    const id = match.id || match.userId || match.startupId;
-    if (!id) return;
-
-    if (match.kind === 'builder' || match.kind === 'mentor' || match.kind === 'investor') {
-      navigate(`/user-profile?userId=${id}`);
-    } else if (match.kind === 'startup') {
-      navigate(`/startup-workspace/${id}`);
-    }
-  };
 
   const config = KIND_CONFIG[match.kind] || KIND_CONFIG.user;
   const Icon = config.icon;
@@ -131,7 +118,6 @@ function MatchCard({ match, className, compact = false }) {
   const handlePrimaryAction = (event) => {
     if (match.ctaOnClick) {
       event?.preventDefault?.();
-      event?.stopPropagation?.();
       match.ctaOnClick(match);
     }
   };
@@ -143,7 +129,7 @@ function MatchCard({ match, className, compact = false }) {
 
     if (match.ctaHref && !match.ctaOnClick) {
       return (
-        <Button asChild size="sm" className={buttonClasses} onClick={(e) => e.stopPropagation()}>
+        <Button asChild size="sm" className={buttonClasses}>
           <a href={match.ctaHref}>{match.ctaLabel}</a>
         </Button>
       );
@@ -153,27 +139,18 @@ function MatchCard({ match, className, compact = false }) {
       <Button
         size="sm"
         className={buttonClasses}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (match.ctaOnClick) {
-            handlePrimaryAction(e);
-          }
-        }}
+        onClick={match.ctaOnClick ? handlePrimaryAction : undefined}
       >
         {match.ctaLabel}
       </Button>
     );
   };
 
-  const isNavigable = ['builder', 'mentor', 'investor', 'startup'].includes(match.kind);
-
   return (
     <Card
-      onClick={isNavigable ? handleCardClick : undefined}
       className={cn(
         'group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 shadow-sm backdrop-blur-xl',
         'transition-all duration-300 hover:-translate-y-0.5 hover:border-white/20 hover:shadow-xl hover:shadow-black/20',
-        isNavigable && 'cursor-pointer',
         className
       )}
     >
