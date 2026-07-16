@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -18,6 +18,7 @@ import { ConnectionButton } from '@/components/connection/ConnectionButton';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 import usePaginatedFetch from '@/utils/hooks/usePaginated';
 import InfiniteList from '@/components/InfiniteList';
+import EmptyState from '../common/EmptyState';
 
 const API_URL = import.meta.env.VITE_API_URL || "/api";
 
@@ -326,23 +327,13 @@ const DiscoverUsers = () => {
               <p className="text-gray-400">Loading users...</p>
             </div>
           ) : filteredUsers.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="flex flex-col w-full items-center justify-center py-20"
-            >
-              <div className="w-20 h-20 bg-linear-to-br from-blue-500/10 to-blue-600/10 rounded-2xl flex items-center justify-center mb-4">
-                <Search className="w-10 h-10 text-blue-500" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">No users found</h3>
-              <p className="text-gray-400 mb-6 text-center max-w-md">
-                Try adjusting your filters or search query to discover more people
-              </p>
-              <Button onClick={clearFilters} variant="outline" className="border-gray-600 text-black">
-                Clear all filters
-              </Button>
-            </motion.div>
+            <EmptyState
+              title="No candidates yet"
+              description="Try adjusting your filters or search query to discover more people."
+              buttonText="Clear all filters"
+              onButtonClick={clearFilters}
+              icon={Search}
+            />
           ) : (
             <motion.div layout className="flex flex-col w-full items-center justify-center">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
