@@ -94,6 +94,7 @@ import InvestorPortalPage from "./components/pages/startupWorkspace/InvestorPort
 import BusinessIntelligencePage from "./components/pages/startupWorkspace/BusinessIntelligencePage.jsx";
 import AutomationPage from "./components/pages/startupWorkspace/AutomationPage.jsx";
 import IntegrationsPage from "./components/pages/startupWorkspace/IntegrationsPage.jsx";
+import StartupCandidatesPage from "./components/pages/startupWorkspace/StartupCandidatesPage.jsx";
 
 // SF Meet
 import MeetingRoom from "./components/ui/meeting-room.jsx";
@@ -466,6 +467,7 @@ export default function App() {
                     <Route path="business-intelligence" element={<BusinessIntelligencePage />} />
                     <Route path="automation" element={<AutomationPage />} />
                     <Route path="integrations" element={<IntegrationsPage />} />
+                    <Route path="candidates" element={<StartupCandidatesPage />} />
                   </Route>
                 </Route>
 
