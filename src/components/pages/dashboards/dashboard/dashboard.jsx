@@ -27,6 +27,7 @@ import DashboardSummaryCard from "./DashboardSummarySection";
 import Loader from "@/components/loader/loader";
 import DashboardChangeSection from "../dashboardChangeSection";
 import AnnouncementsSection from "./AnnouncementsSection";
+import AINewsSection from "@/components/news/AINewsSection";
 const Dashboard = ({
   activeRole, setActiveRole, userRoles, setUserRoles
 }) => {
@@ -126,6 +127,7 @@ const Dashboard = ({
           )
         } */}
         <DashboardSummaryCard userData={userData} />
+        <AINewsSection />
 
         {/* Original Dashboard Header */}
         <div className='w-full  p-4'>
