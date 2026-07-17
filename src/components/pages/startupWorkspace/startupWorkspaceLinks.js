@@ -11,6 +11,7 @@
 import {
   LayoutDashboard, Gauge, Contact, Building2, UserPlus2, ShoppingBag,
   Wallet, Handshake, Rocket, BarChart3, Users2, BrainCircuit, Bot, Plug,
+  Sparkles,
 } from 'lucide-react';
 
 export const getStartupWorkspaceModules = (startupId) => [
@@ -52,6 +53,14 @@ export const getStartupWorkspaceModules = (startupId) => [
     label: 'Hiring',
     icon: UserPlus2,
     href: `/startup-workspace/${startupId}/hiring`,
+    internal: true,
+    group: 'Growth',
+  },
+  {
+    id: 'sw-mentors',
+    label: 'Mentors',
+    icon: Sparkles,
+    href: `/startup-workspace/${startupId}/mentors`,
     internal: true,
     group: 'Growth',
   },

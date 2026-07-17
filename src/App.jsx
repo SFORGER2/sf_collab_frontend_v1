@@ -94,6 +94,7 @@ import InvestorPortalPage from "./components/pages/startupWorkspace/InvestorPort
 import BusinessIntelligencePage from "./components/pages/startupWorkspace/BusinessIntelligencePage.jsx";
 import AutomationPage from "./components/pages/startupWorkspace/AutomationPage.jsx";
 import IntegrationsPage from "./components/pages/startupWorkspace/IntegrationsPage.jsx";
+import StartupMentorsPage from "./components/pages/startupWorkspace/StartupMentorsPage.jsx";
 
 // SF Meet
 import MeetingRoom from "./components/ui/meeting-room.jsx";
@@ -241,6 +242,7 @@ export default function App() {
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/waitlist" element={<Waitlist />} />
                 <Route path="/waitlist-terms" element={<WaitlistTerms />} />
+
 
                 {/* ────── Protected Routes ────── */}
                 <Route element={<ProtectedRoute />}>
@@ -466,6 +468,7 @@ export default function App() {
                     <Route path="business-intelligence" element={<BusinessIntelligencePage />} />
                     <Route path="automation" element={<AutomationPage />} />
                     <Route path="integrations" element={<IntegrationsPage />} />
+                    <Route path="mentors" element={<StartupMentorsPage />} />
                   </Route>
                 </Route>
 
