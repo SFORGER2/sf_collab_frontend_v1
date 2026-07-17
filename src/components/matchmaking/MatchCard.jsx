@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +15,8 @@ import {
   UserRound,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { chatAPI } from '@/utils/APIs/chatApi';
+import { ConnectionButton } from '../connection/ConnectionButton';
 
 const KIND_CONFIG = {
   builder: {
@@ -91,6 +95,7 @@ const formatMetaValue = (value) => {
 
 function MatchCard({ match, className, compact = false }) {
   const [avatarFailed, setAvatarFailed] = useState(false);
+  const navigate = useNavigate();
 
   const config = KIND_CONFIG[match.kind] || KIND_CONFIG.user;
   const Icon = config.icon;
@@ -113,11 +118,18 @@ function MatchCard({ match, className, compact = false }) {
     return fallback || null;
   }, [match.meta]);
 
+  const handleMessage = async () => {
+    try {
+      const data = await chatAPI.createDirectConversation(match.id);
+      const conversationId = data?.conversation?.id;
 
-  const handlePrimaryAction = (event) => {
-    if (match.ctaOnClick) {
-      event?.preventDefault?.();
-      match.ctaOnClick(match);
+      if (!conversationId) {
+        throw new Error('Conversation id missing from response');
+      }
+
+      navigate(`/chat?conversationId=${conversationId}`);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to open chat');
     }
   };
 
@@ -161,6 +173,35 @@ function MatchCard({ match, className, compact = false }) {
           )
         )}
       </div>
+  const buttonClasses = 'w-full sm:w-auto bg-white text-slate-950 hover:bg-white/90';
+
+  const renderActions = () => {
+    if (match.kind === 'startup') {
+      return (
+        <>
+          <Button asChild size="sm" className={buttonClasses}>
+            <Link to={`/startup-details/${match.id}`}>View Startup</Link>
+          </Button>
+          <Button asChild size="sm" className={buttonClasses}>
+            <Link to={`/startup-details/${match.id}`}>Startup Invitation</Link>
+          </Button>
+          <Button size="sm" className={buttonClasses} onClick={handleMessage}>
+            Message
+          </Button>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <Button asChild size="sm" className={buttonClasses}>
+          <Link to={`/user-profile?userId=${match.id}`}>View Profile</Link>
+        </Button>
+        <ConnectionButton userId={match.id} size="sm" />
+        <Button size="sm" className={buttonClasses} onClick={handleMessage}>
+          Message
+        </Button>
+      </>
     );
   };
 
@@ -255,11 +296,13 @@ function MatchCard({ match, className, compact = false }) {
           )}
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-white/5 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-t border-white/5 pt-4">
           <div className="text-xs text-slate-500">
             {compact ? 'Compact view enabled' : 'Full match card view'}
           </div>
-          {renderCta()}
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            {renderActions()}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -270,6 +313,7 @@ MatchCard.propTypes = {
   className: PropTypes.string,
   compact: PropTypes.bool,
   match: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     kind: PropTypes.oneOf(['builder', 'startup', 'mentor', 'investor', 'user']).isRequired,
     name: PropTypes.string.isRequired,
     role: PropTypes.string,
