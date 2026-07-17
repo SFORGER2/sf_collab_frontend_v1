@@ -39,7 +39,6 @@ import BusinessIdeaGenerator from "../components/pages/Business_plan_generator/p
 import Test from "../components/pages/Test.jsx";
 import ScraperForm from "../components/pages/Data_scraper/ScraperForm.jsx";
 import PDFSigningApp from "@/components/pages/PDF_Signing/PDFSigningApp.jsx";
-import ChatPage from "@/components/pages/chat/ChatPage.jsx";
 
 // import TimezoneConverter from "../components/pages/TimezoneConverter/TimezoneConverter.jsx";
 import ChatComponent from "../components/pages/chat/ChatComponent.jsx";
@@ -48,6 +47,7 @@ import DiscoverStartups from "../components/pages/discoverStartups/DiscoverStart
 import StartupDetailPage from "../components/pages/startupDetails/StartupDetailPage.jsx";
 import Profile from "../components/pages/Profile/user-profile/Profile.jsx";
 import ProfileSetup from "../components/pages/ProfileSetup.jsx";
+import MatchCardDemo from "../components/pages/MatchCardDemo.jsx";
 
 export const router = createBrowserRouter([
   // Authentication routes (accessible only when not logged in)
@@ -211,6 +211,11 @@ export const router = createBrowserRouter([
       {
         path: "/notifications",
         element: <Notifications />,
+      },
+
+      {
+        path: "/matchcard-demo",
+        element: <MatchCardDemo />,
       },
       
       {

@@ -59,6 +59,12 @@ export const startupWorkspaceAPI = {
     const response = await api.post(`/startups/${startupId}/unlock-crowdfunding`);
     return response.data;
   },
+
+  // GET /matchmaking/startups/:startupId/candidates
+  getCandidates: async (startupId) => {
+    const response = await api.get(`/matchmaking/startups/${startupId}/candidates`);
+    return response.data;
+  },
 };
 
 export default startupWorkspaceAPI;
