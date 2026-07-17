@@ -5,10 +5,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Users, Calendar, TrendingUp, Heart, Share2, ChevronRight, Home, Trash2, UserPlus, BarChart3,
-  FileText, Target, MessageSquare,CheckCircle2Icon,XIcon,
+  FileText, Target, MessageSquare,CheckCircle2Icon,XIcon, Coins,
   Bookmark,
   ClipboardList
 } from 'lucide-react';
+import InvestorsSection from './sections/InvestorsSection';
 import {
     Alert,
     AlertDescription,
@@ -565,7 +566,7 @@ const handleDeclineInvitation = async () => {
       {/* Main Content with Tabs */}
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full grid-cols-1 md:grid-cols-6 bg-gray-800/50 p-1 rounded-xl backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-1 md:grid-cols-7 bg-gray-800/50 p-1 rounded-xl backdrop-blur-sm">
             <TabsTrigger value="overview" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <BarChart3 className="w-4 h-4 mr-2" />
               <ShinyText
@@ -622,6 +623,14 @@ const handleDeclineInvitation = async () => {
               //   className='custom-title' 
               />
               
+            </TabsTrigger>
+            <TabsTrigger value="investors" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              <Coins className="w-4 h-4 mr-2" />
+              <ShinyText
+                text="Investors"
+                disabled={false}
+                speed={3}
+              />
             </TabsTrigger>
           </TabsList>
 
@@ -684,6 +693,11 @@ const handleDeclineInvitation = async () => {
               isAdmin={isAdmin}
 
             />
+          </TabsContent>
+
+          {/* Investors Tab */}
+          <TabsContent value="investors">
+            <InvestorsSection startupId={id} />
           </TabsContent>
         </Tabs>
       </div>
