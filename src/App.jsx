@@ -31,6 +31,7 @@ import ScraperForm from "./components/pages/Data_scraper/ScraperForm.jsx";
 import DiscoverStartups from "./components/pages/discoverStartups/DiscoverStartups.jsx";
 import StartupDetailPage from "./components/pages/startupDetails/StartupDetailPage.jsx";
 import Profile from "./components/pages/Profile/user-profile/Profile.jsx";
+import MatchCardDemo from "./components/pages/MatchCardDemo.jsx";
 import ImageGenerator from "./components/pages/Image_Logo_Generator/ImageGenerator.jsx";
 import StartupLogoGenerator from "./components/pages/Image_Logo_Generator/StartupLogoGenerator.jsx";
 import QwenChat from "./components/pages/QwenChat/QwenChat";
@@ -94,6 +95,8 @@ import InvestorPortalPage from "./components/pages/startupWorkspace/InvestorPort
 import BusinessIntelligencePage from "./components/pages/startupWorkspace/BusinessIntelligencePage.jsx";
 import AutomationPage from "./components/pages/startupWorkspace/AutomationPage.jsx";
 import IntegrationsPage from "./components/pages/startupWorkspace/IntegrationsPage.jsx";
+import StartupMentorsPage from "./components/pages/startupWorkspace/StartupMentorsPage.jsx";
+import StartupCandidatesPage from "./components/pages/startupWorkspace/StartupCandidatesPage.jsx";
 
 // SF Meet
 import MeetingRoom from "./components/ui/meeting-room.jsx";
@@ -126,6 +129,7 @@ import FounderManageTasks from "./components/pages/founder/manageTasks/FounderMa
 import SavedIdeas from "./components/pages/ideation/SavedIdeas.jsx";
 import AIToolsGuard from "./components/ai/AIToolsGuard.jsx";
 import BuilderStartups from "./components/pages/builderStartups/BuilderStartups.jsx";
+import BuilderMatchingStartupsPage from "./components/pages/builderStartups/BuilderMatchingStartupsPage.jsx";
 import InviteToStartup from "./components/pages/inviteToStartup/InviteToStartup.jsx";
 import MarketplacePage from "./components/pages/marketplace/MarketplacePage";
 import MentorshipDiscovery from "./components/pages/Mentorship/MentorDiscoveryPage.jsx";
@@ -238,9 +242,10 @@ export default function App() {
                 <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/data-collection-and-tracking" element={<DataCollection />} />
-                <Route path="/pricing" element={<Pricing />} />
+                    <Route path="/pricing" element={<Pricing />} />
                 <Route path="/waitlist" element={<Waitlist />} />
                 <Route path="/waitlist-terms" element={<WaitlistTerms />} />
+
 
                 {/* ────── Protected Routes ────── */}
                 <Route element={<ProtectedRoute />}>
@@ -301,6 +306,7 @@ export default function App() {
                     <Route path="builder/my-work" element={<MyWork />} />
                     <Route path="builder/rewards" element={<Rewards />} />
                     <Route path="builder/my-startups" element={<BuilderStartups myStartupsOnly={true} />} />
+                    <Route path="builder/matching-startups" element={<BuilderMatchingStartupsPage />} />
                     <Route path="builder/profile-skills" element={<SkillProfile />} />
                     <Route path="builder/profile" element={<SkillProfile />} />
 
@@ -367,6 +373,7 @@ export default function App() {
                     <Route path="register-startup" element={<RegisterStartUp />} />
                     <Route path="register-existing-startup" element={<RegisterExistingStartup />} />
                     <Route path="discover-startups" element={<DiscoverStartups />} />
+                    <Route path="matchcard-demo" element={<MatchCardDemo />} />
                     <Route path="my-startups" element={<DiscoverStartups myStartupsOnly={true} />} />
                     <Route path="startup-details/:id" element={<StartupDetailPage />} />
                     <Route path="vision/:id" element={<VisionWorkspacePage />} />
@@ -466,6 +473,8 @@ export default function App() {
                     <Route path="business-intelligence" element={<BusinessIntelligencePage />} />
                     <Route path="automation" element={<AutomationPage />} />
                     <Route path="integrations" element={<IntegrationsPage />} />
+                    <Route path="mentors" element={<StartupMentorsPage />} />
+                    <Route path="candidates" element={<StartupCandidatesPage />} />
                   </Route>
                 </Route>
 

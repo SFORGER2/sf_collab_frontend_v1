@@ -72,6 +72,7 @@
     "mathjs": "^15.1.0",
     "motion": "^12.23.26",
     "pdfjs-dist": "^5.4.449",
+    "prop-types": "^15.8.1",
     "radix-ui": "^1.4.3",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.3.1",
