@@ -21,10 +21,6 @@ export const matchmakingAPI = {
     const res = await api.get('/matchmaking/startups');
     return res.data;
   },
-};
-
-export default matchmakingAPI;
-export const matchmakingAPI = {
   getCofounderSuggestions: async () => {
     try {
       // Exact response shape is unconfirmed because no other consumer of this endpoint exists yet.
@@ -41,4 +37,4 @@ export const matchmakingAPI = {
   },
 };
 
-export default api;
+export default matchmakingAPI;
