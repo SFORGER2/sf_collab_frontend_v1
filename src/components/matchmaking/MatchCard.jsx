@@ -174,7 +174,7 @@ function MatchCard({ match, className, compact = false }) {
 
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-2">
-              <h3 className="min-w-0 truncate text-base font-semibold text-white sm:text-lg">
+              <h3 className="min-w-0 break-words text-base font-semibold text-white sm:text-lg">
                 {match.name}
               </h3>
               <Badge
@@ -198,7 +198,7 @@ function MatchCard({ match, className, compact = false }) {
           </div>
 
           <div className="flex shrink-0 flex-col items-end gap-1">
-            <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-right">
+            <div className="min-w-[80px] rounded-full border border-white/10 bg-white/5 px-3 py-1 text-right">
               <div className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Match score</div>
               <div className="text-lg font-semibold text-white">{score != null ? `${score}%` : '-'}</div>
             </div>

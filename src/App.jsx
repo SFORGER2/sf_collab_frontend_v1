@@ -56,6 +56,7 @@ import { ToastContainer } from "react-toastify";
 import WaitlistTerms from "./components/pages/termsAndConditions/waitlistTerms.jsx";
 import AdminPage from "./components/pages/admin/admin.jsx";
 import DiscoverUsers from "./components/discover-users/DiscoverUsers.jsx";
+import AIMatchmakingPage from "./components/pages/matchmaking/AIMatchmakingPage.jsx";
 import VerifyEmail from "./components/pages/verifyEmail/VerifyEmail.jsx";
 import JoinSF from "./components/pages/joinSF/JoinSF.jsx";
 import Influencer from "./components/pages/influencer/Influencer.jsx";
@@ -398,6 +399,7 @@ export default function App() {
 
                     {/* Discover */}
                     <Route path="discover-users" element={<DiscoverUsers />} />
+                    <Route path="ai-matchmaking" element={<AIMatchmakingPage />} />
 
                     {/* Mentorship */}
                     <Route path="mentors" element={<MentorshipDiscovery />} />

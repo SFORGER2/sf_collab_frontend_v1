@@ -55,10 +55,10 @@ const MatchCategorySection = ({ title, matches }) => {
 
       {/* Horizontally scrollable container */}
       {/* Using snap-x for smooth carousel-like scrolling */}
-      <div className="flex gap-6 overflow-x-auto px-4 pb-6 pt-2 snap-x snap-mandatory scroll-smooth scrollbar-hide">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4 pb-6 pt-2">
         {matches.map((match, idx) => (
-          <div key={match.id || idx} className="w-[320px] sm:w-[380px] shrink-0 snap-center sm:snap-start">
-            <MatchCard match={match} compact={false} />
+          <div key={match.id || idx} className="h-full">
+            <MatchCard match={match} compact={false} className="h-full" />
           </div>
         ))}
       </div>
