@@ -10,7 +10,8 @@
 
 import {
   LayoutDashboard, Gauge, Contact, Building2, UserPlus2, ShoppingBag,
-  Wallet, Handshake, Rocket, BarChart3, Users2, BrainCircuit, Bot, Plug, Users,
+  Wallet, Handshake, Rocket, BarChart3, Users2, BrainCircuit, Bot, Plug,
+  Sparkles,
 } from 'lucide-react';
 
 export const getStartupWorkspaceModules = (startupId) => [
@@ -56,6 +57,10 @@ export const getStartupWorkspaceModules = (startupId) => [
     group: 'Growth',
   },
   {
+    id: 'sw-mentors',
+    label: 'Mentors',
+    icon: Sparkles,
+    href: `/startup-workspace/${startupId}/mentors`,
     id: 'sw-candidates',
     label: 'Candidates',
     icon: Users,
