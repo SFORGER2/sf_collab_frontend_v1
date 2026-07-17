@@ -173,6 +173,8 @@ function MatchCard({ match, className, compact = false }) {
           )
         )}
       </div>
+    );
+  };
   const buttonClasses = 'w-full sm:w-auto bg-white text-slate-950 hover:bg-white/90';
 
   const renderActions = () => {

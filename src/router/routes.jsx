@@ -48,6 +48,7 @@ import StartupDetailPage from "../components/pages/startupDetails/StartupDetailP
 import Profile from "../components/pages/Profile/user-profile/Profile.jsx";
 import ProfileSetup from "../components/pages/ProfileSetup.jsx";
 import MatchCardDemo from "../components/pages/MatchCardDemo.jsx";
+import AINews from "../components/pages/ai-news/AINews.jsx";
 
 export const router = createBrowserRouter([
   // Authentication routes (accessible only when not logged in)
@@ -137,6 +138,11 @@ export const router = createBrowserRouter([
       {
         path: "/dashboard",
         element: <Dashboard />,
+      },
+      
+      {
+        path: "/ai-news",
+        element: <AINews />,
       },
       
       {

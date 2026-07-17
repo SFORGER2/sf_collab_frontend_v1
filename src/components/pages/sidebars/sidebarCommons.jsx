@@ -26,6 +26,7 @@ export function aiTools(id) {
       { id: "multimodal-images", href: "/multimodal-images", label: "Multimodal Images", icon: <Images size={18} /> },
       { id: "video-generator", href: "/video-generator", label: "Video Generator", icon: <VideoIcon size={18} /> },
       { id: "caption-generator", href: "/caption-generator", label: "Caption Generator", icon: <CaptionsIcon size={18} /> },
+      { id: "ai-news", href: "/ai-news", label: "AI News", icon: <Rss size={18} /> },
     ],
   };
 };
