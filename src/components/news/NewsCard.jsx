@@ -41,11 +41,26 @@ export default function NewsCard({ article }) {
   const sourceName = typeof source === 'object' ? source?.name : source;
   const showImage = urlToImage && !imgError;
 
+  let validUrl = null;
+  try {
+    if (url && typeof url === 'string') {
+      const parsedUrl = new URL(url.trim());
+      if (parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:') {
+        validUrl = parsedUrl.href;
+      }
+    }
+  } catch (e) {
+    // Invalid URL
+  }
+
+  const CardWrapper = validUrl ? motion.a : motion.div;
+  const wrapperProps = validUrl 
+    ? { href: validUrl, target: '_blank', rel: 'noopener noreferrer' }
+    : {};
+
   return (
-    <motion.a
-      href={url || '#'}
-      target={url ? '_blank' : undefined}
-      rel="noopener noreferrer"
+    <CardWrapper
+      {...wrapperProps}
       className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 backdrop-blur-xl transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-blue-500/5"
       whileHover={{ y: -4 }}
       transition={{ type: 'spring', stiffness: 300, damping: 24 }}
@@ -114,6 +129,6 @@ export default function NewsCard({ article }) {
           <ExternalLink className="w-4 h-4 text-slate-600 group-hover:text-blue-400 transition-colors" />
         </div>
       </div>
-    </motion.a>
+    </CardWrapper>
   );
 }
