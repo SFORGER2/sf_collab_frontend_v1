@@ -57,6 +57,12 @@ export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiv
           icon: <Rocket size={18} />,
         },
         {
+          id: "matching-startups",
+          href: "/builder/matching-startups",
+          label: "Matching Startups",
+          icon: <Star size={18} />,
+        },
+        {
           id: "saved-startups",
           href: "/saved-startups",
           label: "Saved Startups",
