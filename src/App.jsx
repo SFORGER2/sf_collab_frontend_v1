@@ -129,6 +129,7 @@ import FounderManageTasks from "./components/pages/founder/manageTasks/FounderMa
 import SavedIdeas from "./components/pages/ideation/SavedIdeas.jsx";
 import AIToolsGuard from "./components/ai/AIToolsGuard.jsx";
 import BuilderStartups from "./components/pages/builderStartups/BuilderStartups.jsx";
+import BuilderMatchingStartupsPage from "./components/pages/builderStartups/BuilderMatchingStartupsPage.jsx";
 import InviteToStartup from "./components/pages/inviteToStartup/InviteToStartup.jsx";
 import MarketplacePage from "./components/pages/marketplace/MarketplacePage";
 import MentorshipDiscovery from "./components/pages/Mentorship/MentorDiscoveryPage.jsx";
@@ -305,6 +306,7 @@ export default function App() {
                     <Route path="builder/my-work" element={<MyWork />} />
                     <Route path="builder/rewards" element={<Rewards />} />
                     <Route path="builder/my-startups" element={<BuilderStartups myStartupsOnly={true} />} />
+                    <Route path="builder/matching-startups" element={<BuilderMatchingStartupsPage />} />
                     <Route path="builder/profile-skills" element={<SkillProfile />} />
                     <Route path="builder/profile" element={<SkillProfile />} />
 
