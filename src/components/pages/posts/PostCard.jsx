@@ -12,7 +12,7 @@ import PostActions from "./PostActions";
 import { getAvatarUrl, getMediaUrl } from "@/utils/getMediaUrl";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import { toAbsoluteFileUrl } from "@/utils/toAbsoluteFileUrl";
-
+import SentimentIndicator from "../../ui/SentimentIndicator";
 
 const cardVariants = {
   hidden:   { opacity: 0, y: 20 },
@@ -204,10 +204,16 @@ export default function PostCard({ post, onPostDeleted }) {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-semibold text-sm text-white">
-                  {post.author?.firstName || post.author?.first_name}{" "}
-                  {post.author?.lastName  || post.author?.last_name}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-sm text-white">
+                    {post.author?.firstName || post.author?.first_name}{" "}
+                    {post.author?.lastName  || post.author?.last_name}
+                  </p>
+                  <SentimentIndicator
+                    sentiment={post.sentiment}
+                    aiEnriched={post.ai_enriched}
+                  />
+                </div>
                 <p className="text-xs text-zinc-400">
                   {post.timestamp || new Date(post.createdAt).toLocaleDateString()}
                 </p>
