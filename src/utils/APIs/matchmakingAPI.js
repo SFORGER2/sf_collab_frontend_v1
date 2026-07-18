@@ -12,10 +12,20 @@ const api = axios.create(API_CONFIG);
 api.interceptors.request.use(requestInterceptor, requestErrorInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
-// ─────────────────────────────────────────────────────────────
-// Matchmaking API — wraps matchmaking related endpoints
-// ─────────────────────────────────────────────────────────────
 export const matchmakingAPI = {
+  
+  getForMe: async (params = {}) => {
+  const response = await api.get('/matchmaking/for-me', { params });
+  return response.data;
+},
+getMatchingStartups: async (params = {}) => {
+  const response = await api.get('/matchmaking/startups', { params });
+  return response.data;
+},
+getCoFounders: async (params = {}) => {
+  const response = await api.get('/matchmaking/cofounders', { params });
+  return response.data;
+},
   // GET /matchmaking/startups
   getMatchingStartups: async () => {
     const res = await api.get('/matchmaking/startups');

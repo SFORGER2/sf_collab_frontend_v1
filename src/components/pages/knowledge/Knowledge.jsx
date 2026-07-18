@@ -9,6 +9,7 @@ import {
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import ImpactScoreIndicator, { getDeterministicScore } from "@/components/common/ImpactScoreIndicator";
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -335,6 +336,7 @@ const Knowledge = () => {
           month: "long", day: "numeric", year: "numeric",
         }),
         dateRaw: item.createdAt,
+        impactScore: item.impactScore ?? item.impact_score ?? getDeterministicScore(item.id),
       }));
 
       setKnowledgeContent(mapped);
@@ -368,6 +370,7 @@ const Knowledge = () => {
       },
       date:    new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
       dateRaw: new Date().toISOString(),
+      impactScore: newPost.impactScore ?? newPost.impact_score ?? getDeterministicScore(newPost.id),
     };
     setKnowledgeContent((prev) => [mapped, ...prev]);
     setTotalContent((prev) => prev + 1);
@@ -667,6 +670,16 @@ const Knowledge = () => {
         onClose={() => setShowAddModal(false)}
         onSuccess={handleResourceAdded}
       />
+
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        .animate-shimmer {
+          animation: shimmer 3s linear infinite;
+        }
+      `}</style>
     </div>
   );
 };
@@ -695,9 +708,12 @@ const KnowledgeCard = ({ content, index }) => {
                 {content.title}
               </h3>
             </div>
-            <span className={`px-3 py-1 rounded-full text-xs font-medium text-white bg-gradient-to-r ${getFileTypeColor(content.fileType)} shrink-0`}>
-              {content.fileType}
-            </span>
+            <div className="flex flex-col items-end gap-2 shrink-0">
+              <span className={`px-3 py-1 rounded-full text-xs font-medium text-white bg-gradient-to-r ${getFileTypeColor(content.fileType)}`}>
+                {content.fileType}
+              </span>
+              <ImpactScoreIndicator score={content.impactScore} size="sm" />
+            </div>
           </div>
 
           <p className="text-sm text-gray-400 line-clamp-3 leading-relaxed">
