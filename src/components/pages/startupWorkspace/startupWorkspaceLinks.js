@@ -11,7 +11,7 @@
 import {
   LayoutDashboard, Gauge, Contact, Building2, UserPlus2, ShoppingBag,
   Wallet, Handshake, Rocket, BarChart3, Users2, BrainCircuit, Bot, Plug,
-  Sparkles,
+  Sparkles, Users
 } from 'lucide-react';
 
 export const getStartupWorkspaceModules = (startupId) => [

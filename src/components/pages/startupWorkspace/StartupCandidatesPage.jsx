@@ -41,9 +41,12 @@ function normaliseCandidate(raw) {
 function normaliseCandidates(responseData) {
   const list =
     responseData?.candidates ??
+    responseData?.matches ??
     responseData?.data?.candidates ??
-    responseData?.data ??
+    responseData?.data?.matches ??
+    (Array.isArray(responseData?.data) ? responseData.data : null) ??
     (Array.isArray(responseData) ? responseData : []);
+
   return list.map(normaliseCandidate);
 }
 

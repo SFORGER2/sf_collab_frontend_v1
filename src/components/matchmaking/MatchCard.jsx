@@ -133,46 +133,6 @@ function MatchCard({ match, className, compact = false }) {
     }
   };
 
-  const renderCta = () => {
-    const hasPrimary = Boolean(match.ctaLabel && (match.ctaHref || match.ctaOnClick));
-    const hasSecondary = Boolean(match.secondaryCtaLabel && match.secondaryCtaOnClick);
-
-    if (!hasPrimary && !hasSecondary) return null;
-
-    const primaryClasses = 'w-full sm:w-auto bg-white text-slate-955 hover:bg-white/90 font-medium rounded-xl';
-    const secondaryClasses = 'w-full sm:w-auto border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white font-medium rounded-xl';
-
-    return (
-      <div className="flex w-full sm:w-auto items-center gap-2">
-        {hasSecondary && (
-          <Button
-            size="sm"
-            variant="outline"
-            className={secondaryClasses}
-            onClick={(e) => {
-              e.preventDefault();
-              match.secondaryCtaOnClick(match);
-            }}
-          >
-            {match.secondaryCtaLabel}
-          </Button>
-        )}
-        {hasPrimary && (
-          match.ctaHref && !match.ctaOnClick ? (
-            <Button asChild size="sm" className={primaryClasses}>
-              <a href={match.ctaHref}>{match.ctaLabel}</a>
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              className={primaryClasses}
-              onClick={match.ctaOnClick ? handlePrimaryAction : undefined}
-            >
-              {match.ctaLabel}
-            </Button>
-          )
-        )}
-      </div>
   const buttonClasses = 'w-full sm:w-auto bg-white text-slate-950 hover:bg-white/90';
 
   const renderActions = () => {
