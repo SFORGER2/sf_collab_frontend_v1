@@ -134,7 +134,7 @@ export default function ArticleCard({ article }) {
           rel="noopener noreferrer"
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white hover:text-slate-950"
         >
-          Read Article
+          Read Original
           <ExternalLink className="size-4" />
         </a>
       </CardFooter>
