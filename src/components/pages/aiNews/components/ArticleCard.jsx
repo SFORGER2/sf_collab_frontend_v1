@@ -1,8 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, ExternalLink, Flame, ShieldAlert, HeartHandshake } from 'lucide-react';
+import { Sparkles, ExternalLink, Flame, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Helper to determine sentiment badge classes and icons
@@ -51,6 +52,8 @@ export default function ArticleCard({ article }) {
   const sentimentConfig = getSentimentConfig(sentiment);
   const impactColor = getImpactColor(impactScore);
 
+  const detailUrl = article.id ? `/ai-news/${article.id}` : null;
+
   return (
     <Card className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 shadow-md backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-2xl hover:shadow-blue-500/5">
       {/* Glow Effect on Hover */}
@@ -94,9 +97,17 @@ export default function ArticleCard({ article }) {
 
         {/* Card Content with Title & Description */}
         <CardContent className="p-5 pt-0 pb-4 space-y-3">
-          <h3 className="text-lg font-bold text-white leading-snug group-hover:text-blue-400 transition-colors duration-200">
-            {title}
-          </h3>
+          {detailUrl ? (
+            <Link to={detailUrl} className="block group-hover:text-blue-400 transition-colors duration-200">
+              <h3 className="text-lg font-bold text-white leading-snug">
+                {title}
+              </h3>
+            </Link>
+          ) : (
+            <h3 className="text-lg font-bold text-white leading-snug group-hover:text-blue-400 transition-colors duration-200">
+              {title}
+            </h3>
+          )}
           <p className="text-sm leading-relaxed text-slate-400 line-clamp-3">
             {summary}
           </p>
@@ -147,16 +158,28 @@ export default function ArticleCard({ article }) {
           </div>
         )}
 
-        {/* Read Article Action button */}
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white hover:text-slate-950"
-        >
-          Read Article
-          <ExternalLink className="size-4" />
-        </a>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 w-full">
+          {detailUrl && (
+            <Link
+              to={detailUrl}
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-blue-500/30 bg-blue-500/10 py-2.5 text-xs font-semibold text-blue-300 transition-all duration-300 hover:bg-blue-600 hover:text-white"
+            >
+              View Details
+              <ChevronRight className="size-4" />
+            </Link>
+          )}
+
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold text-white transition-all duration-300 hover:bg-white hover:text-slate-950"
+          >
+            Read Article
+            <ExternalLink className="size-3.5" />
+          </a>
+        </div>
       </CardFooter>
     </Card>
   );
