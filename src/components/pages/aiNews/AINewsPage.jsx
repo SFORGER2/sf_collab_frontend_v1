@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Rss, Sparkles, UserCheck } from 'lucide-react';
+import { Rss, Sparkles } from 'lucide-react';
 import { aiNewsAPI } from '@/utils/APIs/aiNewsAPI';
 import ArticleCard from './components/ArticleCard';
 import EmptyState from '@/components/common/EmptyState';
@@ -11,6 +11,7 @@ export default function AINewsPage() {
   const [digestData, setDigestData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   const fetchDigest = useCallback(async () => {
     setLoading(true);
@@ -59,6 +60,13 @@ export default function AINewsPage() {
       ))}
     </div>
   );
+
+  // Extract categories dynamically
+  const categories = ['All', ...new Set((digestData?.articles || []).map(a => a.category).filter(Boolean))];
+
+  const filteredArticles = selectedCategory === 'All'
+    ? (digestData?.articles || [])
+    : (digestData?.articles || []).filter(a => a.category === selectedCategory);
 
   return (
     <div className="min-h-screen w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 bg-black text-white">
@@ -138,6 +146,25 @@ export default function AINewsPage() {
                 </div>
               )}
 
+              {/* Category Filter Chips */}
+              {digestData?.articles?.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" data-testid="category-filter">
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={`px-4 py-2 rounded-lg whitespace-nowrap transition-all text-sm font-medium border ${
+                        selectedCategory === category
+                          ? "bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/20"
+                          : "bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"
+                      }`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Recommendations list */}
               {!Array.isArray(digestData?.articles) || digestData.articles.length === 0 ? (
                 <EmptyState
@@ -145,9 +172,17 @@ export default function AINewsPage() {
                   description="We couldn't find any relevant news articles for your profile at the moment. Try updating your profile keywords or preferences."
                   icon={Rss}
                 />
+              ) : filteredArticles.length === 0 ? (
+                <EmptyState
+                  title="No articles found."
+                  description="Try another category."
+                  buttonText="Clear Filters"
+                  onButtonClick={() => setSelectedCategory('All')}
+                  icon={Rss}
+                />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {digestData.articles.map((article, idx) => (
+                  {filteredArticles.map((article, idx) => (
                     <ArticleCard key={article.id || idx} article={article} />
                   ))}
                 </div>
