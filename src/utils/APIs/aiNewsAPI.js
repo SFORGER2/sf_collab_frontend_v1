@@ -6,6 +6,15 @@ api.interceptors.request.use(requestInterceptor, requestErrorInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 export const aiNewsAPI = {
+   scrapeNews: async () => {
+    const response = await api.post("/ai-news/ainews/scrape");
+    return response.data;
+  },
+
+  enrichNews: async () => {
+    const response = await api.post("/ai-news/ainews/enrich");
+    return response.data;
+  },
   /**
    * Fetch AI news articles.
    * GET /api/ai-news/ainews

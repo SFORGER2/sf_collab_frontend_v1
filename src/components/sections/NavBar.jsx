@@ -65,6 +65,8 @@ const NavBar = ({
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const { notifications: notifUnread, messages: msgUnread } = useUnreadCounts();
+  console.log("msgUnread =", msgUnread);
+  console.log("notifUnread =", notifUnread);
   const [loaderState, setLoaderState] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -255,11 +257,11 @@ const NavBar = ({
   >
     <IoChatbubbles size={22} />
 
-    {msgUnread > 0 && (
-      <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full border border-[#0a0a0a]">
-        {msgUnread > 99 ? '99+' : msgUnread}
-      </span>
-    )}
+    {false && (
+  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full border border-[#0a0a0a]">
+    TEST
+  </span>
+)}
   </button>
 </Tippy>
 
