@@ -59,9 +59,9 @@ export default function ArticleCard({ article }) {
       <div>
         {/* Card Header with Badges */}
         <CardHeader className="p-5 pb-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-start sm:items-center justify-between gap-1.5 sm:gap-2">
             {/* Impact & AI Enriched */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <Badge
                 variant="outline"
                 className={cn('flex items-center gap-1 border px-2.5 py-1 text-[11px] font-medium tracking-wide uppercase', impactColor)}

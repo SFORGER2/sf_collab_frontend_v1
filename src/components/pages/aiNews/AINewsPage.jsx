@@ -82,7 +82,7 @@ export default function AINewsPage() {
 
       {/* Tabs Layout */}
       <Tabs defaultValue="for-you" className="w-full space-y-6">
-        <TabsList className="bg-slate-900 border border-white/10 p-1 rounded-xl">
+        <TabsList className="grid grid-cols-2 w-full sm:w-auto sm:inline-flex bg-slate-900 border border-white/10 p-1 rounded-xl">
           <TabsTrigger value="for-you" className="px-4 py-2 text-sm font-semibold tracking-wide">
             For You
           </TabsTrigger>
@@ -106,8 +106,8 @@ export default function AINewsPage() {
             <>
               {/* Profile Prompt Banner (When personalized is false) */}
               {digestData?.personalized === false && (
-                <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-orange-500/5 p-5 sm:p-6 backdrop-blur-xl">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-orange-500/5 p-4 sm:p-6 backdrop-blur-xl">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                     <div className="space-y-1">
                       <h4 className="text-base font-bold text-amber-400">Personalization Not Active</h4>
                       <p className="text-sm text-slate-300">
