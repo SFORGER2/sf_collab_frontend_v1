@@ -20,6 +20,7 @@ export function aiTools(id) {
     label: "AI Tools",
     subItems: [
       { id: "ai-matchmaking",   href: "/ai-matchmaking",    label: "AI Matchmaking",   icon: <BrainCircuit size={18} /> },
+      { id: "ai-news",          href: "/ai-news",           label: "AI News Feed",     icon: <Rss size={18} /> },
       { id: "logo-generator",   href: "/logo-generator",    label: "Logo Generator",   icon: <Wand2 size={18} /> },
       { id: "business-plan",    href: "/business-plan",     label: "Business Plan",    icon: <ClipboardList size={18} /> },
       { id: "qwen-chat",        href: "/qwen-chat",         label: "Qwen Chat",        icon: <Bot size={18} /> },
