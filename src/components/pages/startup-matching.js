@@ -1,31 +1,30 @@
 import React, { useCallback } from 'react';
-import { useOutletContext, useNavigate } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Building2 } from 'lucide-react';
 
 import MatchCard from '@/components/matchmaking/MatchCard';
 import { MatchSectionSkeleton } from '@/components/matchmaking/MatchmakingSkeleton';
 import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 import { useApiRequest } from '@/utils/hooks/useApiRequest';
-import { startupWorkspaceAPI } from '@/utils/APIs/startupWorkspaceAPI';
+import { matchmakingAPI } from '@/utils/APIs/matchmakingAPI';
 import { mapBackendMatchToCard } from '@/utils/matchMapping';
 
-export default function StartupMentorsPage() {
-  const { startupId } = useOutletContext();
+export default function MatchingStartupsPage() {
   const navigate = useNavigate();
 
-  const fetchMentors = useCallback(
-    () => startupWorkspaceAPI.getMentors(startupId),
-    [startupId]
+  const fetchStartups = useCallback(
+    () => matchmakingAPI.getMatchingStartups({ explain: 0, limit: 20 }),
+    []
   );
 
   const { data, isLoading, isError, errorInfo, retry } = useApiRequest(
-    fetchMentors,
-    [fetchMentors]
+    fetchStartups,
+    [fetchStartups]
   );
 
-  const rawMentors = data?.data ?? [];
-  const mentors = Array.isArray(rawMentors) ? rawMentors.map(mapBackendMatchToCard) : [];
+  const rawStartups = data?.data ?? [];
+  const startups = Array.isArray(rawStartups) ? rawStartups.map(mapBackendMatchToCard) : [];
 
   if (isLoading) {
     return (
@@ -50,16 +49,16 @@ export default function StartupMentorsPage() {
     );
   }
 
-  if (mentors.length === 0) {
+  if (startups.length === 0) {
     return (
       <div className="space-y-6">
         <PageHeader />
         <EmptyState
-          icon={Sparkles}
-          title="No mentors yet"
-          description="We couldn't find any mentor recommendations for your startup at this time."
-          buttonText="Back to Dashboard"
-          onButtonClick={() => navigate(`/startup-workspace/${startupId}`)}
+          icon={Building2}
+          title="No matching startups"
+          description="We couldn't find any startups that match your skills. Complete your profile to get better recommendations."
+          buttonText="Complete Your Profile"
+          onButtonClick={() => navigate('/profile/edit')}
         />
       </div>
     );
@@ -67,10 +66,10 @@ export default function StartupMentorsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader count={mentors.length} />
+      <PageHeader count={startups.length} />
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {mentors.map((mentor) => (
-          <MatchCard key={mentor.id} match={mentor} />
+        {startups.map((startup) => (
+          <MatchCard key={startup.id} match={startup} />
         ))}
       </div>
     </div>
@@ -81,11 +80,11 @@ function PageHeader({ count }) {
   return (
     <div className="flex items-start justify-between gap-4">
       <div>
-        <h1 className="text-xl font-semibold text-white">Mentor Recommendations</h1>
+        <h1 className="text-xl font-semibold text-white">Startups Matching Your Skills</h1>
         <p className="mt-1 text-sm text-slate-400">
           {count != null
-            ? `${count} mentor${count !== 1 ? 's' : ''} matched to your startup`
-            : 'Mentors matched by AI'}
+            ? `${count} startup${count !== 1 ? 's' : ''} matched to your profile`
+            : 'Startups that need your expertise'}
         </p>
       </div>
     </div>
