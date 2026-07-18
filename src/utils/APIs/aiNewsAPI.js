@@ -1,11 +1,17 @@
 import axios from 'axios';
 import { API_CONFIG, requestInterceptor, requestErrorInterceptor, responseInterceptor, responseErrorInterceptor } from './interceptors';
+import api from './interceptors';
 
 const api = axios.create(API_CONFIG);
 api.interceptors.request.use(requestInterceptor, requestErrorInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 export const aiNewsAPI = {
+  getArticles: async () => {
+    const response = await api.get('/ai-news/ainews');
+    return response.data;
+  },
+  
    scrapeNews: async () => {
     const response = await api.post("/ai-news/ainews/scrape");
     return response.data;
