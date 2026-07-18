@@ -21,6 +21,14 @@ export const aiNewsAPI = {
     return response.data;
   },
   /**
+   * Fetch personalized AI news digest.
+   * GET /api/ai-news/ainews/digest
+   */
+  getDigest: async (params = {}) => {
+    const response = await api.get('/ai-news/ainews/digest', { params });
+    return response.data;
+  },
+  /**
    * Fetch AI news articles.
    * GET /api/ai-news/ainews
    */
