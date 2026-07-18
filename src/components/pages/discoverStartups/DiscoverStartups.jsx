@@ -22,7 +22,6 @@ import InfiniteList from '@/components/InfiniteList';
 
 import { parseApiError } from '@/utils/APIs/parseApiError';
 import ErrorState from '@/components/common/ErrorState';
-=======
 import EmptyState from '../../common/EmptyState';
 
 const FUNDING_RANGES = [

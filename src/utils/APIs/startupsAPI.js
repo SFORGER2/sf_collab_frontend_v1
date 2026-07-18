@@ -345,6 +345,10 @@ declineInvitation: async (startupId, invitationId) => {
   getIdeaLaunchData: async (ideaId) => {
     const response = await api.get(`/startups/${ideaId}/launch-data`)
     return response.data
+  },
+  getInvestorMatches: async (startupId) => {
+    const response = await api.get(`/matchmaking/startups/${startupId}/investors`)
+    return response.data
   }
 }
 // Project Goals API

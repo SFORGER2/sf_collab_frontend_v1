@@ -4,8 +4,8 @@ import { Card } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 import { startupsAPI } from "@/utils/APIs/startupsAPI";
 import { API_URL } from "@/utils/config";
-import { motion } from "framer-motion";
-import { Building2, MapPin, Eye, Briefcase, ChevronDown, Bookmark } from "lucide-react";
+import { motion } from "framer-motion"; // eslint-disable-line no-unused-vars
+import { Building2, MapPin, Eye, Briefcase, ChevronDown, Bookmark, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -23,8 +23,9 @@ const stageColors = [
 
 export default function StartupCard({
   startup,
-  index,
-  recommendedRole
+  index, // eslint-disable-line no-unused-vars
+  recommendedRole,
+  showViewCta = false
 }) {
   const [selectedStartup, setSelectedStartup] = useState(null);
   const [bannerFailed, setBannerFailed] = useState(false);
@@ -205,6 +206,12 @@ export default function StartupCard({
                   {formatViews(startup.views)} views
                 </span>
               )}
+              {(startup?.memberCount !== undefined || startup?.member_count !== undefined) && (
+                <span className="flex items-center gap-1.5 shrink-0">
+                  <Users className="w-3.5 h-3.5" />
+                  {(startup.memberCount ?? startup.member_count) || 0} members
+                </span>
+              )}
             </div>
 
             {/* Description */}
@@ -212,113 +219,141 @@ export default function StartupCard({
               {startup?.description || "No description available"}
             </p>
 
-            {/* Recommended Role */}
-            {recommendedRole && startup?.roles && startup.roles[recommendedRole] && (
-              <div className="flex items-center justify-between p-3 rounded-lg border border-blue-500/30 bg-blue-500/5">
+            {showViewCta ? (
+              <div className="mt-auto pt-2 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-blue-300 font-semibold mb-0.5">
-                    Recommended role
-                  </p>
-                  <p className="text-sm font-medium text-white">
-                    {recommendedRole}
-                  </p>
+                  {startup?.openRoles !== undefined && (
+                    <div>
+                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Open Roles</div>
+                      <Badge variant="outline" className="bg-transparent border-gray-700 text-gray-300 text-xs font-medium py-0.5">
+                        {startup.openRoles} role{startup.openRoles !== 1 ? 's' : ''}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
                 <Button
                   size="sm"
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 ml-auto shrink-0 font-semibold rounded-lg"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setSelectedStartup(startup);
+                    navigate(`/startup-details/${startup?.original_id || startup?.id}`);
                   }}
                 >
-                  Apply
+                  View Startup
                 </Button>
               </div>
-            )}
-
-            {/* Other Roles */}
-            {startup?.roles && Object.keys(startup.roles).length > 0 && (
-              <div className="space-y-2 mt-auto">
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setExpandedRoles(!expandedRoles);
-                  }}
-                  className="w-full flex justify-between items-center text-sm text-gray-300 hover:text-white transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <Briefcase className="w-4 h-4" />
-                    Roles needed ({Object.keys(startup.roles).length})
-                  </span>
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${expandedRoles ? "rotate-180" : ""
-                      }`}
-                  />
-                </button>
-
-                {expandedRoles && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-2"
-                  >
-                    {Object.entries(startup.roles)
-                      .filter(([role]) => role !== recommendedRole)
-                      .map(([role]) => (
-                        <div
-                          key={role}
-                          className="flex justify-between items-center p-2 rounded-md bg-gray-800 border border-gray-700"
-                        >
-                          <span className="text-sm text-gray-200">{role}</span>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setSelectedStartup(startup);
-                              setSelectedRole(role);
-                            }}
-                          >
-                            Apply
-                          </Button>
-                        </div>
-                      ))}
-                  </motion.div>
+            ) : (
+              <>
+                {/* Recommended Role */}
+                {recommendedRole && startup?.roles && startup.roles[recommendedRole] && (
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-blue-500/30 bg-blue-500/5">
+                    <div>
+                      <p className="text-xs text-blue-300 font-semibold mb-0.5">
+                        Recommended role
+                      </p>
+                      <p className="text-sm font-medium text-white">
+                        {recommendedRole}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedStartup(startup);
+                      }}
+                    >
+                      Apply
+                    </Button>
+                  </div>
                 )}
-              </div>
-            )}
-            {/* Fallback array of rolesNeeded from Discovery Feed */}
-            {startup?.rolesNeeded && Array.isArray(startup.rolesNeeded) && startup.rolesNeeded.length > 0 && !startup?.roles && (
-               <div className="mt-auto pt-2 flex items-center justify-between">
-                 <div>
-                   <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Roles Needed</div>
-                   <div className="flex flex-wrap gap-2">
-                     {startup.rolesNeeded.slice(0, 3).map((role, i) => (
-                       <Badge key={i} variant="outline" className="bg-transparent border-gray-700 text-gray-300 text-[10px] py-0">
-                         {role}
-                       </Badge>
-                     ))}
-                     {startup.rolesNeeded.length > 3 && (
-                       <span className="text-[10px] text-gray-500 pt-0.5">+{startup.rolesNeeded.length - 3} more</span>
-                     )}
+
+                {/* Other Roles */}
+                {startup?.roles && Object.keys(startup.roles).length > 0 && (
+                  <div className="space-y-2 mt-auto">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setExpandedRoles(!expandedRoles);
+                      }}
+                      className="w-full flex justify-between items-center text-sm text-gray-300 hover:text-white transition"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Briefcase className="w-4 h-4" />
+                        Roles needed ({Object.keys(startup.roles).length})
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${expandedRoles ? "rotate-180" : ""
+                          }`}
+                      />
+                    </button>
+
+                    {expandedRoles && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        transition={{ duration: 0.2 }}
+                        className="space-y-2"
+                      >
+                        {Object.entries(startup.roles)
+                          .filter(([role]) => role !== recommendedRole)
+                          .map(([role]) => (
+                            <div
+                              key={role}
+                              className="flex justify-between items-center p-2 rounded-md bg-gray-800 border border-gray-700"
+                            >
+                              <span className="text-sm text-gray-200">{role}</span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setSelectedStartup(startup);
+                                  setSelectedRole(role);
+                                }}
+                              >
+                                Apply
+                              </Button>
+                            </div>
+                          ))}
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+                {/* Fallback array of rolesNeeded from Discovery Feed */}
+                {startup?.rolesNeeded && Array.isArray(startup.rolesNeeded) && startup.rolesNeeded.length > 0 && !startup?.roles && (
+                   <div className="mt-auto pt-2 flex items-center justify-between">
+                     <div>
+                       <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Roles Needed</div>
+                       <div className="flex flex-wrap gap-2">
+                         {startup.rolesNeeded.slice(0, 3).map((role, i) => (
+                           <Badge key={i} variant="outline" className="bg-transparent border-gray-700 text-gray-300 text-[10px] py-0">
+                             {role}
+                           </Badge>
+                         ))}
+                         {startup.rolesNeeded.length > 3 && (
+                           <span className="text-[10px] text-gray-500 pt-0.5">+{startup.rolesNeeded.length - 3} more</span>
+                         )}
+                       </div>
+                     </div>
+                     <Button
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 ml-2 shrink-0"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedStartup(startup);
+                        }}
+                      >
+                        Apply Now
+                     </Button>
                    </div>
-                 </div>
-                 <Button
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 ml-2 shrink-0"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setSelectedStartup(startup);
-                    }}
-                  >
-                    Apply Now
-                 </Button>
-               </div>
+                )}
+              </>
             )}
             
           </div>
