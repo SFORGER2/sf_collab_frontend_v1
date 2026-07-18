@@ -59,6 +59,7 @@ import AdminPage from "./components/pages/admin/admin.jsx";
 import DiscoverUsers from "./components/discover-users/DiscoverUsers.jsx";
 import AIMatchmakingPage from "./components/pages/matchmaking/AIMatchmakingPage.jsx";
 import AINewsPage from "./components/pages/aiNews/AINewsPage.jsx";
+import AINewsDetailPage from "./components/pages/aiNews/AINewsDetailPage.jsx";
 import VerifyEmail from "./components/pages/verifyEmail/VerifyEmail.jsx";
 import JoinSF from "./components/pages/joinSF/JoinSF.jsx";
 import Influencer from "./components/pages/influencer/Influencer.jsx";
@@ -409,6 +410,7 @@ export default function App() {
                     <Route path="discover-users" element={<DiscoverUsers />} />
                     <Route path="ai-matchmaking" element={<AIMatchmakingPage />} />
                     <Route path="ai-news" element={<AINewsPage />} />
+                    <Route path="ai-news/:id" element={<AINewsDetailPage />} />
 
                     {/* Mentorship */}
                     <Route path="mentors" element={<MentorshipDiscovery />} />
