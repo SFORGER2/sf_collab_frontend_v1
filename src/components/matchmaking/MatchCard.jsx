@@ -133,7 +133,14 @@ function MatchCard({ match, className, compact = false }) {
     }
   };
 
-  const renderCta = () => {
+  const handlePrimaryAction = (e) => {
+    e?.preventDefault?.();
+    if (match.ctaOnClick) {
+      match.ctaOnClick(match);
+    }
+  };
+
+  const renderCta = () => { // eslint-disable-line no-unused-vars
     const hasPrimary = Boolean(match.ctaLabel && (match.ctaHref || match.ctaOnClick));
     const hasSecondary = Boolean(match.secondaryCtaLabel && match.secondaryCtaOnClick);
 
@@ -174,8 +181,9 @@ function MatchCard({ match, className, compact = false }) {
         )}
       </div>
     );
-  }
-  const buttonClasses = 'w-full sm:w-auto bg-white text-slate-950 hover:bg-white/90';
+  };
+
+  const buttonClasses = 'w-full sm:w-auto bg-white text-slate-955 hover:bg-white/90';
 
   const renderActions = () => {
     if (match.kind === 'startup') {

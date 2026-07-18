@@ -8,6 +8,7 @@ import {
   Clock, Tag, User, Calendar, FileText, MessageCircle, Send,
   ExternalLink, Loader2, AlertCircle
 } from "lucide-react";
+import ImpactScoreIndicator, { getDeterministicScore } from "@/components/common/ImpactScoreIndicator";
 
 const API_URL = import.meta.env.VITE_API_URL || "/api";
 
@@ -106,7 +107,6 @@ export default function KnowledgeDetails() {
   const [commentsPage, setCommentsPage]   = useState(1);
   const [commentsTotalPages, setCommentsTotalPages] = useState(1);
 
-  // ── Fetch post ──────────────────────────────────────────────────────────────
   const fetchPost = useCallback(async () => {
     if (!id) { setError("No resource ID provided"); setLoading(false); return; }
     try {
@@ -403,10 +403,11 @@ export default function KnowledgeDetails() {
 
             {/* Title & description */}
             <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
-              <div className="flex flex-wrap gap-2 mb-4">
+              <div className="flex flex-wrap items-center gap-3 mb-4">
                 <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs px-3 py-1 rounded-full">
                   {post.category}
                 </span>
+                <ImpactScoreIndicator score={post.impactScore ?? post.impact_score ?? getDeterministicScore(post.id)} />
               </div>
 
               <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3 leading-tight">
