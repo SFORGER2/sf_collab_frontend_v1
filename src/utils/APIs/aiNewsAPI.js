@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { API_CONFIG, requestInterceptor, requestErrorInterceptor, responseInterceptor, responseErrorInterceptor } from './interceptors';
-import api from './interceptors';
 
 const api = axios.create(API_CONFIG);
 api.interceptors.request.use(requestInterceptor, requestErrorInterceptor);
@@ -19,6 +18,14 @@ export const aiNewsAPI = {
 
   enrichNews: async () => {
     const response = await api.post("/ai-news/ainews/enrich");
+    return response.data;
+  },
+  /**
+   * Fetch personalized AI news digest.
+   * GET /api/ai-news/ainews/digest
+   */
+  getDigest: async (params = {}) => {
+    const response = await api.get('/ai-news/ainews/digest', { params });
     return response.data;
   },
   /**
