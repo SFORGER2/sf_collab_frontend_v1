@@ -62,9 +62,9 @@ export default function ArticleCard({ article }) {
       <div>
         {/* Card Header with Badges */}
         <CardHeader className="p-5 pb-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-start sm:items-center justify-between gap-1.5 sm:gap-2">
             {/* Impact & AI Enriched */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <Badge
                 variant="outline"
                 className={cn('flex items-center gap-1 border px-2.5 py-1 text-[11px] font-medium tracking-wide uppercase', impactColor)}
@@ -116,25 +116,45 @@ export default function ArticleCard({ article }) {
 
       {/* Footer with Tags, Entities, and CTA */}
       <CardFooter className="p-5 pt-0 flex flex-col items-start gap-4">
-        {/* Tags / Entities line */}
-        {(tags.length > 0 || entities.length > 0) && (
-          <div className="flex flex-wrap gap-1.5 w-full">
-            {tags.map((tag) => (
-              <span
-                key={tag}
-                className="text-[10px] bg-slate-900 border border-slate-800 text-slate-300 font-medium px-2 py-0.5 rounded-md"
-              >
-                #{tag}
-              </span>
-            ))}
-            {entities.map((ent) => (
-              <span
-                key={ent}
-                className="text-[10px] bg-blue-950/20 border border-blue-900/30 text-blue-300 font-medium px-2 py-0.5 rounded-md"
-              >
-                {ent}
-              </span>
-            ))}
+        {/* Tags & Entities Section */}
+        {ai_enriched && (tags.length > 0 || entities.length > 0) && (
+          <div className="space-y-3 w-full text-left">
+            {tags.length > 0 && (
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
+                  Tags
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {tags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="outline"
+                      className="text-[10px] bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition-colors py-0.5 px-2 font-medium animate-in fade-in duration-300"
+                    >
+                      #{tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {entities.length > 0 && (
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
+                  Entities
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {entities.map((ent) => (
+                    <Badge
+                      key={ent}
+                      variant="outline"
+                      className="text-[10px] bg-blue-950/20 border border-blue-900/30 text-blue-300 hover:bg-blue-900/20 transition-colors py-0.5 px-2 font-medium animate-in fade-in duration-300"
+                    >
+                      {ent}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
