@@ -28,6 +28,7 @@ import { paymentAPI } from '@/utils/APIs/paymentAPI';
 import AdminSendAnnouncementSection from './SendAnnouncementsSection';
 import AdminApplicationsSection from './ApplicationsAdminSection';
 import AdminFeedbackSection from './FeedbackAdminSection';
+import AdminRefreshNewsSection from './AdminRefreshNewsSection';
 import { errorAPI } from '@/utils/APIs/errorAPI';
 import { Trash2, Search, Users as UsersIcon, Rocket, AlertCircle, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -422,6 +423,7 @@ const AdminDashboard = () => {
           />
           <AdminIdeasReviewSection />
           <AdminSendAnnouncementSection />
+          <AdminRefreshNewsSection />
 
           {/* Users & Startups List */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
