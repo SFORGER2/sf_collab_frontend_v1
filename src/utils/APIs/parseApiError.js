@@ -8,7 +8,7 @@
  * @typedef {Object} ParsedError
  * @property {string} title       - Short, capitalised error heading
  * @property {string} message     - Full, human-readable explanation
- * @property {'network'|'auth'|'forbidden'|'server'|'unknown'} type
+ * @property {'network'|'auth'|'forbidden'|'api'|'server'|'unknown'} type
  */
 
 /**
@@ -56,7 +56,18 @@ export function parseApiError(error) {
     };
   }
 
-  // ── 5xx Server errors ──────────────────────────────────────────────────────
+  // ── 4xx API errors (excluding 401/403 which are handled above) ──────────────
+  if (status >= 400 && status < 500) {
+    return {
+      type: 'api',
+      title: 'Request Failed',
+      message:
+        error?.response?.data?.error ||
+        "Something went wrong with that request. Please try again.",
+    };
+  }
+
+  // ── 5xx Server errors ───────────────────────────────────────────────────────
   if (status >= 500) {
     return {
       type: 'server',
@@ -71,6 +82,6 @@ export function parseApiError(error) {
     type: 'unknown',
     title: 'Something Went Wrong',
     message:
-      "We couldn't load your recommendations right now. Give it another shot.",
+      "We couldn't load this right now. Give it another shot.",
   };
 }
