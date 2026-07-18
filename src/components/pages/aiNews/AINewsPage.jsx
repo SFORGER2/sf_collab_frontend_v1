@@ -6,13 +6,28 @@ import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import SearchBar from '@/components/common/SearchBar';
+import CategoryFilter from '@/components/common/CategoryFilter';
+import SourceFilter from '@/components/common/SourceFilter';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function AINewsPage() {
+  // Personalized Tab State
   const [digestData, setDigestData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
+  // Global Tab State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSource, setSelectedSource] = useState('');
+  const [selectedSort, setSelectedSort] = useState('latest');
+  const [globalArticles, setGlobalArticles] = useState([]);
+  const [globalLoading, setGlobalLoading] = useState(true);
+  const [globalError, setGlobalError] = useState(null);
+
+  // Fetch Personalized News
   const fetchDigest = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -31,9 +46,47 @@ export default function AINewsPage() {
     }
   }, []);
 
+  // Fetch Global Ecosystem News
+  const fetchGlobalNews = useCallback(async () => {
+    setGlobalLoading(true);
+    setGlobalError(null);
+    try {
+      const params = {};
+      if (searchQuery) params.search = searchQuery;
+      if (selectedCategory) params.category = selectedCategory;
+      if (selectedSource) params.source = selectedSource;
+      if (selectedSort) params.sort = selectedSort;
+
+      const response = await aiNewsAPI.getNews(params);
+      
+      const rawData = response?.data || response;
+      let parsedArticles = [];
+      if (Array.isArray(rawData)) {
+        parsedArticles = rawData;
+      } else if (Array.isArray(rawData?.articles)) {
+        parsedArticles = rawData.articles;
+      } else if (Array.isArray(rawData?.data)) {
+        parsedArticles = rawData.data;
+      } else if (Array.isArray(rawData?.data?.articles)) {
+        parsedArticles = rawData.data.articles;
+      }
+
+      setGlobalArticles(parsedArticles);
+    } catch (err) {
+      console.error('AINewsPage: Failed to load global news feed', err);
+      setGlobalError(err);
+    } finally {
+      setGlobalLoading(false);
+    }
+  }, [searchQuery, selectedCategory, selectedSource, selectedSort]);
+
   useEffect(() => {
     fetchDigest();
   }, [fetchDigest]);
+
+  useEffect(() => {
+    fetchGlobalNews();
+  }, [fetchGlobalNews]);
 
   // Loading skeleton layout matching the article card grid
   const renderLoadingSkeletons = () => (
@@ -191,18 +244,82 @@ export default function AINewsPage() {
           )}
         </TabsContent>
 
-        {/* Tab 2: Global Ecosystem (Placeholder) */}
-        <TabsContent value="global" className="pt-6">
-          <EmptyState
-            title="Global Feed Coming Soon"
-            description="We are currently index-aggregating global startup feeds. Check back soon for broader global market news."
-            buttonText="Back to For You"
-            onButtonClick={() => {
-              // Direct state change is not possible on Radix TabsPrimitive without controlled value,
-              // but we can let the user switch naturally.
-            }}
-            icon={Rss}
-          />
+        {/* Tab 2: Global Ecosystem */}
+        <TabsContent value="global" className="space-y-6 pt-2">
+          {/* Controls Bar */}
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between border-b border-white/5 pb-6">
+            <div className="flex-1 w-full max-w-md">
+              <SearchBar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                placeholder="Search articles..."
+              />
+            </div>
+            
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <span className="text-sm text-slate-400 font-medium whitespace-nowrap">Sort By:</span>
+              <Select value={selectedSort} onValueChange={setSelectedSort}>
+                <SelectTrigger className="w-full md:w-[180px] bg-slate-900 border-white/10 text-white rounded-xl h-10">
+                  <SelectValue placeholder="Sort By" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-white/10 text-white">
+                  <SelectItem value="latest">Latest</SelectItem>
+                  <SelectItem value="oldest">Oldest</SelectItem>
+                  <SelectItem value="impact">Highest Impact</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Categories and Sources Filters */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Categories</span>
+              <CategoryFilter
+                selectedCategory={selectedCategory}
+                onCategoryChange={(cat) => setSelectedCategory(cat === selectedCategory ? '' : cat)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Sources</span>
+              <SourceFilter
+                selectedSource={selectedSource}
+                onSourceChange={(src) => setSelectedSource(src === selectedSource ? '' : src)}
+              />
+            </div>
+          </div>
+
+          {/* Results Grid */}
+          {globalLoading ? (
+            renderLoadingSkeletons()
+          ) : globalError ? (
+            <ErrorState
+              title="Failed to Load Global Feed"
+              message="An error occurred while fetching the ecosystem articles. Please try again."
+              onRetry={fetchGlobalNews}
+              type="server"
+            />
+          ) : globalArticles.length === 0 ? (
+            <EmptyState
+              title="No Articles Found"
+              description="No articles match your search or filter selections. Try adjusting your query or resetting filters."
+              icon={Rss}
+              buttonText="Clear Filters"
+              onButtonClick={() => {
+                setSearchQuery('');
+                setSelectedCategory('');
+                setSelectedSource('');
+                setSelectedSort('latest');
+              }}
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {globalArticles.map((article, idx) => (
+                <ArticleCard key={article.id || idx} article={article} />
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
