@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, ExternalLink, Flame, ShieldAlert, HeartHandshake } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatFriendlyDate } from '@/utils/formatFriendlyDate';
 
 // Helper to determine sentiment badge classes and icons
 const getSentimentConfig = (sentiment) => {
@@ -41,20 +42,60 @@ export default function ArticleCard({ article }) {
     title,
     summary,
     url,
-    impactScore = 0,
+    image_url = '',
+    impact_score = 0,
     ai_enriched = false,
     sentiment = 'Neutral',
     entities = [],
     tags = [],
+    author = '',
+    source = '',
+    source_label = '',
+    category = '',
+    reading_time_min,
+    published_at = '',
   } = article;
 
   const sentimentConfig = getSentimentConfig(sentiment);
-  const impactColor = getImpactColor(impactScore);
+  const impactColor = getImpactColor(impact_score);
+
+  const coverImageUrl = image_url;
+  const sourceName = source_label || source;
+  const readingTimeLabel =
+    reading_time_min !== undefined && reading_time_min !== null && reading_time_min !== ''
+      ? `${reading_time_min} min read`
+      : '';
+  const publishedDateLabel = published_at
+    ? formatFriendlyDate(published_at) ||
+      new Date(published_at).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : '';
 
   return (
     <Card className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 shadow-md backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-2xl hover:shadow-blue-500/5">
       {/* Glow Effect on Hover */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+      {/* Cover Image */}
+      <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950">
+        {coverImageUrl ? (
+          <img
+            src={coverImageUrl}
+            alt={title}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-tr from-slate-950 via-slate-900 to-indigo-950">
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.02)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+            <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+              <ExternalLink className="size-7 text-slate-500" />
+            </div>
+          </div>
+        )}
+      </div>
 
       <div>
         {/* Card Header with Badges */}
@@ -67,7 +108,7 @@ export default function ArticleCard({ article }) {
                 className={cn('flex items-center gap-1 border px-2.5 py-1 text-[11px] font-medium tracking-wide uppercase', impactColor)}
               >
                 <Flame className="size-3.5" />
-                Impact: {impactScore}
+                Impact: {impact_score}
               </Badge>
 
               {ai_enriched && (
@@ -77,6 +118,15 @@ export default function ArticleCard({ article }) {
                 >
                   <Sparkles className="size-3.5 fill-cyan-300/20" />
                   AI Enriched
+                </Badge>
+              )}
+
+              {category && (
+                <Badge
+                  variant="outline"
+                  className="flex items-center gap-1 border border-slate-500/30 bg-slate-500/10 px-2.5 py-1 text-[11px] font-medium uppercase text-slate-300 tracking-wide"
+                >
+                  {category}
                 </Badge>
               )}
             </div>
@@ -97,6 +147,27 @@ export default function ArticleCard({ article }) {
           <h3 className="text-lg font-bold text-white leading-snug group-hover:text-blue-400 transition-colors duration-200">
             {title}
           </h3>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+            {(author || sourceName) && (
+              <span className="font-medium text-slate-400">
+                {author}
+                {author && sourceName ? ` ${'\u00B7'} ` : ''}
+                {sourceName}
+              </span>
+            )}
+            {readingTimeLabel && (
+              <span className="flex items-center gap-1">
+                <span className="text-slate-600">{'\u00B7'}</span>
+                <span>{readingTimeLabel}</span>
+              </span>
+            )}
+            {publishedDateLabel && (
+              <span className="flex items-center gap-1">
+                <span className="text-slate-600">{'\u00B7'}</span>
+                <span>{publishedDateLabel}</span>
+              </span>
+            )}
+          </div>
           <p className="text-sm leading-relaxed text-slate-400 line-clamp-3">
             {summary}
           </p>
@@ -134,7 +205,7 @@ export default function ArticleCard({ article }) {
           rel="noopener noreferrer"
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white hover:text-slate-950"
         >
-          Read Article
+          Read Original
           <ExternalLink className="size-4" />
         </a>
       </CardFooter>
@@ -147,10 +218,17 @@ ArticleCard.propTypes = {
     title: PropTypes.string.isRequired,
     summary: PropTypes.string.isRequired,
     url: PropTypes.string.isRequired,
-    impactScore: PropTypes.number,
+    image_url: PropTypes.string,
+    impact_score: PropTypes.number,
     ai_enriched: PropTypes.bool,
     sentiment: PropTypes.string,
     entities: PropTypes.arrayOf(PropTypes.string),
     tags: PropTypes.arrayOf(PropTypes.string),
+    author: PropTypes.string,
+    source: PropTypes.string,
+    source_label: PropTypes.string,
+    category: PropTypes.string,
+    reading_time_min: PropTypes.number,
+    published_at: PropTypes.string,
   }).isRequired,
 };
