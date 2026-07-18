@@ -133,6 +133,48 @@ function MatchCard({ match, className, compact = false }) {
     }
   };
 
+  const renderCta = () => {
+    const hasPrimary = Boolean(match.ctaLabel && (match.ctaHref || match.ctaOnClick));
+    const hasSecondary = Boolean(match.secondaryCtaLabel && match.secondaryCtaOnClick);
+
+    if (!hasPrimary && !hasSecondary) return null;
+
+    const primaryClasses = 'w-full sm:w-auto bg-white text-slate-955 hover:bg-white/90 font-medium rounded-xl';
+    const secondaryClasses = 'w-full sm:w-auto border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white font-medium rounded-xl';
+
+    return (
+      <div className="flex w-full sm:w-auto items-center gap-2">
+        {hasSecondary && (
+          <Button
+            size="sm"
+            variant="outline"
+            className={secondaryClasses}
+            onClick={(e) => {
+              e.preventDefault();
+              match.secondaryCtaOnClick(match);
+            }}
+          >
+            {match.secondaryCtaLabel}
+          </Button>
+        )}
+        {hasPrimary && (
+          match.ctaHref && !match.ctaOnClick ? (
+            <Button asChild size="sm" className={primaryClasses}>
+              <a href={match.ctaHref}>{match.ctaLabel}</a>
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              className={primaryClasses}
+              onClick={match.ctaOnClick ? handlePrimaryAction : undefined}
+            >
+              {match.ctaLabel}
+            </Button>
+          )
+        )}
+      </div>
+    );
+  }
   const buttonClasses = 'w-full sm:w-auto bg-white text-slate-950 hover:bg-white/90';
 
   const renderActions = () => {
@@ -193,7 +235,7 @@ function MatchCard({ match, className, compact = false }) {
 
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-2">
-              <h3 className="min-w-0 truncate text-base font-semibold text-white sm:text-lg">
+              <h3 className="min-w-0 break-words text-base font-semibold text-white sm:text-lg">
                 {match.name}
               </h3>
               <Badge
@@ -217,7 +259,7 @@ function MatchCard({ match, className, compact = false }) {
           </div>
 
           <div className="flex shrink-0 flex-col items-end gap-1">
-            <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-right">
+            <div className="min-w-[80px] rounded-full border border-white/10 bg-white/5 px-3 py-1 text-right">
               <div className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Match score</div>
               <div className="text-lg font-semibold text-white">{score != null ? `${score}%` : '-'}</div>
             </div>
@@ -255,6 +297,22 @@ function MatchCard({ match, className, compact = false }) {
             <p className="text-sm text-slate-500">No reasons provided.</p>
           )}
         </div>
+
+        {/* Breakdown (optional) */}
+{match.breakdown && Object.keys(match.breakdown).length > 0 && (
+  <div className="mt-3 space-y-1">
+    <p className="text-xs uppercase tracking-wider text-slate-400">Match breakdown</p>
+    {Object.entries(match.breakdown).map(([key, value]) => (
+      <div key={key} className="flex items-center gap-2">
+        <span className="w-20 text-xs text-slate-400 capitalize">{key.replace('_', ' ')}</span>
+        <div className="flex-1 h-1.5 bg-slate-700 rounded-full">
+          <div className="h-1.5 bg-cyan-400 rounded-full" style={{ width: `${value}%` }} />
+        </div>
+        <span className="text-xs text-slate-300">{value}%</span>
+      </div>
+    ))}
+  </div>
+)}
 
         <div className="flex flex-col gap-3 border-t border-white/5 pt-4">
           <div className="text-xs text-slate-500">

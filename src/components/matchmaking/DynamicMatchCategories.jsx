@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import MatchCard from "./MatchCard";
+import { mapBackendMatchToCard } from '@/utils/matchMapping';
 
 // Fallback mock data in case no data is provided via props
 const MOCK_MATCH_DATA = {
@@ -26,7 +27,7 @@ const MOCK_MATCH_DATA = {
       meta: { skills: "Figma, User Research" }
     }
   ],
-  "Mentors for Your Startup": [], // This should be ignored
+  "Mentors for Your Startup": [],
   "Startups Looking for Your Skills": [
     {
       id: "3",
@@ -44,21 +45,18 @@ const MOCK_MATCH_DATA = {
 };
 
 const MatchCategorySection = ({ title, matches }) => {
-  // Ignore missing or empty categories
   if (!matches || matches.length === 0) return null;
+  const cardMatches = matches.map(mapBackendMatchToCard);
 
   return (
     <div className="mb-10 w-full">
       <h3 className="mb-6 px-4 text-xl font-bold text-white tracking-wide">
         {title}
       </h3>
-
-      {/* Horizontally scrollable container */}
-      {/* Using snap-x for smooth carousel-like scrolling */}
-      <div className="flex gap-6 overflow-x-auto px-4 pb-6 pt-2 snap-x snap-mandatory scroll-smooth scrollbar-hide">
-        {matches.map((match, idx) => (
-          <div key={match.id || idx} className="w-[320px] sm:w-[380px] shrink-0 snap-center sm:snap-start">
-            <MatchCard match={match} compact={false} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4 pb-6 pt-2">
+        {cardMatches.map((cardMatch, idx) => (
+          <div key={cardMatch.id || idx} className="h-full">
+            <MatchCard match={cardMatch} compact={false} className="h-full" />
           </div>
         ))}
       </div>
@@ -67,10 +65,8 @@ const MatchCategorySection = ({ title, matches }) => {
 };
 
 export default function DynamicMatchCategories({ matchData }) {
-  // Use provided data or fallback to mock data
   const dataToRender = matchData || MOCK_MATCH_DATA;
 
-  // Safety check
   if (!dataToRender || typeof dataToRender !== 'object') {
     return null;
   }
@@ -83,7 +79,6 @@ export default function DynamicMatchCategories({ matchData }) {
       className="w-full py-6"
     >
       {Object.entries(dataToRender)
-        // Filter out empty arrays
         .filter(([_, matches]) => Array.isArray(matches) && matches.length > 0)
         .map(([categoryTitle, matches]) => (
           <MatchCategorySection
