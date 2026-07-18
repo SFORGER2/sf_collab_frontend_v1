@@ -1,28 +1,35 @@
-import axios from 'axios';
-import { API_CONFIG, requestInterceptor, requestErrorInterceptor, responseInterceptor, responseErrorInterceptor } from './interceptors';
 import api from './interceptors';
 
-const api = axios.create(API_CONFIG);
-api.interceptors.request.use(requestInterceptor, requestErrorInterceptor);
-api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
-
 export const aiNewsAPI = {
+  /**
+   * Fetch AI news articles (unfiltered).
+   * GET /api/ai-news/ainews
+   */
   getArticles: async () => {
     const response = await api.get('/ai-news/ainews');
     return response.data;
   },
-  
-   scrapeNews: async () => {
+
+  /**
+   * Scrape latest news from external feeds.
+   * POST /api/ai-news/ainews/scrape
+   */
+  scrapeNews: async () => {
     const response = await api.post("/ai-news/ainews/scrape");
     return response.data;
   },
 
+  /**
+   * Enrich news articles using LLMs/enrichment service.
+   * POST /api/ai-news/ainews/enrich
+   */
   enrichNews: async () => {
     const response = await api.post("/ai-news/ainews/enrich");
     return response.data;
   },
+
   /**
-   * Fetch AI news articles.
+   * Fetch AI news articles with search, sorting, category, and source query parameters.
    * GET /api/ai-news/ainews
    */
   getAINews: async (params = {}) => {
@@ -31,11 +38,38 @@ export const aiNewsAPI = {
   },
 
   /**
-   * Fetch AI News articles dynamically from the backend with search query support.
+   * Fetch AI News articles dynamically from the backend with query support.
    * GET /api/ai-news/ainews
    */
   getNews: async (params = {}) => {
     const response = await api.get('/ai-news/ainews', { params });
+    return response.data;
+  },
+
+  /**
+   * Fetch personalized AI News digest based on startup profile.
+   * GET /api/ai-news/ainews/digest
+   */
+  getDigest: async () => {
+    const response = await api.get('/ai-news/ainews/digest');
+    return response.data;
+  },
+
+  /**
+   * Fetch available categories dynamically.
+   * GET /api/ai-news/ainews/categories
+   */
+  getCategories: async () => {
+    const response = await api.get('/ai-news/ainews/categories');
+    return response.data;
+  },
+
+  /**
+   * Fetch available news sources dynamically.
+   * GET /api/ai-news/ainews/sources
+   */
+  getSources: async () => {
+    const response = await api.get('/ai-news/ainews/sources');
     return response.data;
   },
 };
