@@ -1,4 +1,6 @@
 import api from './interceptors';
+import axios from 'axios';
+import { API_CONFIG, requestInterceptor, requestErrorInterceptor, responseInterceptor, responseErrorInterceptor } from './interceptors';
 
 export const aiNewsAPI = {
   /**
@@ -29,7 +31,15 @@ export const aiNewsAPI = {
   },
 
   /**
-   * Fetch AI news articles with search, sorting, category, and source query parameters.
+   * Fetch personalized AI news digest.
+   * GET /api/ai-news/ainews/digest
+   */
+  getDigest: async (params = {}) => {
+    const response = await api.get('/ai-news/ainews/digest', { params });
+    return response.data;
+  },
+  /**
+   * Fetch AI news articles.
    * GET /api/ai-news/ainews
    */
   getAINews: async (params = {}) => {
@@ -47,7 +57,7 @@ export const aiNewsAPI = {
   },
 
   /**
-   * Fetch personalized AI News digest based on startup profile.
+   * Fetch personalized AI News digest.
    * GET /api/ai-news/ainews/digest
    */
   getDigest: async () => {
@@ -56,7 +66,7 @@ export const aiNewsAPI = {
   },
 
   /**
-   * Fetch available categories dynamically.
+   * Fetch list of category tags.
    * GET /api/ai-news/ainews/categories
    */
   getCategories: async () => {
