@@ -6,7 +6,7 @@
  *   title    {string}   - Bold heading  (default: "Something Went Wrong")
  *   message  {string}   - Body copy     (default: generic fallback)
  *   onRetry  {function} - Called when the Retry button is clicked (optional)
- *   type     {'network'|'auth'|'forbidden'|'server'|'unknown'} - Controls icon (optional)
+ *   type     {'network'|'auth'|'forbidden'|'api'|'server'|'unknown'} - Controls icon (optional)
  *   className {string}  - Extra Tailwind classes for the wrapper (optional)
  */
 
@@ -49,6 +49,14 @@ const TYPE_CONFIG = {
     bgColor: 'bg-rose-500/10',
     badgeColor: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
     badgeLabel: 'Forbidden',
+  },
+  api: {
+    Icon: CircleAlert,
+    iconColor: 'text-yellow-400',
+    ringColor: 'ring-yellow-500/20',
+    bgColor: 'bg-yellow-500/10',
+    badgeColor: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30',
+    badgeLabel: 'Request Error',
   },
   server: {
     Icon: ServerCrash,
@@ -136,7 +144,7 @@ ErrorState.propTypes = {
   title: PropTypes.string,
   message: PropTypes.string,
   onRetry: PropTypes.func,
-  type: PropTypes.oneOf(['network', 'auth', 'forbidden', 'server', 'unknown']),
+  type: PropTypes.oneOf(['network', 'auth', 'forbidden', 'api', 'server', 'unknown']),
   className: PropTypes.string,
 };
 
