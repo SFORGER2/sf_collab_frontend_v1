@@ -30,6 +30,15 @@ export const aiNewsAPI = {
     const response = await api.get('/ai-news/ainews/sources');
     return response.data;
   },
+
+  /**
+   * Fetch AI News articles dynamically from the backend with search query support.
+   * GET /api/ai-news/ainews
+   */
+  getNews: async (params = {}) => {
+    const response = await api.get('/ai-news/ainews', { params });
+    return response.data;
+  },
 };
 
 export default aiNewsAPI;
