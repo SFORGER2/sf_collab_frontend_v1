@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { API_CONFIG, requestInterceptor, requestErrorInterceptor, responseInterceptor, responseErrorInterceptor } from './interceptors';
-import api from './interceptors';
 
 const api = axios.create(API_CONFIG);
 api.interceptors.request.use(requestInterceptor, requestErrorInterceptor);
