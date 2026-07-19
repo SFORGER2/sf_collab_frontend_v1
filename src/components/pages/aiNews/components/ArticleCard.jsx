@@ -41,7 +41,7 @@ const getImpactColor = (score) => {
 export default function ArticleCard({ article }) {
   const {
     title,
-    summary,
+    summary = 'No summary available.', // fallback for null/undefined
     url,
     image_url = '',
     impact_score = 0,
@@ -55,6 +55,7 @@ export default function ArticleCard({ article }) {
     category = '',
     reading_time_min,
     published_at = '',
+    id,
   } = article;
 
   const sentimentConfig = getSentimentConfig(sentiment);
@@ -75,7 +76,7 @@ export default function ArticleCard({ article }) {
       })
     : '';
 
-  const detailUrl = article.id ? `/ai-news/${article.id}` : null;
+  const detailUrl = id ? `/ai-news/${id}` : null;
 
   return (
     <Card className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 shadow-md backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-2xl hover:shadow-blue-500/5">
@@ -147,9 +148,19 @@ export default function ArticleCard({ article }) {
 
         {/* Card Content with Title & Description */}
         <CardContent className="p-5 pt-0 pb-4 space-y-3">
-          <h3 className="text-lg font-bold text-white leading-snug group-hover:text-blue-400 transition-colors duration-200">
-            {title}
-          </h3>
+          {/* Single Title – conditionally wrapped as a Link */}
+          {detailUrl ? (
+            <Link to={detailUrl} className="block group-hover:text-blue-400 transition-colors duration-200">
+              <h3 className="text-lg font-bold text-white leading-snug">
+                {title}
+              </h3>
+            </Link>
+          ) : (
+            <h3 className="text-lg font-bold text-white leading-snug group-hover:text-blue-400 transition-colors duration-200">
+              {title}
+            </h3>
+          )}
+
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
             {(author || sourceName) && (
               <span className="font-medium text-slate-400">
@@ -171,17 +182,7 @@ export default function ArticleCard({ article }) {
               </span>
             )}
           </div>
-          {detailUrl ? (
-            <Link to={detailUrl} className="block group-hover:text-blue-400 transition-colors duration-200">
-              <h3 className="text-lg font-bold text-white leading-snug">
-                {title}
-              </h3>
-            </Link>
-          ) : (
-            <h3 className="text-lg font-bold text-white leading-snug group-hover:text-blue-400 transition-colors duration-200">
-              {title}
-            </h3>
-          )}
+
           <p className="text-sm leading-relaxed text-slate-400 line-clamp-3">
             {summary}
           </p>
@@ -232,16 +233,6 @@ export default function ArticleCard({ article }) {
           </div>
         )}
 
-        {/* Read Article Action button */}
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white hover:text-slate-950"
-        >
-          Read Original
-          <ExternalLink className="size-4" />
-        </a>
         {/* Action Buttons */}
         <div className="flex items-center gap-2 w-full">
           {detailUrl && (
@@ -272,7 +263,7 @@ export default function ArticleCard({ article }) {
 ArticleCard.propTypes = {
   article: PropTypes.shape({
     title: PropTypes.string.isRequired,
-    summary: PropTypes.string.isRequired,
+    summary: PropTypes.string, // now optional
     url: PropTypes.string.isRequired,
     image_url: PropTypes.string,
     impact_score: PropTypes.number,
@@ -286,5 +277,6 @@ ArticleCard.propTypes = {
     category: PropTypes.string,
     reading_time_min: PropTypes.number,
     published_at: PropTypes.string,
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), // added for detailUrl
   }).isRequired,
 };

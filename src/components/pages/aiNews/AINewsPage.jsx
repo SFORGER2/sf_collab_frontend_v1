@@ -16,12 +16,12 @@ export default function AINewsPage() {
   const [digestData, setDigestData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [personalizedCategory, setPersonalizedCategory] = useState('All');
 
-  // Global Tab State
+  // Global Tab State – all filters start empty (no filters)
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedSource, setSelectedSource] = useState('');
+  const [globalCategory, setGlobalCategory] = useState(''); // empty = no filter
+  const [selectedSource, setSelectedSource] = useState(''); // empty = no filter
   const [selectedSort, setSelectedSort] = useState('latest');
   const [globalArticles, setGlobalArticles] = useState([]);
   const [globalLoading, setGlobalLoading] = useState(true);
@@ -46,14 +46,14 @@ export default function AINewsPage() {
     }
   }, []);
 
-  // Fetch Global Ecosystem News
+  // Fetch Global Ecosystem News – only include params that have truthy values
   const fetchGlobalNews = useCallback(async () => {
     setGlobalLoading(true);
     setGlobalError(null);
     try {
       const params = {};
       if (searchQuery) params.search = searchQuery;
-      if (selectedCategory) params.category = selectedCategory;
+      if (globalCategory) params.category = globalCategory;
       if (selectedSource) params.source = selectedSource;
       if (selectedSort) params.sort = selectedSort;
 
@@ -78,7 +78,7 @@ export default function AINewsPage() {
     } finally {
       setGlobalLoading(false);
     }
-  }, [searchQuery, selectedCategory, selectedSource, selectedSort]);
+  }, [searchQuery, globalCategory, selectedSource, selectedSort]);
 
   useEffect(() => {
     fetchDigest();
@@ -88,7 +88,7 @@ export default function AINewsPage() {
     fetchGlobalNews();
   }, [fetchGlobalNews]);
 
-  // Loading skeleton layout matching the article card grid
+  // Loading skeleton
   const renderLoadingSkeletons = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -114,12 +114,12 @@ export default function AINewsPage() {
     </div>
   );
 
-  // Extract categories dynamically
+  // Extract categories from digest for the "For You" tab
   const categories = ['All', ...new Set((digestData?.articles || []).map(a => a.category).filter(Boolean))];
 
-  const filteredArticles = selectedCategory === 'All'
+  const filteredArticles = personalizedCategory === 'All'
     ? (digestData?.articles || [])
-    : (digestData?.articles || []).filter(a => a.category === selectedCategory);
+    : (digestData?.articles || []).filter(a => a.category === personalizedCategory);
 
   return (
     <div className="min-h-screen w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 bg-black text-white">
@@ -144,13 +144,19 @@ export default function AINewsPage() {
       {/* Tabs Layout */}
       <Tabs defaultValue="for-you" className="w-full space-y-6">
         <TabsList className="grid grid-cols-2 w-full sm:w-auto sm:inline-flex bg-slate-900 border border-white/10 p-1 rounded-xl">
-          <TabsTrigger value="for-you" className="px-4 py-2 text-sm font-semibold tracking-wide">
-            For You
-          </TabsTrigger>
-          <TabsTrigger value="global" className="px-4 py-2 text-sm font-semibold tracking-wide">
-            Global Ecosystem
-          </TabsTrigger>
-        </TabsList>
+  <TabsTrigger
+    value="for-you"
+    className="px-4 py-2 text-sm font-semibold tracking-wide data-[state=inactive]:text-slate-400 data-[state=active]:text-white data-[state=active]:bg-blue-500 data-[state=active]:rounded-lg"
+  >
+    For You
+  </TabsTrigger>
+  <TabsTrigger
+    value="global"
+    className="px-4 py-2 text-sm font-semibold tracking-wide data-[state=inactive]:text-slate-400 data-[state=active]:text-white data-[state=active]:bg-blue-500 data-[state=active]:rounded-lg"
+  >
+    Global Ecosystem
+  </TabsTrigger>
+</TabsList>
 
         {/* Tab 1: For You */}
         <TabsContent value="for-you" className="space-y-6">
@@ -165,7 +171,7 @@ export default function AINewsPage() {
             />
           ) : (
             <>
-              {/* Profile Prompt Banner (When personalized is false) */}
+              {/* Profile Prompt Banner */}
               {digestData?.personalized === false && (
                 <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-orange-500/5 p-4 sm:p-6 backdrop-blur-xl">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
@@ -179,7 +185,7 @@ export default function AINewsPage() {
                 </div>
               )}
 
-              {/* Personalized Interests Badges (When personalized is true) */}
+              {/* Personalized Interests Badges */}
               {digestData?.personalized === true && Array.isArray(digestData.interests) && digestData.interests.length > 0 && (
                 <div className="flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/30 p-4 sm:p-5">
                   <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -199,15 +205,15 @@ export default function AINewsPage() {
                 </div>
               )}
 
-              {/* Category Filter Chips */}
+              {/* Category Filter Chips for personalized tab */}
               {digestData?.articles?.length > 0 && (
                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" data-testid="category-filter">
                   {categories.map((category) => (
                     <button
                       key={category}
-                      onClick={() => setSelectedCategory(category)}
+                      onClick={() => setPersonalizedCategory(category)}
                       className={`px-4 py-2 rounded-lg whitespace-nowrap transition-all text-sm font-medium border ${
-                        selectedCategory === category
+                        personalizedCategory === category
                           ? "bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/20"
                           : "bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"
                       }`}
@@ -218,7 +224,7 @@ export default function AINewsPage() {
                 </div>
               )}
 
-              {/* Recommendations list */}
+              {/* Articles list */}
               {!Array.isArray(digestData?.articles) || digestData.articles.length === 0 ? (
                 <EmptyState
                   title="No Articles Available"
@@ -230,7 +236,7 @@ export default function AINewsPage() {
                   title="No articles found."
                   description="Try another category."
                   buttonText="Clear Filters"
-                  onButtonClick={() => setSelectedCategory('All')}
+                  onButtonClick={() => setPersonalizedCategory('All')}
                   icon={Rss}
                 />
               ) : (
@@ -271,13 +277,13 @@ export default function AINewsPage() {
             </div>
           </div>
 
-          {/* Categories and Sources Filters */}
+          {/* Categories and Sources Filters – now using updated components */}
           <div className="space-y-4">
             <div className="space-y-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Categories</span>
               <CategoryFilter
-                selectedCategory={selectedCategory}
-                onCategoryChange={(cat) => setSelectedCategory(cat === selectedCategory ? '' : cat)}
+                selectedCategory={globalCategory}
+                onCategoryChange={(cat) => setGlobalCategory(cat || '')} // empty string = no filter
               />
             </div>
             
@@ -285,7 +291,7 @@ export default function AINewsPage() {
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Sources</span>
               <SourceFilter
                 selectedSource={selectedSource}
-                onSourceChange={(src) => setSelectedSource(src === selectedSource ? '' : src)}
+                onSourceChange={(src) => setSelectedSource(src || '')}
               />
             </div>
           </div>
@@ -303,12 +309,16 @@ export default function AINewsPage() {
           ) : globalArticles.length === 0 ? (
             <EmptyState
               title="No Articles Found"
-              description="No articles match your search or filter selections. Try adjusting your query or resetting filters."
+              description={
+                (globalCategory || selectedSource || searchQuery)
+                  ? "No articles match your current filters. Try adjusting your selections."
+                  : "No articles available at the moment."
+              }
               icon={Rss}
               buttonText="Clear Filters"
               onButtonClick={() => {
                 setSearchQuery('');
-                setSelectedCategory('');
+                setGlobalCategory('');
                 setSelectedSource('');
                 setSelectedSort('latest');
               }}

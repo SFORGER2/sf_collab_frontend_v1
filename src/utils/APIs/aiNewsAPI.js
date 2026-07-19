@@ -38,8 +38,9 @@ export const aiNewsAPI = {
     const response = await api.get('/ai-news/ainews/digest', { params });
     return response.data;
   },
+
   /**
-   * Fetch AI news articles.
+   * Fetch AI news articles with query parameters.
    * GET /api/ai-news/ainews
    */
   getAINews: async (params = {}) => {
@@ -48,20 +49,11 @@ export const aiNewsAPI = {
   },
 
   /**
-   * Fetch AI News articles dynamically from the backend with query support.
+   * Alias for getAINews (used in AINewsPage).
    * GET /api/ai-news/ainews
    */
   getNews: async (params = {}) => {
     const response = await api.get('/ai-news/ainews', { params });
-    return response.data;
-  },
-
-  /**
-   * Fetch personalized AI News digest.
-   * GET /api/ai-news/ainews/digest
-   */
-  getDigest: async () => {
-    const response = await api.get('/ai-news/ainews/digest');
     return response.data;
   },
 

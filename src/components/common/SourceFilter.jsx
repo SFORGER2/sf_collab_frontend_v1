@@ -16,13 +16,25 @@ export default function SourceFilter({ selectedSource, onSourceChange }) {
     setErrorMessage('');
     try {
       const response = await aiNewsAPI.getSources();
-      const list =
-        response?.sources ??
-        response?.data?.sources ??
-        response?.data ??
-        (Array.isArray(response) ? response : []);
+      let raw = response?.sources ?? response?.data?.sources ?? response?.data ?? response;
+      if (!Array.isArray(raw)) raw = [];
 
-      setSources(list);
+      // Normalize to objects with { id, name }
+      const normalized = raw.map((item, index) => {
+        if (typeof item === 'string') {
+          // If it's just a string, use it as both id and name (fallback)
+          return { id: item, name: item };
+        }
+        if (typeof item === 'object' && item !== null) {
+          // Extract the source key (id) and display label (name)
+          const id = item.source ?? item.id ?? item.name ?? item.label ?? `source-${index}`;
+          const name = item.source_label ?? item.name ?? item.label ?? String(id);
+          return { id: String(id), name: String(name) };
+        }
+        return { id: `source-${index}`, name: String(item) };
+      });
+
+      setSources(normalized);
     } catch (err) {
       setIsError(true);
       setErrorMessage(err?.message || 'Failed to load news sources.');
@@ -36,7 +48,6 @@ export default function SourceFilter({ selectedSource, onSourceChange }) {
     loadSources();
   }, [loadSources]);
 
-  // Loading State (Skeleton Chips)
   if (isLoading) {
     return (
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" data-testid="source-filter-loading">
@@ -47,7 +58,6 @@ export default function SourceFilter({ selectedSource, onSourceChange }) {
     );
   }
 
-  // Error State
   if (isError) {
     return (
       <div className="flex items-center justify-between p-3 rounded-lg border border-red-500/30 bg-red-500/5 text-red-300 text-sm mb-4">
@@ -66,26 +76,38 @@ export default function SourceFilter({ selectedSource, onSourceChange }) {
     );
   }
 
-  // Empty State
-  if (sources.length === 0) {
-    return null;
-  }
+  // Always include "All Sources" option
+  const allSources = [
+    { id: 'all-sources', name: 'All Sources' },
+    ...sources
+  ];
 
   return (
     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" data-testid="source-filter">
-      {sources.map((source) => (
-        <button
-          key={source}
-          onClick={() => onSourceChange?.(source)}
-          className={`px-4 py-2 rounded-lg whitespace-nowrap transition-all text-sm font-medium border ${
-            selectedSource === source
-              ? "bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/20"
-              : "bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"
-          }`}
-        >
-          {source}
-        </button>
-      ))}
+      {allSources.map((source) => {
+        const isActive = selectedSource === source.id || (source.id === 'all-sources' && !selectedSource);
+        return (
+          <button
+            key={source.id}
+            onClick={() => {
+              if (source.id === 'all-sources') {
+                onSourceChange?.(''); // clear filter
+              } else if (selectedSource === source.id) {
+                onSourceChange?.(''); // toggle off
+              } else {
+                onSourceChange?.(source.id); // ← now sends the correct source key (e.g., "openai")
+              }
+            }}
+            className={`px-4 py-2 rounded-lg whitespace-nowrap transition-all text-sm font-medium border ${
+              isActive
+                ? "bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/20"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"
+            }`}
+          >
+            {source.name}
+          </button>
+        );
+      })}
     </div>
   );
 }
