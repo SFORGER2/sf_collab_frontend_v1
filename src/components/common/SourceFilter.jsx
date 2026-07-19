@@ -22,11 +22,10 @@ export default function SourceFilter({ selectedSource, onSourceChange }) {
       // Normalize to objects with { id, name }
       const normalized = raw.map((item, index) => {
         if (typeof item === 'string') {
-          // If it's just a string, use it as both id and name (fallback)
           return { id: item, name: item };
         }
         if (typeof item === 'object' && item !== null) {
-          // Extract the source key (id) and display label (name)
+          // ✅ Use `source` as the id (e.g., "openai") and `source_label` as the display name
           const id = item.source ?? item.id ?? item.name ?? item.label ?? `source-${index}`;
           const name = item.source_label ?? item.name ?? item.label ?? String(id);
           return { id: String(id), name: String(name) };
@@ -95,7 +94,7 @@ export default function SourceFilter({ selectedSource, onSourceChange }) {
               } else if (selectedSource === source.id) {
                 onSourceChange?.(''); // toggle off
               } else {
-                onSourceChange?.(source.id); // ← now sends the correct source key (e.g., "openai")
+                onSourceChange?.(source.id); // now sends "openai", not "OpenAI Blog"
               }
             }}
             className={`px-4 py-2 rounded-lg whitespace-nowrap transition-all text-sm font-medium border ${

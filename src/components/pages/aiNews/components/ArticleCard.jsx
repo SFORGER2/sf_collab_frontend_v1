@@ -5,7 +5,6 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, ExternalLink, Flame, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatFriendlyDate } from '@/utils/formatFriendlyDate';
 
 // Helper to determine sentiment badge classes and icons
 const getSentimentConfig = (sentiment) => {
@@ -38,10 +37,22 @@ const getImpactColor = (score) => {
   return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
 };
 
+// ✅ Format date to "June 30, 2026"
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date)) return '';
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
 export default function ArticleCard({ article }) {
   const {
     title,
-    summary = 'No summary available.', // fallback for null/undefined
+    summary,
     url,
     image_url = '',
     impact_score = 0,
@@ -67,14 +78,7 @@ export default function ArticleCard({ article }) {
     reading_time_min !== undefined && reading_time_min !== null && reading_time_min !== ''
       ? `${reading_time_min} min read`
       : '';
-  const publishedDateLabel = published_at
-    ? formatFriendlyDate(published_at) ||
-      new Date(published_at).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : '';
+  const publishedDateLabel = formatDate(published_at);
 
   const detailUrl = id ? `/ai-news/${id}` : null;
 
@@ -183,9 +187,12 @@ export default function ArticleCard({ article }) {
             )}
           </div>
 
-          <p className="text-sm leading-relaxed text-slate-400 line-clamp-3">
-            {summary}
-          </p>
+          {/* Summary – now shows nothing if null instead of a fallback */}
+          {summary && (
+            <p className="text-sm leading-relaxed text-slate-400 line-clamp-3">
+              {summary}
+            </p>
+          )}
         </CardContent>
       </div>
 
@@ -263,7 +270,7 @@ export default function ArticleCard({ article }) {
 ArticleCard.propTypes = {
   article: PropTypes.shape({
     title: PropTypes.string.isRequired,
-    summary: PropTypes.string, // now optional
+    summary: PropTypes.string,
     url: PropTypes.string.isRequired,
     image_url: PropTypes.string,
     impact_score: PropTypes.number,
@@ -277,6 +284,6 @@ ArticleCard.propTypes = {
     category: PropTypes.string,
     reading_time_min: PropTypes.number,
     published_at: PropTypes.string,
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), // added for detailUrl
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   }).isRequired,
 };
