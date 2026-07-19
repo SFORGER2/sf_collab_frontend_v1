@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Newspaper, RefreshCw, AlertCircle } from 'lucide-react';
+import { Newspaper, RefreshCw, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import NewsCard from './NewsCard';
 import { NewsCardSkeletonGrid } from './NewsCardSkeleton';
 import aiNewsAPI from '@/utils/APIs/aiNewsAPI';
@@ -28,6 +28,8 @@ export default function AINewsSection() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -36,15 +38,31 @@ export default function AINewsSection() {
     };
   }, []);
 
-  const fetchNews = useCallback(async () => {
+  const fetchNews = useCallback(async (pageToFetch = 1) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await aiNewsAPI.getAINews();
+      const data = await aiNewsAPI.getAINews({ page: pageToFetch });
       if (!mountedRef.current) return;
 
       const list = extractArticles(data);
       setArticles(list);
+
+      let extractedTotalPages = 1;
+      if (data) {
+        if (data.pagination && data.pagination.totalPages) {
+          extractedTotalPages = data.pagination.totalPages;
+        } else if (data.data && data.data.pagination && data.data.pagination.totalPages) {
+          extractedTotalPages = data.data.pagination.totalPages;
+        } else if (data.totalPages) {
+          extractedTotalPages = data.totalPages;
+        } else if (data.meta && data.meta.totalPages) {
+          extractedTotalPages = data.meta.totalPages;
+        }
+      }
+      
+      setTotalPages(extractedTotalPages);
+      setCurrentPage(pageToFetch);
     } catch (err) {
       if (!mountedRef.current) return;
       console.error('Failed to fetch AI news:', err);
@@ -57,8 +75,20 @@ export default function AINewsSection() {
   }, []);
 
   useEffect(() => {
-    fetchNews();
+    fetchNews(1);
   }, [fetchNews]);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      fetchNews(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      fetchNews(currentPage - 1);
+    }
+  };
 
   return (
     <section className="w-full my-8">
@@ -76,7 +106,7 @@ export default function AINewsSection() {
 
         {!loading && (
           <motion.button
-            onClick={fetchNews}
+            onClick={() => fetchNews(currentPage)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 text-sm text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-3 py-2 transition-colors"
@@ -110,7 +140,7 @@ export default function AINewsSection() {
           </div>
           <p className="text-slate-400 text-center max-w-sm">{error}</p>
           <button
-            onClick={fetchNews}
+            onClick={() => fetchNews(currentPage)}
             className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-4 transition-colors"
           >
             Try again
@@ -153,6 +183,41 @@ export default function AINewsSection() {
             ))}
           </AnimatePresence>
         </motion.div>
+      )}
+
+      {/* Pagination Controls */}
+      {!loading && !error && totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 mt-8">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              currentPage === 1
+                ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'
+            }`}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Previous Page
+          </button>
+          
+          <span className="text-sm font-medium text-slate-300">
+            Current Page: {currentPage} / Total Pages: {totalPages}
+          </span>
+          
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              currentPage === totalPages
+                ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'
+            }`}
+          >
+            Next Page
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       )}
     </section>
   );
