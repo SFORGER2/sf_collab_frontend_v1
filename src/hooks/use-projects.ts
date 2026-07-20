@@ -50,7 +50,7 @@ interface UseProjectsReturn {
 export function useProjects(): UseProjectsReturn {
   const [projects, setProjects] = useState<Project[]>(() => loadProjects())
   const [isLoading, setIsLoading] = useState(true)
-  const [error] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const syncProjects = useCallback((updated: Project[]) => {
     setProjects(updated)
@@ -81,14 +81,17 @@ export function useProjects(): UseProjectsReturn {
 
   const refetch = useCallback(async () => {
     setIsLoading(true)
+    setError(null)
     try {
       const response = await fetch("/projects")
       if (response.ok) {
         const data: Project[] = await response.json()
         syncProjects(data)
+      } else {
+        throw new Error(`Failed to fetch: ${response.statusText}`)
       }
-    } catch {
-      // API not available — use what's in localStorage
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load projects')
     } finally {
       setIsLoading(false)
     }
