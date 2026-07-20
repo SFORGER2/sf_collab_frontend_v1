@@ -24,23 +24,9 @@ export function useCreateProject(): UseCreateProjectReturn {
       }
 
       const project: Project = await response.json()
-      setIsCreating(false)
       return project
-    } catch {
-      // API not available — create mock project
-      const newProject: Project = {
-        id: `new-${Date.now()}`,
-        name: data.name,
-        status: "draft",
-        createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString(),
-        description: data.description,
-        packId: data.packId,
-        designTheme: data.designTheme,
-      }
-
+    } finally {
       setIsCreating(false)
-      return newProject
     }
   }, [])
 

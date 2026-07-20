@@ -3,61 +3,6 @@ import type { Project } from "../types"
 
 const STORAGE_KEY = "sfcollab_projects"
 
-const MOCK_PROJECTS: Project[] = [
-  {
-    id: "1",
-    name: "My Portfolio",
-    status: "delivered",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString(),
-    lastUpdated: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    url: "https://my-portfolio.example.com",
-    description: "Personal portfolio website",
-    designTheme: "lumen",
-  },
-  {
-    id: "2",
-    name: "Company Blog",
-    status: "generating",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-    lastUpdated: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
-    description: "Company blog with CMS",
-  },
-  {
-    id: "3",
-    name: "E-commerce Store",
-    status: "draft",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    lastUpdated: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
-    description: "Online store frontend",
-  },
-  {
-    id: "4",
-    name: "API Documentation",
-    status: "delivered",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
-    lastUpdated: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    url: "https://docs.example.com",
-    description: "API reference site",
-    designTheme: "aurora",
-  },
-  {
-    id: "5",
-    name: "Marketing Landing Page",
-    status: "failed",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-    lastUpdated: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    description: "Product launch landing page",
-  },
-  {
-    id: "6",
-    name: "Admin Dashboard",
-    status: "proposal_ready",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14).toISOString(),
-    lastUpdated: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-    description: "Internal admin panel",
-  },
-]
-
 const STATUS_MIGRATION: Record<string, Project["status"]> = {
   building: "generating",
   deployed: "delivered",
@@ -80,11 +25,9 @@ function loadProjects(): Project[] {
       }
     }
   } catch {
-    // corrupted data — fall through to seed
+    // corrupted data
   }
-  // Seed with mock data on first load
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_PROJECTS))
-  return MOCK_PROJECTS
+  return []
 }
 
 function saveProjects(projects: Project[]) {

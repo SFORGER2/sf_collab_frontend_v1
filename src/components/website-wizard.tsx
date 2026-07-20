@@ -139,25 +139,34 @@ export function WebsiteWizard({
 
   const handleGenerateComplete = useCallback(async () => {
     setIsGenerating(true)
-    const project = await createProject({
-      name: data.websiteName.trim(),
-      description: data.description.trim() || undefined,
-      packId: data.template || undefined,
-      branding: data.branding,
-      features: data.features.length > 0 ? data.features : undefined,
-      referenceUrls: data.referenceUrls.length > 0 ? data.referenceUrls : undefined,
-      designTheme: data.designTheme,
-    })
+    try {
+      const project = await createProject({
+        name: data.websiteName.trim(),
+        description: data.description.trim() || undefined,
+        packId: data.template || undefined,
+        branding: data.branding,
+        features: data.features.length > 0 ? data.features : undefined,
+        referenceUrls: data.referenceUrls.length > 0 ? data.referenceUrls : undefined,
+        designTheme: data.designTheme,
+      })
 
-    onCreateProject?.(project)
+      onCreateProject?.(project)
 
-    addToast({
-      title: "Website generated!",
-      description: `${data.websiteName} has been created successfully.`,
-      variant: "success",
-    })
+      addToast({
+        title: "Website generated!",
+        description: `${data.websiteName} has been created successfully.`,
+        variant: "success",
+      })
 
-    handleClose()
+      handleClose()
+    } catch {
+      addToast({
+        title: "Failed to create website",
+        description: "An error occurred. Please check your connection and try again.",
+        variant: "destructive",
+      })
+      setIsGenerating(false)
+    }
   }, [data, createProject, onCreateProject, addToast, handleClose])
 
   const canProceed = useMemo(() => {
