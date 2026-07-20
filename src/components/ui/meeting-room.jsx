@@ -1021,7 +1021,7 @@ export default function MeetingRoom() {
       {/* Settings modal */}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
     </div>
-  )
+  );
 }
 
 // ── ToolButton ────────────────────────────────────────────────────────────────

@@ -72,7 +72,7 @@ const StartUp = () => {
 
   return (
     <>
-      <section ref={sectionRef} className="w-full flex items-center justify-center lg:min-h-screen md:min-h-[90vh] min-h-[95vh] relative overflow-hidden">
+      <section ref={sectionRef} className="w-full flex items-center justify-center lg:min-h-screen md:min-h-[90vh] min-h-[95vh] relative">
         {/* Background Image with enhanced mobile positioning */}
         <div className="absolute inset-0">
           <img

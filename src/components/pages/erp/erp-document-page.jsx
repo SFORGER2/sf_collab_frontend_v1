@@ -296,25 +296,25 @@ const DocumentsPage = () => {
     }
   };
 
-const handleDelete = async (file) => {
-  if (!file._docId) return;
+  const handleDelete = async (file) => {
+    if (!file._docId) return;
 
-  if (!window.confirm(`Delete "${file.name}"?`)) return;
+    if (!window.confirm(`Delete "${file.name}"?`)) return;
 
-  try {
-    await api.delete(`/${file._docId}`);
+    try {
+      await api.delete(`/${file._docId}`);
 
-    setModalItems((prev) =>
-      prev.filter((item) => item._docId !== file._docId)
-    );
+      setModalItems((prev) =>
+        prev.filter((item) => item._docId !== file._docId)
+      );
 
-    flash("Document deleted");
+      flash("Document deleted");
 
-    await loadDocuments();
-  } catch (err) {
-    flash("Delete failed", true);
-  }
-};
+      await loadDocuments();
+    } catch (err) {
+      flash("Delete failed", true);
+    }
+  };
 
   const handleRealUpload = async () => {
     const input = document.createElement("input");

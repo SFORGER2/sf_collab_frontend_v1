@@ -32,6 +32,7 @@
 
 #root {
   width: 100%;
+  min-height: calc(100% + 1px);
   display: flex;
   flex-direction: column;
 }
@@ -39,19 +40,90 @@
 html, body{
     color: white;
     background-color: black;
-    overflow-x: hidden;
     /* font-family: "Trade Winds", system-ui; */
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
 }
 
 html {
-  overflow: auto;
+  overflow: hidden;
 }
 body {
-  min-height: 100vh;
-  overflow-y: auto;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  height: 100vh;
 }
+
+/* HTML and Body scrollbar for landing page and website theme */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: rgba(13, 26, 54, 0.5) !important;
+  border-radius: 10px !important;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%) !important;
+  border-radius: 10px !important;
+  border: 2px solid rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3) !important;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #2563eb 0%, #60a5fa 50%, #93c5fd 100%) !important;
+  border: 2px solid rgba(96, 165, 250, 0.6) !important;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.5) !important;
+}
+
+html, body {
+  scrollbar-width: thin !important;
+  scrollbar-color: #3b82f6 rgba(13, 26, 54, 0.5) !important;
+}
+
+/* Custom Workspace Scrollbar styling for collaboration workspace */
+.custom-workspace-scrollbar::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+.custom-workspace-scrollbar::-webkit-scrollbar-track {
+  background: rgba(13, 26, 54, 0.5) !important;
+  border-radius: 10px !important;
+}
+.custom-workspace-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%) !important;
+  border-radius: 10px !important;
+  border: 2px solid rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3) !important;
+}
+.custom-workspace-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #2563eb 0%, #60a5fa 50%, #93c5fd 100%) !important;
+  border: 2px solid rgba(96, 165, 250, 0.6) !important;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.5) !important;
+}
+.custom-workspace-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: #3b82f6 rgba(13, 26, 54, 0.5) !important;
+}
+
+
+/* Landing page - body scrolls but scrollbar is hidden */
+body.hide-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+body.hide-scrollbar {
+  scrollbar-width: none !important;
+  overflow-y: scroll !important;
+}
+
 label {
   all: unset;
   color: white;
@@ -99,34 +171,111 @@ backdrop-filter: blur(10);
   /* z-index:99999999 !important; */
 }
 
+/* ============================================ */
+/* GLOBAL SCROLLBAR THEME - DARK SPACE DESIGN */
+/* ============================================ */
 
-
-/* Styled scrollbar - visible but minimal */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Main scrollbar styles - Apply to body only */
+body::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+body::-webkit-scrollbar-track {
+  background: rgba(13, 26, 54, 0.5) !important;
+  border-radius: 10px !important;
 }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
+body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%) !important;
+  border-radius: 10px !important;
+  border: 2px solid rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3) !important;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
+body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #2563eb 0%, #60a5fa 50%, #93c5fd 100%) !important;
+  border: 2px solid rgba(96, 165, 250, 0.6) !important;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.5) !important;
 }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+/* Firefox Support - Apply to body only */
+body {
+  scrollbar-width: thin !important;
+  scrollbar-color: #3b82f6 rgba(13, 26, 54, 0.5) !important;
 }
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+/* Hide body scrollbar on landing page */
+body:has(#root > .landing-page)::-webkit-scrollbar {
+  display: none !important;
 }
+body:has(#root > .landing-page) {
+  scrollbar-width: none !important;
+}
+
+/* ============================================ */
+
+
+
+@layer base {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 10px !important;
+    height: 10px !important;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(13, 26, 54, 0.5) !important;
+    border-radius: 10px !important;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%) !important;
+    border-radius: 10px !important;
+    border: 2px solid rgba(59, 130, 246, 0.4) !important;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3) !important;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #2563eb 0%, #60a5fa 50%, #93c5fd 100%) !important;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.5) !important;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none !important;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+
+  /* Visible scrollbar for sidebar when open */
+  .scrollbar-visible::-webkit-scrollbar {
+    width: 8px !important;
+    display: block !important;
+  }
+  .scrollbar-visible::-webkit-scrollbar-track {
+    background: rgba(13, 26, 54, 0.5) !important;
+    border-radius: 10px !important;
+  }
+  .scrollbar-visible::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%) !important;
+    border-radius: 10px !important;
+    border: 2px solid rgba(59, 130, 246, 0.4) !important;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3) !important;
+  }
+  .scrollbar-visible::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #2563eb 0%, #60a5fa 50%, #93c5fd 100%) !important;
+    border: 2px solid rgba(96, 165, 250, 0.6) !important;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.5) !important;
+  }
+  .scrollbar-visible {
+    scrollbar-width: thin !important;
+    scrollbar-color: #3b82f6 rgba(13, 26, 54, 0.5) !important;
+  }
+}
+
+
+
 
 /* Line clamp utilities */
 .line-clamp-1 {
@@ -287,3 +436,121 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
 }
 
+/* ============================================ */
+/* PROJECT DETAILS BADGE HOVER EFFECTS           */
+/* Flat CSS to bypass Tailwind v4 nesting issue  */
+/* ============================================ */
+
+.role-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: rgba(59, 130, 246, 0.1);
+  color: rgb(147, 197, 253);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: default;
+  transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, transform 300ms ease;
+  transform-origin: center;
+}
+
+.role-tag:hover {
+  background-color: rgba(59, 130, 246, 0.22);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: white;
+  transform: scale(1.05);
+}
+
+.tech-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: rgba(168, 85, 247, 0.1);
+  color: rgb(216, 180, 254);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: default;
+  transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, transform 300ms ease;
+  transform-origin: center;
+}
+
+.tech-tag:hover {
+  background-color: rgba(168, 85, 247, 0.22);
+  border-color: rgba(168, 85, 247, 0.5);
+  color: white;
+  transform: scale(1.05);
+}
+
+/* Container boxes for Required Roles & Tech Stack */
+.roles-container {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background-color: rgba(59, 130, 246, 0.02);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  transition: border-color 400ms ease, box-shadow 400ms ease, background-color 400ms ease;
+}
+.roles-container:hover {
+  border-color: rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.04), inset 0 0 8px rgba(59, 130, 246, 0.02);
+  background-color: rgba(59, 130, 246, 0.02);
+}
+
+.tech-container {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background-color: rgba(168, 85, 247, 0.02);
+  border: 1px solid rgba(168, 85, 247, 0.1);
+  transition: border-color 400ms ease, box-shadow 400ms ease, background-color 400ms ease;
+}
+.tech-container:hover {
+  border-color: rgba(168, 85, 247, 0.2);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.04), inset 0 0 8px rgba(168, 85, 247, 0.02);
+  background-color: rgba(168, 85, 247, 0.02);
+}
+
+.problem-container {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background-color: rgba(245, 158, 11, 0.02);
+  border: 1px solid rgba(245, 158, 11, 0.1);
+  transition: border-color 400ms ease, box-shadow 400ms ease, background-color 400ms ease;
+}
+.problem-container:hover {
+  border-color: rgba(245, 158, 11, 0.2);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.04), inset 0 0 8px rgba(245, 158, 11, 0.02);
+  background-color: rgba(245, 158, 11, 0.04);
+}
+
+.solution-container {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background-color: rgba(16, 185, 129, 0.02);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  transition: border-color 400ms ease, box-shadow 400ms ease, background-color 400ms ease;
+}
+.solution-container:hover {
+  border-color: rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.04), inset 0 0 8px rgba(16, 185, 129, 0.02);
+  background-color: rgba(16, 185, 129, 0.04);
+}
+
+/* Overview container */
+.overview-container {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background-color: rgba(59, 130, 246, 0.02);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  transition: border-color 400ms ease, box-shadow 400ms ease, background-color 400ms ease;
+}
+
+.overview-container:hover {
+  border-color: rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.04), inset 0 0 8px rgba(59, 130, 246, 0.02);
+  background-color: rgba(59, 130, 246, 0.04);
+}

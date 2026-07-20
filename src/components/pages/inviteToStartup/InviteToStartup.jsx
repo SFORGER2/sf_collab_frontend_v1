@@ -137,7 +137,7 @@ const InviteToStartup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white px-2 md:px-4 py-8">
+    <div className="min-h-screen bg-black text-white px-2 md:px-4 lg:pl-6 py-8">
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
@@ -145,7 +145,7 @@ const InviteToStartup = () => {
         <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" style={{ animationDelay: '2s' }} />
       </div>
 
-      <div className="w-full mx-auto space-y-8 w-full">
+      <div className="w-full mx-auto space-y-8 w-full relative z-10">
         {/* Header */}
         <motion.div
           className="space-y-4"

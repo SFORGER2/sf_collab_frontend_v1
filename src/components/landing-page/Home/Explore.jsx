@@ -68,7 +68,7 @@ export default function Explore() {
   }, []);
 
   return (
-    <div className="relative bg-black text-white overflow-hidden">
+    <div className="relative bg-black text-white w-full">
       <section
         ref={sectionRef}
         className="relative flex items-center justify-center w-full h-screen overflow-hidden z-[30]"

@@ -514,7 +514,6 @@ const ReferPage = () => {
               </span>
             </motion.p>
           )}
-
           <div className="space-y-3 max-h-[600px] overflow-y-auto">
             {leaderboard.slice(0, 50).map((leaderUser, idx) => {
               const tier = RANK_REWARDS.find(

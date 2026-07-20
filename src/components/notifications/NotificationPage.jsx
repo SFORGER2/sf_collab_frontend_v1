@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Bell,
   CheckCheck,
@@ -9,16 +9,17 @@ import {
   WifiOff,
   Loader2,
   AlertCircle,
-  Newspaper,
-  Inbox,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useLocation, useNavigate } from "react-router-dom";
 import NotificationItem from "./NotificationItem";
 import { useNotifications } from "@/contexts/NotificationContext";
 
 export default function NotificationPage() {
   const ctx = useNotifications();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Keep compatibility with either naming style
   const notifications = ctx.notifications || [];
@@ -41,7 +42,6 @@ export default function NotificationPage() {
   const [activeFilter, setActiveFilter] = useState("general");
   const [isClearing, setIsClearing] = useState(false);
   const [confirmModal, setConfirmModal] = useState(null);
-  // (Refs removed — no IntersectionObserver needed; unmount handles mark-all-read)
 
   // Filter definitions
   const filters = useMemo(
@@ -92,27 +92,12 @@ export default function NotificationPage() {
     return filtered;
   }, [notifications, activeFilter]);
 
-  // We intentionally do NOT auto-mark-as-read via IntersectionObserver here.
-  // Notifications show their unread highlight while the user is on this page.
-  // On unmount (navigate away), markAllAsRead() is called (see effect above).
-  // Individual notifications can be marked read/unread via their context menu.
-
   // Handle filter change
   const handleFilterChange = useCallback(
     (f) => {
-      setActiveFilter(f.id);
-
-      if (typeof applyFilters === "function") {
-        if (f.id === "general") {
-          applyFilters({});
-        } else if (f.id === "newsletter") {
-          applyFilters({ category: "newsletter" });
-        } else {
-          applyFilters(f.filter || {});
-        }
-      }
+      navigate(`/notifications?tab=${f.id}`);
     },
-    [applyFilters]
+    [navigate]
   );
 
   // Handle mark all as read
@@ -138,14 +123,13 @@ export default function NotificationPage() {
         setIsClearing(true);
         try {
           await clearAllNotifications();
-          refresh();
         } finally {
           setIsClearing(false);
           setConfirmModal(null);
         }
       },
     });
-  }, [clearAllNotifications, refresh]);
+  }, [clearAllNotifications]);
 
   // Handle notification delete
   const handleNotificationDelete = useCallback(async (notificationId) => {
@@ -156,12 +140,15 @@ export default function NotificationPage() {
     }
   }, [deleteNotification]);
 
-  // Set default filter on mount
+  // Set active filter based on URL ?tab= parameter or fallback to general
   useEffect(() => {
-    const f = filters.find((x) => x.id === "general") || filters[0];
-    handleFilterChange(f);
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get("tab");
+    const targetFilter = filters.find((x) => x.id === tabParam) || filters.find((x) => x.id === "general") || filters[0];
+    setActiveFilter(targetFilter.id);
+    applyFilters(targetFilter.filter);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [location.search]);
 
   // Mark all notifications as read when the user LEAVES the page (unmount).
   // This keeps the unread highlights visible while they are on the page,
@@ -218,7 +205,7 @@ export default function NotificationPage() {
 
             <HeaderButton
               icon={Settings}
-              onClick={() => (window.location.href = "/user-profile?page=notifications")}
+              onClick={() => navigate("/user-profile?page=notifications")}
             >
               Settings
             </HeaderButton>
@@ -334,10 +321,6 @@ export default function NotificationPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="cursor-pointer"
-              onClick={() => {
-                if (n.linkUrl) window.location.href = n.linkUrl;
-              }}
             >
               <NotificationItem
                 notification={n}
@@ -395,9 +378,12 @@ function HeaderButton({ icon: Icon, danger, loading, disabled, onClick, children
 
 function EmptyState({ label }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[200px] text-white/40">
-      <Bell className="w-12 h-12 mb-4 opacity-50" />
-      <p className="text-sm">{label}</p>
+    <div className="flex flex-col items-center justify-center min-h-[250px] rounded-2xl bg-slate-900/30 border border-slate-800/60 p-8 text-center shadow-inner">
+      <div className="p-4 rounded-full bg-slate-800/60 text-slate-500 mb-4 ring-1 ring-slate-700/50 shadow-md">
+        <Bell className="w-8 h-8 opacity-60" />
+      </div>
+      <p className="text-base font-semibold text-slate-300">{label}</p>
+      <p className="text-xs text-slate-500 mt-1 max-w-xs">When new notifications match this category, they will automatically appear here.</p>
     </div>
   );
 }

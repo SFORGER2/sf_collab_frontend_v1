@@ -25,7 +25,7 @@ export function useConnectionStatus(targetUserId) {
    */
   const fetchStatus = useCallback(async () => {
     if (!targetUserId || !currentUser?.id) {
-      setStatus(ConnectionStatus.LOADING);
+      setStatus(ConnectionStatus.NONE);
       return;
     }
 

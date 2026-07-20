@@ -30,8 +30,9 @@ import AdminApplicationsSection from './ApplicationsAdminSection';
 import AdminFeedbackSection from './FeedbackAdminSection';
 import AdminRefreshNewsSection from './AdminRefreshNewsSection';
 import { errorAPI } from '@/utils/APIs/errorAPI';
-import { Trash2, Search, Users as UsersIcon, Rocket, AlertCircle, TrendingUp } from 'lucide-react';
+import { Trash2, Search, Users as UsersIcon, Rocket, AlertCircle, TrendingUp, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
+import NewsletterDashboard from './NewsletterDashboard';
 
 // Register chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
@@ -424,6 +425,15 @@ const AdminDashboard = () => {
           <AdminIdeasReviewSection />
           <AdminSendAnnouncementSection />
           <AdminRefreshNewsSection />
+
+          {/* Newsletter Subscribers & Management Dashboard */}
+          <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50 mb-8">
+            <h2 className="text-2xl font-bold mb-6 text-gray-100 flex items-center gap-2">
+              <Mail className="w-6 h-6 text-purple-400" />
+              Newsletter & Subscriber Management
+            </h2>
+            <NewsletterDashboard />
+          </div>
 
           {/* Users & Startups List */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

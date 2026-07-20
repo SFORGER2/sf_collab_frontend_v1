@@ -3,23 +3,23 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
+import {
   ArrowLeft, Users, Calendar, TrendingUp, Heart, Share2, ChevronRight, Home, Trash2, UserPlus, BarChart3,
-  FileText, Target, MessageSquare,CheckCircle2Icon,XIcon, Coins,
+  FileText, Target, MessageSquare, CheckCircle2Icon, XIcon, Coins,
   Bookmark,
   ClipboardList
 } from 'lucide-react';
 import InvestorsSection from './sections/InvestorsSection';
 import {
-    Alert,
-    AlertDescription,
-    AlertTitle,
-  } from "../../ui/alert"
-  
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "../../ui/alert"
+
 // shadcn/ui components
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
-import { Card, CardContent, CardHeader} from '../../ui/card';
+import { Card, CardContent, CardHeader } from '../../ui/card';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Progress } from '../../ui/progress';
@@ -39,6 +39,7 @@ import DocumentsSection from './sections/DocumentsSection';
 import TeamSection from './sections/TeamSection';
 import DescriptionSection from './sections/DescriptionSection';
 import TechStackSection from './sections/TechStackSection';
+import AIMatchmakingSection from './matchmaking/AIMatchmakingSection';
 import HeroSection from './sections/HeroSection';
 import StartupDetailSkeleton from './StartupDetailsSkeleton';
 import ProjectTasksSection from './sections/ProjectTasksSection';
@@ -73,19 +74,19 @@ const StartupDetailPage = () => {
   const [demoting, setDemoting] = useState(false);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
-  
+
   const [alertDescription, setAlertDescription] = useState("");
   const [alertTitle, setAlertTitle] = useState("");
   const [alertVariant, setAlertVariant] = useState("success");
-  
+
   const [showAlert, setShowAlert] = useState(false);
   const [projectTasks, setProjectTasks] = useState([]);
   const [projectGoals, setProjectGoals] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
-  
+
   const [isAdmin, setIsAdmin] = useState(false);
   const [isFounder, setIsFounder] = useState(false);
-  const {user,access_token,refreshToken} = useSelector((state) => state.auth);
+  const { user, access_token, refreshToken } = useSelector((state) => state.auth);
 
   const [joinForm, setJoinForm] = useState({
     name: '',
@@ -96,17 +97,17 @@ const StartupDetailPage = () => {
     github: ''
   });
 
-  
-const [pendingInvitation, setPendingInvitation] = useState(null);
+
+  const [pendingInvitation, setPendingInvitation] = useState(null);
   const [joinRequests, setJoinRequests] = useState([]);
   const joinRequestCountRef = useRef(0);
 
-   // Fetch startup data
+  // Fetch startup data
   const fetchStartupData = async () => {
     try {
       setLoading(true);
 
-  
+
       const args = {
         startup_id: id,
         per_page: 100,
@@ -164,24 +165,24 @@ const [pendingInvitation, setPendingInvitation] = useState(null);
     }
   };
 
-const fetchUserInvitation = useCallback(async () => {
-  // Skip if user is already an admin/member — they don't need to see an invitation banner
-  if (!user || !id || isAdmin) return;
+  const fetchUserInvitation = useCallback(async () => {
+    // Skip if user is already an admin/member — they don't need to see an invitation banner
+    if (!user || !id || isAdmin) return;
 
-  try {
-    // Use the dedicated /mine endpoint which doesn't require manager role
-    const response = await startupsAPI.getMyInvitation(id);
-    const invitation = response?.data?.invitation || null;
-    setPendingInvitation(invitation);
-  } catch (error) {
-    // Silently ignore — 404 means route not yet registered on this backend,
-    // plain object rejections mean interceptor transformed the error
-    setPendingInvitation(null);
-  }
-}, [user, id, isAdmin]);
-const fetchJoinRequests = useCallback(async () => {
+    try {
+      // Use the dedicated /mine endpoint which doesn't require manager role
+      const response = await startupsAPI.getMyInvitation(id);
+      const invitation = response?.data?.invitation || null;
+      setPendingInvitation(invitation);
+    } catch (error) {
+      // Silently ignore — 404 means route not yet registered on this backend,
+      // plain object rejections mean interceptor transformed the error
+      setPendingInvitation(null);
+    }
+  }, [user, id, isAdmin]);
+  const fetchJoinRequests = useCallback(async () => {
 
-    
+
     if (!isAdmin || !access_token || !id) {
 
       setJoinRequests([]);
@@ -214,12 +215,12 @@ const fetchJoinRequests = useCallback(async () => {
       fetchStartupData();
 
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]); 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   useEffect(() => {
-  fetchUserInvitation();
-}, [fetchUserInvitation]);
+    fetchUserInvitation();
+  }, [fetchUserInvitation]);
 
 
 
@@ -269,59 +270,59 @@ const fetchJoinRequests = useCallback(async () => {
   };
   const handleBookmarkClick = async () => {
     try {
-        // Remove bookmark
-        const response = await startupsAPI.toggleBookmarkStartup({ startupId: id, userId: user?.id });
-        if (response.success) {
-          setIsFavorited(response.data.bookmarked);
-          toast.info(`Startup ${response.data.bookmarked ? 'added to' : 'removed from'} favorites`);
-        } else {
-          throw new Error('Failed to remove bookmark');
-        }
+      // Remove bookmark
+      const response = await startupsAPI.toggleBookmarkStartup({ startupId: id, userId: user?.id });
+      if (response.success) {
+        setIsFavorited(response.data.bookmarked);
+        toast.info(`Startup ${response.data.bookmarked ? 'added to' : 'removed from'} favorites`);
+      } else {
+        throw new Error('Failed to remove bookmark');
+      }
     } catch {
-        toast.error('Error updating favorite status');
+      toast.error('Error updating favorite status');
     }
   };
- const handleAcceptInvitation = async () => {
-  if (!pendingInvitation) return;
+  const handleAcceptInvitation = async () => {
+    if (!pendingInvitation) return;
 
-  try {
-    await startupsAPI.acceptInvitation(id, pendingInvitation.id);
-    toast.success("You are now a member!");
+    try {
+      await startupsAPI.acceptInvitation(id, pendingInvitation.id);
+      toast.success("You are now a member!");
 
-    setPendingInvitation(null);
-    fetchStartupData();
+      setPendingInvitation(null);
+      fetchStartupData();
 
-  } catch (error) {
-    toast.error("Failed to accept invitation");
-  }
-};
+    } catch (error) {
+      toast.error("Failed to accept invitation");
+    }
+  };
 
-const handleDeclineInvitation = async () => {
-  if (!pendingInvitation) return;
+  const handleDeclineInvitation = async () => {
+    if (!pendingInvitation) return;
 
-  try {
-    await startupsAPI.declineInvitation(id, pendingInvitation.id);
-    toast.info("Invitation declined");
+    try {
+      await startupsAPI.declineInvitation(id, pendingInvitation.id);
+      toast.info("Invitation declined");
 
-    setPendingInvitation(null);
+      setPendingInvitation(null);
 
-  } catch (error) {
-    toast.error("Failed to decline invitation");
-  }
-};
+    } catch (error) {
+      toast.error("Failed to decline invitation");
+    }
+  };
 
   useEffect(() => {
     if (user && startup) {
       // Try to get userId from different possible fields
       const userId = user?.id || user?.userId || user?.user_id;
-      
+
       // Check 1: Is user the startup creator?
       // FIX: use == not === to handle string/int type mismatch from API
       const isStartupCreator = String(startup?.creator?.id) === String(userId);
       console.log("Checking members for userId:", userId, "Members list:", members);
       // Check 2: Is user a member with creator/founder role?
       const isMemberWithRole = members.find(m => String(m.userId) === String(userId) && (['creator', 'founder', 'owner'].includes(m.role) || m.admin));
-    
+
       // User is creator if they are the startup creator OR have member founder role
       const isAdminUser = isStartupCreator || !!isMemberWithRole;
       setIsAdmin(isAdminUser);
@@ -342,7 +343,7 @@ const handleDeclineInvitation = async () => {
     if (isJoinModalOpen && isAdmin && access_token) {
       fetchJoinRequests();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isJoinModalOpen, access_token, isAdmin]);
 
   useEffect(() => {
@@ -359,10 +360,10 @@ const handleDeclineInvitation = async () => {
     try {
       const response = await startupsAPI.delete(id, access_token);
 
-      
+
       if (response.success) {
         navigate('/discover-startups');
-      } 
+      }
     } catch (error) {
       toast.error('Error deleting startup');
       console.error('Error deleting startup:', error);
@@ -460,14 +461,14 @@ const handleDeclineInvitation = async () => {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Discover
               </Button>
-              
+
               <div className="hidden sm:flex flex-wrap items-center gap-2 text-sm text-gray-400">
                 <Home className="w-4 h-4" />
                 <ChevronRight className="w-3 h-3" />
                 <span className="text-white font-medium">{startup.name}</span>
               </div>
             </div>
-            
+
             <div className="flex flex-wrap h-auto items-center gap-2">
               {isAdmin && (
                 <>
@@ -480,7 +481,7 @@ const handleDeclineInvitation = async () => {
                     >
                       <MessageSquare className="w-4 h-4 mr-1" />
                       Edit Startup
-                    
+
                     </Button>
                   }
 
@@ -513,7 +514,7 @@ const handleDeclineInvitation = async () => {
                   }
                   {
                     isFounder && (
-                  
+
                       <Button
                         variant="destructive"
                         size="sm"
@@ -602,7 +603,7 @@ const handleDeclineInvitation = async () => {
                 speed={3}
               //   className='custom-title' 
               />
-             
+
             </TabsTrigger>
             <TabsTrigger value="goals" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Target className="w-4 h-4 mr-2" />
@@ -612,7 +613,7 @@ const handleDeclineInvitation = async () => {
                 speed={3}
               //   className='custom-title' 
               />
-             
+
             </TabsTrigger>
             <TabsTrigger value="calendar" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Calendar className="w-4 h-4 mr-2" />
@@ -622,7 +623,7 @@ const handleDeclineInvitation = async () => {
                 speed={3}
               //   className='custom-title' 
               />
-              
+
             </TabsTrigger>
             <TabsTrigger value="investors" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Coins className="w-4 h-4 mr-2" />
@@ -639,8 +640,13 @@ const handleDeclineInvitation = async () => {
             <StartupAnnouncementsSection startup={startup} />
             <GamifiedStatsOverview startup={startup} stats={stats} goals={projectGoals} />
             <DescriptionSection startup={startup} />
-            
+
             <TechStackSection startup={startup} />
+
+            {/* AI Matchmaking — Recommended Builders (Task 1) */}
+            {isFounder && (
+              <AIMatchmakingSection startup={startup} />
+            )}
           </TabsContent>
 
           {/* Members Tab */}
@@ -717,14 +723,14 @@ const handleDeclineInvitation = async () => {
         />
       )}
       {pendingInvitation && !isAdmin && (
-  <AcceptInvitationModal
-    isOpen={true}
-    onClose={() => setPendingInvitation(null)}
-    startupName={startup?.name}
-    onAccept={handleAcceptInvitation}
-    onDecline={handleDeclineInvitation}
-  />
-)}
+        <AcceptInvitationModal
+          isOpen={true}
+          onClose={() => setPendingInvitation(null)}
+          startupName={startup?.name}
+          onAccept={handleAcceptInvitation}
+          onDecline={handleDeclineInvitation}
+        />
+      )}
       {isAdmin &&
         <>
           <DeleteConfirmationModal
@@ -760,7 +766,7 @@ const handleDeclineInvitation = async () => {
             onAccept={handleAcceptJoinRequest}
             onReject={handleRejectJoinRequest}
           />
-          
+
           <AddTaskModal
             isOpen={isAddTaskModalOpen}
             onClose={() => setIsAddTaskModalOpen(false)}
@@ -773,7 +779,7 @@ const handleDeclineInvitation = async () => {
       {showAlert && (
         <div className="w-full max-w-lg fixed top-46 right-6">
           <Alert className={'relative '}>
-                    
+
             <CheckCircle2Icon />
             <AlertTitle>{alertTitle}</AlertTitle>
             <AlertDescription>
@@ -795,7 +801,7 @@ const handleDeclineInvitation = async () => {
 
 
 
-  
+
 // Gamified Stats Overview
 const GamifiedStatsOverview = ({ goals, startup, stats }) => {
   const milestoneProgress = useMemo(() => {
@@ -889,21 +895,21 @@ const GamifiedStatsOverview = ({ goals, startup, stats }) => {
 
 // Add the Trophy icon component
 const Trophy = (props) => (
-    <svg
-      {...props}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-      <path d="M4 22h16" />
-      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-    </svg>
-  );
+  <svg
+    {...props}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+    <path d="M4 22h16" />
+    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+  </svg>
+);
 export default StartupDetailPage;

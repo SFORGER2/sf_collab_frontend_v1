@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 // import { useAuth } from '../../contexts/AuthContext'
 
 const SettingSidebar = () => {
     const navigate = useNavigate()
-    // const { logout } = useAuth()
+    const { user } = useSelector((state) => state.auth);
     const [active, setActive] = useState(1)
 
     const handleLogout = () => {
@@ -66,6 +67,11 @@ const SettingSidebar = () => {
                             </Link>
                         )
                     ))}
+{user?.isAdmin && (
+  <Link key="admin" to="/admin" onClick={() => setActive(6)} className={`text-lg text-[#C4C4C4] hover:text-white text-left ${active === 6 ? 'text-white' : ''}`}>
+    Admin
+  </Link>
+)}
                 </div>
             </div>
         </>

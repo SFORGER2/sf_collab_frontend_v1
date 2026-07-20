@@ -49,9 +49,9 @@ export default function TopIdeas() {
   };
 
   return (
-    <div className="relative py-20 px-6 lg:px-20 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
+    <div className="relative py-20 px-6 lg:px-20 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 w-full">
       {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
       </div>

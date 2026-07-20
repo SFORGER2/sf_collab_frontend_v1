@@ -177,7 +177,7 @@ export default function NewIdeaForm({
           initial="hidden"
           animate="visible"
         >
-          <h2 className="text-xl font-semibold">Share Your Brilliant Vision</h2>
+          <h2 className="text-xl font-semibold">Share Your Idea</h2>
           <motion.button
             onClick={() => onClose()}
             className="p-2 hover:bg-white/10 rounded-xl transition-colors"
@@ -191,9 +191,9 @@ export default function NewIdeaForm({
         <form onSubmit={handleFormSubmit} className="space-y-5" noValidate>
           {[
             {
-              label: "Vision Title *",
+              label: "Idea Title *",
               type: "input",
-              placeholder: "What's your big vision?",
+              placeholder: "What's your big idea?",
               ref: titleRef,
               required: true,
               autoFocus: true,
@@ -203,7 +203,7 @@ export default function NewIdeaForm({
               label: "Description *",
               type: "textarea",
               placeholder:
-                "Describe your vision in detail. What problem does it solve? How does it work?",
+                "Describe your idea in detail. What problem does it solve? How does it work?",
               ref: descriptionRef,
               required: true,
               rows: 4,
@@ -213,7 +213,7 @@ export default function NewIdeaForm({
               label: "Project Details",
               type: "textarea",
               placeholder:
-                "Add more technical or business details about your vision",
+                "Add more technical or business details about your idea",
               ref: projectDetailsRef,
               rows: 3,
               fieldName: "projectDetails",
@@ -496,7 +496,7 @@ export default function NewIdeaForm({
               whileHover={{ scale: 1.05, boxShadow: "0 10px 20px rgba(0,0,0,0.3)" }}
               whileTap={{ scale: 0.95 }}
             >
-              Share Vision
+              Post Idea
             </motion.button>
           </motion.div>
         </form>

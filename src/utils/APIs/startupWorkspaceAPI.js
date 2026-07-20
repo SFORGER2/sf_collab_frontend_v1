@@ -67,8 +67,8 @@ export const startupWorkspaceAPI = {
   },
 
   getMentors: async (startupId) => {
-     const response = await api.get(`/matchmaking/startups/${startupId}/mentors`);
-     return response.data;
+    const response = await api.get(`/matchmaking/startups/${startupId}/mentors`);
+    return response.data;
   },
   getInvestors: async (startupId) => {
     const response = await api.get(`/matchmaking/startups/${startupId}/investors`);

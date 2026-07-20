@@ -1,16 +1,16 @@
 import React, { useState, lazy, Suspense, useEffect, useCallback, useRef } from "react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { Upload, FolderPlus, X } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Upload, FolderPlus, X, Database } from "lucide-react";
 import { BreadcrumbNav } from "./BreadcrumbNav";
-import { FolderTree }    from "./FolderTree";
-import { FileListView }  from "./FileListView";
+import { FolderTree } from "./FolderTree";
+import { FileListView } from "./FileListView";
 import driveService from "@/services/driveService";
 
 // Lazy-load modals so a bad import never causes a blank page
 const VersionHistoryModal = lazy(() => import("@/components/drive/VersionHistoryModal"));
-const FileLinkModal       = lazy(() => import("@/components/drive/FileLinkModal"));
-const FileShareModal      = lazy(() => import("@/components/drive/FileShareModal"));
+const FileLinkModal = lazy(() => import("@/components/drive/FileLinkModal"));
+const FileShareModal = lazy(() => import("@/components/drive/FileShareModal"));
 
 // ── Root virtual node (UI anchor) ─────────────────────────────────────────
 const ROOT = { id: "root", name: "Drive", type: "folder", updatedAt: new Date().toISOString(), children: [] };
@@ -20,27 +20,27 @@ const ROOT = { id: "root", name: "Drive", type: "folder", updatedAt: new Date().
 // FileListView expects: { id, name, type, size, updatedAt, original_name }
 const normaliseFile = (f) => ({
   ...f,
-  id:            f.file_id ?? f.id,
-  name:          f.filename ?? f.name,
+  id: f.file_id ?? f.id,
+  name: f.filename ?? f.name,
   original_name: f.filename ?? f.original_name ?? f.name,
-  type:          guessType(f.extension ?? f.mime_type ?? ""),
-  size:          f.size_bytes ?? f.size ?? 0,
-  updatedAt:     f.updated_at ?? f.updatedAt ?? new Date().toISOString(),
+  type: guessType(f.extension ?? f.mime_type ?? ""),
+  size: f.size_bytes ?? f.size ?? 0,
+  updatedAt: f.updated_at ?? f.updatedAt ?? new Date().toISOString(),
 });
 
 const normaliseFolder = (f) => ({
   ...f,
-  id:       f.id,
-  name:     f.name,
-  type:     "folder",
+  id: f.id,
+  name: f.name,
+  type: "folder",
   updatedAt: f.updated_at ?? f.created_at ?? new Date().toISOString(),
-  children:  [],   // populated on demand when user navigates in
+  children: [],   // populated on demand when user navigates in
 });
 
 const guessType = (hint = "") => {
   const h = hint.toLowerCase();
-  if (["png","jpg","jpeg","gif","webp","svg"].some((e) => h.includes(e))) return "image";
-  if (["xlsx","xls","csv"].some((e) => h.includes(e)))                    return "spreadsheet";
+  if (["png", "jpg", "jpeg", "gif", "webp", "svg"].some((e) => h.includes(e))) return "image";
+  if (["xlsx", "xls", "csv"].some((e) => h.includes(e))) return "spreadsheet";
   return "document";
 };
 
@@ -52,17 +52,17 @@ export const FolderExplorerUI = () => {
   const navigate = useNavigate();
 
   // ── state ──────────────────────────────────────────────────────────────
-  const [rootNode,       setRootNode]       = useState({ ...ROOT });
-  const [currentFolder,  setCurrentFolder]  = useState({ ...ROOT });
-  const [path,           setPath]           = useState([{ ...ROOT }]);
-  const [items,          setItems]          = useState([]);   // current view (folders + files)
-  const [loading,        setLoading]        = useState(true);
-  const [error,          setError]          = useState(null);
+  const [rootNode, setRootNode] = useState({ ...ROOT });
+  const [currentFolder, setCurrentFolder] = useState({ ...ROOT });
+  const [path, setPath] = useState([{ ...ROOT }]);
+  const [items, setItems] = useState([]);   // current view (folders + files)
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [activeFile,  setActiveFile]  = useState(null);
+  const [activeFile, setActiveFile] = useState(null);
   const [versionOpen, setVersionOpen] = useState(false);
-  const [linkOpen,    setLinkOpen]    = useState(false);
-  const [shareOpen,   setShareOpen]   = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   // ── upload ─────────────────────────────────────────────────────────────
   const fileInputRef = useRef(null);
@@ -77,9 +77,9 @@ export const FolderExplorerUI = () => {
     try {
       await driveService.uploadFile(file, {
         ownerScopeType: 'personal',
-        ownerScopeId:   workspaceId,
-        workspaceId:    workspaceId,
-        folderId:       currentFolder.id !== 'root' ? currentFolder.id : null,
+        ownerScopeId: workspaceId,
+        workspaceId: workspaceId,
+        folderId: currentFolder.id !== 'root' ? currentFolder.id : null,
       });
       setUploadNotice({ ok: true, msg: `"${file.name}" uploaded.` });
       loadRoot();
@@ -94,7 +94,7 @@ export const FolderExplorerUI = () => {
 
   // ── new folder ─────────────────────────────────────────────────────────
   const [showFolderInput, setShowFolderInput] = useState(false);
-  const [folderName, setFolderName]           = useState('');
+  const [folderName, setFolderName] = useState('');
 
   const handleCreateFolder = async () => {
     if (!folderName.trim()) return;
@@ -157,8 +157,8 @@ export const FolderExplorerUI = () => {
       const msg = e?.response?.status === 403
         ? "Drive requires the updated drive_routes.py — replace app/routes/drive_routes.py with the output file and restart Flask."
         : e?.response?.status === 500
-        ? "Drive tables not created yet — run: python -c \"from app import create_app, db; from app.models.drive_file import DriveFile; from app.models.drive_folder import DriveFolder; app=create_app(); app.app_context().push(); db.create_all()\""
-        : "Could not load Drive. Check your workspace access.";
+          ? "Drive tables not created yet — run: python -c \"from app import create_app, db; from app.models.drive_file import DriveFile; from app.models.drive_folder import DriveFolder; app=create_app(); app.app_context().push(); db.create_all()\""
+          : "Could not load Drive. Check your workspace access.";
       setError(msg);
     } finally {
       setLoading(false);
@@ -178,7 +178,7 @@ export const FolderExplorerUI = () => {
         driveService.getFiles(workspaceId, folderId),
       ]);
       const folders = foldersRaw.map(normaliseFolder);
-      const files   = (Array.isArray(filesRaw) ? filesRaw : filesRaw?.files ?? []).map(normaliseFile);
+      const files = (Array.isArray(filesRaw) ? filesRaw : filesRaw?.files ?? []).map(normaliseFile);
       return [...folders, ...files];
     } catch {
       return [];
@@ -201,7 +201,7 @@ export const FolderExplorerUI = () => {
 
     setLoading(true);
     const children = await loadFolder(targetNode.id);
-    const updated  = { ...targetNode, children };
+    const updated = { ...targetNode, children };
     setCurrentFolder(updated);
     setPath(newPath.map((n) => n.id === updated.id ? updated : n));
     setItems(children);
@@ -212,8 +212,8 @@ export const FolderExplorerUI = () => {
   const openModal = (file, modal) => {
     setActiveFile(file);
     if (modal === "version") setVersionOpen(true);
-    if (modal === "link")    setLinkOpen(true);
-    if (modal === "share")   setShareOpen(true);
+    if (modal === "link") setLinkOpen(true);
+    if (modal === "share") setShareOpen(true);
   };
 
   // ── render ─────────────────────────────────────────────────────────────
@@ -225,8 +225,7 @@ export const FolderExplorerUI = () => {
           {uploadNotice.msg}
         </div>
       )}
-
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 px-4 pt-4 lg:pl-6 relative z-10">
         {/* Toolbar */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Upload file */}
@@ -248,6 +247,15 @@ export const FolderExplorerUI = () => {
           >
             <FolderPlus className="w-4 h-4" /> New Folder
           </button>
+
+          {/* Index My Drive */}
+          <Link
+            to="/assistant/documents?tab=drive"
+            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-blue-900/50 text-zinc-300 hover:text-blue-300 text-sm font-medium rounded-xl border border-zinc-700 hover:border-blue-500/40 transition-all duration-200"
+            title="Index this drive in the AI knowledge base"
+          >
+            <Database className="w-4 h-4" /> Index My Drive
+          </Link>
         </div>
 
         {/* New folder input */}
@@ -269,51 +277,51 @@ export const FolderExplorerUI = () => {
 
         {/* File explorer */}
         <div className="flex h-[560px] bg-[#11131a] border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
-        {/* Sidebar */}
-        <aside className="w-64 border-r border-slate-800 bg-[#0a0b10] flex flex-col py-4 overflow-y-auto">
-          <h3 className="px-6 mb-4 text-xs font-semibold tracking-widest text-slate-500 uppercase">Directory</h3>
-          {loading && path.length === 1 ? (
-            <p className="px-6 text-xs text-slate-600">Loading…</p>
-          ) : (
-            <FolderTree
-              node={rootNode}
-              onSelectFolder={handleNavigate}
-              activeFolderId={currentFolder.id}
-            />
-          )}
-        </aside>
+          {/* Sidebar */}
+          <aside className="w-64 border-r border-slate-800 bg-[#0a0b10] flex flex-col py-4 overflow-y-auto">
+            <h3 className="px-6 mb-4 text-xs font-semibold tracking-widest text-slate-500 uppercase">Directory</h3>
+            {loading && path.length === 1 ? (
+              <p className="px-6 text-xs text-slate-600">Loading…</p>
+            ) : (
+              <FolderTree
+                node={rootNode}
+                onSelectFolder={handleNavigate}
+                activeFolderId={currentFolder.id}
+              />
+            )}
+          </aside>
 
-        {/* Main */}
-        <main className="flex-1 flex flex-col min-w-0">
-          <BreadcrumbNav path={path} onNavigate={handleNavigate} />
+          {/* Main */}
+          <main className="flex-1 flex flex-col min-w-0">
+            <BreadcrumbNav path={path} onNavigate={handleNavigate} />
 
-          {loading ? (
-            <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">
-              <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mr-3" />
-              Loading…
-            </div>
-          ) : error ? (
-            <div className="flex-1 flex items-center justify-center text-red-400 text-sm px-8 text-center">
-              {error}
-            </div>
-          ) : (
-            <FileListView
-              files={items}
-              onRowClick={handleRowClick}
-              onOpenModal={openModal}
-              onDeleteFile={handleDeleteFile}
-              onDownloadFile={(file) => driveService.downloadFile(file.id, file.name)}
-            />
-          )}
-        </main>
+            {loading ? (
+              <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">
+                <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mr-3" />
+                Loading…
+              </div>
+            ) : error ? (
+              <div className="flex-1 flex items-center justify-center text-red-400 text-sm px-8 text-center">
+                {error}
+              </div>
+            ) : (
+              <FileListView
+                files={items}
+                onRowClick={handleRowClick}
+                onOpenModal={openModal}
+                onDeleteFile={handleDeleteFile}
+                onDownloadFile={(file) => driveService.downloadFile(file.id, file.name)}
+              />
+            )}
+          </main>
         </div>
 
-      {/* Modals */}
-      <Suspense fallback={null}>
-        <VersionHistoryModal isOpen={versionOpen} onClose={() => setVersionOpen(false)} file={activeFile} />
-        <FileLinkModal       isOpen={linkOpen}    onClose={() => setLinkOpen(false)}    file={activeFile} />
-        <FileShareModal      isOpen={shareOpen}   onClose={() => setShareOpen(false)}   file={activeFile} />
-      </Suspense>
+        {/* Modals */}
+        <Suspense fallback={null}>
+          <VersionHistoryModal isOpen={versionOpen} onClose={() => setVersionOpen(false)} file={activeFile} />
+          <FileLinkModal isOpen={linkOpen} onClose={() => setLinkOpen(false)} file={activeFile} />
+          <FileShareModal isOpen={shareOpen} onClose={() => setShareOpen(false)} file={activeFile} />
+        </Suspense>
       </div>
     </>
   );

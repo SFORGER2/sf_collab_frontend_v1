@@ -15,31 +15,31 @@ import { toAbsoluteFileUrl } from "@/utils/toAbsoluteFileUrl";
 import SentimentIndicator from "../../ui/SentimentIndicator";
 
 const cardVariants = {
-  hidden:   { opacity: 0, y: 20 },
-  visible:  { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] } },
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] } },
 };
 
 export default function PostCard({ post, onPostDeleted }) {
   const currentUser = useSelector((state) => state.auth.user);
 
-  const [liked,          setLiked]          = useState(Boolean(post.isLiked || post.liked_by_current_user));
-  const [likesCount,     setLikesCount]     = useState(Number(post.likes ?? 0));
-  const [saved,          setSaved]          = useState(Boolean(post.isSaved || post.saved_by_current_user));
-  const [isEditing,      setIsEditing]      = useState(false);
-  const [editedCaption,  setEditedCaption]  = useState(post.caption || post.content || "");
-  const [showComments,   setShowComments]   = useState(false);
-  const [comments,       setComments]       = useState(
+  const [liked, setLiked] = useState(Boolean(post.isLiked || post.liked_by_current_user));
+  const [likesCount, setLikesCount] = useState(Number(post.likes ?? 0));
+  const [saved, setSaved] = useState(Boolean(post.isSaved || post.saved_by_current_user));
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedCaption, setEditedCaption] = useState(post.caption || post.content || "");
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState(
     Array.isArray(post.comments) ? post.comments : []
   );
-  const [newComment,       setNewComment]       = useState("");
-  const [loadingComments,  setLoadingComments]  = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [loadingComments, setLoadingComments] = useState(false);
   const commentInputRef = useRef(null);
 
   const isOwnPost =
     currentUser &&
     (post.author?._id === currentUser.id ||
-      post.author?.id  === currentUser.id ||
-      post.userId      === currentUser.id);
+      post.author?.id === currentUser.id ||
+      post.userId === currentUser.id);
 
   // ── Media helpers ─────────────────────────────────────────────────────────
   const getMediaUrls = () => {
@@ -58,16 +58,15 @@ export default function PostCard({ post, onPostDeleted }) {
       const rawUrls = Array.isArray(post.mediaUrl) ? post.mediaUrl : [post.mediaUrl];
       urls = rawUrls.map(u => u ? getMediaUrl(u) : null).filter(Boolean);
     }
-
     // Debug log to see the resolved URLs
     console.log('PostCard media URLs:', urls);
     return urls;
   };
 
-  const mediaUrls      = getMediaUrls();
-  const hasMedia       = mediaUrls.length > 0;
-  const hasMultiple    = mediaUrls.length > 1;
-  const primaryUrl     = mediaUrls[0];
+  const mediaUrls = getMediaUrls();
+  const hasMedia = mediaUrls.length > 0;
+  const hasMultiple = mediaUrls.length > 1;
+  const primaryUrl = mediaUrls[0];
 
   // ── Author avatar ─────────────────────────────────────────────────────────
   const authorAvatarSrc = getAvatarUrl(post.author);
@@ -111,8 +110,8 @@ export default function PostCard({ post, onPostDeleted }) {
 
   const handleLikeClick = async () => {
     if (!currentUser) return;
-    const postId    = post.id ?? post._id;
-    const toLiked   = !liked;
+    const postId = post.id ?? post._id;
+    const toLiked = !liked;
     setLiked(toLiked);
     setLikesCount((c) => toLiked ? c + 1 : Math.max(0, c - 1));
     try {
@@ -133,7 +132,7 @@ export default function PostCard({ post, onPostDeleted }) {
     setLoadingComments(true);
     try {
       const postId = post.id ?? post._id;
-      const res    = await postAPI.getComments(postId, { page: 1, per_page: 50 });
+      const res = await postAPI.getComments(postId, { page: 1, per_page: 50 });
       const list = res?.data?.comments ?? res?.comments ?? [];
       setComments(list);
       setShowComments(true);
@@ -148,25 +147,25 @@ export default function PostCard({ post, onPostDeleted }) {
     if (!newComment.trim() || !currentUser) return;
     try {
       const postId = post.id ?? post._id;
-      const res    = await postAPI.addComment(postId, newComment.trim(), {
-        author_id:         currentUser.id,
+      const res = await postAPI.addComment(postId, newComment.trim(), {
+        author_id: currentUser.id,
         author_first_name: currentUser.firstName || currentUser.first_name,
-        author_last_name:  currentUser.lastName  || currentUser.last_name,
+        author_last_name: currentUser.lastName || currentUser.last_name,
       });
       const created = res?.data?.comment ?? res?.comment;
       if (created) {
         setComments((prev) => [...prev, created]);
       } else {
         setComments((prev) => [...prev, {
-          id:               Date.now(),
-          content:          newComment.trim(),
-          author:           {
-            id:             currentUser.id,
-            firstName:      currentUser.firstName || currentUser.first_name,
-            lastName:       currentUser.lastName  || currentUser.last_name,
+          id: Date.now(),
+          content: newComment.trim(),
+          author: {
+            id: currentUser.id,
+            firstName: currentUser.firstName || currentUser.first_name,
+            lastName: currentUser.lastName || currentUser.last_name,
             profilePicture: currentUser.profile_picture,
           },
-          createdAt:        new Date().toISOString(),
+          createdAt: new Date().toISOString(),
         }]);
       }
       setNewComment("");
@@ -207,7 +206,7 @@ export default function PostCard({ post, onPostDeleted }) {
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-sm text-white">
                     {post.author?.firstName || post.author?.first_name}{" "}
-                    {post.author?.lastName  || post.author?.last_name}
+                    {post.author?.lastName || post.author?.last_name}
                   </p>
                   <SentimentIndicator
                     sentiment={post.sentiment}
@@ -321,11 +320,11 @@ export default function PostCard({ post, onPostDeleted }) {
                   <p className="text-zinc-500 text-sm text-center py-2">No comments yet.</p>
                 ) : (
                   comments.map((comment, idx) => {
-                    const cId      = comment.id ?? comment._id ?? idx;
-                    const cName    = comment.author?.firstName || comment.author_first_name || "User";
+                    const cId = comment.id ?? comment._id ?? idx;
+                    const cName = comment.author?.firstName || comment.author_first_name || "User";
                     const cContent = comment.content ?? comment.text ?? "";
-                    const cDate    = comment.createdAt || comment.created_at;
-                    const cAvatar  = getAvatarUrl(comment.author);
+                    const cDate = comment.createdAt || comment.created_at;
+                    const cAvatar = getAvatarUrl(comment.author);
                     return (
                       <div key={cId} className="bg-zinc-800/30 rounded p-2 text-sm flex gap-2 items-start">
                         <Avatar className="w-7 h-7 shrink-0">

@@ -9,13 +9,14 @@ import {
   Save,
   TrendingUp,
   FolderOpen,
-  HardDrive
+  HardDrive,
+  Presentation,
 } from "lucide-react";
 import { FcDocument, FcInvite } from "react-icons/fc";
 import { aiTools, toolsSection, dashboardLink, socialSection, ideation, wallet, sfDriveSection, sfMeetSection } from "../sidebarCommons";
 
 
-export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActiveRole = () => {}, activeRole = 'investor') {
+export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActiveRole = () => { }, activeRole = 'investor') {
   return [
     dashboardLink(userRoles, setActiveRole),
     {

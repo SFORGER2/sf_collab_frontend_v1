@@ -67,7 +67,7 @@ const StarRating = ({ rating, count, size = 14 }) => (
 
 // ── Mentor Card ───────────────────────────────────────────────────────────────
 const MentorCard = ({ mentor, onClick, currentUserId }) => {
-  const user    = mentor.user;
+  const user = mentor.user;
   const initials = user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'M';
 
   return (
@@ -86,7 +86,7 @@ const MentorCard = ({ mentor, onClick, currentUserId }) => {
         <div className="relative flex-shrink-0">
           {user?.profile_picture ? (
             <img src={getAvatarUrl(user.profile_picture)}
-                 className="w-12 h-12 rounded-xl object-cover" alt="" />
+              className="w-12 h-12 rounded-xl object-cover" alt="" />
           ) : (
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600
                             flex items-center justify-center text-white font-bold text-sm">
@@ -164,19 +164,19 @@ const MentorCard = ({ mentor, onClick, currentUserId }) => {
 const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
   const { user, access_token } = useSelector(state => state.auth);
   const navigate = useNavigate();
-  const [loading, setLoading]                     = useState(false);
+  const [loading, setLoading] = useState(false);
   const [stripeRedirecting, setStripeRedirecting] = useState(false);
-  const [myIdeas, setMyIdeas]       = useState([]);
+  const [myIdeas, setMyIdeas] = useState([]);
   const [myStartups, setMyStartups] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [form, setForm] = useState({
-  idea_id: '',
-  startup_id: '',
-  message: '',
-  areas_of_help: [],
-  otherHelpText: '',   // <-- new
-  mentorship_mode: mentor.is_free ? 'free_community' : 'paid_session',
-});
+    idea_id: '',
+    startup_id: '',
+    message: '',
+    areas_of_help: [],
+    otherHelpText: '',   // <-- new
+    mentorship_mode: mentor.is_free ? 'free_community' : 'paid_session',
+  });
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -233,14 +233,14 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
     setLoading(true);
     try {
       const payload = {
-  mentor_id: parseInt(mentor.id),
-  message: form.message.trim(),
-  areas_of_help: form.areas_of_help.includes('Other') && form.otherHelpText.trim()
-    ? [...form.areas_of_help.filter(a => a !== 'Other'), form.otherHelpText.trim()]
-    : form.areas_of_help,
-  mentorship_mode: form.mentorship_mode,
-};
-      if (form.idea_id)    payload.idea_id    = parseInt(form.idea_id);
+        mentor_id: parseInt(mentor.id),
+        message: form.message.trim(),
+        areas_of_help: form.areas_of_help.includes('Other') && form.otherHelpText.trim()
+          ? [...form.areas_of_help.filter(a => a !== 'Other'), form.otherHelpText.trim()]
+          : form.areas_of_help,
+        mentorship_mode: form.mentorship_mode,
+      };
+      if (form.idea_id) payload.idea_id = parseInt(form.idea_id);
       if (form.startup_id) payload.startup_id = parseInt(form.startup_id);
 
       const res = await mentorRequestAPI.sendRequest(payload);
@@ -419,30 +419,30 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
 
           {/* Areas of help */}
           <div className="flex flex-wrap gap-2">
-  {AREAS_OF_HELP.map(area => (
-    <button key={area} onClick={() => toggleArea(area)}
-      className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors
+            {AREAS_OF_HELP.map(area => (
+              <button key={area} onClick={() => toggleArea(area)}
+                className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors
         ${form.areas_of_help.includes(area)
-          ? 'bg-blue-600/20 text-blue-400 border-blue-500/40'
-          : 'bg-white/[0.03] text-gray-500 border-white/[0.06] hover:border-white/[0.12]'}`}>
-      {area}
-    </button>
-  ))}
-</div>
+                    ? 'bg-blue-600/20 text-blue-400 border-blue-500/40'
+                    : 'bg-white/[0.03] text-gray-500 border-white/[0.06] hover:border-white/[0.12]'}`}>
+                {area}
+              </button>
+            ))}
+          </div>
 
-{/* Show text input when "Other" is selected */}
-{form.areas_of_help.includes('Other') && (
-  <div className="mt-2">
-    <input
-      type="text"
-      placeholder="Describe your specific need..."
-      value={form.otherHelpText || ''}
-      onChange={(e) => setForm(f => ({ ...f, otherHelpText: e.target.value }))}
-      className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5
+          {/* Show text input when "Other" is selected */}
+          {form.areas_of_help.includes('Other') && (
+            <div className="mt-2">
+              <input
+                type="text"
+                placeholder="Describe your specific need..."
+                value={form.otherHelpText || ''}
+                onChange={(e) => setForm(f => ({ ...f, otherHelpText: e.target.value }))}
+                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5
                  text-white text-sm placeholder-gray-600 focus:outline-none focus:border-blue-500/50"
-    />
-  </div>
-)}
+              />
+            </div>
+          )}
 
           {/* Message */}
           <div>
@@ -524,7 +524,7 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
 
 // ── Mentor Profile Modal ──────────────────────────────────────────────────────
 const MentorProfileModal = ({ mentor, onClose, onRequest, onDelete, currentUserId }) => {
-  const user     = mentor.user;
+  const user = mentor.user;
   const initials = user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'M';
 
   return (
@@ -552,7 +552,7 @@ const MentorProfileModal = ({ mentor, onClose, onRequest, onDelete, currentUserI
             <div className="flex items-center gap-3">
               {user?.profile_picture ? (
                 <img src={getAvatarUrl(user.profile_picture)}
-                     className="w-14 h-14 rounded-xl object-cover" alt="" />
+                  className="w-14 h-14 rounded-xl object-cover" alt="" />
               ) : (
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600
                                 flex items-center justify-center text-white font-bold text-lg">
@@ -631,15 +631,15 @@ const MentorProfileModal = ({ mentor, onClose, onRequest, onDelete, currentUserI
               <div className="flex gap-3">
                 {mentor.linkedin_url && (
                   <a href={mentor.linkedin_url} target="_blank" rel="noopener noreferrer"
-                     onClick={e => e.stopPropagation()}
-                     className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors">
+                    onClick={e => e.stopPropagation()}
+                    className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors">
                     <Linkedin size={13} /> LinkedIn
                   </a>
                 )}
                 {mentor.website_url && (
                   <a href={mentor.website_url} target="_blank" rel="noopener noreferrer"
-                     onClick={e => e.stopPropagation()}
-                     className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-300 transition-colors">
+                    onClick={e => e.stopPropagation()}
+                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-300 transition-colors">
                     <Globe size={13} /> Website
                   </a>
                 )}
@@ -913,26 +913,26 @@ const BecomeMentorModal = ({ onClose, onSuccess }) => {
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 const MentorDiscoveryPage = () => {
   const { user } = useSelector(state => state.auth);
-  const [mentors, setMentors]       = useState([]);
-  const [loading, setLoading]       = useState(true);
+  const [mentors, setMentors] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedMentor, setSelectedMentor] = useState(null);
-  const [requestMentor, setRequestMentor]   = useState(null);
+  const [requestMentor, setRequestMentor] = useState(null);
   const [showBecome, setShowBecome] = useState(false);
   const [pagination, setPagination] = useState({ total: 0, pages: 1, page: 1 });
 
   const [filters, setFilters] = useState({
-  sector: '', is_free: '', available: '', sort: 'rating', search: '',
-});
+    sector: '', is_free: '', available: '', sort: 'rating', search: '',
+  });
 
   const loadMentors = useCallback(async (page = 1) => {
     setLoading(true);
     try {
       const params = { page, per_page: 18 };
-      if (filters.search)    params.search    = filters.search;
+      if (filters.search) params.search = filters.search;
       if (filters.sector && filters.sector !== 'All') params.sector = filters.sector;
-      if (filters.is_free)   params.is_free   = filters.is_free;
+      if (filters.is_free) params.is_free = filters.is_free;
       if (filters.available) params.available = filters.available;
-      if (filters.sort)      params.sort      = filters.sort;
+      if (filters.sort) params.sort = filters.sort;
 
       const res = await mentorDiscoveryAPI.getMentors(params);
       if (res.success) {

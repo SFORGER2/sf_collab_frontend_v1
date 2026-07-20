@@ -15,18 +15,36 @@ const getStoredUser = () => {
     return null;
   }
   try {
-    return JSON.parse(stored);
+    const parsed = JSON.parse(stored);
+    if (parsed?.email === 'mockuser@example.com' || parsed?.id === 'mock-user-id') {
+      localStorage.removeItem('user');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refreshToken');
+      return null;
+    }
+    return parsed;
   } catch (e) {
     console.error('Failed to parse stored user', e);
     return null;
   }
 };
 
+const getStoredToken = () => {
+  const token = localStorage.getItem('access_token');
+  if (token === 'mock-jwt-token-xyz123' || (token && token.startsWith('mock-'))) {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    return null;
+  }
+  return token;
+};
+
 const initialState = {
   user: getStoredUser(),
-  access_token: localStorage.getItem('access_token'),
-  refreshToken: localStorage.getItem('refreshToken'),
-  isAuthenticated: !!localStorage.getItem('access_token'),
+  access_token: getStoredToken(),
+  refreshToken: localStorage.getItem('refreshToken') && !localStorage.getItem('access_token') ? null : localStorage.getItem('refreshToken'),
+  isAuthenticated: !!getStoredToken(),
   loading: false,
   error: null,
   hasCheckedProfile: false,

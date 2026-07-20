@@ -1,38 +1,112 @@
-
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { waitlistAPI } from '../../../utils/APIs/waitlistAPI'
-import { CheckCircle2, Users, Gift } from 'lucide-react'
+import { CheckCircle2, Users, Gift, Phone } from 'lucide-react'
 import { toast } from 'react-toastify'
-import useCountdown from './hooks/useCountdown'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { LoadingSpinner } from './ui/loading-spinner'
 
-
-
-// Smooth prompt input (inspired by Claude Style Chat Input)
-function PromptInput({ value, onChange, placeholder, wFull, includeLogo, ...props }) {
+/* ------------------------------------------------------------------
+   PhoneInput — extension + number side by side, dark-theme safe
+------------------------------------------------------------------ */
+function PhoneInput({ extension, onExtensionChange, phone, onPhoneChange }) {
   return (
-    <div className={`relative group ${wFull ? 'w-full' : ''}`}>
-      <Input
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className="pl-10 pr-4 py-2 bg-b/80 border border-primary/30 rounded-lg shadow-md focus:ring-2 focus:ring-primary/40 transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg"
-        {...props}
-      />
-      {includeLogo &&
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary/70 text-lg transition-transform duration-300 group-hover:scale-110">✉️</span>
-      }
+    <div className="flex gap-2 w-full">
+      <div className="relative w-20 shrink-0">
+        <Input
+          id="extension"
+          type="text"
+          placeholder="+1"
+          value={extension}
+          onChange={onExtensionChange}
+          className="w-full bg-neutral-800 border border-white/10 text-white placeholder:text-neutral-500 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors"
+        />
+      </div>
+      <div className="relative flex-1">
+        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 pointer-events-none" />
+        <Input
+          id="phone"
+          type="tel"
+          placeholder="123-456-7890"
+          value={phone}
+          onChange={onPhoneChange}
+          required
+          className="w-full pl-9 bg-neutral-800 border border-white/10 text-white placeholder:text-neutral-500 rounded-lg py-2 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors"
+        />
+      </div>
     </div>
   )
 }
 
+/* ------------------------------------------------------------------
+   ReadOnlyField — consistent display for email / name
+------------------------------------------------------------------ */
+function ReadOnlyField({ label, value }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label className="text-xs font-medium uppercase tracking-wider text-neutral-500">
+        {label}
+      </Label>
+      <p className="text-sm text-neutral-200 bg-neutral-800/60 border border-white/10 rounded-lg px-3 py-2 min-h-[38px] flex items-center">
+        {value || <span className="text-neutral-500 italic">Not provided</span>}
+      </p>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------
+   OTPInput — 6-digit verification code boxes
+------------------------------------------------------------------ */
+function OTPInput({ value, onChange }) {
+  const digits = value.padEnd(6, '').split('').slice(0, 6)
+
+  const handleChange = (e, i) => {
+    const val = e.target.value.replace(/\D/g, '').slice(-1)
+    const next = digits.map((d, idx) => (idx === i ? val : d)).join('')
+    onChange(next)
+    if (val && i < 5) {
+      e.target.parentElement.children[i + 1]?.focus()
+    }
+  }
+
+  const handleKeyDown = (e, i) => {
+    if (e.key === 'Backspace' && !digits[i] && i > 0) {
+      e.target.parentElement.children[i - 1]?.focus()
+    }
+  }
+
+  const handlePaste = (e) => {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    onChange(pasted)
+  }
+
+  return (
+    <div className="flex gap-2 justify-center" onPaste={handlePaste}>
+      {digits.map((d, i) => (
+        <Input
+          key={i}
+          type="text"
+          inputMode="numeric"
+          maxLength={1}
+          value={d}
+          onChange={(e) => handleChange(e, i)}
+          onKeyDown={(e) => handleKeyDown(e, i)}
+          className="w-11 h-11 text-center text-lg font-bold bg-neutral-800 border border-white/10 text-white rounded-lg focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors"
+        />
+      ))}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------
+   WaitlistSignup — main export
+------------------------------------------------------------------ */
 export function WaitlistSignup() {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
@@ -41,60 +115,68 @@ export function WaitlistSignup() {
   const [verificationCode, setVerificationCode] = useState('')
   const [truthyVerificationCode, setTruthyVerificationCode] = useState('')
   const [verified, setVerified] = useState(false)
-
-  useEffect(() => {
-
-    if (verificationCode === truthyVerificationCode && verificationCode.length === 6) {
-      setVerified(true)
-      toast.success('Phone number verified successfully!')
-    }
-
-  }, [verificationCode, truthyVerificationCode]);
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(false)
   const [isOnWaitlist, setIsOnWaitlist] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [maxCount, setMaxCount] = useState(1000)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+
+  const navigate = useNavigate()
+  const { user, access_token } = useSelector((state) => state.auth)
+
+  // Auto-verify when OTP matches
+  useEffect(() => {
+    if (
+      truthyVerificationCode.length === 6 &&
+      verificationCode === truthyVerificationCode
+    ) {
+      setVerified(true)
+      toast.success('Phone number verified successfully!')
+    }
+  }, [verificationCode, truthyVerificationCode])
+
+  // Fetch total waitlist count
   useEffect(() => {
     async function fetchTotalCount() {
-      const result = await waitlistAPI.getTotalCount()
-
-      setTotalCount(result.total)
-      setMaxCount(result.max_allowed)
+      try {
+        const res = await waitlistAPI.getTotalCount()
+        setTotalCount(res.total)
+        setMaxCount(res.max_allowed)
+      } catch {
+        // silently fail — counter just shows 0
+      }
     }
     fetchTotalCount()
-  }, []);
-  const [expiresAt] = useState(null) // in seconds
-  const navigate = useNavigate()
-  const { user, access_token } = useSelector((state) => state.auth);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  }, [])
+
+  // Pre-fill from logged-in user
   useEffect(() => {
-    if (user && user.email) {
+    if (user?.email) {
       setEmail(user.email)
       setName((user.fullName || user.firstName || '').trim())
     }
-  }, [user]);
-  // const secondsLeft = useCountdown(expiresAt || 5, result, () => {
-  //   navigate(`/refer`)
-  // })
+  }, [user])
+
+  // Check if already on waitlist
   useEffect(() => {
     async function checkWaitlist() {
-      if (!email) return;
-      const isOnWaitlist = await waitlistAPI.isOnWaitlist(email)
-
-      setIsOnWaitlist(isOnWaitlist.on_waitlist)
-      if (isOnWaitlist.on_waitlist) {
-        setResult({ position: isOnWaitlist.position })
+      if (!email) return
+      try {
+        const res = await waitlistAPI.isOnWaitlist(email)
+        setIsOnWaitlist(res.on_waitlist)
+        if (res.on_waitlist) setResult({ position: res.position })
+      } catch {
+        // silently fail
       }
     }
     checkWaitlist()
-  }, [email]);
-
-
+  }, [email])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+
     if (isOnWaitlist) {
       toast.error('You are already on the waitlist')
       setLoading(false)
@@ -105,6 +187,7 @@ export function WaitlistSignup() {
       setLoading(false)
       return
     }
+
     if (!verified) {
       try {
         if (truthyVerificationCode.length === 6) {
@@ -112,305 +195,262 @@ export function WaitlistSignup() {
           setLoading(false)
           return
         }
-        const response = await waitlistAPI.sendPhoneVerificationCode(user.id, email, phone, extension, access_token)
+        const response = await waitlistAPI.sendPhoneVerificationCode(
+          user.id, email, phone, extension, access_token
+        )
         if (response?.verified) {
           setVerified(true)
           toast.success('Phone number verified successfully!')
-          setLoading(false)
-        }
-        else {
+        } else {
           setTruthyVerificationCode(String(response.verification_code))
-
           toast.info('Verification code sent to your phone. Please enter the code to verify.')
-          return
         }
-
-
       } catch (err) {
         if (err.status === 401) {
           toast.error('Phone number already in use. Please check and try again.')
-          return
+        } else {
+          toast.error('Failed to send verification code. Please check your phone number and try again.')
         }
-        console.log('Response:', err);
-        toast.error('Failed to send verification code. Please check your phone number and try again.')
-        return
       } finally {
         setLoading(false)
       }
+      return
     }
+
     try {
       const response = await waitlistAPI.register(email, name || undefined, user.id, access_token)
-
       setResult(response)
       toast.success('Successfully joined the waitlist!')
-      setTotalCount(totalCount + 1)
-
-
+      setTotalCount((c) => c + 1)
     } catch (error) {
-      if (error.response && error.response.status === 409) {
+      if (error.response?.status === 409) {
         toast.error('The waitlist is full. We are no longer accepting new signups.')
-        return
-      }
-      if (error.response && error.response.status === 400) {
+      } else if (error.response?.status === 400) {
         toast.error('This phone number is already registered.')
-        return
+      } else {
+        toast.error(error.response?.data?.error || 'Failed to join the waitlist')
       }
-      toast.error(error.response?.data?.error || 'Failed to join the waitlist')
     } finally {
       setLoading(false)
     }
   }
-  if (isOnWaitlist) {
 
+  const progressPct = Math.min((totalCount / maxCount) * 100, 100)
+
+  /* ---- Already on waitlist ---- */
+  if (isOnWaitlist) {
     return (
-      <div className="p-6 bg-neutral-900 border border-green-600 rounded-2xl text-center">
-        <CheckCircle2 className="h-10 w-10 text-green-500 mx-auto mb-4 animate-bounce" />
-        <h2 className="text-2xl font-bold text-white mb-2">Already on Waitlist</h2>
-        <p className="text-neutral-400">
-          You are already on the waitlist. Thank you for your interest! Stay tuned for updates and referral opportunities.
-        </p>
-        <p className="text-lg font-medium mb-4 text-white mt-4">Your Position: <span className="font-bold text-green-400">#{result.position}</span></p>
-        <Button
-          onClick={() => navigate('/dashboard')}
-          className="p-4 m-4 bg-green-600 hover:bg-green-700 transition-all duration-300"
-        >
-          Go to Dashboard
-        </Button>
-      </div>
-    );
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-xl mx-auto"
+      >
+        <div className="p-8 bg-neutral-900 border border-green-600/50 rounded-2xl text-center space-y-4">
+          <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto animate-bounce" />
+          <h2 className="text-2xl font-bold text-white">Already on Waitlist</h2>
+          <p className="text-neutral-400 text-sm leading-relaxed">
+            You're already registered. Thank you for your interest — stay tuned for updates and referral opportunities.
+          </p>
+          <p className="text-white">
+            Your Position:{' '}
+            <span className="font-bold text-green-400 text-lg">#{result.position}</span>
+          </p>
+          <Button
+            onClick={() => navigate('/dashboard')}
+            className="bg-green-600 hover:bg-green-700 transition-colors px-8"
+          >
+            Go to Dashboard
+          </Button>
+        </div>
+      </motion.div>
+    )
   }
+
+  /* ---- Waitlist full ---- */
   if (totalCount >= maxCount) {
     return (
-      <>
-        <div className="p-6 bg-neutral-900 border border-red-600 rounded-2xl text-center">
-          <Gift className="h-10 w-10 text-red-500 mx-auto mb-4 animate-bounce" />
-          <h2 className="text-2xl font-bold text-white mb-2">Waitlist Full</h2>
-          <p className="text-neutral-400">
-            Thank you for your interest! The waitlist has reached its maximum capacity. Please check back later for more opportunities to join.
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-xl mx-auto space-y-4"
+      >
+        <div className="p-8 bg-neutral-900 border border-red-600/50 rounded-2xl text-center space-y-3">
+          <Gift className="h-12 w-12 text-red-500 mx-auto animate-bounce" />
+          <h2 className="text-2xl font-bold text-white">Waitlist Full</h2>
+          <p className="text-neutral-400 text-sm leading-relaxed">
+            The waitlist has reached its maximum capacity. Please check back later for more opportunities to join.
           </p>
         </div>
-
-        <div className="my-6 p-8 bg-slate-900 border border-white rounded-2xl total w-full">
-          <p className="text-sm text-white text-center">
-            Total on Waitlist: <span className="font-bold text-white">{totalCount}</span> / <span className="font-bold text-white">{maxCount}</span>
-          </p>
-          <div className='w-full h-4 border border-black rounded-lg overflow-hidden mt-2 bg-white/10'>
-            <div
-              className='h-full bg-linear-to-r from-blue-500 to-purple-600 transition-all duration-500 rounded-lg'
-              style={{ width: `${(totalCount / maxCount) * 100}%` }}
-            ></div>
-          </div>
-        </div>
-
-      </>
-    );
+        <WaitlistCounter totalCount={totalCount} maxCount={maxCount} progressPct={progressPct} />
+      </motion.div>
+    )
   }
 
+  /* ---- Success state ---- */
+  if (result) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, type: 'spring' }}
+        className="max-w-xl mx-auto"
+      >
+        <Card className="border-green-600/40 shadow-2xl bg-neutral-900 text-center">
+          <CardHeader className="px-6 pt-8 pb-4">
+            <CardTitle className="flex items-center justify-center gap-3 text-white text-2xl">
+              <CheckCircle2 className="h-8 w-8 text-green-500" />
+              Congratulations!
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-6 pb-8 space-y-5">
+            <div>
+              <p className="text-neutral-300 mb-2">You're on the waitlist</p>
+              <p className="text-5xl font-bold bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">
+                #{result.position}
+              </p>
+            </div>
+            <p className="text-neutral-300">🚀 The competition has started!</p>
+            <Button
+              onClick={() => navigate('/dashboard')}
+              className="bg-green-600 hover:bg-green-700 transition-colors px-8"
+            >
+              Go to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
+    )
+  }
+
+  /* ---- Main signup form ---- */
   return (
-    <div className="relative flex flex-col justify-center items-center bg-linear-to-tr min-h-[400px] p-6 rounded-2xl shadow-2xl overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, type: 'spring' }}
+      className="max-w-xl mx-auto"
+    >
+      <Card className="shadow-2xl bg-neutral-900 border border-white/10">
+        <CardHeader className="px-6 pt-6 pb-4 border-b border-white/10">
+          <CardTitle className="flex items-center gap-2 text-white text-xl">
+            <Users className="h-5 w-5 text-blue-400" />
+            Join the Waitlist
+          </CardTitle>
+        </CardHeader>
 
-      {result ? (
-        <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, type: 'spring' }} className="w-full max-w-xl z-10">
-          <Card className="border-primary shadow-2xl bg-slate-800/90 backdrop-blur-md text-center">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-center gap-2 text-white text-3xl">
-                <CheckCircle2 className="h-8 w-8 animate-scale-in" />
-                Congratulations!
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <p className="text-xl font-semibold mb-2 text-white">You're in the waitlist</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-white to-gray-400/60 bg-clip-text text-transparent">
-                  #{result.position}
-                </p>
-              </div>
+        <CardContent className="px-6 pt-6 pb-6">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
-              <p className="text-lg font-medium text-white">🚀 The competition has started!</p>
+            <ReadOnlyField label="Email" value={email} />
+            <ReadOnlyField label="Name" value={name} />
 
-              <Button
-                onClick={() => navigate('/dashboard')}
-                className="p-4 m-4 bg-green-600 hover:bg-green-700 transition-all duration-300"
+            {/* Phone */}
+            <div className="flex flex-col gap-1.5">
+              <Label
+                htmlFor="phone"
+                className="text-xs font-medium uppercase tracking-wider text-neutral-500"
               >
-                Go to Dashboard
-              </Button>
-              {/* <p className="text-sm text-slate-400">
-                Redirecting to referral page in <span className="font-bold text-white">{secondsLeft}</span> seconds...
-              </p> */}
-            </CardContent>
-          </Card>
-        </motion.div>
-      ) : (
-        <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, type: 'spring' }} className="w-full max-w-xl space-y-6 z-10">
-          <Card className="hover-lift animate-fade-in-up shadow-2xl bg-stale-600/90 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="flex text-white items-center gap-2">
-                <Users className="h-5 w-5 text-white transition-transform duration-300 hover:rotate-12" />
-                Join the Waitlist
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in-up animate-stagger-1">
-                <div className="space-y-2 text-white">
-                  <Label>Email</Label>
-                  <p className="text-sm text-slate-300">{email}</p>
-                </div>
-                <div className="space-y-2 text-white">
-                  <Label>Name</Label>
-                  <p className="text-sm text-slate-300">{name || 'Not provided'}</p>
-                </div>
-                <div className="space-y-2 text-white">
-                  <Label htmlFor="phone">Phone Number *</Label>
+                Phone Number <span className="text-red-400">*</span>
+              </Label>
+              <PhoneInput
+                extension={extension}
+                onExtensionChange={(e) => setExtension(e.target.value)}
+                phone={phone}
+                onPhoneChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
 
-                  <div className="flex gap-2 w-full text-black">
-                    <PromptInput
-                      id="extension"
-                      type="text"
-                      placeholder="Ext"
-                      value={extension}
-                      onChange={(e) => setExtension(e.target.value)}
-                      className="w-20"
-                    />
+            {/* Terms */}
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs font-medium uppercase tracking-wider text-neutral-500">
+                Terms & Conditions
+              </Label>
+              <label
+                htmlFor="terms"
+                className="flex items-start gap-3 bg-neutral-800/60 border border-white/10 rounded-lg px-4 py-3 cursor-pointer hover:border-white/20 transition-colors"
+              >
+                <input
+                  id="terms"
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="w-4 h-4 mt-0.5 shrink-0 accent-blue-500 cursor-pointer"
+                />
+                <span className="text-sm text-neutral-300 leading-snug">
+                  I accept the{' '}
+                  <a
+                    href="/waitlist-terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:text-blue-300 underline underline-offset-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    waitlist terms and conditions
+                  </a>
+                </span>
+              </label>
+            </div>
 
-                    <PromptInput
-                      id="phone"
-                      type="tel"
-                      placeholder="123-456-7890"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
-                      className="flex-1"
-                      wFull={true}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2 text-white">
-                  <Label htmlFor="terms">Terms & Conditions</Label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      id="terms"
-                      type="checkbox"
-                      checked={acceptedTerms}
-                      onChange={(e) => setAcceptedTerms(e.target.checked)}
-                      className="w-4 h-4 rounded border-primary/30 bg-b/80 cursor-pointer"
-                    />
-                    <label htmlFor="terms" className="text-sm text-slate-300 cursor-pointer">
-                      I accept the <a href="/waitlist-terms" target="_blank" rel="noopener noreferrer" className="underline">waitlist terms and conditions</a>
-                    </label>
-                  </div>
-                </div>
+            {/* OTP — shown after SMS sent */}
+            {!verified && truthyVerificationCode.length === 6 && (
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-medium uppercase tracking-wider text-neutral-500">
+                  Verification Code
+                </Label>
+                <p className="text-sm text-neutral-400">
+                  Enter the 6-digit code sent to your phone
+                </p>
+                <OTPInput value={verificationCode} onChange={setVerificationCode} />
+              </div>
+            )}
 
-                {
-                  !verified && truthyVerificationCode.length === 6 && (
-                    <div className="space-y-2 text-white">
-                      <Label htmlFor="verificationCode">Verification Code</Label>
-                      <p className="text-sm text-slate-300">Enter the 6-digit code sent to your phone</p>
-                      <div className="flex gap-1 justify-center">
-                        {[...Array(6)].map((_, i) => (
-                          <Input
-                            key={i}
-                            type="text"
-                            maxLength="1"
-                            placeholder="0"
-                            onPaste={(e) => {
-                              const paste = e.clipboardData.getData('text').slice(0, 6)
-                              const newCode = paste.split('')
-                              setVerificationCode(newCode.join(''))
-                            }}
-                            value={verificationCode[i] || ''}
-                            onChange={(e) => {
-                              const newCode = verificationCode.split('')
-                              newCode[i] = e.target.value
-                              setVerificationCode(newCode.join(''))
-                              if (e.target.value.length === 0) {
-                                e.target.previousElementSibling?.focus()
-                                return
-                              }
-                              if (e.target.value && i < 5) {
-                                e.target.nextElementSibling?.focus()
-                              }
-                            }}
-                            className="w-10 h-10 text-center text-lg font-bold border border-primary/30 rounded-lg bg-b/80 focus:ring-2 focus:ring-primary/40"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )
-                }{
-                  !verified && truthyVerificationCode.length === 6 && (
-                    <div className="space-y-2 text-white">
-                      <Label htmlFor="verificationCode">Verification Code</Label>
-                      <p className="text-sm text-slate-300">Enter the 6-digit code sent to your phone</p>
-                      <div className="flex gap-1 justify-center">
-                        {[...Array(6)].map((_, i) => (
-                          <Input
-                            key={i}
-                            type="text"
-                            maxLength="1"
-                            placeholder="0"
-                            onPaste={(e) => {
-                              const paste = e.clipboardData.getData('text').slice(0, 6)
-                              const newCode = paste.split('')
-                              setVerificationCode(newCode.join(''))
-                            }}
+            {/* Submit */}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-1"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <LoadingSpinner size="sm" />
+                  {truthyVerificationCode.length === 6 && !verified ? 'Verifying...' : 'Joining...'}
+                </span>
+              ) : (
+                truthyVerificationCode.length === 6 && !verified ? 'Verify & Join' : 'Join Waitlist'
+              )}
+            </Button>
 
-                            value={verificationCode[i] || ''}
-                            onChange={(e) => {
-                              const newCode = verificationCode.split('')
-                              newCode[i] = e.target.value
-                              setVerificationCode(newCode.join(''))
-                              if (e.target.value.length === 0) {
-                                e.target.previousElementSibling?.focus()
-                                return
-                              }
-                              if (e.target.value && i < 5) {
-                                e.target.nextElementSibling?.focus()
-                              }
-                            }}
-                            className="w-10 h-10 text-center text-lg font-bold border border-primary/30 rounded-lg bg-b/80 focus:ring-2 focus:ring-primary/40"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="group w-full transition-all duration-300 hover:scale-105
-      hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
-      hover:bg-purple-600 cursor-pointer"
-                >
+            {/* Counter */}
+            <WaitlistCounter totalCount={totalCount} maxCount={maxCount} progressPct={progressPct} />
 
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <LoadingSpinner size="sm" />
-                      Joining...
-                    </span>
-                  ) : (
-                    'Join Waitlist'
-                  )}
-                </Button>
-                <div className="total w-full">
-                  <p className="text-sm text-white text-center">
-                    Total on Waitlist: <span className="font-bold text-white">{totalCount}</span> / <span className="font-bold text-white">{maxCount}</span>
-                  </p>
-                  <div className='w-full h-4 border border-black rounded-lg overflow-hidden mt-2 bg-white/10'>
-                    <div
-                      className='h-full bg-linear-to-r from-blue-500 to-purple-600 transition-all duration-500 rounded-lg'
-                      style={{ width: `${(totalCount / maxCount) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+          </form>
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
+}
+
+/* ------------------------------------------------------------------
+   WaitlistCounter — reusable progress bar
+------------------------------------------------------------------ */
+function WaitlistCounter({ totalCount, maxCount, progressPct }) {
+  return (
+    <div className="flex flex-col gap-2 pt-1">
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-neutral-400">Spots filled</span>
+        <span className="text-white font-semibold">
+          {totalCount.toLocaleString()} / {maxCount.toLocaleString()}
+        </span>
+      </div>
+      <div className="w-full h-2 rounded-full bg-neutral-800 overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-700"
+          style={{ width: `${progressPct}%` }}
+        />
+      </div>
+      <p className="text-xs text-neutral-500 text-center">
+        {Math.round(progressPct)}% of spots claimed
+      </p>
     </div>
-  );
-};
-
-
-// ...existing code up to the first return statement...
-// Only keep the first return block, remove all duplicate/extra returns and JSX after it.
-
+  )
+}

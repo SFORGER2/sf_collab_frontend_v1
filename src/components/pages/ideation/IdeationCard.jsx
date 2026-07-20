@@ -6,31 +6,57 @@ import {
   Users, UserPlus, X, Send, CheckCircle, Clock3,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDraft } from "@/utils/hooks/useDraft";
 import { ideaAPI } from "@/utils/APIs/ideaAPI";
 import { useSelector } from "react-redux";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ConnectionButton } from "@/components/connection/ConnectionButton";
 import { toast } from "react-toastify";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import axios from "axios";
+import { API_BASE_URL as API_URL } from "@/utils/config";
 
 // ── Collab Request Modal ──────────────────────────────────────────────────────
 function CollabRequestModal({ idea, onClose, onSuccess, accessToken }) {
   const [message, setMessage] = useState("");
-  const [role,    setRole]    = useState("co-developer");
+  const [role, setRole] = useState("co-developer");
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1); // 2-step wizard
 
-  const roles = ["co-developer","designer","marketer","business analyst","advisor","other"];
+  const roles = ["co-developer", "designer", "marketer", "business analyst", "advisor", "other"];
+
+  const availabilityOptions = [
+    { id: "< 5 hrs / week", label: "< 5 hrs", sub: "/ week" },
+    { id: "5–10 hrs / week", label: "5–10 hrs", sub: "/ week" },
+    { id: "10–20 hrs / week", label: "10–20 hrs", sub: "/ week" },
+    { id: "20+ hrs / week", label: "20+ hrs", sub: "/ week" },
+    { id: "Full-time", label: "Full-time", sub: "dedicated" },
+  ];
+
+  const confirmCustomRole = () => {
+    const trimmed = customRole.trim();
+    if (!trimmed) return;
+    setConfirmedCustomRole(trimmed);
+  };
+
+  const clearCustomRole = () => {
+    setConfirmedCustomRole("");
+    setCustomRole("");
+  };
 
   const handleSubmit = async () => {
+    if (!role) return toast.error("Please select a role.");
+    if (role === "other" && !confirmedCustomRole) return toast.error("Please confirm your custom role.");
+    if (!availability) return toast.error("Please select your availability.");
     setLoading(true);
     try {
+      const finalRole = role === "other" ? confirmedCustomRole : role;
       const res = await axios.post(
         `/api/ideas/${idea.id}/collab-requests`,
         { message, role },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-      toast.success("Request sent! The creator will review it.");
+      toast.success("Application sent! The creator will review it.");
       onSuccess(res?.data?.data?.collab_request?.id);
       onClose();
     } catch (err) {
@@ -40,91 +66,573 @@ function CollabRequestModal({ idea, onClose, onSuccess, accessToken }) {
     }
   };
 
+  const step1Valid = role && (role !== "other" || confirmedCustomRole);
+  const step2Valid = availability;
+  const canSubmit = step1Valid && step2Valid && !loading;
+
+  // ── Backdrop
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-      onClick={onClose}
-    >
+    <AnimatePresence>
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        onClick={e => e.stopPropagation()}
-        className="w-full max-w-md bg-gray-900 border border-blue-500/30 rounded-2xl p-6 space-y-5 shadow-2xl"
+        key="backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ background: "rgba(0,0,0,0.82)", backdropFilter: "blur(18px)" }}
+        onClick={onClose}
       >
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-white">Join as Contributor</h2>
-            <p className="text-sm text-gray-400 mt-1 line-clamp-1">"{idea?.title}"</p>
-          </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors p-1">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div>
-          <label className="text-sm text-gray-400 mb-2 block">Your role</label>
-          <div className="flex flex-wrap gap-2">
-            {roles.map(r => (
-              <button
-                key={r}
-                onClick={() => setRole(r)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all capitalize ${
-                  role === r
-                    ? "bg-blue-500/20 border-blue-500 text-blue-300"
-                    : "bg-white/5 border-gray-700 text-gray-400 hover:border-blue-500/50"
-                }`}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="text-sm text-gray-400 mb-2 block">
-            Message to creator <span className="text-gray-600">(optional)</span>
-          </label>
-          <textarea
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            placeholder="Tell them why you'd be a great fit..."
-            rows={4}
-            className="w-full bg-white/5 border border-gray-700 focus:border-blue-500/50 rounded-xl p-3 text-sm text-white placeholder-gray-600 outline-none resize-none transition-colors"
-          />
-        </div>
-
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl border border-gray-700 text-gray-400 hover:text-white text-sm font-medium transition-colors"
+        <motion.div
+          key="modal"
+          initial={{ scale: 0.93, opacity: 0, y: 28 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.93, opacity: 0, y: 28 }}
+          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-[500px] flex flex-col"
+          style={{ maxHeight: "92vh" }}
+        >
+          {/* ── Card shell ── */}
+          <div
+            className="relative rounded-[22px] overflow-hidden flex flex-col"
+            style={{
+              background: "linear-gradient(160deg, #0b1120 0%, #060a14 100%)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow:
+                "0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.04) inset",
+            }}
           >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="flex-1 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
-          >
-            {loading
-              ? <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-              : <><Send className="h-4 w-4" />Send Request</>
-            }
-          </button>
-        </div>
+            {/* Accent top bar */}
+            <div
+              className="h-[3px] w-full shrink-0"
+              style={{
+                background:
+                  "linear-gradient(90deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%)",
+              }}
+            />
+
+            {/* Ambient glow */}
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                top: -60,
+                right: -60,
+                width: 280,
+                height: 280,
+                background:
+                  "radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)",
+                borderRadius: "50%",
+              }}
+            />
+
+            {/* ── Scrollable Body ── */}
+            <div
+              className="overflow-y-auto flex-1 relative z-10"
+              style={{ padding: "28px 28px 8px" }}
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between mb-6">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2.5 mb-1">
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                      style={{
+                        background: "rgba(59,130,246,0.15)",
+                        border: "1px solid rgba(96,165,250,0.25)",
+                      }}
+                    >
+                      <Zap size={14} style={{ color: "#60a5fa" }} />
+                    </div>
+                    <h2
+                      className="text-[18px] font-bold leading-tight"
+                      style={{ color: "#f1f5f9" }}
+                    >
+                      Apply to Contribute
+                    </h2>
+                  </div>
+                  <p
+                    className="text-[12px] ml-[37px] truncate max-w-[300px]"
+                    style={{ color: "#4b5563" }}
+                  >
+                    {idea?.title}
+                  </p>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="shrink-0 ml-3 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-150"
+                  style={{ background: "rgba(255,255,255,0.05)", color: "#6b7280" }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+                    e.currentTarget.style.color = "#e5e7eb";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                    e.currentTarget.style.color = "#6b7280";
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              {/* Step indicator */}
+              <div className="flex items-center gap-2 mb-7">
+                {[1, 2].map((s) => (
+                  <div key={s} className="flex items-center gap-2">
+                    <div
+                      className="flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold transition-all duration-300"
+                      style={{
+                        background:
+                          step >= s
+                            ? "linear-gradient(135deg, #3b82f6, #6366f1)"
+                            : "rgba(255,255,255,0.05)",
+                        color: step >= s ? "#fff" : "#4b5563",
+                        boxShadow:
+                          step === s ? "0 0 10px rgba(99,102,241,0.4)" : "none",
+                      }}
+                    >
+                      {step > s ? "✓" : s}
+                    </div>
+                    <span
+                      className="text-[11px] font-medium"
+                      style={{ color: step >= s ? "#9ca3af" : "#374151" }}
+                    >
+                      {s === 1 ? "Your Role" : "Details"}
+                    </span>
+                    {s < 2 && (
+                      <ChevronRight size={11} style={{ color: "#374151" }} />
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <AnimatePresence mode="wait">
+                {/* ── STEP 1 ── */}
+                {step === 1 && (
+                  <motion.div
+                    key="step1"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {/* Role label */}
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <Briefcase size={12} style={{ color: "#6b7280" }} />
+                      <span
+                        className="text-[11px] font-bold uppercase tracking-[0.12em]"
+                        style={{ color: "#6b7280" }}
+                      >
+                        What is your role?
+                      </span>
+                      <span className="text-[11px]" style={{ color: "#f87171" }}>
+                        *
+                      </span>
+                    </div>
+
+                    {/* Confirmed custom role pill */}
+                    {confirmedCustomRole ? (
+                      <div className="flex items-center gap-3 mb-4">
+                        <div
+                          className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border"
+                          style={{
+                            background: "rgba(59,130,246,0.12)",
+                            borderColor: "rgba(96,165,250,0.45)",
+                          }}
+                        >
+                          <span
+                            className="text-[13px] font-semibold"
+                            style={{ color: "#93c5fd" }}
+                          >
+                            {confirmedCustomRole}
+                          </span>
+                          <button
+                            onClick={clearCustomRole}
+                            className="flex items-center justify-center w-4 h-4 rounded-full transition-all"
+                            style={{ color: "#60a5fa" }}
+                            onMouseEnter={(e) =>
+                            (e.currentTarget.style.background =
+                              "rgba(59,130,246,0.3)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "transparent")
+                            }
+                          >
+                            <X size={10} />
+                          </button>
+                        </div>
+                        <span className="text-[11px]" style={{ color: "#374151" }}>
+                          Custom role
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Role grid */}
+                        <div className="grid grid-cols-3 gap-2 mb-4">
+                          {roles.map((r) => {
+                            const active = role === r.id;
+                            return (
+                              <button
+                                key={r.id}
+                                onClick={() => {
+                                  setRole(r.id);
+                                  if (r.id !== "other") {
+                                    setCustomRole("");
+                                    setConfirmedCustomRole("");
+                                  }
+                                }}
+                                className="relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-center transition-all duration-150 overflow-hidden"
+                                style={{
+                                  background: active
+                                    ? "rgba(59,130,246,0.12)"
+                                    : "rgba(255,255,255,0.02)",
+                                  borderColor: active
+                                    ? "rgba(96,165,250,0.45)"
+                                    : "rgba(255,255,255,0.07)",
+                                  boxShadow: active
+                                    ? "0 0 14px rgba(59,130,246,0.15)"
+                                    : "none",
+                                }}
+                              >
+                                {active && (
+                                  <div
+                                    className="absolute inset-0 pointer-events-none"
+                                    style={{
+                                      background:
+                                        "radial-gradient(circle at center, rgba(59,130,246,0.08) 0%, transparent 70%)",
+                                    }}
+                                  />
+                                )}
+                                <span className="text-base leading-none">
+                                  {r.icon}
+                                </span>
+                                <span
+                                  className="text-[11px] font-semibold leading-tight"
+                                  style={{
+                                    color: active ? "#93c5fd" : "#6b7280",
+                                  }}
+                                >
+                                  {r.label}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Other input */}
+                        <AnimatePresence>
+                          {role === "other" && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.18 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="flex gap-2 mb-1">
+                                <input
+                                  type="text"
+                                  value={customRole}
+                                  onChange={(e) => setCustomRole(e.target.value)}
+                                  onKeyDown={(e) =>
+                                    e.key === "Enter" && confirmCustomRole()
+                                  }
+                                  autoFocus
+                                  placeholder="Your role (e.g. Product Manager)…"
+                                  className="flex-1 text-[13px] text-white outline-none rounded-xl px-4 py-2.5 placeholder-gray-600 transition-all"
+                                  style={{
+                                    background: "rgba(0,0,0,0.4)",
+                                    border: "1px solid rgba(96,165,250,0.25)",
+                                  }}
+                                  onFocus={(e) =>
+                                  (e.target.style.borderColor =
+                                    "rgba(96,165,250,0.5)")
+                                  }
+                                  onBlur={(e) =>
+                                  (e.target.style.borderColor =
+                                    "rgba(96,165,250,0.25)")
+                                  }
+                                />
+                                <button
+                                  onClick={confirmCustomRole}
+                                  disabled={!customRole.trim()}
+                                  className="shrink-0 px-4 py-2 rounded-xl text-[12px] font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                  style={{
+                                    background: "rgba(59,130,246,0.18)",
+                                    border: "1px solid rgba(96,165,250,0.35)",
+                                    color: "#93c5fd",
+                                  }}
+                                >
+                                  Add
+                                </button>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+
+                {/* ── STEP 2 ── */}
+                {step === 2 && (
+                  <motion.div
+                    key="step2"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-5"
+                  >
+                    {/* Availability */}
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-3">
+                        <Clock size={12} style={{ color: "#6b7280" }} />
+                        <span
+                          className="text-[11px] font-bold uppercase tracking-[0.12em]"
+                          style={{ color: "#6b7280" }}
+                        >
+                          Weekly Availability
+                        </span>
+                        <span
+                          className="text-[11px]"
+                          style={{ color: "#f87171" }}
+                        >
+                          *
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-5 gap-1.5">
+                        {availabilityOptions.map((opt) => {
+                          const active = availability === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              onClick={() => setAvailability(opt.id)}
+                              className="flex flex-col items-center gap-0.5 py-2.5 px-1 rounded-xl border text-center transition-all duration-150"
+                              style={{
+                                background: active
+                                  ? "rgba(52,211,153,0.1)"
+                                  : "rgba(255,255,255,0.02)",
+                                borderColor: active
+                                  ? "rgba(52,211,153,0.4)"
+                                  : "rgba(255,255,255,0.07)",
+                                boxShadow: active
+                                  ? "0 0 12px rgba(52,211,153,0.12)"
+                                  : "none",
+                              }}
+                            >
+                              <span
+                                className="text-[11px] font-bold leading-none"
+                                style={{ color: active ? "#6ee7b7" : "#9ca3af" }}
+                              >
+                                {opt.label}
+                              </span>
+                              <span
+                                className="text-[9px] leading-none mt-0.5"
+                                style={{ color: active ? "#4ade80" : "#374151" }}
+                              >
+                                {opt.sub}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Thin divider */}
+                    <div
+                      style={{
+                        height: 1,
+                        background: "rgba(255,255,255,0.05)",
+                      }}
+                    />
+
+                    {/* Skills */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <span
+                          className="text-[11px] font-bold uppercase tracking-[0.12em]"
+                          style={{ color: "#6b7280" }}
+                        >
+                          Key Skills
+                        </span>
+                        <span
+                          className="text-[10px] px-2 py-0.5 rounded-full border"
+                          style={{
+                            color: "#374151",
+                            borderColor: "rgba(255,255,255,0.06)",
+                            background: "rgba(255,255,255,0.03)",
+                          }}
+                        >
+                          Optional
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        value={skills}
+                        onChange={(e) => setSkills(e.target.value)}
+                        placeholder="React, Node.js, UI Design, Marketing…"
+                        className="w-full text-[13px] text-white outline-none rounded-xl px-4 py-2.5 placeholder-gray-600 transition-all"
+                        style={{
+                          background: "rgba(0,0,0,0.35)",
+                          border: "1px solid rgba(255,255,255,0.07)",
+                        }}
+                        onFocus={(e) =>
+                          (e.target.style.borderColor = "rgba(96,165,250,0.35)")
+                        }
+                        onBlur={(e) =>
+                          (e.target.style.borderColor = "rgba(255,255,255,0.07)")
+                        }
+                      />
+                    </div>
+
+                    {/* Thin divider */}
+                    <div
+                      style={{
+                        height: 1,
+                        background: "rgba(255,255,255,0.05)",
+                      }}
+                    />
+
+                    {/* Message */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <span
+                          className="text-[11px] font-bold uppercase tracking-[0.12em]"
+                          style={{ color: "#6b7280" }}
+                        >
+                          Message
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="text-[10px] px-2 py-0.5 rounded-full border"
+                            style={{
+                              color: "#374151",
+                              borderColor: "rgba(255,255,255,0.06)",
+                              background: "rgba(255,255,255,0.03)",
+                            }}
+                          >
+                            Optional
+                          </span>
+                          <span
+                            className="text-[10px] font-medium tabular-nums"
+                            style={{
+                              color: message.length > 260 ? "#f87171" : "#374151",
+                            }}
+                          >
+                            {message.length}/300
+                          </span>
+                        </div>
+                      </div>
+                      <textarea
+                        value={message}
+                        maxLength={300}
+                        onChange={(e) => setMessage(e.target.value)}
+                        rows={3}
+                        placeholder="Introduce yourself — why are you a great fit for this project?"
+                        className="w-full text-[13px] text-white outline-none rounded-xl px-4 py-3 placeholder-gray-600 resize-none transition-all"
+                        style={{
+                          background: "rgba(0,0,0,0.35)",
+                          border: "1px solid rgba(255,255,255,0.07)",
+                        }}
+                        onFocus={(e) =>
+                          (e.target.style.borderColor = "rgba(96,165,250,0.35)")
+                        }
+                        onBlur={(e) =>
+                          (e.target.style.borderColor = "rgba(255,255,255,0.07)")
+                        }
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* ── Sticky Footer ── */}
+            <div
+              className="shrink-0 px-7 py-5"
+              style={{
+                borderTop: "1px solid rgba(255,255,255,0.06)",
+                background: "rgba(6,10,20,0.85)",
+              }}
+            >
+              {step === 1 ? (
+                <button
+                  onClick={() => setStep(2)}
+                  disabled={!step1Valid}
+                  className="w-full py-3 rounded-xl text-[13px] font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  style={{
+                    background: step1Valid
+                      ? "linear-gradient(135deg, #3b82f6, #6366f1)"
+                      : "rgba(59,130,246,0.2)",
+                    boxShadow: step1Valid
+                      ? "0 0 24px rgba(99,102,241,0.28)"
+                      : "none",
+                  }}
+                >
+                  Continue
+                  <ChevronRight size={15} />
+                </button>
+              ) : (
+                <div className="flex gap-2.5">
+                  <button
+                    onClick={() => setStep(1)}
+                    className="flex-[0.45] py-3 rounded-xl text-[13px] font-semibold transition-all"
+                    style={{
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.09)",
+                      color: "#9ca3af",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                      e.currentTarget.style.color = "#e5e7eb";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                      e.currentTarget.style.color = "#9ca3af";
+                    }}
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!canSubmit}
+                    className="flex-1 py-3 rounded-xl text-[13px] font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                    style={{
+                      background: canSubmit
+                        ? "linear-gradient(135deg, #3b82f6, #6366f1)"
+                        : "rgba(59,130,246,0.2)",
+                      boxShadow: canSubmit
+                        ? "0 0 24px rgba(99,102,241,0.28)"
+                        : "none",
+                    }}
+                  >
+                    {loading ? (
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Send size={13} />
+                        Send Application
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
       </motion.div>
-    </div>,
+    </AnimatePresence>,
     document.body
   );
 }
 
 // ── Collab Button ─────────────────────────────────────────────────────────────
 function CollabButton({ content, accessToken, isOwnIdea }) {
-  const [status,         setStatus]         = useState(null);
-  const [requestId,      setRequestId]      = useState(null);
-  const [showModal,      setShowModal]      = useState(false);
-  const [loading,        setLoading]        = useState(false);
-  const [interestedCount,setInterestedCount]= useState(content?.pending_collab_count ?? 0);
+  const [status, setStatus] = useState(null);
+  const [requestId, setRequestId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [interestedCount, setInterestedCount] = useState(content?.pending_collab_count ?? 0);
 
   useEffect(() => {
     if (isOwnIdea || !content?.id) return;
@@ -136,7 +644,7 @@ function CollabButton({ content, accessToken, isOwnIdea }) {
         const cr = res?.data?.data?.collab_request;
         if (cr) { setStatus(cr.status); setRequestId(cr.id); }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [content?.id, accessToken, isOwnIdea]);
 
   const handleCancel = async e => {
@@ -226,7 +734,14 @@ function CollabButton({ content, accessToken, isOwnIdea }) {
         <UserPlus className="h-4 w-4" />
         {status === "rejected" ? "Express Interest Again" : "Interested in Contributing"}
         {interestedCount > 0 && (
-          <span className="ml-1 px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/40 rounded-full text-xs font-bold text-blue-300">
+          <span
+            className="ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold"
+            style={{
+              background: "rgba(99,102,241,0.18)",
+              border: "1px solid rgba(99,102,241,0.3)",
+              color: "#a5b4fc",
+            }}
+          >
             {interestedCount}
           </span>
         )}
@@ -240,13 +755,13 @@ export default function VisionCard({ content, shouldBlur }) {
   // FIX: useNavigate was missing — caused "navigate is not defined" crash
   const navigate = useNavigate();
 
-  const [likes,     setLikes]     = useState(content?.likes     || 0);
-  const [liked,     setLiked]     = useState(content?.hasLiked  || false);
-  const [bookmarked,setBookmarked]= useState(content?.hasBookmarked || false);
-  const { user, access_token }    = useSelector(state => state?.auth);
+  const [likes, setLikes] = useState(content?.likes || 0);
+  const [liked, setLiked] = useState(content?.hasLiked || false);
+  const [bookmarked, setBookmarked] = useState(content?.hasBookmarked || false);
+  const { user, access_token } = useSelector(state => state?.auth);
 
   const isOwnIdea = user?.id === (content?.author?.id || content?.creator?.id);
-  const author    = useMemo(() => content?.author || content?.creator || {}, [content]);
+  const author = useMemo(() => content?.author || content?.creator || {}, [content]);
 
   const handleLike = useCallback(async e => {
     e?.preventDefault?.(); e?.stopPropagation?.();
@@ -257,7 +772,7 @@ export default function VisionCard({ content, shouldBlur }) {
       const res = await ideaAPI?.likeIdea?.(content?.id, access_token);
       // ideaAPI normalises to { data: { idea: { hasLiked, likes } } }
       const ideaData = res?.data?.idea || {};
-      if (typeof ideaData.likes    === 'number')  setLikes(ideaData.likes);
+      if (typeof ideaData.likes === 'number') setLikes(ideaData.likes);
       if (typeof ideaData.hasLiked === 'boolean') setLiked(ideaData.hasLiked);
     } catch (err) { console.error(err); }
   }, [content?.id, access_token]);
@@ -279,11 +794,11 @@ export default function VisionCard({ content, shouldBlur }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      whileHover={{ y: -4 }}
-      className="h-full group vision"
+      whileHover={{ y: -5, transition: { duration: 0.2 } }}
+      className="h-full group relative"
     >
       {/* FIX: outer <Link> replaced with <div onClick navigate> to prevent nested <a> tags */}
       <div
@@ -371,11 +886,10 @@ export default function VisionCard({ content, shouldBlur }) {
             <div className="flex gap-2 pt-2">
               <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 onClick={handleBookmark}
-                className={`flex-1 py-2.5 px-3 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
-                  bookmarked
-                    ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                    : "bg-white/5 text-gray-400 border border-gray-700/50 hover:border-blue-500/30 hover:text-white"
-                }`}>
+                className={`flex-1 py-2.5 px-3 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${bookmarked
+                  ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
+                  : "bg-white/5 text-gray-400 border border-gray-700/50 hover:border-blue-500/30 hover:text-white"
+                  }`}>
                 <Bookmark className={`h-4 w-4 ${bookmarked ? "fill-current" : ""}`} />
                 Save
               </motion.button>

@@ -69,6 +69,7 @@ const Footer = () => {
               { name: "Platform", href: "/about" },
               { name: "Startups", href: "/startuppage" },
               { name: "Explore", href: "/explore_section" },
+              { name: "Newsletters", href: "/newsletters" },
               { name: "Team", href: "/team" },
               { name: "Contact", href: "/contact" },
             ].map((link, i) => (
@@ -104,6 +105,11 @@ const Footer = () => {
             <li>
               <Link to="/data-collection-and-tracking" className="hover:text-white">
                 Data Collection Policy
+              </Link>
+            </li>
+            <li>
+              <Link to="/unsubscribe" className="hover:text-white">
+                Unsubscribe
               </Link>
             </li>
             <li>

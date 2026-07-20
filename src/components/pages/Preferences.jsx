@@ -1,12 +1,12 @@
-"use client"
-
-import { Check, X } from "lucide-react"
+import { Check, X, Mail } from "lucide-react"
 import React, { useState, useEffect } from "react"
+import notificationAPI from "../../utils/APIs/notificationAPI"
+import { toast } from "react-toastify"
 
 export default function Preferences() {
   const [language, setLanguage] = useState(() => {
-  return localStorage.getItem("language") || "English";
-});
+    return localStorage.getItem("language") || "English";
+  });
   const [timeZone, setTimeZone] = useState("UTC+")
   const [defaultHomepage, setDefaultHomepage] = useState("Dashboard")
   const [showLanguageOptions, setShowLanguageOptions] = useState(false)
@@ -23,26 +23,50 @@ export default function Preferences() {
   ]
   const homepages = ["Dashboard", "Analytics", "Projects", "Settings"]
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showLanguageOptions || showTimeZoneOptions || showHomepageOptions) {
-        setShowLanguageOptions(false)
-        setShowTimeZoneOptions(false)
-        setShowHomepageOptions(false)
+    const loadPreferences = async () => {
+      try {
+        const response = await notificationAPI.getSubscriptionPreferences()
+        if (response) {
+          setNewsletterPrefs({
+            newsletter: response.newsletter ?? true,
+            announcements: response.announcements ?? true,
+            marketing: response.marketing ?? false,
+          })
+        }
+      } catch (error) {
+        console.error("Failed to load newsletter preferences:", error)
       }
     }
+    loadPreferences()
+  }, [])
 
-    document.addEventListener('click', handleClickOutside)
-    return () => {
-      document.removeEventListener('click', handleClickOutside)
-    }
-  }, [showLanguageOptions, showTimeZoneOptions, showHomepageOptions])
+  useEffect(() => {
+    // Only attach listener when at least one dropdown is open
+    if (!showLanguageOptions && !showTimeZoneOptions && !showHomepageOptions) return;
+
+    const handleClickOutside = () => {
+      setShowLanguageOptions(false);
+      setShowTimeZoneOptions(false);
+      setShowHomepageOptions(false);
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showLanguageOptions, showTimeZoneOptions, showHomepageOptions]);
 
   const handleCancel = () => {
     console.log("Settings cancelled")
+    toast.info("Changes discarded")
   }
 
-  const handleSave = () => {
-    console.log("Settings saved:", { language, timeZone, defaultHomepage })
+  const handleSave = async () => {
+    try {
+      await notificationAPI.updateSubscriptionPreferences(newsletterPrefs)
+      toast.success("Preferences saved successfully!")
+    } catch (error) {
+      console.error("Failed to save newsletter preferences:", error)
+      toast.error("Failed to save preferences.")
+    }
   }
 
   const toggleLanguageOptions = (e) => {
@@ -66,9 +90,16 @@ export default function Preferences() {
     setShowTimeZoneOptions(false)
   }
 
+  const handleNewsletterPrefChange = (key) => {
+    setNewsletterPrefs(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }))
+  }
+
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="w-full mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white flex flex-col font-sans">
+      <div className="w-full mx-auto bg-white/5 bg-gradient-to-br from-white/10 via-white/5 to-transparent border border-white/20 rounded-3xl p-8 md:p-10 shadow-2xl backdrop-blur-2xl">
         <div className="flex flex-col gap-6">
           {/* Header */}
           <div>
@@ -109,23 +140,23 @@ export default function Preferences() {
                         <div
                           key={lang}
                           onClick={(e) => {
-  e.stopPropagation();
+                            e.stopPropagation();
 
-  setLanguage(lang);
-  localStorage.setItem("language", lang);
-  if (lang === "Arabic") {
-  document.documentElement.dir = "rtl";
-} else {
-  document.documentElement.dir = "ltr";
-}
+                            setLanguage(lang);
+                            localStorage.setItem("language", lang);
+                            if (lang === "Arabic") {
+                              document.documentElement.dir = "rtl";
+                            } else {
+                              document.documentElement.dir = "ltr";
+                            }
 
-setShowLanguageOptions(false);
-document.documentElement.dir =
-  lang === "Arabic" ? "rtl" : "ltr";
+                            setShowLanguageOptions(false);
+                            document.documentElement.dir =
+                              lang === "Arabic" ? "rtl" : "ltr";
 
-setShowLanguageOptions(false);
-  setShowLanguageOptions(false);
-}}
+                            setShowLanguageOptions(false);
+                            setShowLanguageOptions(false);
+                          }}
                           className="p-2.5 cursor-pointer hover:bg-[#232323]"
                         >
                           {lang}
@@ -202,6 +233,76 @@ setShowLanguageOptions(false);
             </div>
           </div>
 
+          {/* Newsletter Subscriptions */}
+          <hr className="border-gray-800" />
+
+          <div className="flex gap-6 justify-between">
+            <div className="w-1/2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-medium">Newsletter Subscriptions</h2>
+              </div>
+              <p className="text-gray-400 text-sm">
+                Control the newsletter editions and alerts sent to your email inbox.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-4 w-1/2">
+              {/* weekly newsletter */}
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={newsletterPrefs.newsletter}
+                  onChange={() => handleNewsletterPrefChange("newsletter")}
+                  className="mt-1 accent-purple-600 rounded bg-black border-gray-700"
+                />
+                <div>
+                  <span className="block text-sm font-medium text-white group-hover:text-purple-300 transition-colors">
+                    Weekly Eco-system Digest
+                  </span>
+                  <span className="block text-xs text-gray-400 mt-0.5">
+                    Curated startup success stories, developer guides, and community achievements.
+                  </span>
+                </div>
+              </label>
+
+              {/* product announcements */}
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={newsletterPrefs.announcements}
+                  onChange={() => handleNewsletterPrefChange("announcements")}
+                  className="mt-1 accent-purple-600 rounded bg-black border-gray-700"
+                />
+                <div>
+                  <span className="block text-sm font-medium text-white group-hover:text-purple-300 transition-colors">
+                    Product Updates & Feature Releases
+                  </span>
+                  <span className="block text-xs text-gray-400 mt-0.5">
+                    Be the first to know about new tools, platform features, and roadmap progress.
+                  </span>
+                </div>
+              </label>
+
+              {/* marketing */}
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={newsletterPrefs.marketing}
+                  onChange={() => handleNewsletterPrefChange("marketing")}
+                  className="mt-1 accent-purple-600 rounded bg-black border-gray-700"
+                />
+                <div>
+                  <span className="block text-sm font-medium text-white group-hover:text-purple-300 transition-colors">
+                    Events & Partner Promotions
+                  </span>
+                  <span className="block text-xs text-gray-400 mt-0.5">
+                    Get invitations to webinars, founder meetups, and ecosystem events.
+                  </span>
+                </div>
+              </label>
+            </div>
+          </div>
+
           <hr className="border-gray-800" />
 
           {/* Action Buttons */}
@@ -224,3 +325,4 @@ setShowLanguageOptions(false);
     </div>
   )
 }
+

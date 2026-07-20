@@ -31,3 +31,8 @@ package-lock.json
 *.sw?
 
 .vercel
+
+# Temporary files & documentation
+TEMPORARY_CHANGES.md
+docs/
+
