@@ -11,52 +11,67 @@
 ## 🎯 **Page Functions & Analysis**
 
 ### **1. Home (`/`) - Project Discovery Hub**
+
 **File**: `src/components/pages/Home.jsx`
+
 - **Purpose**: Main landing page showcasing available projects
 - **Features**: Search & filter projects by location/stage/industry, project cards with team info
 - **Data**: Project cards with progress, deadlines, team members, requirements
 
 ### **2. Ideation (`/ideation`) - Idea Sharing Platform**
+
 **File**: `src/components/pages/Ideation.jsx`
+
 - **Purpose**: Community platform for sharing and discussing project ideas
 - **Features**: Idea posts with likes/comments, stage tracking, author profiles
 - **Data**: Ideas with collaboration metrics, tags, creation dates
 
 ### **3. Projects (`/projects`) - Contributor Discovery**
+
 **File**: `src/components/pages/Project.jsx`
+
 - **Purpose**: Professional networking to find developers, designers, contributors
 - **Features**: Profile discovery, skills filtering, availability status, ratings
 - **Data**: User profiles with skills, experience, availability, project history
 
 ### **4. Knowledge (`/knowledge`) - Resource Library**
+
 **File**: `src/components/pages/Knowledge.jsx`
+
 - **Purpose**: Learning platform with articles, guides, tutorials
 - **Features**: Resource sharing, category filtering, sorting, file types
 - **Data**: Articles, tutorials, case studies with engagement metrics
 
 ### **5. Startup (`/startup`) - Company Showcase**
+
 **File**: `src/components/pages/StartUp.jsx`
+
 - **Purpose**: Startup discovery and company profiles
 - **Features**: Company listings, industry/stage filtering, funding info
 - **Data**: Startup profiles with team, funding, growth metrics
 
 ### **6. Dashboard (`/dashboard`) - Personal Hub**
+
 **File**: `src/components/pages/dashboard.jsx`
+
 - **Purpose**: Personal productivity dashboard
 - **Features**: World clock, calendar, tasks, progress tracking
 - **Layout**: 3-column desktop, mobile-optimized widgets
 
 ### **7. Authentication Pages**
+
 - **Login** (`/login`): User authentication with OAuth
 - **SignUp** (`/signup`): User registration
 - **OAuth Callback** (`/auth/callback`): Google OAuth handling
 
 ### **8. Settings Pages**
+
 - **Profile** (`/profile`): User profile management
 - **Settings** (`/setting`): Account preferences and security
 - **Help** (`/help`): Support and documentation
 
 ### **9. Detail Pages**
+
 - **Home Details**: Individual project details
 - **Startup Details**: Company profile details
 - **Knowledge Details**: Resource detailed view
@@ -132,7 +147,7 @@ Text: #FFFFFF (White)
 const [searchQuery, setSearchQuery] = useState("");
 const [selectedFilters, setSelectedFilters] = useState("All");
 const filteredData = useMemo(() => {
-  /* filtering logic */
+    /* filtering logic */
 }, [searchQuery, filters]);
 ```
 

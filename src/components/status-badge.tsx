@@ -8,6 +8,7 @@ import {
   CheckCheck,
   Upload,
   Globe,
+  Archive,
   AlertTriangle,
   type LucideIcon,
 } from "lucide-react"
@@ -73,6 +74,13 @@ const statusConfig: Record<
     dot: "bg-success",
     bg: "bg-success/8",
     text: "text-success",
+  },
+  archived: {
+    label: "Archived",
+    icon: Archive,
+    dot: "bg-muted-foreground",
+    bg: "bg-muted/50",
+    text: "text-muted-foreground",
   },
   failed: {
     label: "Failed",

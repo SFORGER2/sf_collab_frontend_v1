@@ -4,12 +4,14 @@ import { Dashboard } from "./components/dashboard"
 import { Workspace } from "./components/workspace"
 import { ToastProvider } from "./hooks/use-toast"
 import { Toaster } from "./components/ui/toaster"
+import { ErrorBoundary } from "./components/error-boundary"
 
 function App() {
   const [workspaceProjectId, setWorkspaceProjectId] = useState<string | null>(null)
 
   return (
     <ToastProvider>
+      <ErrorBoundary>
       <AnimatePresence mode="popLayout">
         {workspaceProjectId ? (
           <motion.div
@@ -38,6 +40,7 @@ function App() {
           </motion.div>
         )}
       </AnimatePresence>
+      </ErrorBoundary>
       <Toaster />
     </ToastProvider>
   )

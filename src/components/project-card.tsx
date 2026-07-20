@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react"
 import { motion } from "framer-motion"
-import { ExternalLink, MoreHorizontal, Globe, Trash2, Calendar, Eye } from "lucide-react"
+import { ExternalLink, MoreHorizontal, Globe, Trash2, Calendar, Eye, Copy, Edit, Archive, UploadCloud, CloudOff, FileEdit } from "lucide-react"
 import { StatusBadge } from "./status-badge"
 import { formatRelativeTime, formatDate, cn } from "../lib/utils"
+import { useToast } from "../hooks/use-toast"
 import type { Project } from "../types"
 
 interface ProjectCardProps {
@@ -10,10 +11,15 @@ interface ProjectCardProps {
   index: number
   onDelete?: (project: Project) => void
   onOpenWorkspace?: (projectId: string) => void
+  onDuplicate?: (project: Project) => void
+  onPublish?: (project: Project) => void
+  onUnpublish?: (project: Project) => void
+  onArchive?: (project: Project) => void
 }
-	export function ProjectCard({ project, index, onDelete, onOpenWorkspace }: ProjectCardProps) {
+	export function ProjectCard({ project, index, onDelete, onOpenWorkspace, onDuplicate, onPublish, onUnpublish, onArchive }: ProjectCardProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const { addToast } = useToast()
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -26,6 +32,27 @@ interface ProjectCardProps {
     }
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [menuOpen])
+
+  const handleAction = (
+    e: React.MouseEvent,
+    action: string,
+    callback?: (project: Project) => void
+  ) => {
+    e.stopPropagation()
+    setMenuOpen(false)
+    if (callback) {
+      callback(project)
+    } else {
+      addToast({
+        title: `${action} unavailable`,
+        description: `This feature requires an API connection.`,
+        variant: "info",
+      })
+    }
+  }
+
+  const isPublished = project.status === "delivered"
+  const isArchived = project.status === "archived"
 
   return (
     <motion.div
@@ -41,7 +68,10 @@ interface ProjectCardProps {
     >
       <div
         onClick={() => onOpenWorkspace?.(project.id)}
-        className="group relative rounded-xl border border-border bg-card hover:bg-card-hover transition-all duration-200 cursor-pointer h-full hover:shadow-sm"
+        className={cn(
+          "group relative rounded-xl border bg-card hover:bg-card-hover transition-all duration-200 cursor-pointer h-full hover:shadow-sm",
+          isArchived ? "border-dashed border-border/50 opacity-60" : "border-border"
+        )}
       >
         {/* Subtle top accent line */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -82,6 +112,7 @@ interface ProjectCardProps {
                   e.stopPropagation()
                   setMenuOpen(!menuOpen)
                 }}
+                title="Manage"
               >
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </button>
@@ -92,14 +123,62 @@ interface ProjectCardProps {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: -4 }}
                   transition={{ duration: 0.12 }}
-                  className="absolute right-0 top-full mt-1 w-36 rounded-xl border border-border bg-card shadow-lg z-50 py-1"
+                  className="absolute right-0 top-full mt-1 w-44 rounded-xl border border-border bg-card shadow-lg z-50 py-1 overflow-hidden"
                   onClick={(e) => e.stopPropagation()}
                 >
+                  {/* Edit */}
                   <button
-                    onClick={() => {
-                      setMenuOpen(false)
-                      onDelete?.(project)
-                    }}
+                    onClick={(e) => handleAction(e, "Edit", onOpenWorkspace ? () => onOpenWorkspace(project.id) : undefined)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-card-foreground hover:bg-accent transition-colors duration-150 cursor-pointer"
+                  >
+                    <FileEdit className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
+                    Edit
+                  </button>
+
+                  {/* Duplicate */}
+                  <button
+                    onClick={(e) => handleAction(e, "Duplicate", onDuplicate)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-card-foreground hover:bg-accent transition-colors duration-150 cursor-pointer"
+                  >
+                    <Copy className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
+                    Duplicate
+                  </button>
+
+                  <div className="h-px bg-border/50 mx-2" />
+
+                  {/* Publish / Unpublish */}
+                  {isPublished ? (
+                    <button
+                      onClick={(e) => handleAction(e, "Unpublish", onUnpublish)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-card-foreground hover:bg-accent transition-colors duration-150 cursor-pointer"
+                    >
+                      <CloudOff className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
+                      Unpublish
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => handleAction(e, "Publish", onPublish)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-card-foreground hover:bg-accent transition-colors duration-150 cursor-pointer"
+                    >
+                      <UploadCloud className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
+                      Publish
+                    </button>
+                  )}
+
+                  {/* Archive */}
+                  <button
+                    onClick={(e) => handleAction(e, "Archive", onArchive)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-card-foreground hover:bg-accent transition-colors duration-150 cursor-pointer"
+                  >
+                    <Archive className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
+                    {isArchived ? "Unarchive" : "Archive"}
+                  </button>
+
+                  <div className="h-px bg-border/50 mx-2" />
+
+                  {/* Delete */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete?.(project); }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-destructive hover:bg-destructive/5 transition-colors duration-150 cursor-pointer"
                   >
                     <Trash2 className="h-3.5 w-3.5" />

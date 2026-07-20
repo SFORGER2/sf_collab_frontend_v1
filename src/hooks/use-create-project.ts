@@ -20,11 +20,10 @@ export function useCreateProject(): UseCreateProjectReturn {
       })
 
       if (!response.ok) {
-        throw new Error(`Failed to create project: ${response.statusText}`)
+        throw new Error("Unable to create website. Please check your connection and try again.")
       }
 
-      const project: Project = await response.json()
-      return project
+      return await response.json() as Project
     } finally {
       setIsCreating(false)
     }

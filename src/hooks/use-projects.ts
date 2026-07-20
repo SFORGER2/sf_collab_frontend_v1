@@ -45,6 +45,7 @@ interface UseProjectsReturn {
   refetch: () => void
   addProject: (project: Project) => void
   removeProject: (id: string) => void
+  updateProject: (id: string, updates: Partial<Project>) => void
 }
 
 export function useProjects(): UseProjectsReturn {
@@ -79,19 +80,43 @@ export function useProjects(): UseProjectsReturn {
     []
   )
 
+  const updateProject = useCallback(
+    (id: string, updates: Partial<Project>) => {
+      setProjects((prev) => {
+        const updated = prev.map((p) =>
+          p.id === id
+            ? { ...p, ...updates, lastUpdated: new Date().toISOString() }
+            : p
+        )
+        saveProjects(updated)
+        return updated
+      })
+    },
+    []
+  )
+
   const refetch = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     try {
       const response = await fetch("/projects")
       if (response.ok) {
-        const data: Project[] = await response.json()
-        syncProjects(data)
+        const contentType = response.headers.get("content-type") || ""
+        if (contentType.includes("application/json")) {
+          const data: Project[] = await response.json()
+          syncProjects(data)
+        } else {
+          // Server returned non-JSON (e.g. Vite SPA fallback) — API not available
+          setError("Server is not available. Showing projects from local storage.")
+        }
+      } else if (response.status === 404) {
+        setError("Website API is not connected. Showing projects from local storage.")
       } else {
-        throw new Error(`Failed to fetch: ${response.statusText}`)
+        throw new Error(`Server returned an error: ${response.statusText}`)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load projects')
+      const message = err instanceof Error ? err.message : 'Failed to load projects'
+      setError(`Unable to reach the server. ${message}. Using local data.`)
     } finally {
       setIsLoading(false)
     }
@@ -102,5 +127,5 @@ export function useProjects(): UseProjectsReturn {
     refetch()
   }, [refetch])
 
-  return { projects, isLoading, error, refetch, addProject, removeProject }
+  return { projects, isLoading, error, refetch, addProject, removeProject, updateProject }
 }

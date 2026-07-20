@@ -34,7 +34,7 @@ export function formatDate(dateString: string): string {
   })
 }
 
-export type StatusFilter = "all" | "draft" | "in-progress" | "completed" | "failed"
+export type StatusFilter = "all" | "draft" | "in-progress" | "completed" | "failed" | "archived"
 
 export function getFilterLabel(filter: StatusFilter): string {
   const labels: Record<StatusFilter, string> = {
@@ -43,6 +43,7 @@ export function getFilterLabel(filter: StatusFilter): string {
     "in-progress": "In Progress",
     completed: "Completed",
     failed: "Failed",
+    archived: "Archived",
   }
   return labels[filter]
 }
@@ -54,5 +55,6 @@ export function matchesStatusFilter(status: string, filter: StatusFilter): boole
     return ["harvesting", "proposal_ready", "approved", "generating", "generated", "pushing"].includes(status)
   if (filter === "completed") return status === "delivered"
   if (filter === "failed") return status === "failed"
+  if (filter === "archived") return status === "archived"
   return true
 }

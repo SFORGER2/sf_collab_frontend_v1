@@ -7,6 +7,7 @@ export type ProjectStatus =
   | "generated"
   | "pushing"
   | "delivered"
+  | "archived"
   | "failed"
 
 export interface Project {

@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Plus, RefreshCw, AlertCircle, Search, FolderOpen } from "lucide-react";
 import { useProjects } from "../hooks/use-projects";
+import { useToast } from "../hooks/use-toast";
 import { ProjectCard } from "./project-card";
 import { EmptyState } from "./empty-state";
 import { Button } from "./ui/button";
@@ -11,14 +12,15 @@ import { cn } from "../lib/utils";
 import { getFilterLabel, matchesStatusFilter, type StatusFilter } from "../lib/utils";
 import type { Project } from "../types";
 
-const STATUS_FILTERS: StatusFilter[] = ["all", "draft", "in-progress", "completed", "failed"]
+const STATUS_FILTERS: StatusFilter[] = ["all", "draft", "in-progress", "completed", "failed", "archived"]
 
 interface DashboardProps {
   onOpenWorkspace?: (projectId: string) => void
 }
 
 export function Dashboard({ onOpenWorkspace }: DashboardProps) {
-		const { projects, isLoading, error, refetch, addProject, removeProject } = useProjects();
+		const { projects, isLoading, error, refetch, addProject, removeProject, updateProject } = useProjects();
+    const { addToast } = useToast();
 		const [searchQuery, setSearchQuery] = useState("");
 		const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 		const [showCreateModal, setShowCreateModal] = useState(false);
@@ -46,6 +48,7 @@ export function Dashboard({ onOpenWorkspace }: DashboardProps) {
 			"in-progress": allProjects.filter((p) => matchesStatusFilter(p.status, "in-progress")).length,
 			completed: allProjects.filter((p) => matchesStatusFilter(p.status, "completed")).length,
 			failed: allProjects.filter((p) => matchesStatusFilter(p.status, "failed")).length,
+			archived: allProjects.filter((p) => matchesStatusFilter(p.status, "archived")).length,
 		}
 		return counts
 	}, [allProjects])
@@ -61,6 +64,52 @@ export function Dashboard({ onOpenWorkspace }: DashboardProps) {
 	const handleConfirmDelete = (project: Project) => {
 		removeProject(project.id);
 	};
+
+  const handleDuplicate = (project: Project) => {
+    const duplicate: Project = {
+      ...project,
+      id: `dup_${Date.now()}`,
+      name: `${project.name} (Copy)`,
+      status: "draft",
+      createdAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
+      url: undefined,
+    }
+    addProject(duplicate)
+    addToast({
+      title: "Website duplicated",
+      description: `${duplicate.name} has been created.`,
+      variant: "success",
+    })
+  }
+
+  const handlePublish = (project: Project) => {
+    updateProject(project.id, { status: "delivered" })
+    addToast({
+      title: "Published!",
+      description: `${project.name} is now live.`,
+      variant: "success",
+    })
+  }
+
+  const handleUnpublish = (project: Project) => {
+    updateProject(project.id, { status: "generated" })
+    addToast({
+      title: "Unpublished",
+      description: `${project.name} has been taken down.`,
+      variant: "info",
+    })
+  }
+
+  const handleArchive = (project: Project) => {
+    const isArchived = project.status === "archived"
+    updateProject(project.id, { status: isArchived ? "draft" : "archived" })
+    addToast({
+      title: isArchived ? "Unarchived" : "Archived",
+      description: `${project.name} has been ${isArchived ? "restored" : "archived"}.`,
+      variant: "info",
+    })
+  }
 
 	return (
 		<>
@@ -248,8 +297,8 @@ export function Dashboard({ onOpenWorkspace }: DashboardProps) {
 					</div>
 				)}
 
-				{/* Error */}
-				{!isLoading && error && (
+				{/* Error — full screen when no data, banner when data exists */}
+				{!isLoading && error && allProjects.length === 0 && (
 					<motion.div
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
@@ -279,13 +328,26 @@ export function Dashboard({ onOpenWorkspace }: DashboardProps) {
 					</motion.div>
 				)}
 
+				{/* Error banner — shown above projects when data exists */}
+				{!isLoading && error && allProjects.length > 0 && (
+					<motion.div
+						initial={{ opacity: 0, y: -8 }}
+						animate={{ opacity: 1, y: 0 }}
+						className="mb-4 flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-200/30 bg-amber-50/5">
+						<AlertCircle className="h-3.5 w-3.5 text-amber-400 shrink-0" strokeWidth={1.5} />
+						<p className="text-[11px] text-amber-300/80 flex-1">
+							{error}
+						</p>
+					</motion.div>
+				)}
+
 				{/* Empty */}
 				{!isLoading && !error && allProjects.length === 0 && (
 					<EmptyState onCreateNew={() => setShowCreateModal(true)} />
 				)}
 
 				{/* Projects */}
-				{!isLoading && !error && allProjects.length > 0 && (
+				{!isLoading && allProjects.length > 0 && (
 					<>
 						{/* No results */}
 						{filteredProjects.length === 0 && (searchQuery || statusFilter !== "all") && (
@@ -345,6 +407,10 @@ export function Dashboard({ onOpenWorkspace }: DashboardProps) {
 										index={index}
 										onDelete={handleDeleteProject}
 										onOpenWorkspace={onOpenWorkspace}
+                    onDuplicate={handleDuplicate}
+                    onPublish={handlePublish}
+                    onUnpublish={handleUnpublish}
+                    onArchive={handleArchive}
 									/>
 								))}
 
