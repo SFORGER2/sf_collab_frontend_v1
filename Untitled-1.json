@@ -1,0 +1,2209 @@
+{
+  "name": "SFCOLAB-main",
+  "path": "e:\\SFCOLAB-main\\SFCOLAB-main",
+  "type": "directory",
+  "children": [
+    {
+      "name": "components",
+      "type": "folder",
+      "icon": "📁",
+      "children": [
+        {
+          "name": "ai",
+          "type": "folder",
+          "icon": "📁",
+          "children": [
+            {
+              "name": "response-writer.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            }
+          ]
+        },
+        {
+          "name": "gsap",
+          "type": "folder",
+          "icon": "📁",
+          "children": [
+            {
+              "name": "draw-line-text.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            },
+            {
+              "name": "profile-peek.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            },
+            {
+              "name": "swap.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "hook",
+      "type": "folder",
+      "icon": "📁",
+      "children": [
+        {
+          "name": "use-writer.js",
+          "type": "file",
+          "icon": "📜"
+        }
+      ]
+    },
+    {
+      "name": "public",
+      "type": "folder",
+      "icon": "📁",
+      "children": [
+        {
+          "name": "3dicons-crown-dynamic-color.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "Black Elegant and Modern Startup Pitch Deck Presentation.pptx",
+          "type": "file",
+          "icon": "📄"
+        },
+        {
+          "name": "CE40D70C-A7B0-4E32-B145-01205D9FFCE1-removebg-preview 1.svg",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "CV minimal.pdf",
+          "type": "file",
+          "icon": "📕"
+        },
+        {
+          "name": "ChatGPT Image 27 nov. 2025, 01_48_21.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "Create_a_short_cinematic_intro.mp4",
+          "type": "file",
+          "icon": "📄"
+        },
+        {
+          "name": "Futuristic_Office_Hologram_Animation.mp4",
+          "type": "file",
+          "icon": "📄"
+        },
+        {
+          "name": "LOGO.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "LOGO_gr.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "PDF.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "_redirects",
+          "type": "file",
+          "icon": "📄"
+        },
+        {
+          "name": "achievement.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "ai.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "brain.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "bulleseye.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "call.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "chart.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "chat.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "clock.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "collaboration.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "company.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "design.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "design.svg",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "design_2.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "design_3.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "design_left.svg",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "design_right.svg",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "email.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "feedback.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "flame.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "idea.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "investor.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "jurica.jpg",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "line_wave_bottom.svg",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "line_wave_top.svg",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "link.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "logo_white.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "message_2.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "openai.svg",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "pexels-alberto-salum-1784034021-28626097.jpg",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "pexels-nickoloui-2473183.jpg",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "pexels-padrinan-745365.jpg",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "pexels-rdne-7414214.jpg",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "profit.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "progress.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "project.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "qwen.svg",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "recycle.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "roadmap.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "rocket.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "search.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "seed.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "shiny_logo.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "startup.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "team.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "thounder.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "trophy.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "video.png",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "vite.svg",
+          "type": "file",
+          "icon": "🖼️"
+        },
+        {
+          "name": "world_clock.png",
+          "type": "file",
+          "icon": "🖼️"
+        }
+      ]
+    },
+    {
+      "name": "src",
+      "type": "folder",
+      "icon": "📁",
+      "children": [
+        {
+          "name": "Layout",
+          "type": "folder",
+          "icon": "📁",
+          "children": [
+            {
+              "name": "Layout.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            }
+          ]
+        },
+        {
+          "name": "assets",
+          "type": "folder",
+          "icon": "📁",
+          "children": [
+            {
+              "name": "audio",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "Don Toliver - Lose My Mind (feat. Doja Cat) [From F1 The Movie] [Official Music Video].mp3",
+                  "type": "file",
+                  "icon": "📄"
+                }
+              ]
+            },
+            {
+              "name": "fonts",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "67caa260e64adfb4b31f4033_MessinaSansCompleteUprightVariableTrial.ttf",
+                  "type": "file",
+                  "icon": "📄"
+                }
+              ]
+            },
+            {
+              "name": "img",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "profile photo.svg",
+                  "type": "file",
+                  "icon": "🖼️"
+                }
+              ]
+            },
+            {
+              "name": "imgs",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "connect.jpg",
+                  "type": "file",
+                  "icon": "🖼️"
+                },
+                {
+                  "name": "flag.jpg",
+                  "type": "file",
+                  "icon": "🖼️"
+                },
+                {
+                  "name": "invest.jpg",
+                  "type": "file",
+                  "icon": "🖼️"
+                },
+                {
+                  "name": "logogen.jpg",
+                  "type": "file",
+                  "icon": "🖼️"
+                }
+              ]
+            },
+            {
+              "name": "videos",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "about",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "five.mp4",
+                      "type": "file",
+                      "icon": "📄"
+                    },
+                    {
+                      "name": "four.mp4",
+                      "type": "file",
+                      "icon": "📄"
+                    },
+                    {
+                      "name": "one.mp4",
+                      "type": "file",
+                      "icon": "📄"
+                    },
+                    {
+                      "name": "three.mp4",
+                      "type": "file",
+                      "icon": "📄"
+                    },
+                    {
+                      "name": "two.mp4",
+                      "type": "file",
+                      "icon": "📄"
+                    },
+                    {
+                      "name": "uKzdfVEd1O_576p_1744824341.mp4",
+                      "type": "file",
+                      "icon": "📄"
+                    }
+                  ]
+                },
+                {
+                  "name": "8085924f.mp4",
+                  "type": "file",
+                  "icon": "📄"
+                },
+                {
+                  "name": "aedb3913.mp4",
+                  "type": "file",
+                  "icon": "📄"
+                },
+                {
+                  "name": "hero.mp4",
+                  "type": "file",
+                  "icon": "📄"
+                },
+                {
+                  "name": "main.mp4",
+                  "type": "file",
+                  "icon": "📄"
+                }
+              ]
+            },
+            {
+              "name": "react.svg",
+              "type": "file",
+              "icon": "🖼️"
+            }
+          ]
+        },
+        {
+          "name": "components",
+          "type": "folder",
+          "icon": "📁",
+          "children": [
+            {
+              "name": "animate-ui",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "components",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "backgrounds",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "gravity-stars.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "radix",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "sidebar.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "primitives",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "effects",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "highlight.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "radix",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "checkbox.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "auth",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "Login.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "OAuthCallback.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "SignUp.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                }
+              ]
+            },
+            {
+              "name": "collaboration-canvas",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "Canvas.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "PaintingBoard.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                }
+              ]
+            },
+            {
+              "name": "detailspage",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "HomedetailsPage.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Idationdetails.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Knowledgedetails.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "ProjectDetails.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "SFCOLAB.code-workspace",
+                  "type": "file",
+                  "icon": "📄"
+                },
+                {
+                  "name": "StartUpdetails.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                }
+              ]
+            },
+            {
+              "name": "discover-users",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "DiscoverUsers.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "SidebarV2.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                }
+              ]
+            },
+            {
+              "name": "examples",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "input",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "types",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "input-types-3.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "tooltip",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "standard",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "tooltip-standard-2.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "tooltip-standard-4.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "headers",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "forms",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "NewKnowledgeForm.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    }
+                  ]
+                },
+                {
+                  "name": "DashboardHeader.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "FindContributionHeader.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "HomeHeader.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "IdeationHeader.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "KnowledgeHeader.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "NotificationsHeader.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "StartUpHeader.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                }
+              ]
+            },
+            {
+              "name": "hooks",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "use-mobile.tsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "use-toast.tsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                }
+              ]
+            },
+            {
+              "name": "landing-page",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "Home",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "About.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "AboutSection.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "Explore.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "Hero.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "Products.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "Roadmap.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "StartUp.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    }
+                  ]
+                },
+                {
+                  "name": "pages",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "About.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "Contact.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "Home.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "Products.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "StartupPage.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "Team.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    }
+                  ]
+                },
+                {
+                  "name": "utils",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "index.js",
+                      "type": "file",
+                      "icon": "📜"
+                    }
+                  ]
+                },
+                {
+                  "name": "Footer.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Navbar.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "ParallaxImage.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "TextAnimaton.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                }
+              ]
+            },
+            {
+              "name": "lib",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "utils.d.ts",
+                  "type": "file",
+                  "icon": "📘"
+                },
+                {
+                  "name": "utils.js",
+                  "type": "file",
+                  "icon": "📜"
+                }
+              ]
+            },
+            {
+              "name": "lightswind",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "animated-notification.tsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "input.tsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "password-strength-indicator.tsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "shine-button.tsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                }
+              ]
+            },
+            {
+              "name": "pages",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "Background_remover",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "AnimeConverter.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "BackgroundRemover.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "BackgroundRemover_2.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    }
+                  ]
+                },
+                {
+                  "name": "Business_plan_generator",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "premium-business-generator.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "qwen_chat_component.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    }
+                  ]
+                },
+                {
+                  "name": "Chat_bot",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "GeminiChat.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    }
+                  ]
+                },
+                {
+                  "name": "Data_scraper",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "LoadingSpinner.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "ScraperForm.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "ScraperResults.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    }
+                  ]
+                },
+                {
+                  "name": "Image_Logo_Generator",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "ImageGenerator.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "ImageGenerator_2.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "StartupLogoGenerator.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "image_editor_app.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    }
+                  ]
+                },
+                {
+                  "name": "PDF_Signing",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "PDFSigningApp.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    }
+                  ]
+                },
+                {
+                  "name": "Profile",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "AchievementSection.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "ActivityFeed.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "Profile.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "ProfileHeader.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "ProfileSettings.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "ProfileStats.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "ProfileTabs.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    }
+                  ]
+                },
+                {
+                  "name": "QucikGuides",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "gettingStarted.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    },
+                    {
+                      "name": "teamCollaboration.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    }
+                  ]
+                },
+                {
+                  "name": "QwenChat",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "QwenChat.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    }
+                  ]
+                },
+                {
+                  "name": "AccountandSecurity.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "ChatPage.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "DiscoverStartups.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Help.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Home.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Ideation.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Knowledge.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Notifications.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Posts.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Preferences.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Profile.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "ProfileSetting.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Project.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "ProjectManagement.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "RegisterStartUp.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "SavedHeader.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "SavedIdeaList.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Setting.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "StartUp.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "StartupDetailPage.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Test.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "VideoTutorials.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "dashboard.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "models.rar",
+                  "type": "file",
+                  "icon": "📄"
+                },
+                {
+                  "name": "pages.rar",
+                  "type": "file",
+                  "icon": "📄"
+                }
+              ]
+            },
+            {
+              "name": "sections",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "Alert.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Calendar.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Chat.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "ChatWidget.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "CompactFeedbackCard.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "DashboardSection.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "HomeCard.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "HomeSearchBar.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "MobileNavBar.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "NavBar.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Options.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "ScrollToTop.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "SearchBar.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "SettingSidebar.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "SideBar.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "TaskProgress.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Tasks.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "WorldClock.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                }
+              ]
+            },
+            {
+              "name": "style",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "Alert.css",
+                  "type": "file",
+                  "icon": "🎨"
+                },
+                {
+                  "name": "Canvas.css",
+                  "type": "file",
+                  "icon": "🎨"
+                },
+                {
+                  "name": "ChatComponent.css",
+                  "type": "file",
+                  "icon": "🎨"
+                },
+                {
+                  "name": "Ideation.css",
+                  "type": "file",
+                  "icon": "🎨"
+                },
+                {
+                  "name": "Layout.css",
+                  "type": "file",
+                  "icon": "🎨"
+                },
+                {
+                  "name": "Login.css",
+                  "type": "file",
+                  "icon": "🎨"
+                },
+                {
+                  "name": "PaintingBoard.css",
+                  "type": "file",
+                  "icon": "🎨"
+                },
+                {
+                  "name": "TimeAwareMessageInput.css",
+                  "type": "file",
+                  "icon": "🎨"
+                }
+              ]
+            },
+            {
+              "name": "ui",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "account",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "account-referrals-01.jsx",
+                      "type": "file",
+                      "icon": "⚛️"
+                    }
+                  ]
+                },
+                {
+                  "name": "shadcn-io",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "ai",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "actions.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "branch.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "code-block.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "conversation.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "image.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "inline-citation.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "loader.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "message.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "prompt-input.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "reasoning.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "response.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "source.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "suggestion.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "task.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "tool.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "web-preview.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "area-chart-01",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "index.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "avatar-group",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "index.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "bar-chart-01",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "index.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "code-block",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "index.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        },
+                        {
+                          "name": "server.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "kanban",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "index.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "list",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "index.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "motion-highlight",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "index.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "tabs",
+                      "type": "folder",
+                      "icon": "📁",
+                      "children": [
+                        {
+                          "name": "index.jsx",
+                          "type": "file",
+                          "icon": "⚛️"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "style",
+                  "type": "folder",
+                  "icon": "📁",
+                  "children": [
+                    {
+                      "name": "Beam.css",
+                      "type": "file",
+                      "icon": "🎨"
+                    },
+                    {
+                      "name": "GlareHover.css",
+                      "type": "file",
+                      "icon": "🎨"
+                    },
+                    {
+                      "name": "GradientText.css",
+                      "type": "file",
+                      "icon": "🎨"
+                    },
+                    {
+                      "name": "LaserFlow.css",
+                      "type": "file",
+                      "icon": "🎨"
+                    },
+                    {
+                      "name": "LogoLoop.css",
+                      "type": "file",
+                      "icon": "🎨"
+                    },
+                    {
+                      "name": "ProfileCard.css",
+                      "type": "file",
+                      "icon": "🎨"
+                    },
+                    {
+                      "name": "ShinyText.css",
+                      "type": "file",
+                      "icon": "🎨"
+                    },
+                    {
+                      "name": "SpotlightCard.css",
+                      "type": "file",
+                      "icon": "🎨"
+                    },
+                    {
+                      "name": "StarBorder.css",
+                      "type": "file",
+                      "icon": "🎨"
+                    }
+                  ]
+                },
+                {
+                  "name": "Beams.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "GlareHover.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "GradientText.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "LaserFlow.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "LogoLoop.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "ProfileCard.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "ShinyText.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "Silk.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "SpotlightCard.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "StarBorder.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "accordion.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "alert.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "avatar.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "badge.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "breadcrumb.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "button-group.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "button.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "card.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "chart.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "collapsible.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "dialog.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "dropdown-menu.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "following-pointer.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "input.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "label.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "notification-list.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "popover.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "progress.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "scroll-area.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "select.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "separator.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "sheet.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "skeleton.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "slider.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "switch.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "table.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "tabs.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "textarea.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                },
+                {
+                  "name": "tooltip.jsx",
+                  "type": "file",
+                  "icon": "⚛️"
+                }
+              ]
+            },
+            {
+              "name": "ChatComponent.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            },
+            {
+              "name": "LoadingSpinner.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            },
+            {
+              "name": "NotFound.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            },
+            {
+              "name": "ProtectedRoute.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            },
+            {
+              "name": "TimeAwareMessageInput.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            },
+            {
+              "name": "lightswind.css",
+              "type": "file",
+              "icon": "🎨"
+            }
+          ]
+        },
+        {
+          "name": "contexts",
+          "type": "folder",
+          "icon": "📁",
+          "children": [
+            {
+              "name": "AuthContext.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            },
+            {
+              "name": "SocketContext.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            }
+          ]
+        },
+        {
+          "name": "hooks",
+          "type": "folder",
+          "icon": "📁",
+          "children": [
+            {
+              "name": "use-controlled-state.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            },
+            {
+              "name": "use-mobile.js",
+              "type": "file",
+              "icon": "📜"
+            },
+            {
+              "name": "use-mobile.tsx",
+              "type": "file",
+              "icon": "⚛️"
+            },
+            {
+              "name": "use-toast.tsx",
+              "type": "file",
+              "icon": "⚛️"
+            },
+            {
+              "name": "useScrollHide.js",
+              "type": "file",
+              "icon": "📜"
+            }
+          ]
+        },
+        {
+          "name": "lib",
+          "type": "folder",
+          "icon": "📁",
+          "children": [
+            {
+              "name": "get-strict-context.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            },
+            {
+              "name": "utils.d.ts",
+              "type": "file",
+              "icon": "📘"
+            },
+            {
+              "name": "utils.js",
+              "type": "file",
+              "icon": "📜"
+            }
+          ]
+        },
+        {
+          "name": "router",
+          "type": "folder",
+          "icon": "📁",
+          "children": [
+            {
+              "name": "routes.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            }
+          ]
+        },
+        {
+          "name": "services",
+          "type": "folder",
+          "icon": "📁",
+          "children": [
+            {
+              "name": "auth",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "authAPI.js",
+                  "type": "file",
+                  "icon": "📜"
+                },
+                {
+                  "name": "authMiddleware.js",
+                  "type": "file",
+                  "icon": "📜"
+                },
+                {
+                  "name": "authSlice.js",
+                  "type": "file",
+                  "icon": "📜"
+                },
+                {
+                  "name": "authThunks.js",
+                  "type": "file",
+                  "icon": "📜"
+                }
+              ]
+            },
+            {
+              "name": "store",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "store.js",
+                  "type": "file",
+                  "icon": "📜"
+                }
+              ]
+            },
+            {
+              "name": "websocket",
+              "type": "folder",
+              "icon": "📁",
+              "children": [
+                {
+                  "name": "ChatWebSocketClient.js",
+                  "type": "file",
+                  "icon": "📜"
+                }
+              ]
+            },
+            {
+              "name": "simpleOAuthService.js",
+              "type": "file",
+              "icon": "📜"
+            }
+          ]
+        },
+        {
+          "name": "utils",
+          "type": "folder",
+          "icon": "📁",
+          "children": [
+            {
+              "name": "countries.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            },
+            {
+              "name": "getUserCountry.js",
+              "type": "file",
+              "icon": "📜"
+            },
+            {
+              "name": "index.js",
+              "type": "file",
+              "icon": "📜"
+            }
+          ]
+        },
+        {
+          "name": "voice-command",
+          "type": "folder",
+          "icon": "📁",
+          "children": [
+            {
+              "name": "voice_system_prod.jsx",
+              "type": "file",
+              "icon": "⚛️"
+            }
+          ]
+        },
+        {
+          "name": "App.jsx",
+          "type": "file",
+          "icon": "⚛️"
+        },
+        {
+          "name": "index.css",
+          "type": "file",
+          "icon": "🎨"
+        },
+        {
+          "name": "lightswind.css",
+          "type": "file",
+          "icon": "🎨"
+        },
+        {
+          "name": "main.jsx",
+          "type": "file",
+          "icon": "⚛️"
+        }
+      ]
+    },
+    {
+      "name": ".env.example",
+      "type": "file",
+      "icon": "📄"
+    },
+    {
+      "name": ".gitignore",
+      "type": "file",
+      "icon": "📁"
+    },
+    {
+      "name": "OAUTH_SETUP.md",
+      "type": "file",
+      "icon": "📝"
+    },
+    {
+      "name": "PROJECT.md",
+      "type": "file",
+      "icon": "📝"
+    },
+    {
+      "name": "README.md",
+      "type": "file",
+      "icon": "📝"
+    },
+    {
+      "name": "change.md",
+      "type": "file",
+      "icon": "📝"
+    },
+    {
+      "name": "components.json",
+      "type": "file",
+      "icon": "⚙️"
+    },
+    {
+      "name": "eslint.config.js",
+      "type": "file",
+      "icon": "📜"
+    },
+    {
+      "name": "index.html",
+      "type": "file",
+      "icon": "🌐"
+    },
+    {
+      "name": "jsconfig.json",
+      "type": "file",
+      "icon": "⚙️"
+    },
+    {
+      "name": "package-lock.json",
+      "type": "file",
+      "icon": "⚙️"
+    },
+    {
+      "name": "package.json",
+      "type": "file",
+      "icon": "📦"
+    },
+    {
+      "name": "rs",
+      "type": "file",
+      "icon": "📄"
+    },
+    {
+      "name": "vercel.json",
+      "type": "file",
+      "icon": "⚙️"
+    },
+    {
+      "name": "vite.config.js",
+      "type": "file",
+      "icon": "📜"
+    }
+  ],
+  "metadata": {
+    "generated": "2025-12-16T03:59:21.420Z",
+    "generator": "FileTree Pro Extension",
+    "version": "0.2.0",
+    "showIcons": true,
+    "maxDepth": 10
+  }
+}

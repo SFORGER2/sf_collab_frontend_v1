@@ -1,0 +1,69 @@
+.fire-border {
+  position: relative;
+  display: inline-block;
+  padding: 3px;
+  border-radius: 999px;
+  animation: fire-pulse 2.2s ease-in-out infinite;
+}
+
+.fire-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: conic-gradient(from 0deg, #ff4500, #ff9f1c, #ff003c, #ff4500);
+  animation: fire-rotate 1.6s linear infinite;
+  filter: blur(1.5px);
+  opacity: 0.85;
+}
+
+/* recorte interno */
+.fire-border::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: inherit;
+  background: transparent;
+  z-index: 1;
+}
+
+/* botón */
+.fire-button {
+  background: linear-gradient(to right, #4f7cff, #8b5cf6);
+  border-radius: 999px;
+  padding: 14px 36px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 2;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* 🔥 Hover = más urgencia */
+.fire-border:hover::before {
+  animation-duration: 0.7s;
+  filter: blur(2.5px);
+  opacity: 1;
+}
+
+.fire-border:hover .fire-button {
+  transform: scale(1.06);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* Animaciones */
+@keyframes fire-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fire-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}

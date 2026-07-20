@@ -1,0 +1,218 @@
+import axios from 'axios'
+import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
+
+const api = axios.create(API_CONFIG)
+
+api.interceptors.request.use(
+  requestInterceptor,
+  requestErrorInterceptor
+);
+
+api.interceptors.response.use(
+  responseInterceptor,
+  responseErrorInterceptor
+);
+
+// AI API
+export const aiAPI = {
+  // Health check
+  getHealth: async () => {
+    const response = await api.get('/ai/health');
+    return response.data;
+  },
+
+  // Get available models
+  getAvailableModels: async () => {
+    const response = await api.get('/ai/models');
+    return response.data.data;
+  },
+
+  // Generate content (business plan, pitch deck, etc.)
+  generateContent: async ({ prompt, model, contentType = 'chat', temperature = 0.7, maxTokens = 2048, outputFormat = 'text', metadata = {} }) => {
+    const response = await api.post('/ai/generate', {
+      prompt,
+      model,
+      content_type: contentType,
+      metadata,
+      temperature,
+      max_tokens: maxTokens,
+      output_format: outputFormat,
+    });
+    return response.data;
+  },
+
+  // Business ideas & plans (requires JWT)
+  generateBusinessIdeas: async ({ prompt, contentType = 'business_ideas', model, temperature = 0.7, maxTokens = 4096, metadata = {} }) => {
+    const response = await api.post('/ai/business-ideas', {
+      prompt,
+      content_type: contentType,
+      model,
+      temperature,
+      max_tokens: maxTokens,
+      metadata,
+    });
+    return response.data;
+  },
+
+  // Chat endpoint
+  chat: async (messages, model, temperature = 0.7, maxTokens = 2048) => {
+    const response = await api.post('/ai/chat', {
+      messages,
+      model,
+      temperature,
+      max_tokens: maxTokens,
+    });
+    return response.data.data;
+  },
+
+  // Download generated content
+  downloadContent: async (filename) => {
+    const response = await api.get(`/ai/download/${filename}`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  // Generate logo (requires JWT)
+  generateLogo: async ({ brandName, imagesAmount, industry = 'technology', style = 'minimal', colors = [], additionalNotes = '', subtitle = '' }) => {
+    const response = await api.post('/ai/logo/generate', {
+      brandName,
+      industry,
+      style,
+      colors,
+      additionalNotes,
+      subtitle,
+      imagesAmount
+    });
+    return response.data;
+  },
+
+  // Upload document for assistant (requires JWT, admin only)
+  uploadDocument: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/ai/assistant/documents', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // Query assistant (requires JWT)
+  queryAssistant: async (question) => {
+    const response = await api.post('/ai/assistant/query', {
+      question,
+    });
+    return response.data;
+  },
+
+  // Text to image (requires JWT)
+  textToImage: async (prompt) => {
+    const response = await api.post('/ai/image/text-to-image', {
+      prompt,
+    });
+    return response.data;
+  },
+
+  // ============================================================================
+  // GEMINI API
+  // ============================================================================
+
+  // Gemini health check
+  geminiHealth: async () => {
+    const response = await api.get('/gemini/health');
+    return response.data;
+  },
+
+  // Get Gemini models
+  geminiGetModels: async () => {
+    const response = await api.get('/gemini/models');
+    return response.data;
+  },
+
+  // Gemini chat
+  geminiChat: async (message, model = 'gemini-pro') => {
+    const response = await api.post('/gemini/chat', {
+      message,
+      model,
+    });
+    return response.data;
+  },
+
+  // Gemini analyze image
+  geminiAnalyzeImage: async (formData) => {
+    const response = await api.post('/gemini/analyze-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // ============================================================================
+  // CLOUDFLARE AI API
+  // ============================================================================
+
+  // CF health check
+  cfHealth: async () => {
+    const response = await api.get('/cf/health');
+    return response.data;
+  },
+
+  // Get CF models
+  cfGetModels: async () => {
+    const response = await api.get('/cf/models');
+    return response.data;
+  },
+
+  // CF generate image
+  cfGenerate: async ({ prompt, model, num_steps = 20, guidance = 7.5, strength = 1, width = 1024, height = 1024 }) => {
+    const response = await api.post('/cf/generate', {
+      prompt,
+      model,
+      num_steps,
+      guidance,
+      strength,
+      width,
+      height,
+    });
+    return response.data;
+  },
+
+  // Generate caption
+  generateCaption: async ({ prompt, model, platform = 'Instagram', tone = 'casual', temperature = 0.7, maxTokens = 200 }) => {
+    const response = await api.post('/ai/generate/caption', {
+      prompt,
+      model,
+      platform,
+      tone,
+      content_type: 'text',
+      temperature,
+      max_tokens: maxTokens,
+    });
+    return response.data;
+  },
+
+  // Generate video — backend expects multipart/form-data
+  generateVideo: async ({ mode, prompt, style = 'cinematic', duration = 10, files = null }) => {
+    const formData = new FormData();
+    formData.append('mode', mode === 'text-to-video' ? 'text' : mode === 'image-to-video' ? 'image' : mode);
+    formData.append('prompt', prompt);
+    formData.append('style', style);
+    formData.append('duration', String(duration));
+    if (files && files.length > 0) {
+      files.forEach((file) => formData.append('files', file));
+    }
+    const response = await api.post('/video/generate', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // Download generated video
+  downloadVideo: async (filename) => {
+    const response = await api.get(`/video/download/${filename}`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+};
+
+export default api;

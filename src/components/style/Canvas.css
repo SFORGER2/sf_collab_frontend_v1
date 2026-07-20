@@ -1,0 +1,128 @@
+/* Add these to Canvas.css */
+
+.no-conversation-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.no-conversation-message h3 {
+    margin-bottom: 8px;
+    font-size: 24px;
+}
+
+.no-conversation-message p {
+    opacity: 0.8;
+    font-size: 16px;
+}
+
+.join-whiteboard-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 12px;
+}
+
+.join-whiteboard-message {
+    text-align: center;
+    padding: 40px;
+    max-width: 400px;
+}
+
+.join-whiteboard-message h3 {
+    margin-bottom: 12px;
+    color: #374151;
+}
+
+.join-whiteboard-message p {
+    color: #6B7280;
+    margin-bottom: 24px;
+}
+
+.join-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.join-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.disconnected-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 12px;
+}
+
+.disconnected-message {
+    text-align: center;
+    padding: 40px;
+    max-width: 400px;
+}
+
+.disconnected-message h3 {
+    margin-bottom: 12px;
+    color: #EF4444;
+}
+
+.disconnected-message p {
+    color: #6B7280;
+}
+
+/* Update connection status styles */
+.connection-status {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    /* color: #4B5563; */
+    font-weight: 500;
+    /* background: rgba(243, 244, 246, 0.8); */
+    padding: 6px 16px;
+    border-radius: 20px;
+    gap: 8px;
+}
+
+/* Disabled state for tools */
+.tool-button:disabled,
+.color-button:disabled,
+.slider:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Update text input for disabled state */
+.text-input:disabled {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    cursor: not-allowed;
+}

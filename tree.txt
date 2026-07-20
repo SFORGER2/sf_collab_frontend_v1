@@ -1,0 +1,437 @@
+.
+├── change.md
+├── components
+│   ├── ai
+│   │   └── response-writer.jsx
+│   └── gsap
+│       ├── draw-line-text.jsx
+│       ├── profile-peek.jsx
+│       └── swap.jsx
+├── components.json
+├── eslint.config.js
+├── hook
+│   └── use-writer.js
+├── index.html
+├── jsconfig.json
+├── OAUTH_SETUP.md
+├── package-lock.json
+├── package.json
+├── PROJECT.md
+├── public
+│   ├── _redirects
+│   ├── 3dicons-crown-dynamic-color.png
+│   ├── achievement.png
+│   ├── ai.png
+│   ├── Black Elegant and Modern Startup Pitch Deck Presentation.pptx
+│   ├── brain.png
+│   ├── bulleseye.png
+│   ├── call.png
+│   ├── CE40D70C-A7B0-4E32-B145-01205D9FFCE1-removebg-preview 1.svg
+│   ├── chart.png
+│   ├── chat.png
+│   ├── ChatGPT Image 27 nov. 2025, 01_48_21.png
+│   ├── clock.png
+│   ├── collaboration.png
+│   ├── company.png
+│   ├── Create_a_short_cinematic_intro.mp4
+│   ├── CV minimal.pdf
+│   ├── design_2.png
+│   ├── design_3.png
+│   ├── design_left.svg
+│   ├── design_right.svg
+│   ├── design.png
+│   ├── design.svg
+│   ├── email.png
+│   ├── f1.png
+│   ├── f2.png
+│   ├── f3.png
+│   ├── f4.png
+│   ├── f5.png
+│   ├── f6.png
+│   ├── feedback.png
+│   ├── flame.png
+│   ├── Futuristic_Office_Hologram_Animation.mp4
+│   ├── idea.png
+│   ├── investor.png
+│   ├── jurica.jpg
+│   ├── line_wave_bottom.svg
+│   ├── line_wave_top.svg
+│   ├── link.png
+│   ├── LOGO_gr.png
+│   ├── logo_white.png
+│   ├── LOGO.png
+│   ├── message_2.png
+│   ├── openai.svg
+│   ├── PDF.png
+│   ├── pexels-alberto-salum-1784034021-28626097.jpg
+│   ├── pexels-nickoloui-2473183.jpg
+│   ├── pexels-padrinan-745365.jpg
+│   ├── pexels-rdne-7414214.jpg
+│   ├── profit.png
+│   ├── progress.png
+│   ├── project.png
+│   ├── qwen.svg
+│   ├── recycle.png
+│   ├── roadmap.png
+│   ├── rocket.png
+│   ├── search.png
+│   ├── seed.png
+│   ├── shiny_logo.png
+│   ├── startup.png
+│   ├── team.png
+│   ├── thounder.png
+│   ├── trophy.png
+│   ├── video.png
+│   ├── vite.svg
+│   └── world_clock.png
+├── README.md
+├── rs
+├── src
+│   ├── App.jsx
+│   ├── assets
+│   │   ├── audio
+│   │   │   └── Don Toliver - Lose My Mind (feat. Doja Cat) [From F1 The Movie] [Official Music Video].mp3
+│   │   ├── fonts
+│   │   │   └── 67caa260e64adfb4b31f4033_MessinaSansCompleteUprightVariableTrial.ttf
+│   │   ├── img
+│   │   │   └── profile photo.svg
+│   │   ├── imgs
+│   │   │   ├── connect.jpg
+│   │   │   ├── flag.jpg
+│   │   │   ├── invest.jpg
+│   │   │   └── logogen.jpg
+│   │   ├── react.svg
+│   │   └── videos
+│   │       ├── 8085924f.mp4
+│   │       ├── about
+│   │       │   ├── five.mp4
+│   │       │   ├── four.mp4
+│   │       │   ├── one.mp4
+│   │       │   ├── three.mp4
+│   │       │   ├── two.mp4
+│   │       │   └── uKzdfVEd1O_576p_1744824341.mp4
+│   │       ├── aedb3913.mp4
+│   │       ├── hero.mp4
+│   │       └── main.mp4
+│   ├── components
+│   │   ├── animate-ui
+│   │   │   ├── components
+│   │   │   │   ├── backgrounds
+│   │   │   │   │   └── gravity-stars.jsx
+│   │   │   │   └── radix
+│   │   │   │       └── sidebar.jsx
+│   │   │   └── primitives
+│   │   │       ├── effects
+│   │   │       │   └── highlight.jsx
+│   │   │       └── radix
+│   │   │           └── checkbox.jsx
+│   │   ├── auth
+│   │   │   ├── admin
+│   │   │   │   ├── AccessRequestModal.jsx
+│   │   │   │   ├── AccessRequests.jsx
+│   │   │   │   ├── AdminDashboard.jsx
+│   │   │   │   ├── PermissionManagement.jsx
+│   │   │   │   └── UserPermissions.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── OAuthCallback.jsx
+│   │   │   └── SignUp.jsx
+│   │   ├── ChatComponent.jsx
+│   │   ├── collaboration-canvas
+│   │   │   ├── Canvas.jsx
+│   │   │   └── PaintingBoard.jsx
+│   │   ├── detailspage
+│   │   │   ├── HomedetailsPage.jsx
+│   │   │   ├── Idationdetails.jsx
+│   │   │   ├── Knowledgedetails.jsx
+│   │   │   ├── ProjectDetails.jsx
+│   │   │   ├── SFCOLAB.code-workspace
+│   │   │   └── StartUpdetails.jsx
+│   │   ├── discover-users
+│   │   │   ├── DiscoverUsers.jsx
+│   │   │   └── SidebarV2.jsx
+│   │   ├── examples
+│   │   │   ├── input
+│   │   │   │   └── types
+│   │   │   │       └── input-types-3.jsx
+│   │   │   └── tooltip
+│   │   │       └── standard
+│   │   │           ├── tooltip-standard-2.jsx
+│   │   │           └── tooltip-standard-4.jsx
+│   │   ├── headers
+│   │   │   ├── DashboardHeader.jsx
+│   │   │   ├── FindContributionHeader.jsx
+│   │   │   ├── forms
+│   │   │   │   └── NewKnowledgeForm.jsx
+│   │   │   ├── HomeHeader.jsx
+│   │   │   ├── IdeationHeader.jsx
+│   │   │   ├── KnowledgeHeader.jsx
+│   │   │   ├── NotificationsHeader.jsx
+│   │   │   └── StartUpHeader.jsx
+│   │   ├── hooks
+│   │   │   ├── use-mobile.tsx
+│   │   │   └── use-toast.tsx
+│   │   ├── landing-page
+│   │   │   ├── Footer.jsx
+│   │   │   ├── Home
+│   │   │   │   ├── About.jsx
+│   │   │   │   ├── AboutSection.jsx
+│   │   │   │   ├── Explore.jsx
+│   │   │   │   ├── Hero.jsx
+│   │   │   │   ├── Products.jsx
+│   │   │   │   ├── Roadmap.jsx
+│   │   │   │   └── StartUp.jsx
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── pages
+│   │   │   │   ├── About.jsx
+│   │   │   │   ├── Contact.jsx
+│   │   │   │   ├── Home.jsx
+│   │   │   │   ├── Products.jsx
+│   │   │   │   ├── StartupPage.jsx
+│   │   │   │   └── Team.jsx
+│   │   │   ├── ParallaxImage.jsx
+│   │   │   ├── TextAnimaton.jsx
+│   │   │   └── utils
+│   │   │       └── index.js
+│   │   ├── lib
+│   │   │   ├── utils.d.ts
+│   │   │   └── utils.js
+│   │   ├── lightswind
+│   │   │   ├── animated-notification.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── password-strength-indicator.tsx
+│   │   │   └── shine-button.tsx
+│   │   ├── lightswind.css
+│   │   ├── LoadingSpinner.jsx
+│   │   ├── NotFound.jsx
+│   │   ├── pages
+│   │   │   ├── AccountandSecurity.jsx
+│   │   │   ├── Background_remover
+│   │   │   │   ├── AnimeConverter.jsx
+│   │   │   │   ├── BackgroundRemover_2.jsx
+│   │   │   │   └── BackgroundRemover.jsx
+│   │   │   ├── Business_plan_generator
+│   │   │   │   ├── premium-business-generator.jsx
+│   │   │   │   └── qwen_chat_component.jsx
+│   │   │   ├── Chat_bot
+│   │   │   │   └── GeminiChat.jsx
+│   │   │   ├── ChatPage.jsx
+│   │   │   ├── dashboard.jsx
+│   │   │   ├── Data_scraper
+│   │   │   │   ├── LoadingSpinner.jsx
+│   │   │   │   ├── ScraperForm.jsx
+│   │   │   │   └── ScraperResults.jsx
+│   │   │   ├── DiscoverStartups.jsx
+│   │   │   ├── Help.jsx
+│   │   │   ├── Home.jsx
+│   │   │   ├── Ideation.jsx
+│   │   │   ├── Image_Logo_Generator
+│   │   │   │   ├── image_editor_app.jsx
+│   │   │   │   ├── ImageGenerator_2.jsx
+│   │   │   │   ├── ImageGenerator.jsx
+│   │   │   │   └── StartupLogoGenerator.jsx
+│   │   │   ├── Knowledge.jsx
+│   │   │   ├── Mentorship
+│   │   │   │   ├── MentorshipOverview.jsx
+│   │   │   │   ├── MentorshipProgramDetails.jsx
+│   │   │   │   ├── MentorshipPrograms.jsx
+│   │   │   │   └── MentorshipRequests.jsx
+│   │   │   ├── Notifications.jsx
+│   │   │   ├── PDF_Signing
+│   │   │   │   └── PDFSigningApp.jsx
+│   │   │   ├── Posts.jsx
+│   │   │   ├── Preferences.jsx
+│   │   │   ├── Pricing
+│   │   │   │   ├── CollaboratorPricing.jsx
+│   │   │   │   ├── ComparePlans.jsx
+│   │   │   │   ├── EquityAccess.jsx
+│   │   │   │   ├── FAQSection.jsx
+│   │   │   │   ├── FounderPricing.jsx
+│   │   │   │   ├── InvestorPricing.jsx
+│   │   │   │   ├── Pricing.jsx
+│   │   │   │   └── RoleBasedPricing.jsx
+│   │   │   ├── Profile
+│   │   │   │   ├── AchievementSection.jsx
+│   │   │   │   ├── ActivityFeed.jsx
+│   │   │   │   ├── Profile.jsx
+│   │   │   │   ├── ProfileHeader.jsx
+│   │   │   │   ├── ProfileSettings.jsx
+│   │   │   │   ├── ProfileStats.jsx
+│   │   │   │   └── ProfileTabs.jsx
+│   │   │   ├── Profile.jsx
+│   │   │   ├── ProfileSetting.jsx
+│   │   │   ├── Project.jsx
+│   │   │   ├── ProjectManagement.jsx
+│   │   │   ├── QucikGuides
+│   │   │   │   ├── gettingStarted.jsx
+│   │   │   │   └── teamCollaboration.jsx
+│   │   │   ├── QwenChat
+│   │   │   │   └── QwenChat.jsx
+│   │   │   ├── RegisterStartUp.jsx
+│   │   │   ├── SavedHeader.jsx
+│   │   │   ├── SavedIdeaList.jsx
+│   │   │   ├── Setting.jsx
+│   │   │   ├── StartUp.jsx
+│   │   │   ├── StartupDetailPage.jsx
+│   │   │   ├── Test.jsx
+│   │   │   └── VideoTutorials.jsx
+│   │   ├── ProtectedRoute.jsx
+│   │   ├── sections
+│   │   │   ├── Alert.jsx
+│   │   │   ├── Calendar.jsx
+│   │   │   ├── Chat.jsx
+│   │   │   ├── ChatWidget.jsx
+│   │   │   ├── CompactFeedbackCard.jsx
+│   │   │   ├── DashboardSection.jsx
+│   │   │   ├── HomeCard.jsx
+│   │   │   ├── HomeSearchBar.jsx
+│   │   │   ├── MobileNavBar.jsx
+│   │   │   ├── NavBar.jsx
+│   │   │   ├── Options.jsx
+│   │   │   ├── ScrollToTop.jsx
+│   │   │   ├── SearchBar.jsx
+│   │   │   ├── SettingSidebar.jsx
+│   │   │   ├── SideBar.jsx
+│   │   │   ├── TaskProgress.jsx
+│   │   │   ├── Tasks.jsx
+│   │   │   └── WorldClock.jsx
+│   │   ├── style
+│   │   │   ├── Alert.css
+│   │   │   ├── Canvas.css
+│   │   │   ├── ChatComponent.css
+│   │   │   ├── Ideation.css
+│   │   │   ├── Layout.css
+│   │   │   ├── Login.css
+│   │   │   ├── PaintingBoard.css
+│   │   │   └── TimeAwareMessageInput.css
+│   │   ├── TimeAwareMessageInput.jsx
+│   │   └── ui
+│   │       ├── accordion.jsx
+│   │       ├── account
+│   │       │   └── account-referrals-01.jsx
+│   │       ├── alert.jsx
+│   │       ├── avatar.jsx
+│   │       ├── badge.jsx
+│   │       ├── Beams.jsx
+│   │       ├── breadcrumb.jsx
+│   │       ├── button-group.jsx
+│   │       ├── button.jsx
+│   │       ├── card.jsx
+│   │       ├── chart.jsx
+│   │       ├── collapsible.jsx
+│   │       ├── dialog.jsx
+│   │       ├── dropdown-menu.jsx
+│   │       ├── following-pointer.jsx
+│   │       ├── GlareHover.jsx
+│   │       ├── GradientText.jsx
+│   │       ├── input.jsx
+│   │       ├── label.jsx
+│   │       ├── LaserFlow.jsx
+│   │       ├── LogoLoop.jsx
+│   │       ├── notification-list.jsx
+│   │       ├── popover.jsx
+│   │       ├── ProfileCard.jsx
+│   │       ├── progress.jsx
+│   │       ├── scroll-area.jsx
+│   │       ├── select.jsx
+│   │       ├── separator.jsx
+│   │       ├── shadcn-io
+│   │       │   ├── ai
+│   │       │   │   ├── actions.jsx
+│   │       │   │   ├── branch.jsx
+│   │       │   │   ├── code-block.jsx
+│   │       │   │   ├── conversation.jsx
+│   │       │   │   ├── image.jsx
+│   │       │   │   ├── inline-citation.jsx
+│   │       │   │   ├── loader.jsx
+│   │       │   │   ├── message.jsx
+│   │       │   │   ├── prompt-input.jsx
+│   │       │   │   ├── reasoning.jsx
+│   │       │   │   ├── response.jsx
+│   │       │   │   ├── source.jsx
+│   │       │   │   ├── suggestion.jsx
+│   │       │   │   ├── task.jsx
+│   │       │   │   ├── tool.jsx
+│   │       │   │   └── web-preview.jsx
+│   │       │   ├── area-chart-01
+│   │       │   │   └── index.jsx
+│   │       │   ├── avatar-group
+│   │       │   │   └── index.jsx
+│   │       │   ├── bar-chart-01
+│   │       │   │   └── index.jsx
+│   │       │   ├── code-block
+│   │       │   │   ├── index.jsx
+│   │       │   │   └── server.jsx
+│   │       │   ├── kanban
+│   │       │   │   └── index.jsx
+│   │       │   ├── list
+│   │       │   │   └── index.jsx
+│   │       │   ├── motion-highlight
+│   │       │   │   └── index.jsx
+│   │       │   └── tabs
+│   │       │       └── index.jsx
+│   │       ├── sheet.jsx
+│   │       ├── ShinyText.jsx
+│   │       ├── Silk.jsx
+│   │       ├── skeleton.jsx
+│   │       ├── slider.jsx
+│   │       ├── SpotlightCard.jsx
+│   │       ├── StarBorder.jsx
+│   │       ├── style
+│   │       │   ├── Beam.css
+│   │       │   ├── GlareHover.css
+│   │       │   ├── GradientText.css
+│   │       │   ├── LaserFlow.css
+│   │       │   ├── LogoLoop.css
+│   │       │   ├── ProfileCard.css
+│   │       │   ├── ShinyText.css
+│   │       │   ├── SpotlightCard.css
+│   │       │   └── StarBorder.css
+│   │       ├── switch.jsx
+│   │       ├── table.jsx
+│   │       ├── tabs.jsx
+│   │       ├── textarea.jsx
+│   │       └── tooltip.jsx
+│   ├── contexts
+│   │   ├── AuthContext.jsx
+│   │   └── SocketContext.jsx
+│   ├── hooks
+│   │   ├── use-controlled-state.jsx
+│   │   ├── use-mobile.js
+│   │   ├── use-mobile.tsx
+│   │   ├── use-toast.tsx
+│   │   └── useScrollHide.js
+│   ├── index.css
+│   ├── Layout
+│   │   └── Layout.jsx
+│   ├── lib
+│   │   ├── get-strict-context.jsx
+│   │   ├── utils.d.ts
+│   │   └── utils.js
+│   ├── lightswind.css
+│   ├── main.jsx
+│   ├── router
+│   │   └── routes.jsx
+│   ├── services
+│   │   ├── auth
+│   │   │   ├── authAPI.js
+│   │   │   ├── authMiddleware.js
+│   │   │   ├── authSlice.js
+│   │   │   └── authThunks.js
+│   │   ├── simpleOAuthService.js
+│   │   ├── store
+│   │   │   └── store.js
+│   │   └── websocket
+│   │       └── ChatWebSocketClient.js
+│   ├── utils
+│   │   ├── countries.jsx
+│   │   ├── getUserCountry.js
+│   │   ├── index.js
+│   │   └── permissionCheck.js
+│   └── voice-command
+│       └── voice_system_prod.jsx
+├── tree.txt
+├── Untitled-1.json
+├── vercel.json
+└── vite.config.js
+
+79 directories, 356 files

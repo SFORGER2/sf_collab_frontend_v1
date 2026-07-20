@@ -1,4 +1,4 @@
-# Logs
+ # Logs
 logs
 *.log
 npm-debug.log*
@@ -6,12 +6,19 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+.env
+.env.*
+.env.dev
+
+# .env.example
+
+backend/
 
 node_modules
 dist
 dist-ssr
 *.local
-
+package-lock.json
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -23,7 +30,4 @@ dist-ssr
 *.sln
 *.sw?
 
-# Self Docs
-web-1.pdf
-web-2.pdf
-web-2.md
+.vercel
