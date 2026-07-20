@@ -27,7 +27,6 @@ interface WorkspaceProps {
 interface StepItem {
   label: string
   description: string
-  autoComplete?: boolean
 }
 
 const STEP_ITEMS: Record<WorkspaceStepId, { icon: typeof Search; title: string; items: StepItem[] }> = {

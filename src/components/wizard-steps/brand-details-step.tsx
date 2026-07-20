@@ -1,12 +1,12 @@
 import { BrandingConfig } from "../branding-config"
 import type { BrandingData } from "../../types"
 
-interface BrandingStepProps {
+interface BrandDetailsStepProps {
   data: { branding: BrandingData }
   onChange: (data: { branding: BrandingData }) => void
 }
 
-export function BrandingStep({ data, onChange }: BrandingStepProps) {
+export function BrandDetailsStep({ data, onChange }: BrandDetailsStepProps) {
   return (
     <div className="flex flex-col">
       <BrandingConfig

@@ -24,3 +24,35 @@ export function formatRelativeTime(dateString: string): string {
     year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
   })
 }
+
+export function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })
+}
+
+export type StatusFilter = "all" | "draft" | "in-progress" | "completed" | "failed"
+
+export function getFilterLabel(filter: StatusFilter): string {
+  const labels: Record<StatusFilter, string> = {
+    all: "All",
+    draft: "Draft",
+    "in-progress": "In Progress",
+    completed: "Completed",
+    failed: "Failed",
+  }
+  return labels[filter]
+}
+
+export function matchesStatusFilter(status: string, filter: StatusFilter): boolean {
+  if (filter === "all") return true
+  if (filter === "draft") return status === "draft"
+  if (filter === "in-progress")
+    return ["harvesting", "proposal_ready", "approved", "generating", "generated", "pushing"].includes(status)
+  if (filter === "completed") return status === "delivered"
+  if (filter === "failed") return status === "failed"
+  return true
+}

@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react"
 import { motion } from "framer-motion"
-import { ExternalLink, MoreHorizontal, Globe, Trash2 } from "lucide-react"
+import { ExternalLink, MoreHorizontal, Globe, Trash2, Calendar, Eye } from "lucide-react"
 import { StatusBadge } from "./status-badge"
-import { formatRelativeTime } from "../lib/utils"
+import { formatRelativeTime, formatDate, cn } from "../lib/utils"
 import type { Project } from "../types"
 
 interface ProjectCardProps {
@@ -46,7 +46,7 @@ interface ProjectCardProps {
         {/* Subtle top accent line */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-        <div className="p-4 flex flex-col gap-3">
+        <div className="p-4 flex flex-col gap-2.5">
           {/* Top row: icon + name + menu */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -128,22 +128,65 @@ interface ProjectCardProps {
             </motion.span>
           </motion.div>
 
-          {/* URL */}
-          {project.url && (
-            <motion.a
-              href={project.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.18 }}
-              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/60 hover:text-primary transition-colors duration-200"
-            >
-              <ExternalLink className="h-3 w-3" />
-              <span className="truncate max-w-[200px]">{project.url}</span>
-            </motion.a>
-          )}
+          {/* Creation date */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.16 }}
+            className="flex items-center gap-1.5"
+          >
+            <Calendar className="h-3 w-3 text-muted-foreground/40" strokeWidth={1.5} />
+            <span className="text-[11px] text-muted-foreground/50">
+              Created {formatDate(project.createdAt)}
+            </span>
+            {project.designTheme && (
+              <span className="text-[11px] text-muted-foreground/30">
+                &middot; {project.designTheme}
+              </span>
+            )}
+          </motion.div>
+
+          {/* URL + Preview */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.18 }}
+            className="flex items-center gap-2 flex-wrap"
+          >
+            {project.url && (
+              <motion.a
+                href={project.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.18 }}
+                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/60 hover:text-primary transition-colors duration-200"
+              >
+                <ExternalLink className="h-3 w-3" />
+                <span className="truncate max-w-[160px]">{project.url}</span>
+              </motion.a>
+            )}
+            {project.status === "delivered" && project.url && (
+              <motion.a
+                href={project.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2, delay: 0.2 }}
+                className={cn(
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium",
+                  "bg-brand/[0.08] text-brand hover:bg-brand/[0.12] transition-colors duration-200"
+                )}
+              >
+                <Eye className="h-3 w-3" strokeWidth={1.5} />
+                Preview
+              </motion.a>
+            )}
+          </motion.div>
         </div>
       </div>
     </motion.div>

@@ -1,5 +1,6 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { motion } from "framer-motion"
+import { CheckCircle, AlertCircle } from "lucide-react"
 import { cn } from "../../lib/utils"
 
 const PRESET_COLORS = [
@@ -9,6 +10,12 @@ const PRESET_COLORS = [
   { label: "Orange", value: "#ea580c" },
   { label: "Gray", value: "#525252" },
 ]
+
+const HEX_REGEX = /^#[0-9a-fA-F]{6}$/
+
+function isValidHex(value: string): boolean {
+  return HEX_REGEX.test(value)
+}
 
 interface ColorPickerProps {
   value: string
@@ -23,9 +30,16 @@ export function ColorPicker({
   label,
   description,
 }: ColorPickerProps) {
-  const [isCustom, setIsCustom] = useState(
-    !PRESET_COLORS.some((c) => c.value === value)
-  )
+  const isPreset = PRESET_COLORS.some((c) => c.value === value)
+  const [isCustom, setIsCustom] = useState(!isPreset)
+
+  const isValueValid = useMemo(() => {
+    if (isPreset) return true
+    return isValidHex(value)
+  }, [value, isPreset])
+
+  const showError = isCustom && value.length > 0 && !isValueValid
+  const showSuccess = isCustom && value.length > 0 && isValueValid
 
   return (
     <div className="flex flex-col gap-2">
@@ -34,7 +48,7 @@ export function ColorPicker({
           <label className="text-xs font-medium text-card-foreground/70">
             {label}
           </label>
-          {value && (
+          {value && isValueValid && (
             <span className="text-[10px] font-mono uppercase text-muted-foreground/40">
               {value}
             </span>
@@ -114,21 +128,51 @@ export function ColorPicker({
       </motion.div>
       {/* Custom hex input */}
       {isCustom && (
-        <div className="flex items-center gap-2 mt-0.5">
-          <div
-            className="h-6 w-6 rounded-md border border-border shrink-0"
-            style={{
-              backgroundColor: /^#[0-9a-fA-F]{6}$/.test(value) ? value : undefined,
-            }}
-          />
-          <input
-            type="text"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="#000000"
-            className="h-7 w-28 rounded-md border border-border bg-background px-2 text-xs font-mono text-card-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-1 focus:ring-ring"
-          />
-          <label className="text-[11px] text-muted-foreground/40">Hex</label>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <div
+              className={cn(
+                "h-6 w-6 rounded-md border shrink-0",
+                showError ? "border-destructive/50" : "border-border",
+                showSuccess ? "border-success/50" : ""
+              )}
+              style={{
+                backgroundColor: isValidHex(value) ? value : undefined,
+              }}
+            />
+            <input
+              type="text"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="#000000"
+              className={cn(
+                "h-7 w-28 rounded-md border bg-background px-2 text-xs font-mono text-card-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-1 transition-all duration-200",
+                showError && "border-destructive focus:ring-destructive",
+                showSuccess && "border-success/50 focus:ring-success/30",
+                !showError && !showSuccess && "border-border focus:ring-ring"
+              )}
+            />
+            <label className="text-[11px] text-muted-foreground/40">Hex</label>
+            {showSuccess && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 15 }}
+              >
+                <CheckCircle className="h-3.5 w-3.5 text-success" strokeWidth={2} />
+              </motion.div>
+            )}
+          </div>
+          {showError && (
+            <motion.p
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-[10px] text-destructive/70 flex items-center gap-1"
+            >
+              <AlertCircle className="h-3 w-3" strokeWidth={1.5} />
+              Invalid hex color. Use format #RRGGBB
+            </motion.p>
+          )}
         </div>
       )}
     </div>

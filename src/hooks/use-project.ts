@@ -89,10 +89,12 @@ export function useProject(id: string | null): UseProjectReturn {
             id: updated.id,
             name: updated.name,
             status: updated.status,
+            createdAt: updated.createdAt,
             lastUpdated: new Date().toISOString(),
             url: updated.url,
             description: updated.description,
             packId: updated.packId,
+            designTheme: updated.designTheme,
           }
           saveProjects(projects)
         }

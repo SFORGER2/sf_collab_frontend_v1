@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Plus, RefreshCw, AlertCircle, Search, FolderOpen } from "lucide-react";
 import { useProjects } from "../hooks/use-projects";
@@ -7,7 +7,11 @@ import { EmptyState } from "./empty-state";
 import { Button } from "./ui/button";
 import { CreateWebsiteModal } from "./create-website-modal";
 import { DeleteWebsiteDialog } from "./delete-website-dialog";
+import { cn } from "../lib/utils";
+import { getFilterLabel, matchesStatusFilter, type StatusFilter } from "../lib/utils";
 import type { Project } from "../types";
+
+const STATUS_FILTERS: StatusFilter[] = ["all", "draft", "in-progress", "completed", "failed"]
 
 interface DashboardProps {
   onOpenWorkspace?: (projectId: string) => void
@@ -16,16 +20,35 @@ interface DashboardProps {
 export function Dashboard({ onOpenWorkspace }: DashboardProps) {
 		const { projects, isLoading, error, refetch, addProject, removeProject } = useProjects();
 		const [searchQuery, setSearchQuery] = useState("");
+		const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 		const [showCreateModal, setShowCreateModal] = useState(false);
 		const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
 		const allProjects = projects;
 
-	const filteredProjects = searchQuery
-		? allProjects.filter((p) =>
+	const filteredProjects = useMemo(() => {
+		let result = allProjects
+		if (searchQuery) {
+			result = result.filter((p) =>
 				p.name.toLowerCase().includes(searchQuery.toLowerCase()),
 			)
-		: allProjects;
+		}
+		if (statusFilter !== "all") {
+			result = result.filter((p) => matchesStatusFilter(p.status, statusFilter))
+		}
+		return result
+	}, [allProjects, searchQuery, statusFilter])
+
+	const projectCounts = useMemo(() => {
+		const counts: Record<StatusFilter, number> = {
+			all: allProjects.length,
+			draft: allProjects.filter((p) => matchesStatusFilter(p.status, "draft")).length,
+			"in-progress": allProjects.filter((p) => matchesStatusFilter(p.status, "in-progress")).length,
+			completed: allProjects.filter((p) => matchesStatusFilter(p.status, "completed")).length,
+			failed: allProjects.filter((p) => matchesStatusFilter(p.status, "failed")).length,
+		}
+		return counts
+	}, [allProjects])
 
 	const handleCreateProject = (project: Project) => {
 		addProject(project);
@@ -160,20 +183,54 @@ export function Dashboard({ onOpenWorkspace }: DashboardProps) {
 			</motion.header>
 
 			<main className="max-w-5xl mx-auto px-6 py-6">
-				{/* Search */}
-				{allProjects.length > 0 && (
+				{/* Search */}				{allProjects.length > 0 && (
 					<motion.div
 						initial={{ opacity: 0, y: -8 }}
 						animate={{ opacity: 1, y: 0 }}
-						className="relative mb-5">
-						<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
-						<input
-							type="text"
-							placeholder="Search websites..."
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							className="w-full h-9 pl-9 pr-3 rounded-lg border border-border bg-card text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring focus:border-transparent transition-all duration-200"
-						/>
+						className="flex flex-col gap-3 mb-5">
+						{/* Search */}
+						<div className="relative">
+							<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
+							<input
+								type="text"
+								placeholder="Search websites..."
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								className="w-full h-9 pl-9 pr-3 rounded-lg border border-border bg-card text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring focus:border-transparent transition-all duration-200"
+							/>
+						</div>
+
+						{/* Status filter chips */}
+						<div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+							{STATUS_FILTERS.map((filter) => (
+								<button
+									key={filter}
+									onClick={() => setStatusFilter(filter)}
+									className={cn(
+										"inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all duration-200 cursor-pointer whitespace-nowrap",
+										statusFilter === filter
+											? "border-brand bg-brand/[0.08] text-brand"
+											: "border-border bg-card text-muted-foreground/70 hover:border-foreground/30 hover:text-foreground/70"
+									)}
+								>
+									{getFilterLabel(filter)}
+									<motion.span
+										initial={{ scale: 0 }}
+										animate={{ scale: 1 }}
+										transition={{ type: "spring", stiffness: 300, damping: 15 }}
+										key={projectCounts[filter]}
+										className={cn(
+											"tabular-nums text-[10px] px-1 py-0.5 rounded-md",
+											statusFilter === filter
+												? "bg-brand/10"
+												: "bg-secondary/60"
+										)}
+									>
+										{projectCounts[filter]}
+									</motion.span>
+								</button>
+							))}
+						</div>
 					</motion.div>
 				)}
 
@@ -231,7 +288,7 @@ export function Dashboard({ onOpenWorkspace }: DashboardProps) {
 				{!isLoading && !error && allProjects.length > 0 && (
 					<>
 						{/* No results */}
-						{filteredProjects.length === 0 && searchQuery && (
+						{filteredProjects.length === 0 && (searchQuery || statusFilter !== "all") && (
 							<motion.div
 								initial={{ opacity: 0 }}
 								animate={{ opacity: 1 }}
@@ -247,18 +304,32 @@ export function Dashboard({ onOpenWorkspace }: DashboardProps) {
 										No results found
 									</h2>
 									<p className="text-xs text-muted-foreground/70">
-										No websites match{" "}
-										<span className="font-medium text-foreground/60">
-											&ldquo;{searchQuery}&rdquo;
-										</span>
+										{searchQuery && statusFilter !== "all"
+											? `No websites match &ldquo;${searchQuery}&rdquo; in ${getFilterLabel(statusFilter).toLowerCase()}`
+											: statusFilter !== "all"
+												? `No ${getFilterLabel(statusFilter).toLowerCase()} websites yet`
+												: `No websites match &ldquo;${searchQuery}&rdquo;`
+										}
 									</p>
 								</div>
-								<Button
-									onClick={() => setSearchQuery("")}
-									variant="outline"
-									size="sm">
-									Clear search
-								</Button>
+								<div className="flex items-center gap-2">
+									{searchQuery && (
+										<Button
+											onClick={() => setSearchQuery("")}
+											variant="outline"
+											size="sm">
+											Clear search
+										</Button>
+									)}
+									{statusFilter !== "all" && (
+										<Button
+											onClick={() => setStatusFilter("all")}
+											variant="outline"
+											size="sm">
+											Show all
+										</Button>
+									)}
+								</div>
 							</motion.div>
 						)}
 

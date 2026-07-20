@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Self Docs
+web-1.pdf
+web-2.pdf
+web-2.md
