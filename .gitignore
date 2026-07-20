@@ -31,3 +31,6 @@ package-lock.json
 *.sw?
 
 .vercel
+
+# Self Docs
+web-2.*
