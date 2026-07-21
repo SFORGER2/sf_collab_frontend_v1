@@ -29,7 +29,8 @@ import {
   ShieldCheck,
   Video,
   FileStack,
-  FolderOpen
+  FolderOpen,
+  Presentation,
 } from "lucide-react";
 
 import { Lightbulb } from "lucide-react";
