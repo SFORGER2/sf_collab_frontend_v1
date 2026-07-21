@@ -1,4 +1,16 @@
-import { Brain, CaptionsIcon, Database, FileSignature, ImageIcon, MessageSquare, PenTool, VideoIcon } from "lucide-react";
+import {
+  Brain,
+  CaptionsIcon,
+  Database,
+  FileSignature,
+  ImageIcon,
+  MessageSquare,
+  PenTool,
+  VideoIcon,
+  Users,        // new
+  Newspaper,    // new
+  Globe,        // new
+} from "lucide-react";
 
 export const tools = [
   {
@@ -58,5 +70,26 @@ export const tools = [
     gradient: "from-slate-600 to-gray-600",
     available: false
   },
-
+  // ── NEW TOOLS ──
+  {
+    name: "AI Matchmaking",
+    description: "Find the perfect founders, builders, investors, and mentors using AI.",
+    icon: Users,
+    path: "/ai-matchmaking",
+    gradient: "from-purple-600 to-blue-600"
+  },
+  {
+    name: "AI News",
+    description: "Latest startup, technology, AI, and funding news personalized for you.",
+    icon: Newspaper,
+    path: "/ai-news",
+    gradient: "from-orange-600 to-pink-600"
+  },
+  {
+    name: "Web Generator",
+    description: "Generate beautiful, responsive websites using AI prompts.",
+    icon: Globe,
+    path: "/website-generator",
+    gradient: "from-blue-600 to-cyan-600"
+  }
 ];

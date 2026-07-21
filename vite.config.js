@@ -3,7 +3,6 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from "path";
-import { BACKEND_URL } from './src/config/backendConfig.js';
 
 const __dirname = path.resolve();
 
