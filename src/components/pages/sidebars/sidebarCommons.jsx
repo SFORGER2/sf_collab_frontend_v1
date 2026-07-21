@@ -5,7 +5,8 @@ import {
   MessageSquare, MessageSquareHeart, Rss, StickyNote, TrendingUp,
   UserPlus, Users, VideoIcon, Wallet, Wand2, CalendarClock, FileStack,
   Bell, DollarSign, BarChart2, Award, Flag, AlertTriangle,
-  CheckCircle, LayoutDashboard, Settings, PieChart, Coins, CreditCard, FolderOpen, Video, Clock, Trash2, Star   // ✅ Added missing import
+  CheckCircle, LayoutDashboard, Settings, PieChart, Coins, CreditCard, FolderOpen, Video, Clock, Trash2, Star,
+  Newspaper   // ✅ Added missing import
 } from "lucide-react";
 import { BsGear, BsPeople } from "react-icons/bs";
 import { IoChatbubbles } from "react-icons/io5";

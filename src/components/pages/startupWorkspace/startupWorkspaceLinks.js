@@ -1,4 +1,4 @@
-s// src/components/pages/startupWorkspace/startupWorkspaceLinks.js
+// src/components/pages/startupWorkspace/startupWorkspaceLinks.js
 //
 // Module list for the Startup Workspace (spec section 10):
 //   Startup Dashboard, Startup Scoring, CRM, ERP, Hiring, Marketplace,
@@ -61,6 +61,10 @@ export const getStartupWorkspaceModules = (startupId) => [
     label: 'Mentors',
     icon: Sparkles,
     href: `/startup-workspace/${startupId}/mentors`,
+    internal: true,
+    group: 'Growth',
+  },
+  {
     id: 'sw-candidates',
     label: 'Candidates',
     icon: Users,

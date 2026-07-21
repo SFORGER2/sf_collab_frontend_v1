@@ -262,6 +262,8 @@ export default function App() {
         <ChatNotificationProvider>
           <ChatContactsProvider token={access_token}>
             <NotificationProvider>
+              <AnnouncementProvider>
+              <NewsletterProvider>
               <ScrollToTop />
               <Routes>
                 {/* Public Routes */}
@@ -520,10 +522,7 @@ export default function App() {
                 style={{ bottom: "20px" }}
               />
               <ToastNotification />
-              <AnnouncementProvider>
-                <NewsletterProvider>
-                  {/* Additional Providers Active */}
-                </NewsletterProvider>
+              </NewsletterProvider>
               </AnnouncementProvider>
             </NotificationProvider>
           </ChatContactsProvider>
