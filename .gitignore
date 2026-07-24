@@ -31,3 +31,7 @@ package-lock.json
 *.sw?
 
 .vercel
+
+# self
+ai-2.md
+ai-2.pdf
