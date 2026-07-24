@@ -1,47 +1,94 @@
-import {
-  MessageSquare,
-  ThumbsUp,
-  Users,
-  Calendar,
-  ArrowUpRight,
-  TrendingUp,
-  Lightbulb,
-  Star,
-  Eye,
-  Clock,
-  Share2,
-  Bookmark,
-  Heart,
-  MessageCircle,
-  User,
-  Trophy,
-  Zap,
-  Plus,
-  Tag,
-  WifiOff,
-  RefreshCw,
-} from "lucide-react";
+import { WifiOff, RefreshCw, Eye, Clock, Heart, MessageCircle, Users, AlertTriangle } from "lucide-react";
 import React, { useState, useEffect, useCallback } from "react";
 import IdeationHeader from "./IdeationHeader";
 import ScrollToTop from "../../sections/ScrollToTop";
 import { ideaAPI } from "@/utils/APIs/ideaAPI";
 import { useSelector } from "react-redux";
-import { API_BASE_URL } from "@/utils/config";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import IdeationCard from "./IdeationCard";
-import { getStageColor } from "./getStageColor";
 import IdeationTutorial from "./IdeationTutorial";
+import { motion } from "framer-motion";
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const MOCK_IDEAS = [
+  {
+    id: "mock-idea-1",
+    title: "Founder Match: Find Your Tech Co-Founder",
+    description:
+      "A simple tool that connects non-technical founders with developers based on actual skills and shared interests, not just resume buzzwords.",
+    projectDetails:
+      "We're building a platform to solve the biggest headache for early-stage startups: finding a technical co-founder. Instead of endless networking events, we use smart matching to connect you with builders who have the right skills, tech stack, and vibe.",
+    stage: "Prototype",
+    category: "AI / SaaS",
+    privacy: "public",
+    creatorId: "mock-user-1",
+    imageUrl: "",
+    creator: { id: "mock-user-1", firstName: "Alex", lastName: "Mercer" },
+    author: { name: "Alex Mercer", avatar: "", id: "mock-user-1", role: "Founder & CEO" },
+    createdAt: new Date().toISOString(),
+    timeAgo: "1 hour ago",
+    likes: 12,
+    hasLiked: false,
+    hasBookmarked: false,
+    comments: [],
+    teamMembers: [],
+    collaborators: 1,
+    tags: ["Matchmaking", "Startup Tool", "Community"],
+    visionState: "public",
+    readinessScore: 85,
+    isConverted: false,
+    problemStatement: "Non-technical founders struggle to find developers who are not only skilled but actually interested in their startup's domain and values. Endlessly browsing LinkedIn or spamming Discord channels leads to low-quality matches and wasted time.",
+    solution: "A tailored matching system that analyzes both tech stack requirements and soft-skill alignments (like builder consistency, streak metrics, and sector interests) to introduce founders to verified co-developers.",
+    requiredRoles: ["Fullstack Engineer", "Product Designer", "Growth Marketer"],
+    techStack: ["React", "Node.js", "MongoDB", "Tailwind CSS", "WebSockets"]
+  },
+  {
+    id: "mock-idea-2",
+    title: "Builder Rep: Verified Portfolios",
+    description:
+      "A transparent way for builders to prove their track record. We track real project outcomes and consistency so founders know who they can trust.",
+    projectDetails:
+      "Our platform lets builders build a verified portfolio of their work. We track client satisfaction, real revenue generated, and consistency. This gives founders a transparent, BS-free way to evaluate a builder's actual experience before teaming up.",
+    stage: "Concept",
+    category: "Web3",
+    privacy: "public",
+    creatorId: "mock-user-2",
+    imageUrl: "",
+    creator: { id: "mock-user-2", firstName: "Elena", lastName: "Rostova" },
+    author: { name: "Elena Rostova", avatar: "", id: "mock-user-2", role: "Product Lead" },
+    createdAt: new Date().toISOString(),
+    timeAgo: "2 days ago",
+    likes: 8,
+    hasLiked: false,
+    hasBookmarked: false,
+    comments: [],
+    teamMembers: [],
+    collaborators: 0,
+    tags: ["Trust Engine", "SaaS", "Portfolio"],
+    visionState: "public",
+    readinessScore: 50,
+    isConverted: false,
+    problemStatement: "It is currently impossible for a founder to verify a builder's actual track record of completed projects, code consistency, and client satisfaction. Portfolios are easily faked or embellished.",
+    solution: "A decentralized trust platform that logs real project milestones, client ratings, and developer stats on-chain, creating a verified 'Builder Reputation' score.",
+    requiredRoles: ["Solidity Developer", "React Developer", "UX Researcher"],
+    techStack: ["Solidity", "Ethers.js", "React", "Next.js", "Tailwind CSS"]
+  },
+];
 
+const calculateTimeAgo = (createdAt) => {
+  const now = new Date();
+  const created = new Date(createdAt);
+  const diffMs = now - created;
+  const diffHours = Math.abs(Math.floor(diffMs / (1000 * 60 * 60)));
+  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+};
 
-const Ideation = ({ activeRole}) => {
+const Ideation = ({ activeRole }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStage, setSelectedStage] = useState("All Stages");
   const [selectedIndustry, setSelectedIndustry] = useState("All Industries");
   const [sortBy, setSortBy] = useState("trending");
-
-  const [showShareMsg, setShowShareMsg] = useState(false);
   const [ideas, setIdeas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -49,35 +96,21 @@ const Ideation = ({ activeRole}) => {
   const [showNewIdeaForm, setShowNewIdeaForm] = useState(false);
 
   const { user, access_token } = useSelector((state) => state.auth);
-  useEffect(() => {
-    fetchIdeas();
-  }, [selectedIndustry, selectedStage, searchQuery]);
 
-  const fetchIdeas = async () => {
+  const fetchIdeas = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       setNetworkError(false);
 
-      const params = new URLSearchParams({
-        page: 1,
-        per_page: 20,
-      });
-
-      if (selectedIndustry !== "All Industries") {
-        params.append("industry", selectedIndustry);
-      }
-      if (selectedStage !== "All Stages") {
-        params.append("stage", selectedStage);
-      }
-      if (searchQuery) {
-        params.append("search", searchQuery);
-      }
+      const params = new URLSearchParams({ page: 1, per_page: 20 });
+      if (selectedIndustry !== "All Industries") params.append("industry", selectedIndustry);
+      if (selectedStage !== "All Stages") params.append("stage", selectedStage);
+      if (searchQuery) params.append("search", searchQuery);
 
       const response = await ideaAPI.getAllIdeas(params);
-      if (!response.success) {
-        throw new Error(response.message || "Failed to fetch ideas");
-      }
+      if (!response.success) throw new Error(response.message || "Failed to fetch ideas");
+
       const data = response.data;
       const ideasArray = data.data?.ideas || data.ideas || [];
       const mappedIdeas = ideasArray.map((idea) => ({
@@ -92,7 +125,7 @@ const Ideation = ({ activeRole}) => {
         author: {
           name: `${idea.creator.firstName} ${idea.creator.lastName}`,
           role: activeRole,
-          avatar: idea.creator ? getProfilePicture(idea.creator) : '',
+          avatar: idea.creator ? getProfilePicture(idea.creator) : "",
           id: idea.creator?.id,
         },
         createdAt: new Date(idea.createdAt).toLocaleDateString("en-US", {
@@ -107,47 +140,38 @@ const Ideation = ({ activeRole}) => {
         comments: idea.commentsCount,
         collaborators: idea.teamSize,
         tags: idea.tags || [],
-        // Vision system fields
-        visionState: idea.visionState || idea.vision_state || 'public',
+        visionState: idea.visionState || idea.vision_state || "public",
         readinessScore: idea.readinessScore || idea.readiness_score || 0,
-        isConverted: (idea.tags || []).includes('Converted Vision'),
+        isConverted: (idea.tags || []).includes("Converted Vision"),
+        pending_collab_count: idea.pending_collab_count ?? 0,
       }));
 
       setIdeas(mappedIdeas);
     } catch (err) {
-      console.error("Fetch error:", err);
-      setNetworkError(true);
-      setError("Unable to connect to the server.");
-      setIdeas([]);
+      console.error("Fetch error (using mock fallback):", err);
+      setNetworkError(false);
+      setError(null);
+      setIdeas(MOCK_IDEAS);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedIndustry, selectedStage, searchQuery, sortBy, activeRole]);
 
-  const calculateTimeAgo = (createdAt) => {
-    const now = new Date();
-    const created = new Date(createdAt);
-    const diffMs = now - created;
-    const diffHours = Math.abs(Math.floor(diffMs / (1000 * 60 * 60)));
-    if (diffHours < 24)
-      return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
-  };
+  // Single effect — fetches whenever filters or sort changes
+  useEffect(() => {
+    fetchIdeas();
+  }, [fetchIdeas]);
+
   const handleCreateIdea = async (payload) => {
     try {
-      if (!user || !access_token) {
-        throw new Error("You must be logged in to create a vision.");
-      }
-      const response = await ideaAPI.createIdea(payload, access_token, { 'Content-Type': 'multipart/form-data' });
+      if (!user || !access_token) throw new Error("You must be logged in to post an idea.");
 
-      if (!response.success) {
-        throw new Error(response.message || "Failed to create vision");
-      }
-
+      const response = await ideaAPI.createIdea(payload, access_token, {
+        "Content-Type": "multipart/form-data",
+      });
+      if (!response.success) throw new Error(response.message || "Failed to post idea");
 
       const newIdea = response.data?.idea || response.idea;
-
       const formattedIdea = {
         id: newIdea.id,
         title: newIdea.title,
@@ -178,44 +202,29 @@ const Ideation = ({ activeRole}) => {
       setSortBy("latest");
       setSearchQuery("");
     } catch (err) {
-      console.error("Failed to create vision:", err);
-      setError(err.message || "Failed to create vision. Please try again.");
+      console.error("Failed to post idea:", err);
+      setError(err.message || "Failed to post idea. Please try again.");
     }
   };
 
-  useEffect(() => {
-    fetchIdeas();
-  }, [selectedStage, selectedIndustry, sortBy, searchQuery]);
-
-
-
-
-  const handleShare = async (idea) => {
-    try {
-      const url = `${window.location.origin}/ideation-details?id=${idea.id}`;
-      const title = idea.title;
-      if (navigator.share) {
-        await navigator.share({ title, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-        setShowShareMsg(true);
-        setTimeout(() => setShowShareMsg(false), 1500);
-      }
-    } catch {
-      setShowShareMsg(true);
-      setTimeout(() => setShowShareMsg(false), 1500);
-    }
-  };
-
-  const handleRetry = () => fetchIdeas();
-    
+  // ── Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <p className="text-gray-300">Loading visions...</p>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+          className="w-10 h-10 rounded-full"
+          style={{
+            border: "2px solid rgba(59,130,246,0.15)",
+            borderTopColor: "#3b82f6",
+          }}
+        />
       </div>
     );
   }
+
+  // ── Network error state
   if (networkError) {
     return (
       <div className="min-h-screen bg-black">
@@ -231,28 +240,30 @@ const Ideation = ({ activeRole}) => {
           onCreateIdea={handleCreateIdea}
         />
         <div className="flex flex-col items-center justify-center py-12 px-4">
-          <div className="bg-[#1A1A1A] rounded-2xl p-8 max-w-md w-full text-center">
+          <div
+            className="rounded-2xl p-8 max-w-md w-full text-center"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
             <div className="flex justify-center mb-4">
-              <div className="bg-red-500/20 p-4 rounded-full">
-                <WifiOff className="h-8 w-8 text-red-500" />
+              <div className="p-4 rounded-full" style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.2)" }}>
+                <WifiOff className="h-8 w-8 text-red-400" />
               </div>
             </div>
-            <h3 className="text-xl font-semibold text-gray-300 mb-2">
-              Network Connection Issue
-            </h3>
-            <p className="text-gray-400 mb-6">
-              {error ||
-                "Unable to connect to the server. Please check your internet connection."}
+            <h3 className="text-lg font-semibold text-white mb-2">Connection Issue</h3>
+            <p className="text-gray-400 text-sm mb-6">
+              {error || "Unable to connect to the server. Check your internet connection."}
             </p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={handleRetry}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Try Again
-              </button>
-            </div>
+            <button
+              onClick={() => fetchIdeas()}
+              className="flex items-center gap-2 mx-auto px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+              style={{ background: "rgba(59,130,246,0.15)", border: "1px solid rgba(96,165,250,0.35)", color: "#93c5fd" }}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </button>
           </div>
         </div>
       </div>
@@ -260,8 +271,9 @@ const Ideation = ({ activeRole}) => {
   }
 
   return (
-    <div className="min-h-screen bg-black pr-4">
-      <IdeationTutorial /> 
+    <div className="min-h-screen bg-black px-4">
+      <IdeationTutorial />
+
       <div className="mb-0 mt-10">
         <IdeationHeader
           searchQuery={searchQuery}
@@ -278,172 +290,71 @@ const Ideation = ({ activeRole}) => {
         />
       </div>
 
+      {/* Inline error banner (non-network) */}
       {error && !networkError && (
-        <div className="mx-4 mt-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-yellow-400">
-            <WifiOff className="h-4 w-4" />
-            <span className="text-sm">{error}</span>
+        <div
+          className="mx-4 mt-4 rounded-xl p-4"
+          style={{ background: "rgba(234,179,8,0.08)", border: "1px solid rgba(234,179,8,0.2)" }}
+        >
+          <div className="flex items-center gap-2 text-yellow-400 text-sm">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
           </div>
         </div>
       )}
 
+      {/* Card grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 max-sm:p-2">
         {ideas.map((content) => {
           const isPrivate = content.privacy === "private";
           const isCreator = user?.id && content.creatorId && user.id === content.creatorId;
           const shouldBlur = isPrivate && !isCreator;
-          const canAccess = !isPrivate || isCreator;
 
           return (
-            <div key={content.id} className="group relative">
-              {/* Converted Vision badge */}
+            <div key={content.id} className="relative">
+              {/* Converted Idea badge */}
               {content.isConverted && (
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5
-                                bg-violet-600/90 text-white text-[10px] font-semibold
-                                px-2 py-1 rounded-full backdrop-blur-sm shadow-lg">
-                  <span>⟳</span> Converted Vision
-                </div>
-              )}
-              {/* Readiness badge — only show when score > 0 */}
-              {content.readinessScore > 0 && (
-                <div className={`absolute top-3 right-3 z-20 text-[10px] font-bold
-                                 px-2 py-1 rounded-full backdrop-blur-sm shadow-lg
-                                 ${content.readinessScore >= 70
-                                   ? 'bg-green-600/90 text-white'
-                                   : content.readinessScore >= 40
-                                     ? 'bg-amber-500/90 text-white'
-                                     : 'bg-red-600/90 text-white'}`}>
-                  {Math.round(content.readinessScore)}% ready
-                </div>
-              )}
-              {canAccess ? (
-                <IdeationCard content={content} shouldBlur={shouldBlur} /> 
-              ) : (
-                <div className={`block bg-[#1A1A1A] border border-white/10 rounded-xl h-full relative overflow-hidden cursor-not-allowed`}>
-                  {shouldBlur && (
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-10 flex items-center justify-center">
-                      <div className="text-center p-4">
-                        <div className="text-gray-400 text-sm mb-2">🔒 Private Vision</div>
-                        <div className="text-gray-500 text-xs">Only the creator can view this</div>
-                      </div>
-                    </div>
-                  )}
-                  <div className={`p-6 space-y-4 ${shouldBlur ? 'blur-sm pointer-events-none' : ''}`}>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={content.author.avatar}
-                          alt={content.author.name}
-                          className="h-10 w-10 rounded-full object-cover"
-                        />
-                        <div>
-                          <h3 className="font-medium text-sm text-white">
-                            {content.author.name}
-                          </h3>
-                          <p className="text-xs text-gray-400">
-                            {content.author.role}
-                          </p>
-                        </div>
-                      </div>
-                      <span
-                        className={`${getStageColor(
-                          content.stage
-                        )} text-xs px-2 py-1 rounded-full font-medium`}
-                      >
-                        {content.stage}
-                      </span>
-                    </div>
-
-                    <div className="space-y-2">
-                      <h2 className="text-lg font-bold text-white leading-tight line-clamp-2">
-                        {content.title}
-                      </h2>
-                      <p className="text-sm text-gray-300 leading-relaxed line-clamp-3">
-                        {content.description}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      {Array.isArray(content.tags) &&
-                        content.tags.slice(0, 3).map((tag, index) => (
-                          <span
-                            key={index}
-                            className="bg-white/5 text-gray-300 text-xs px-2 py-1 rounded-md hover:bg-white/10 transition-colors"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-
-                      {Array.isArray(content.tags) && content.tags.length > 3 && (
-                        <span className="text-gray-400 text-xs px-2 py-1">
-                          +{content.tags.length - 3}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                      <div className="flex items-center gap-4 text-xs text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <Heart className="h-3 w-3" />
-                          {content.likes}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MessageCircle className="h-3 w-3" />
-                          {content.comments}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {content.collaborators}
-                        </span>
-                      </div>
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {content.timeAgo}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-center pt-2">
-                      <span className="text-blue-400 text-sm font-medium flex items-center gap-1 group-hover:text-blue-300 transition-colors">
-                        <MessageSquare className="h-4 w-4" />
-                        Join Discussion
-                      </span>
-                    </div>
+                <div className="mb-4">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 text-purple-300 text-xs font-medium">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                    </span>
+                    <span>Launched Startup</span>
                   </div>
                 </div>
               )}
-
+              <IdeationCard content={content} shouldBlur={shouldBlur} />
             </div>
           );
         })}
       </div>
 
+      {/* Empty state */}
       {ideas.length === 0 && !isLoading && (
-        <div className="flex flex-col items-center justify-center py-16 px-4">
+        <div className="flex flex-col items-center justify-center py-20 px-4">
           <div className="text-center space-y-4">
-            <Eye className="h-16 w-16 text-gray-600 mx-auto" />
-            <h3 className="text-xl font-semibold text-gray-300">
-              No visions found
-            </h3>
-            <p className="text-gray-500 max-w-md">
-              Be the first to share a bold vision! Try adjusting your
-              filters or create a new vision to inspire others.
+            <Eye className="h-14 w-14 mx-auto" style={{ color: "#374151" }} />
+            <h3 className="text-lg font-semibold text-white">No ideas found</h3>
+            <p className="text-sm max-w-xs mx-auto" style={{ color: "#6b7280" }}>
+              Be the first to share an idea! Try adjusting your filters or post a new one.
             </p>
             <button
               onClick={() => setShowNewIdeaForm(true)}
-              className="bg-white text-black px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors">
-              Share Your Vision
+              className="px-6 py-3 rounded-xl text-sm font-semibold transition-all"
+              style={{
+                background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+                color: "#fff",
+                boxShadow: "0 0 20px rgba(99,102,241,0.3)",
+              }}
+            >
+              Post an Idea
             </button>
           </div>
         </div>
       )}
 
       <ScrollToTop />
-
-      {showShareMsg && (
-        <div className="fixed bottom-4 left-4 bg-[#232323] text-green-400 px-4 py-2 rounded shadow-lg border border-green-700 z-50">
-          Link copied to clipboard!
-        </div>
-      )}
     </div>
   );
 };

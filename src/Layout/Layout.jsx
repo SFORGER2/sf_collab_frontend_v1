@@ -4,7 +4,9 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import NavBar from "../components/sections/NavBar";
+import SkipToContent from "@/components/accessibility/SkipToContent";
 import { motion } from "framer-motion";
+const MotionDiv = motion.div;
 import UserSidebar from "@/components/pages/sidebars/sidebar/GeneralSidebar";
 import FounderSidebar from "@/components/pages/sidebars/founderSidebar/FounderSidebar";
 import InfluencerSidebar from "@/components/pages/sidebars/influencerSidebar/InfluencerSidebar";
@@ -16,7 +18,7 @@ import { hasPermission } from "../utils/permissionCheck";
 import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
 
 import ChatDock from "@/components/chat-dock/ChatDock";
-import { useChatContacts } from "@/context/ChatContactsProvider";
+
 
 import useSocket from "@/components/pages/chat/useSocket";
 import { toast } from "react-toastify";
@@ -40,12 +42,9 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const navigate = useNavigate();
   const { socket, isConnected } = useSocket();
   const isRootPath = location.pathname === "/";
-  const isChatRoute = location.pathname.startsWith("/chat");
-  const isConnectionsRoute = location.pathname.startsWith("/connections");
 
   const { user, access_token } = useSelector((state) => state.auth);
   const [isAdmin] = useState(hasPermission(user, "admin_access"));
-  const { friends } = useChatContacts();
 
   const { isHidden: isNavHidden, onScroll } = useScrollHide({
     deltaThreshold: 4,
@@ -53,8 +52,6 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   });
 
   const [unreadMessagesCount] = useState(0);
-  const [isOptionsVisible, setIsOptionsVisible] = useState(false);
-  const optionsRef = useRef(null);
   const navContainerRef = useRef(null);
 
   const [isOpen, setIsOpen] = useState(false);
@@ -62,6 +59,12 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const [isCompletePopupVisible, setIsCompletePopupVisible] = useState(false);
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
   const toggleAIAssistant = useCallback(() => setIsAIAssistantOpen(prev => !prev), []);
+  // Allow any page to open the assistant via window event (used by AskAIButton)
+  useEffect(() => {
+    const handler = () => setIsAIAssistantOpen(true);
+    window.addEventListener('sfassistant:open', handler);
+    return () => window.removeEventListener('sfassistant:open', handler);
+  }, []);
 
   useEffect(() => {
     AOS.init({ duration: 800, easing: "ease-out", once: false });
@@ -207,25 +210,20 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     }
   };
 
-  const handleNavAreaEnter = () => !isRootPath && setIsOptionsVisible(true);
-  const handleNavAreaLeave = (e) => {
-    if (isRootPath) return;
-    const nextEl = e.relatedTarget;
-    if (!nextEl || !(nextEl instanceof Node)) {
-      setIsOptionsVisible(false);
-      return;
-    }
-    if (optionsRef.current && optionsRef.current.contains(nextEl)) return;
-    if (nextEl.closest?.(".options-container")) return;
-    setIsOptionsVisible(false);
-  };
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
-  const isMobile = useMemo(() => window.matchMedia("(max-width: 1024px)").matches, []);
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1024px)");
+    const onChange = () => setIsMobile(mql.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
 
   // ── Regular application layout ──────────────────────────────────────────
   return (
     <>
       {location.pathname === "/dashboard" && <Tutorial activeRole={activeRole} />}
+      <SkipToContent />
       <div className="relative min-h-screen w-screen flex flex-col">
         {/* Background */}
         <div
@@ -241,10 +239,11 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
         {/* Profile Completion Modal */}
         {isCompletePopupVisible && <CompleteProfilePopUp setCompletePopupVisible={setIsCompletePopupVisible} />}
 
-        {/* Top Nav */}
+        {/* Top Nav - Header with banner landmark */}
         {!isRootPath && !disableNavbar && (
-          <div
+          <header
             ref={navContainerRef}
+            role="banner"
             className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${isNavHidden ? "h-0" : "h-[60px]"}`}
           >
             <NavBar
@@ -259,23 +258,32 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
               isAIAssistantOpen={isAIAssistantOpen}
               toggleAIAssistant={toggleAIAssistant}
             />
-          </div>
+          </header>
         )}
 
-        <motion.div className="relative flex-1 w-full flex overflow-hidden">
-          {/* Left sidebar */}
-          {!isRootPath && <SideBar />}
+        <MotionDiv className="relative flex-1 w-full flex">
+          {/* Left sidebar - Aside with complementary landmark */}
+          {!isRootPath && (
+            <aside aria-label="Sidebar navigation">
+              <SideBar />
+            </aside>
+          )}
 
-          {/* Main content area */}
-          <div className="text-white relative flex flex-col items-center w-full overflow-hidden lg:ml-0">
+          {/* Main content area - Main landmark */}
+          <main
+            id="main-content"
+            role="main"
+            tabIndex={-1}
+            className="text-white relative flex flex-col items-center w-full overflow-hidden lg:ml-0"
+          >
             <div
-              className={`relative w-full h-full overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
+              className={`relative w-full scroll-smooth overflow-x-hidden`}
               onScroll={isRootPath ? undefined : onScroll}
             >
               <Outlet />
             </div>
-          </div>
-        </motion.div>
+          </main>
+        </MotionDiv>
       </div>
 
       {/* Chat docks */}

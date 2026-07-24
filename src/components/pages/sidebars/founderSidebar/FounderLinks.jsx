@@ -23,16 +23,28 @@ import {
   GraduationCap,
   Search,
   Star,
+  Mail,
   CalendarClock,
   Activity,
   ShieldCheck,
   Video,
   FileStack,
-  FolderOpen
+  FolderOpen,
+  Presentation,
 } from "lucide-react";
 
 import { Lightbulb } from "lucide-react";
-import { aiTools, dashboardLink, ideation, socialSection, toolsSection, erpSection, filterERPModules, sfDriveSection, sfMeetSection } from "../sidebarCommons";
+import {
+  aiTools,
+  dashboardLink,
+  ideation,
+  socialSection,
+  toolsSection,
+  erpSection,
+  filterERPModules,
+  sfDriveSection,
+  sfMeetSection,
+} from "../sidebarCommons";
 import { GiChecklist } from "react-icons/gi";
 
 /**
@@ -41,8 +53,16 @@ import { GiChecklist } from "react-icons/gi";
  * @returns {Array} Array of link objects for sidebar navigation
  */
 // eslint-disable-next-line no-unused-vars
-export function createFounderLinks(unreadMessagesCount, userRoles = [], setActiveRole = () => {}, activeRole = 'founder') {
-  const erp = { ...erpSection(11), subItems: filterERPModules(erpSection(11).subItems, activeRole, userRoles) };
+export function createFounderLinks(
+  unreadMessagesCount,
+  userRoles = [],
+  setActiveRole = () => { },
+  activeRole = "founder",
+) {
+  const erp = {
+    ...erpSection(11),
+    subItems: filterERPModules(erpSection(11).subItems, activeRole, userRoles),
+  };
   return [
     dashboardLink(userRoles, setActiveRole),
     {
@@ -112,6 +132,27 @@ export function createFounderLinks(unreadMessagesCount, userRoles = [], setActiv
     },
     socialSection(5),
     aiTools(6),
+    // ── Pitch Deck Generator (Module 1 — Navigation) ──────────────────────
+    {
+      id: 14,
+      icon: <Presentation size={22} />,
+      href: "/pitch-deck",
+      label: "Pitch Deck",
+      subItems: [
+        {
+          id: "pitch-deck-create",
+          href: "/pitch-deck/create",
+          label: "Create Deck",
+          icon: <PlusSquare size={18} />,
+        },
+        {
+          id: "pitch-deck-my-decks",
+          href: "/pitch-deck/my-decks",
+          label: "My Decks",
+          icon: <FileStack size={18} />,
+        },
+      ],
+    },
     toolsSection(7),
     // Mentorship
     { id: "section-grow", sectionLabel: "Grow", isSection: true },
@@ -121,9 +162,24 @@ export function createFounderLinks(unreadMessagesCount, userRoles = [], setActiv
       href: "/mentors",
       label: "Mentorship",
       subItems: [
-        { id: "mentors",                href: "/mentors",                label: "Find a Mentor",    icon: <Search size={18} /> },
-        { id: "mentor-dashboard",       href: "/mentor-dashboard",       label: "Mentor Dashboard", icon: <GraduationCap size={18} /> },
-        { id: "my-mentorship-requests", href: "/my-mentorship-requests", label: "My Requests",      icon: <Star size={18} /> },
+        {
+          id: "mentors",
+          href: "/mentors",
+          label: "Find a Mentor",
+          icon: <Search size={18} />,
+        },
+        {
+          id: "mentor-dashboard",
+          href: "/mentor-dashboard",
+          label: "Mentor Dashboard",
+          icon: <GraduationCap size={18} />,
+        },
+        {
+          id: "my-mentorship-requests",
+          href: "/my-mentorship-requests",
+          label: "My Requests",
+          icon: <Star size={18} />,
+        },
       ],
     },
     { id: "section-earn", sectionLabel: "Earn", isSection: true },
@@ -134,10 +190,30 @@ export function createFounderLinks(unreadMessagesCount, userRoles = [], setActiv
       href: "/wallet",
       label: "Wallet & Store",
       subItems: [
-        { id: "wallet",      href: "/wallet",      label: "My Wallet",   icon: <Coins size={18} /> },
-        { id: "store",       href: "/store",       label: "SF Store",    icon: <ShoppingBag size={18} /> },
-        { id: "leaderboard", href: "/leaderboard", label: "Leaderboard", icon: <Trophy size={18} /> },
-        { id: "marketplace", href: "/marketplace", label: "Marketplace", icon: <ShoppingCart size={18} /> },
+        {
+          id: "wallet",
+          href: "/wallet",
+          label: "My Wallet",
+          icon: <Coins size={18} />,
+        },
+        {
+          id: "store",
+          href: "/store",
+          label: "SF Store",
+          icon: <ShoppingBag size={18} />,
+        },
+        {
+          id: "leaderboard",
+          href: "/leaderboard",
+          label: "Leaderboard",
+          icon: <Trophy size={18} />,
+        },
+        {
+          id: "marketplace",
+          href: "/marketplace",
+          label: "Marketplace",
+          icon: <ShoppingCart size={18} />,
+        },
       ],
     },
     // ── SECTION BREAK: Workspace ──────────────────────────────────────────────

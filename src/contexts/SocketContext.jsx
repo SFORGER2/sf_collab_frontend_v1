@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, useRef } from "react";
+import { createContext, useEffect, useState, useRef, useContext } from "react";
 import { io } from "socket.io-client";
 
 const SOCKET_API_URL = import.meta.env.VITE_SOCKET_API_URL || '';

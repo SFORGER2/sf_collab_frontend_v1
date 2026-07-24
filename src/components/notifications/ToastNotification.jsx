@@ -1,95 +1,135 @@
 /**
- * ToastNotification Component
- * Toast popups for real-time notifications
+ * components/notifications/ToastNotification.jsx
+ *
+ * Drop-in replacement for the existing ToastNotification.
+ * Keeps the same CSS class names (toast-container, toast, toast-{type}, etc.)
+ * so existing ToastNotification.css still applies.
+ *
+ * Enhancements over original:
+ *  - Deduplication: identical title+type within 2s are collapsed
+ *  - Priority-aware duration (critical = 8s, high = 6s, default = 5s)
+ *  - Click-to-navigate if notification carries a link_url
+ *  - Accessible: role="alert", aria-live="polite"
+ *  - Max 5 toasts visible at once (oldest auto-dismissed)
  */
 
-import React, { useState, useEffect } from 'react';
-import { CheckCircle, Info, AlertTriangle, AlertCircle, X } from 'lucide-react';
-import './ToastNotification.css';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { CheckCircle, Info, AlertTriangle, AlertCircle, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import "./ToastNotification.css";
 
-const ToastNotification = () => {
-  const [toasts, setToasts] = useState([]);
+const MAX_TOASTS = 5;
 
-  useEffect(() => {
-    // Listen for toast events from NotificationContext
-    const handleShowToast = (event) => {
-      const { type, title, message, data } = event.detail;
-      
-      const newToast = {
-        id: Date.now(),
-        type,
-        title,
-        message,
-        data,
-      };
+const DURATIONS = {
+  critical: 8000,
+  high:     6000,
+  default:  5000,
+};
 
-      setToasts((prev) => [...prev, newToast]);
+export default function ToastNotification() {
+  const [toasts, setToasts]   = useState([]);
+  const navigate              = useNavigate();
+  const recentKeys            = useRef(new Set());  // dedup window
 
-      // Auto-remove after 5 seconds
-      setTimeout(() => {
-        removeToast(newToast.id);
-      }, 5000);
-    };
-
-    window.addEventListener('showToast', handleShowToast);
-
-    return () => {
-      window.removeEventListener('showToast', handleShowToast);
-    };
+  const removeToast = useCallback((id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  const removeToast = (id) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  };
+  useEffect(() => {
+    const handle = (event) => {
+      const { type, title, message, data } = event.detail ?? {};
 
-  const getIcon = (type) => {
-    switch (type) {
-      case 'success':
-        return <CheckCircle className="toast-icon" size={20} />;
-      case 'info':
-        return <Info className="toast-icon" size={20} />;
-      case 'warning':
-        return <AlertTriangle className="toast-icon" size={20} />;
-      case 'error':
-        return <AlertCircle className="toast-icon" size={20} />;
-      default:
-        return <Info className="toast-icon" size={20} />;
-    }
-  };
+      // Dedup: same title+type within 2s
+      const key = `${type}::${title}`;
+      if (recentKeys.current.has(key)) return;
+      recentKeys.current.add(key);
+      setTimeout(() => recentKeys.current.delete(key), 2000);
+
+      const id       = Date.now() + Math.random();
+      const priority = data?.priority ?? "medium";
+      const duration = DURATIONS[priority] ?? DURATIONS.default;
+
+      const newToast = { id, type: type ?? "info", title, message, data, duration };
+
+      setToasts(prev => {
+        const next = [newToast, ...prev];
+        // Dismiss oldest if over limit
+        if (next.length > MAX_TOASTS) {
+          const removed = next.splice(MAX_TOASTS);
+          removed.forEach(t => {
+            setTimeout(() => removeToast(t.id), 0);
+          });
+        }
+        return next;
+      });
+
+      setTimeout(() => removeToast(id), duration);
+    };
+
+    window.addEventListener("showToast", handle);
+    return () => window.removeEventListener("showToast", handle);
+  }, [removeToast]);
+
+  const handleClick = useCallback((toast) => {
+    const link = toast.data?.link_url ?? toast.data?.linkUrl;
+    if (link) navigate(link);
+    removeToast(toast.id);
+  }, [navigate, removeToast]);
+
+  if (!toasts.length) return null;
 
   return (
-    <div className="toast-container z-1000">
-      {toasts.map((toast) => (
+    <div
+      className="toast-container"
+      role="region"
+      aria-label="Notifications"
+      aria-live="polite"
+    >
+      {toasts.map(toast => (
         <div
           key={toast.id}
+          role="alert"
           className={`toast toast-${toast.type}`}
-          onClick={() => removeToast(toast.id)}
+          onClick={() => handleClick(toast)}
+          style={{ cursor: toast.data?.link_url || toast.data?.linkUrl ? "pointer" : "default" }}
         >
           <div className="toast-content">
-            <div className="toast-icon-wrapper">{getIcon(toast.type)}</div>
-            
+            <div className="toast-icon-wrapper">
+              <ToastIcon type={toast.type} />
+            </div>
+
             <div className="toast-text">
               <h4 className="toast-title">{toast.title}</h4>
-              <p className="toast-message">{toast.message}</p>
+              {toast.message && (
+                <p className="toast-message">{toast.message}</p>
+              )}
             </div>
 
             <button
               className="toast-close"
-              onClick={(e) => {
-                e.stopPropagation();
-                removeToast(toast.id);
-              }}
+              aria-label="Dismiss"
+              onClick={(e) => { e.stopPropagation(); removeToast(toast.id); }}
             >
               <X size={16} />
             </button>
           </div>
 
-          {/* Progress bar */}
-          <div className="toast-progress" />
+          <div
+            className="toast-progress"
+            style={{ animationDuration: `${toast.duration}ms` }}
+          />
         </div>
       ))}
     </div>
   );
-};
+}
 
-export default ToastNotification;
+function ToastIcon({ type }) {
+  const cls = "toast-icon";
+  switch (type) {
+    case "success": return <CheckCircle   className={cls} size={20} />;
+    case "warning": return <AlertTriangle className={cls} size={20} />;
+    case "error":   return <AlertCircle   className={cls} size={20} />;
+    default:        return <Info          className={cls} size={20} />;
+  }
+}

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
 import { Clock, AlertTriangle, CheckCircle, FileText, DollarSign, Star } from "lucide-react";
+import AssistantFAB from "@/components/common/AssistantFAB";
 
 const tasksApi = axios.create({ baseURL: "/api/erp-tasks" });
 tasksApi.interceptors.request.use(requestInterceptor);
@@ -96,7 +97,8 @@ export default function MemberDashboard() {
   if (loading) return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
+    <>
+      <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">Member Dashboard</h1>
         <p className="text-zinc-400 mb-8">Your workspace overview</p>
@@ -170,6 +172,8 @@ export default function MemberDashboard() {
         </div>
       </div>
     </div>
+    <AssistantFAB workspaceId={workspaceId} label="Ask SF Assistant" />
+    </>
   );
 }
 

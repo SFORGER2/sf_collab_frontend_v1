@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   User, Award, BarChart3,
   Rocket, TrendingUp, Zap, Globe, Briefcase, ExternalLink,
   Badge
@@ -25,7 +25,7 @@ import UserRatingCard from "@/components/ui/UserRatingCard";
 // ✅ NEW IMPORTS
 import { FollowButton } from '@/components/FollowButton';
 import { FollowersModal } from '@/components/FollowersModal';
-import { getMediaUrl } from '@/utils/getMediaUrl'; 
+import { getMediaUrl } from '@/utils/getMediaUrl';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -34,7 +34,7 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [queryParams] = useSearchParams();
-  
+
   const [portfolio, setPortfolio] = useState([]);
   const [loadingPortfolio, setLoadingPortfolio] = useState(false);
   const [profileData, setProfileData] = useState(null);
@@ -80,7 +80,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchPortfolio = async () => {
       if (!authUser || !access_token || isOtherUser) return;
-      
+
       setLoadingPortfolio(true);
       try {
         const response = await builderProfileAPI.getProfile(access_token);
@@ -105,6 +105,10 @@ const Profile = () => {
     authUser && !isOtherUser && { id: 'transactions', label: 'Transactions', icon: RiBillFill },
   ].filter(Boolean), [authUser, isOtherUser]);
 
+  if (showSettings && !isOtherUser && authUser) {
+    return <ProfileSettings user={authUser} back={() => window.history.back()} activeSection={page} initialActiveSection={page} />;
+  }
+
   // ✅ OPTIMISTIC FOLLOW COUNT UPDATE
   const handleFollowChange = (newStatus) => {
     setProfileData(prev => ({
@@ -121,10 +125,6 @@ const Profile = () => {
         <p>Loading profile...</p>
       </div>
     );
-  }
-
-  if (showSettings && !isOtherUser) {
-    return <ProfileSettings user={authUser} back={() => window.history.back()} initialActiveSection={page} />;
   }
 
   const calculateLevel = (xp) => Math.floor(xp / 1000) + 1;
@@ -156,7 +156,6 @@ const Profile = () => {
             </div>
           )}
         </div>
-
         <ProfileStats profile={profileData} />
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
@@ -205,7 +204,7 @@ const Profile = () => {
               <div className="space-y-3">
                 {
                   !isOtherUser &&
-                
+
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-400">SF Coins</span>
                     <span className="text-yellow-400 font-semibold">{profileData?.credits || 0}</span>
@@ -259,46 +258,50 @@ const Profile = () => {
             </motion.div>
 
             {/* Social Links */}
-            {profileData?.social && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-6"
-              >
-                <h4 className="font-semibold mb-4">Connect</h4>
-                <div className="space-y-2">
-                  {profileData.social.linkedinUrl && (
-                    <a href={profileData.social.linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-400 hover:text-blue-400 transition-colors">
-                      LinkedIn
-                    </a>
-                  )}
-                  {profileData.social.githubUrl && (
-                    <a href={profileData.social.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-300 transition-colors">
-                      GitHub
-                    </a>
-                  )}
-                  {profileData.social.websiteUrl && (
-                    <a href={profileData.social.websiteUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-400 hover:text-purple-400 transition-colors">
-                      <Globe className="w-4 h-4" />
-                      Portfolio
-                    </a>
-                  )}
-                </div>
-              </motion.div>
-            )}
+            {
+              profileData?.social && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-6"
+                >
+                  <h4 className="font-semibold mb-4">Connect</h4>
+                  <div className="space-y-2">
+                    {profileData.social.linkedinUrl && (
+                      <a href={profileData.social.linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-400 hover:text-blue-400 transition-colors">
+                        LinkedIn
+                      </a>
+                    )}
+                    {profileData.social.githubUrl && (
+                      <a href={profileData.social.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-300 transition-colors">
+                        GitHub
+                      </a>
+                    )}
+                    {profileData.social.websiteUrl && (
+                      <a href={profileData.social.websiteUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-400 hover:text-purple-400 transition-colors">
+                        <Globe className="w-4 h-4" />
+                        Portfolio
+                      </a>
+                    )}
+                  </div>
+                </motion.div>
+              )
+            }
 
             {/* Ratings */}
-            {user?.id && (
-              <UserRatingCard
-                subjectId={user.id}
-                subjectName={[user.first_name, user.last_name].filter(Boolean).join(' ') || 'this user'}
-              />
-            )}
-          </div>
+            {
+              user?.id && (
+                <UserRatingCard
+                  subjectId={user.id}
+                  subjectName={[user.first_name, user.last_name].filter(Boolean).join(' ') || 'this user'}
+                />
+              )
+            }
+          </div >
 
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
+          < div className="lg:col-span-3 space-y-6" >
             <ProfileTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
             <div className="min-h-150">
@@ -439,7 +442,7 @@ const Profile = () => {
                     </motion.div>
                   )}
                 </div>
-                
+
               )}
               {console.log("profileData.startupMemberships:", profileData?.startupMemberships)}
               {activeTab === "startups" && (
@@ -462,17 +465,17 @@ const Profile = () => {
                             className="group relative p-5 bg-gradient-to-br from-gray-700/40 to-gray-800/40 border border-gray-600 rounded-xl hover:border-blue-500/50 transition-all cursor-pointer overflow-hidden"
                           >
                             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all" />
-                            
+
                             <div className="relative z-10">
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex items-center gap-3">
                                   {startup.logo_url ? (
-    <img
-      src={getMediaUrl(startup.logo_url)}
-      alt={startup.name}
-      className="w-10 h-10 rounded-lg object-cover border border-orange-600/30"
-    />
-  ) : (
+                                    <img
+                                      src={getMediaUrl(startup.logo_url)}
+                                      alt={startup.name}
+                                      className="w-10 h-10 rounded-lg object-cover border border-orange-600/30"
+                                    />
+                                  ) : (
                                     <div className="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center border border-gray-600">
                                       <Briefcase className="w-6 h-6 text-gray-500" />
                                     </div>
@@ -600,18 +603,18 @@ const Profile = () => {
                 </div>
               )}
             </div>
-          </div>
-        </div>
-      </div>
+          </div >
+        </div >
+      </div >
 
       {/* ───── FOLLOWERS / FOLLOWING MODAL ───── */}
-      <FollowersModal
+      < FollowersModal
         isOpen={modalType !== null}
         onClose={() => setModalType(null)}
         userId={viewedUserId || user?.id}
         type={modalType}
       />
-    </div>
+    </div >
   );
 };
 

@@ -92,7 +92,7 @@ const BuilderStartups = () => {
         <div className="absolute top-1/3 -right-10 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="w-full mx-auto px-2 md:px-4 py-8 w-full relative">
+      <div className="w-full mx-auto px-2 md:px-4 lg:pl-6 py-8 w-full relative z-10">
         
         {/* Header */}
         <motion.div

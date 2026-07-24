@@ -94,17 +94,17 @@ export default function KnowledgeDetails() {
   const id = searchParams.get("id");
   const { access_token, user } = useSelector((s) => s.auth || {});
 
-  const [post, setPost]           = useState(null);
-  const [comments, setComments]   = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState(null);
-  const [liked, setLiked]         = useState(false);
+  const [post, setPost] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
-  const [likeLoading, setLikeLoading]     = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
-  const [commentText, setCommentText]     = useState("");
+  const [commentText, setCommentText] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
-  const [commentsPage, setCommentsPage]   = useState(1);
+  const [commentsPage, setCommentsPage] = useState(1);
   const [commentsTotalPages, setCommentsTotalPages] = useState(1);
 
   const fetchPost = useCallback(async () => {
@@ -281,9 +281,10 @@ export default function KnowledgeDetails() {
           </button>
 
           <div className="flex items-center gap-3 flex-wrap">
-            <StatBadge icon={Eye}      value={post.views}     label="views"     color="text-purple-400" />
+            <StatBadge icon={Eye} value={post.views} label="views" color="text-purple-400" />
             <StatBadge icon={Download} value={post.downloads} label="downloads" color="text-yellow-400" />
-            <StatBadge icon={ThumbsUp} value={post.likes}     label="likes"     color="text-green-400" />
+            <StatBadge icon={ThumbsUp} value={post.likes} label="likes" color="text-green-400" />
+            <AskAIButton workspaceId={user?.active_workspace_id} label="Ask AI about this" />
           </div>
         </div>
 
@@ -352,11 +353,10 @@ export default function KnowledgeDetails() {
               <button
                 onClick={handleLike}
                 disabled={likeLoading}
-                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border font-medium transition-all ${
-                  liked
+                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border font-medium transition-all ${liked
                     ? "bg-green-500/20 border-green-500/50 text-green-400"
                     : "bg-gray-800 border-gray-700 text-gray-300 hover:border-green-500/50 hover:text-green-400"
-                }`}
+                  }`}
               >
                 {likeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsUp className="w-4 h-4" />}
                 {liked ? "Liked" : "Like"} · {post.likes}
@@ -365,11 +365,10 @@ export default function KnowledgeDetails() {
               <button
                 onClick={handleBookmark}
                 disabled={bookmarkLoading}
-                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border font-medium transition-all ${
-                  bookmarked
+                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border font-medium transition-all ${bookmarked
                     ? "bg-yellow-500/20 border-yellow-500/50 text-yellow-400"
                     : "bg-gray-800 border-gray-700 text-gray-300 hover:border-yellow-500/50 hover:text-yellow-400"
-                }`}
+                  }`}
               >
                 {bookmarkLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

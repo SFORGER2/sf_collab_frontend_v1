@@ -9,6 +9,7 @@ import {
   Wallet,
   FolderOpen,
   HardDrive,
+  Presentation,
 } from "lucide-react";
 import { aiTools, toolsSection, dashboardLink, socialSection, wallet, ideation, sfDriveSection, sfMeetSection } from "../sidebarCommons";
 import { FcInvite } from "react-icons/fc";
@@ -92,8 +93,8 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
     // wallet(8),
     aiTools(9),
     toolsSection(10),
-   sfDriveSection(11),
-   sfMeetSection(12),
+    sfDriveSection(11),
+    sfMeetSection(12),
   ];
 }
 

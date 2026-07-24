@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, X, ExternalLink, CheckCheck, Loader2 } from 'lucide-react';
+import { Bell, X, ExternalLink, CheckCheck, Loader2, Settings } from 'lucide-react';
 // ✅ FIX: import from the shared context so Bell and Notifications page share state
 import { useNotifications } from '../../contexts/NotificationContext';
 // ✅ FIX: corrected import path — ChatNotificationProvider lives in pages/chat, not context/
@@ -16,8 +16,7 @@ const NotificationBell = () => {
     unreadCount, 
     loading,
     markAsRead,
-    markAllAsRead,
-    refresh
+    markAllAsRead
   } = useNotifications();
 
   // ─── Feature 4: Chat unread count from ChatNotificationProvider ──────────
@@ -46,7 +45,18 @@ const NotificationBell = () => {
     if (notification.link_url) return notification.link_url;
     
     const { template_key, category, data } = notification;
-    const metadata = data || {};
+    let metadata = {};
+    if (data) {
+      if (typeof data === 'string') {
+        try {
+          metadata = JSON.parse(data);
+        } catch (e) {
+          metadata = {};
+        }
+      } else {
+        metadata = data;
+      }
+    }
     
     // Template-based links
     if (template_key) {
@@ -55,27 +65,29 @@ const NotificationBell = () => {
         return '/chat';
       }
       
-      // Connections -> /connections
+      // Connections -> /user-profile
       if (template_key.includes('friend') || template_key.includes('connection')) {
-        if (template_key.includes('accepted') && metadata.user_id) {
-          return `/users/${metadata.user_id}`;
+        const targetUserId = metadata.user_id || metadata.userId || metadata.actor_id || metadata.actorId;
+        if (targetUserId) {
+          return `/user-profile?userId=${targetUserId}`;
         }
-        return '/connections';
+        return '/user-profile';
       }
       
       // Posts -> /posts
-      if (template_key.includes('like') || template_key.includes('comment') || template_key.includes('post')) {
+      if (template_key.includes('like') || template_key.includes('comment') || template_key.includes('post') || template_key.includes('reply') || template_key.includes('reaction')) {
         return '/posts';
       }
       
       // Ideas -> /ideation
-      if (template_key.includes('idea')) {
+      if (template_key.includes('idea') || template_key.includes('feedback')) {
         return '/ideation';
       }
       
       // Startups -> /startup-details/:id
       if (template_key.includes('startup') || template_key.includes('team')) {
-        if (metadata.startup_id) return `/startup-details/${metadata.startup_id}`;
+        const startupId = metadata.startup_id || metadata.startupId;
+        if (startupId) return `/startup-details/${startupId}`;
         return '/discover-startups';
       }
       
@@ -94,31 +106,38 @@ const NotificationBell = () => {
         return '/contribution';
       }
 
-      // Mentorship -> /mentors/dashboard or /mentors/my-requests
+      // Mentorship -> /help
       if (template_key.includes('mentorship') || template_key.includes('mentor')) {
-        if (template_key.includes('received') || template_key.includes('rated')) {
-          return '/mentors/dashboard';
-        }
-        return '/mentors/my-requests';
+        return '/help';
       }
 
-      // Marketplace -> /marketplace
+      // Marketplace -> /pricing
       if (template_key.includes('marketplace') || template_key.includes('purchase') || template_key.includes('listing')) {
-        return '/marketplace';
+        return '/pricing';
       }
     }
     
     // Category-based fallback
     switch (category) {
-      case 'social': return '/connections';
+      case 'social': {
+        const targetUserId = metadata.user_id || metadata.userId || metadata.actor_id || metadata.actorId;
+        if (targetUserId) {
+          return `/user-profile?userId=${targetUserId}`;
+        }
+        return '/user-profile';
+      }
       case 'message': return '/chat';
       case 'idea': return '/ideation';
       case 'team': return '/discover-startups';
-      case 'financial': return '/crowdfunding';
+      case 'financial':
+      case 'payment':
+        return '/pricing';
       case 'account': return '/setting';
-      case 'mentorship': return '/mentors/my-requests';
-      case 'marketplace': return '/marketplace';
-      case 'payment': return '/wallet';
+      case 'newsletter':
+        return '/notifications?tab=newsletter';
+      case 'system':
+      case 'warning':
+        return '/notifications?tab=warning';
       default: return '/dashboard';
     }
   };
@@ -219,6 +238,16 @@ const NotificationBell = () => {
                   Mark all read
                 </button>
               )}
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate('/user-profile?page=notifications');
+                }}
+                className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-700/50 transition-colors"
+                title="Notification Settings"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1 text-slate-400 hover:text-white rounded"

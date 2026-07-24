@@ -14,10 +14,10 @@ export default function IdeationTutorial({ activeRole }) {
       content: (
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            Welcome to SF Vision Incubator!
+            Welcome to SF Idea Incubator!
           </h2>
           <p>
-            The Vision Hub is where startup ideas are shared, explored, and built. Founders, builders, and investors can collaborate, validate concepts, and turn ideas into real projects.
+            The Idea Hub is where startup ideas are shared, explored, and built. Founders, builders, and investors can collaborate, validate concepts, and turn ideas into real projects.
           </p>
         </div>
       ),
@@ -25,11 +25,11 @@ export default function IdeationTutorial({ activeRole }) {
     },
     {
       target: ".create-idea",
-      content: "Here you can create a new vision. Click this button to start sharing your innovative concepts with the community.",
+      content: "Here you can share a new idea. Click this button to start sharing your innovative concepts with the community.",
     },
     {
       target: ".idea",
-      content: "Each card represents a vision shared by the community. Click on a card to view details, provide feedback, or join as a collaborator. You can filter and search for visions that match your interests and expertise.",
+      content: "Each card represents an idea shared by the community. Click on a card to view details, provide feedback, or join as a collaborator. You can filter and search for ideas that match your interests and expertise.",
       placement: "right"
     },
     {
@@ -38,10 +38,10 @@ export default function IdeationTutorial({ activeRole }) {
       content: (
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            Ready to Innovate? 🚀
+            Ready to Build? 🚀
           </h2>
           <p>
-            The Vision Hub is your launchpad for creativity and collaboration. Dive in, explore visions, connect with like-minded innovators, and let's build the future together!
+            The Idea Hub is your launchpad for creativity and collaboration. Dive in, explore ideas, connect with like-minded innovators, and let's build the future together!
           </p>
         </div>
       ),

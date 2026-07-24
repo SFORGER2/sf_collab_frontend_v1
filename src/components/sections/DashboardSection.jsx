@@ -167,7 +167,7 @@ const DashboardSection = ({ searchQuery = '' }) => {
                 className={`w-full relative backdrop-blur-xl rounded-2xl border ${accentClasses.border} transition-all duration-500 overflow-hidden shadow-2xl hover:shadow-3xl hover:scale-[1.02] custom-spotlight-card`}
                 spotlightColor={card.color}
               >
-                    <img loading="lazy" src="/design_2.jpg" className="object-cover w-fit h-full absolute top-0 left-0 group-hover:opacity-50 transition-all duration-1000 -z-50 opacity-15" />
+                    <img loading="lazy" src="/design_2.jpg" className="object-cover w-fit h-full absolute top-0 left-0 group-hover:opacity-50 transition-all duration-1000 -z-50 opacity-15" alt="" />
               
                 {/* Top Accent Line */}
                 <div className={`absolute top-0 left-0 right-0 h-1 bg-linear-to-r ${card.gradient} opacity-75 group-hover:opacity-100 transition-opacity duration-300`} />

@@ -3,7 +3,7 @@ import SideBar from '../SideBar';
 import { createLinks } from './links';
 
 export default function GeneralSidebar({ isOpen, setIsOpen, unreadMessagesCount, isAdmin, userRoles = [], setActiveRole = () => {} }) {
-  const [links, setLinks] = useState(createLinks(unreadMessagesCount));
+  const [links, setLinks] = useState(createLinks(unreadMessagesCount, userRoles, setActiveRole));
   useEffect(() => {
     setLinks(createLinks(unreadMessagesCount, userRoles, setActiveRole));
   }, [unreadMessagesCount, userRoles, setActiveRole]);

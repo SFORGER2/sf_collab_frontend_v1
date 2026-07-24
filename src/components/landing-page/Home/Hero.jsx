@@ -303,14 +303,13 @@ const Hero = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40 z-10"></div>
         <video
           ref={imageRef}
+          src={heroAssest.herovideoFour}
           autoPlay
           muted
           loop
           playsInline
           className="w-full h-full object-cover"
-        >
-          <source src={heroAssest.herovideoFour} type="video/mp4" />
-        </video>
+        />
       </div>
 
       {/* Popup Modal */}

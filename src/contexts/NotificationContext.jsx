@@ -1,530 +1,417 @@
 /**
- * SF Collab Notification Context - FIXED VERSION
- * 
- * FIXES APPLIED ON TOP OF YOUR ORIGINAL:
- * 1. markAllAsRead() is now OPTIMISTIC — badge drops to 0 BEFORE the API call
- * 2. Added `notifications_marked_read` socket listener so all open tabs/windows
- *    sync instantly when any component calls mark-all-read
- * 3. All other original code preserved exactly
+ * contexts/NotificationContext.jsx
+ *
+ * Central notification context. Powers:
+ *  - NotificationBell, NotificationPage, NotificationItem
+ *  - ToastNotification (via window.showToast events)
+ *  - Real-time delivery via Socket.IO (new_notification, notification_read,
+ *    notifications_marked_read, notification_count)
+ *  - Warning alerts, payout alerts, task reminders, mention system
+ *  - Notification preferences
+ *
+ * Socket events consumed (emitted by socket_events.py):
+ *   new_notification          → prepend to list, increment unread, show toast
+ *   notification_read         → mark single as read in local state
+ *   notifications_marked_read → mark all as read in local state
+ *   notification_count        → sync unread count on reconnect
+ *
+ * Socket events emitted (handled by socket_events.py):
+ *   mark_notification_read        → { notification_id }
+ *   mark_all_notifications_read   → { category? }
  */
 
-import React, { 
-  createContext, 
-  useContext, 
-  useEffect, 
-  useMemo, 
-  useState, 
-  useCallback
+import React, {
+  createContext, useContext, useCallback,
+  useEffect, useRef, useState, useMemo,
 } from "react";
-import { useSelector } from "react-redux";
-import { notificationAPI } from "@/utils/APIs/notificationAPI";
-import { getSocketInstance } from "@/utils/getSocketInstance";
+import notificationAPI from "@/utils/APIs/notificationAPI";
 
-// Create context
+// ─── Toast helper ─────────────────────────────────────────────────────────────
+export function showToast({ type = "info", title, message, data }) {
+  window.dispatchEvent(
+    new CustomEvent("showToast", { detail: { type, title, message, data } })
+  );
+}
+
+// ─── Preference defaults ──────────────────────────────────────────────────────
+const DEFAULT_PREFS = {
+  realtime:          true,
+  toastEnabled:      true,
+  // Per-category toasts
+  toastCategories:   ["task", "mention", "payment", "warning", "account"],
+  // Quiet hours
+  quietHours:        { enabled: false, start: "22:00", end: "08:00" },
+  // Per-category mutes
+  mutedCategories:   [],
+};
+
+// ─── Context ──────────────────────────────────────────────────────────────────
 const NotificationContext = createContext(null);
 
-/**
- * Normalize notification object to have consistent field names
- * Backend sends camelCase (isRead), frontend expects snake_case (is_read)
- */
-const normalizeNotification = (notif) => {
-  if (!notif) return notif;
-  
-  return {
-    ...notif,
-    // Normalize read status - support both conventions
-    is_read: notif.is_read ?? notif.isRead ?? false,
-    isRead: notif.isRead ?? notif.is_read ?? false,
-    // Normalize type
-    type: notif.type || notif.notification_type || 'info',
-    notification_type: notif.notification_type || notif.type || 'info',
-    // Normalize timestamps
-    created_at: notif.created_at || notif.createdAt,
-    createdAt: notif.createdAt || notif.created_at,
-    // Normalize other fields
-    user_id: notif.user_id || notif.userId,
-    actor_id: notif.actor_id || notif.actorId,
-    link_url: notif.link_url || notif.linkUrl,
-  };
-};
-
-/**
- * Custom hook to use notification context
- */
-export const useNotifications = () => {
+export function useNotifications() {
   const ctx = useContext(NotificationContext);
-  if (!ctx) {
-    throw new Error("useNotifications must be used within NotificationProvider");
-  }
+  if (!ctx) throw new Error("useNotifications must be used inside NotificationProvider");
   return ctx;
-};
+}
 
-/**
- * Notification Provider Component
- */
-export const NotificationProvider = ({ children }) => {
-  const { user, access_token } = useSelector((state) => state.auth);
+// ─── Quiet-hours check ────────────────────────────────────────────────────────
+function inQuietHours(prefs) {
+  if (!prefs?.quietHours?.enabled) return false;
+  const now   = new Date();
+  const mins  = now.getHours() * 60 + now.getMinutes();
+  const [sh, sm] = (prefs.quietHours.start || "22:00").split(":").map(Number);
+  const [eh, em] = (prefs.quietHours.end   || "08:00").split(":").map(Number);
+  const start = sh * 60 + sm;
+  const end   = eh * 60 + em;
+  return start < end
+    ? mins >= start && mins < end
+    : mins >= start || mins < end;
+}
 
-  // State
-  const [socket, setSocket] = useState(null);
+// ─── Provider ─────────────────────────────────────────────────────────────────
+export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [filters, setFilters] = useState({});
-  const [isConnected, setIsConnected] = useState(false);
+  const [unreadCount,   setUnreadCount]   = useState(0);
+  const [loading,       setLoading]       = useState(false);
+  const [hasMore,       setHasMore]       = useState(false);
+  const [error,         setError]         = useState(null);
+  const [isConnected,   setIsConnected]   = useState(true);
+  const [prefs,         setPrefs]         = useState(DEFAULT_PREFS);
+  const [activeFilters, setActiveFilters] = useState({});
 
+  const pageRef    = useRef(1);
+  const socketRef  = useRef(null);   // Socket.IO instance
+  const mountedRef = useRef(true);
 
-
-  // -----------------------------
-  // SOCKET.IO CONNECTION
-  // -----------------------------
+  // ─────────────────────────────────────────────────────────────────────────
+  //  Socket: get from SocketProvider via the global singleton
+  // ─────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!access_token || !user?.id) return;
-
-    const socketInstance = getSocketInstance(access_token);
-
-    const onConnect = async () => {
-      setIsConnected(true);
-      socketInstance.emit("join_notifications", { user_id: user.id });
-      // Fetch fresh unread count from server now that we are in the notification room
-      // (Call API directly here — avoids stale-closure / ref timing issues)
+    // Retry until SocketProvider has initialised the socket
+    const tryAttach = () => {
+      // Works with the standard getSocketInstance pattern used across this project
       try {
-        const data = await notificationAPI.getUnreadCount();
-        setUnreadCount(Number(data?.unreadCount ?? data?.unread_count ?? 0));
-      } catch (e) {
-        // non-critical — count will be correct from initial load
-      }
+        const { getSocketInstance } = require("@/components/pages/chat/getSocketInstance");
+        const sock = getSocketInstance();
+        if (sock) { socketRef.current = sock; return true; }
+      } catch {}
+      return false;
     };
-
-    socketInstance.on("connect", onConnect);
-
-    // If socket is already connected when this effect runs (e.g. hot reload, lazy route),
-    // fire the connect logic immediately so we don't miss the join
-    if (socketInstance.connected) {
-      onConnect();
+    if (!tryAttach()) {
+      const id = setInterval(() => { if (tryAttach()) clearInterval(id); }, 500);
+      return () => clearInterval(id);
     }
+  }, []);
 
-    socketInstance.on("disconnect", (reason) => {
-      console.log("❌ Socket.IO disconnected:", reason);
-      setIsConnected(false);
-    });
+  // ─────────────────────────────────────────────────────────────────────────
+  //  Fetch notifications (REST)
+  // ─────────────────────────────────────────────────────────────────────────
+  const fetchNotifications = useCallback(async (filters = {}, page = 1) => {
+    if (!mountedRef.current) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await notificationAPI.getAll({ ...filters, page, per_page: 20 });
+      const list  = data?.notifications ?? [];
+      const total = data?.pagination?.total ?? list.length;
+      const shown = page * 20;
 
-    socketInstance.on("connect_error", (err) => {
-      console.error("Socket.IO connection error:", err?.message || err);
-      setIsConnected(false);
-    });
+      if (!mountedRef.current) return;
 
-    // Handle new notifications
-    socketInstance.on("new_notification", (data) => {
-      console.log("📬 New notification received:", data);
-      const rawNotif = data?.notification ?? data;
-      if (!rawNotif) return;
-
-      // Normalize the notification
-      const notif = normalizeNotification(rawNotif);
-
-      // Add to notifications list (avoid duplicates — use String() for type-safe comparison)
-      setNotifications((prev) => {
-        if (prev.some(n => String(n.id) === String(notif.id))) {
-          return prev;
-        }
-        return [notif, ...prev];
-      });
-      
-      // Increment unread count
-      if (!notif.is_read) {
-        setUnreadCount((prev) => prev + 1);
-      }
-
-      // Dispatch toast event for ToastNotification component
-      window.dispatchEvent(
-        new CustomEvent("showToast", {
-          detail: {
-            type: notif.type || 'info',
-            title: notif.title,
-            message: notif.message,
-            data: notif.data,
-          },
-        })
-      );
-    });
-
-    // Handle user status updates
-    socketInstance.on("user_status", (data) => {
-      console.log("User status update:", data);
-    });
-
-    // Handle single notification read sync — use server's authoritative count
-    socketInstance.on("notification_read", (data) => {
-      const notifId = data?.notificationId ?? data?.notification_id;
-      if (notifId !== undefined) {
-        setNotifications((prev) =>
-          prev.map((n) =>
-            String(n.id) === String(notifId) ? { ...n, is_read: true, isRead: true } : n
-          )
-        );
-      }
-      // Prefer the authoritative count from server to avoid drift
-      if (data?.unread_count !== undefined) {
-        setUnreadCount(Math.max(0, Number(data.unread_count)));
+      if (page === 1) {
+        setNotifications(list);
       } else {
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      }
-    });
-
-    // ✅ FIX: Handle mark-ALL-read sync across tabs/windows.
-    // The backend emits this event from service.py after mark_all_as_read() succeeds.
-    // This means if you open the Notifications page in one tab and the Bell is open
-    // in another, both zero out instantly without any polling.
-    socketInstance.on("notifications_marked_read", () => {
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, is_read: true, isRead: true }))
-      );
-      setUnreadCount(0);
-    });
-
-    setSocket(socketInstance);
-
-    return () => {
-      // Remove listeners but do NOT destroy the singleton socket.
-      // The singleton lives until logout (destroySocketInstance).
-      socketInstance.off("connect", onConnect);
-      socketInstance.off("new_notification");
-      socketInstance.off("notification_read");
-      socketInstance.off("notifications_marked_read");
-      socketInstance.off("user_status");
-      socketInstance.off("disconnect");
-      socketInstance.off("connect_error");
-      setSocket(null);
-      setIsConnected(false);
-    };
-  }, [access_token, user?.id]);
-
-  // -----------------------------
-  // API METHODS
-  // -----------------------------
-  
-  /**
-   * Load notifications from API
-   */
-  const loadNotifications = useCallback(
-    async (pageNum = 1, newFilters = filters) => {
-      if (!access_token) return;
-
-      try {
-        setLoading(true);
-
-        const data = await notificationAPI.getAll({
-          page: pageNum,
-          per_page: 20,
-          ...newFilters,
+        setNotifications(prev => {
+          const ids = new Set(prev.map(n => n.id));
+          return [...prev, ...list.filter(n => !ids.has(n.id))];
         });
-
-        // Normalize all notifications
-        const rawList = data?.notifications ?? [];
-        const list = rawList.map(normalizeNotification);
-
-        if (pageNum === 1) {
-          setNotifications(list);
-        } else {
-          setNotifications((prev) => {
-            const existingIds = new Set(prev.map(n => n.id));
-            const newItems = list.filter(n => !existingIds.has(n.id));
-            return [...prev, ...newItems];
-          });
-        }
-
-        setPage(pageNum);
-
-        const pagination = data?.pagination;
-        if (pagination?.page != null && pagination?.pages != null) {
-          setHasMore(pagination.page < pagination.pages);
-        } else {
-          setHasMore(false);
-        }
-      } catch (err) {
-        console.error("Error loading notifications:", err);
-      } finally {
-        setLoading(false);
       }
-    },
-    [access_token, filters]
-  );
+      setHasMore(shown < total);
+    } catch (e) {
+      if (mountedRef.current) setError("Could not load notifications.");
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
+  }, []);
 
-  /**
-   * Load unread count from API
-   */
-  const loadUnreadCount = useCallback(async () => {
-    if (!access_token) return;
+  const fetchUnreadCount = useCallback(async () => {
     try {
       const data = await notificationAPI.getUnreadCount();
-      setUnreadCount(Number(data?.unreadCount ?? data?.unread_count ?? 0));
-    } catch (err) {
-      console.error("Error loading unread count:", err);
-    }
-  }, [access_token]);
-
-
-
-  /**
-   * Load notification stats
-   */
-  const loadStats = useCallback(async () => {
-    if (!access_token) return;
-    try {
-      const data = await notificationAPI.getStats();
-      setStats(data);
-    } catch (err) {
-      console.error("Error loading stats:", err);
-    }
-  }, [access_token]);
-
-  /**
-   * Mark a notification as read
-   */
-  const markAsRead = useCallback(async (notificationId) => {
-    // OPTIMISTIC: update local state immediately, revert on failure
-    setNotifications((prev) =>
-      prev.map((n) =>
-        String(n.id) === String(notificationId) ? { ...n, is_read: true, isRead: true } : n
-      )
-    );
-    setUnreadCount((prev) => Math.max(0, prev - 1));
-
-    try {
-      await notificationAPI.markAsRead(notificationId);
-      // Backend emits notification_read socket → other tabs sync via onNotificationRead above
-    } catch (err) {
-      console.error("Error marking notification as read:", err);
-      // Revert optimistic update on failure
-      setNotifications((prev) =>
-        prev.map((n) =>
-          String(n.id) === String(notificationId) ? { ...n, is_read: false, isRead: false } : n
-        )
-      );
-      setUnreadCount((prev) => prev + 1);
-    }
+      if (mountedRef.current) setUnreadCount(data?.unreadCount ?? data?.unread_count ?? 0);
+    } catch {}
   }, []);
 
-  /**
-   * Mark a notification as unread
-   */
-  const markAsUnread = useCallback(async (notificationId) => {
-    try {
-      await notificationAPI.markAsUnread(notificationId);
+  // Initial load
+  useEffect(() => {
+    fetchNotifications();
+    fetchUnreadCount();
+    return () => { mountedRef.current = false; };
+  }, []); // eslint-disable-line
 
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: false, isRead: false } : n
-        )
-      );
+  // ─────────────────────────────────────────────────────────────────────────
+  //  Socket.IO real-time events
+  // ─────────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const attach = () => {
+      const sock = socketRef.current;
+      if (!sock) return;
 
-      setUnreadCount((prev) => prev + 1);
-    } catch (err) {
-      console.error("Error marking notification as unread:", err);
-    }
-  }, []);
+      // ── new_notification ────────────────────────────────────────────────
+      const onNew = (payload) => {
+        const n = payload?.notification ?? payload;
+        if (!n?.id) return;
 
-  /**
-   * Mark all notifications as read
-   * 
-   * ✅ FIX: Now OPTIMISTIC — unreadCount drops to 0 and all notifications are
-   * marked read in local state IMMEDIATELY, before the API call resolves.
-   * This means the badge zeroes out the instant you click, with no waiting.
-   * If the API call fails, we re-fetch to restore accurate state.
-   */
-  const markAllAsRead = useCallback(async (category = null) => {
-    // --- OPTIMISTIC UPDATE (instant, no flicker) ---
-    setUnreadCount(0);
-    setNotifications((prev) =>
-      prev.map((n) => {
-        if (category && n.category !== category) return n;
-        return { ...n, is_read: true, isRead: true };
-      })
-    );
+        setNotifications(prev => {
+          if (prev.some(x => x.id === n.id)) return prev;
+          return [n, ...prev];
+        });
+        setUnreadCount(c => c + (n.is_read ? 0 : 1));
 
-    // --- BACKGROUND API CALL ---
-    try {
-      await notificationAPI.markAllRead(category);
-      // Backend will also emit `notifications_marked_read` via socket,
-      // which syncs any other open tabs/windows automatically.
-    } catch (err) {
-      console.error("Error marking all as read:", err);
-      // On failure: revert by reloading real state from server
-      loadUnreadCount();
-      loadNotifications(1);
-    }
-  }, [loadUnreadCount, loadNotifications]);
+        // Toast — respect prefs + quiet hours + category mutes
+        if (
+          prefs.toastEnabled
+          && !inQuietHours(prefs)
+          && !(prefs.mutedCategories || []).includes(n.category)
+        ) {
+          const wantToast = !prefs.toastCategories?.length
+            || prefs.toastCategories.includes(n.category)
+            || n.priority === "critical"
+            || n.priority === "high";
 
-  /**
-   * Delete a notification - FIXED
-   */
-  const deleteNotification = useCallback(async (notificationId) => {
-    try {
-      await notificationAPI.delete(notificationId);
-      
-      // Find the notification to check if it was unread
-      const notification = notifications.find(n => n.id === notificationId);
-      
-      // Remove from list
-      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-      
-      // Update unread count if it was unread
-      if (notification && !notification.is_read && !notification.isRead) {
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      }
-      
-      return true;
-    } catch (err) {
-      console.error("Error deleting notification:", err);
-      throw err;
-    }
-  }, [notifications]);
+          if (wantToast) {
+            showToast({
+              type:    n.notification_type ?? n.type ?? "info",
+              title:   n.title,
+              message: n.message,
+              data:    n,
+            });
+          }
+        }
 
-  /**
-   * Delete all read notifications
-   */
-  const deleteAllRead = useCallback(async () => {
-    try {
-      await notificationAPI.deleteAllRead();
-      setNotifications((prev) => prev.filter((n) => !n.is_read && !n.isRead));
-    } catch (err) {
-      console.error("Error deleting read notifications:", err);
-      throw err;
-    }
-  }, []);
+        // Warn alert — warning/error priority and category
+        if (
+          n.category === "moderation" ||
+          n.priority  === "critical"   ||
+          n.notification_type === "warning" ||
+          n.notification_type === "error"
+        ) {
+          window.dispatchEvent(new CustomEvent("sfcollab:warning_alert", { detail: n }));
+        }
 
-  /**
-   * Clear ALL notifications - ADDED
-   */
-  const clearAllNotifications = useCallback(async () => {
-    try {
-      await notificationAPI.clearAll();
-      setNotifications([]);
-      setUnreadCount(0);
-    } catch (err) {
-      console.error("Error clearing all notifications:", err);
-      throw err;
-    }
-  }, []);
+        // Payout alert
+        if (n.category === "payment" || n.category === "marketplace" || n.category === "mentorship") {
+          window.dispatchEvent(new CustomEvent("sfcollab:payout_alert", { detail: n }));
+        }
 
-  /**
-   * Copy notification to notes
-   */
-  const copyToNotes = useCallback(async (notification) => {
-    try {
-      const payload = {
-        title: notification?.title || "Notification",
-        content: notification?.message || "",
-        meta: {
-          notification_id: notification?.id,
-          category: notification?.category,
-          type: notification?.type,
-          created_at: notification?.created_at || notification?.createdAt,
-          data: notification?.data,
-        },
+        // Task reminder
+        if (
+          n.category === "task" ||
+          (n.data?.template_key || "").includes("TASK_") ||
+          (n.data?.template_key || "").includes("DEADLINE")
+        ) {
+          window.dispatchEvent(new CustomEvent("sfcollab:task_reminder", { detail: n }));
+        }
+
+        // Mention
+        if (
+          (n.data?.template_key || "").includes("MENTION") ||
+          (n.data?.template_key || "").includes("mention")
+        ) {
+          window.dispatchEvent(new CustomEvent("sfcollab:mention", { detail: n }));
+        }
       };
 
-      return await notificationAPI.copyToNotes(payload);
-    } catch (err) {
-      console.error("Error copying notification to notes:", err);
-      throw err;
+      // ── notification_read (single) ──────────────────────────────────────
+      const onRead = ({ notification_id, unread_count }) => {
+        setNotifications(prev =>
+          prev.map(n => n.id === notification_id ? { ...n, is_read: true } : n)
+        );
+        if (unread_count !== undefined) setUnreadCount(unread_count);
+      };
+
+      // ── notifications_marked_read (bulk) ────────────────────────────────
+      const onAllRead = ({ unread_count, category }) => {
+        setNotifications(prev =>
+          prev.map(n =>
+            (!category || n.category === category) ? { ...n, is_read: true } : n
+          )
+        );
+        setUnreadCount(unread_count ?? 0);
+      };
+
+      // ── notification_count (initial sync on connect) ─────────────────────
+      const onCount = ({ unread_count }) => {
+        setUnreadCount(unread_count ?? 0);
+        setIsConnected(true);
+      };
+
+      const onConnect    = () => setIsConnected(true);
+      const onDisconnect = () => setIsConnected(false);
+
+      sock.on("new_notification",          onNew);
+      sock.on("notification_read",         onRead);
+      sock.on("notifications_marked_read", onAllRead);
+      sock.on("notification_count",        onCount);
+      sock.on("connect",                   onConnect);
+      sock.on("disconnect",                onDisconnect);
+
+      return () => {
+        sock.off("new_notification",          onNew);
+        sock.off("notification_read",         onRead);
+        sock.off("notifications_marked_read", onAllRead);
+        sock.off("notification_count",        onCount);
+        sock.off("connect",                   onConnect);
+        sock.off("disconnect",                onDisconnect);
+      };
+    };
+
+    // Retry if socket not yet ready
+    if (socketRef.current) {
+      return attach();
     }
+    const id = setInterval(() => {
+      if (socketRef.current) { clearInterval(id); attach(); }
+    }, 500);
+    return () => clearInterval(id);
+  }, [prefs]); // re-bind when prefs change so toast logic is fresh
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  Actions
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const markAsRead = useCallback(async (id) => {
+    // Optimistic
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    setUnreadCount(c => Math.max(0, c - 1));
+    // Socket (fastest) + REST (persistent)
+    if (socketRef.current?.connected) {
+      socketRef.current.emit("mark_notification_read", { notification_id: id });
+    }
+    try { await notificationAPI.markAsRead(id); } catch {}
   }, []);
 
-  // Initial load when authenticated
-  useEffect(() => {
-    if (!access_token) return;
-    loadNotifications(1);
-    loadUnreadCount();
-  }, [access_token]);
+  const markAsUnread = useCallback(async (id) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: false } : n));
+    setUnreadCount(c => c + 1);
+    try { await notificationAPI.markAsUnread(id); } catch {}
+  }, []);
 
-  /**
-   * Load more notifications (pagination)
-   */
-  const loadMore = useCallback(() => {
-    if (!loading && hasMore) {
-      loadNotifications(page + 1);
+  const markAllAsRead = useCallback(async (category = null) => {
+    setNotifications(prev =>
+      prev.map(n => (!category || n.category === category) ? { ...n, is_read: true } : n)
+    );
+    setUnreadCount(0);
+    if (socketRef.current?.connected) {
+      socketRef.current.emit("mark_all_notifications_read", { category });
     }
-  }, [loading, hasMore, page, loadNotifications]);
+    try { await notificationAPI.markAllRead(category); } catch {}
+  }, []);
 
-  /**
-   * Apply filters and reload
-   */
-  const applyFilters = useCallback(
-    (newFilters) => {
-      setFilters(newFilters);
-      loadNotifications(1, newFilters);
-    },
-    [loadNotifications]
-  );
+  const deleteNotification = useCallback(async (id) => {
+    const n = notifications.find(x => x.id === id);
+    setNotifications(prev => prev.filter(x => x.id !== id));
+    if (n && !n.is_read) setUnreadCount(c => Math.max(0, c - 1));
+    try { await notificationAPI.delete(id); } catch {}
+  }, [notifications]);
 
-  /**
-   * Refresh all notification data
-   */
+  const deleteAllRead = useCallback(async () => {
+    setNotifications(prev => prev.filter(n => !n.is_read));
+    try { await notificationAPI.deleteAllRead(); } catch {}
+  }, []);
+
+  const clearAllNotifications = useCallback(async () => {
+    setNotifications([]);
+    setUnreadCount(0);
+    try { await notificationAPI.clearAll(); } catch {}
+  }, []);
+
   const refresh = useCallback(() => {
-    loadNotifications(1);
-    loadUnreadCount();
-  }, [loadNotifications, loadUnreadCount]);
+    pageRef.current = 1;
+    fetchNotifications(activeFilters, 1);
+    fetchUnreadCount();
+  }, [fetchNotifications, fetchUnreadCount, activeFilters]);
 
-  // Context value
-  const value = useMemo(
-    () => ({
-      // State
-      notifications,
-      unreadCount,
-      stats,
-      isLoading: loading,
-      loading,
-      hasMore,
-      filters,
-      socket,
-      isConnected,
+  const loadMore = useCallback(() => {
+    if (!hasMore || loading) return;
+    const next = pageRef.current + 1;
+    pageRef.current = next;
+    fetchNotifications(activeFilters, next);
+  }, [hasMore, loading, fetchNotifications, activeFilters]);
 
-      // Actions
-      loadMore,
-      applyFilters,
-      refresh,
-      markAsRead,
-      markAsUnread,
-      markAllAsRead,
-      deleteNotification,
-      deleteAllRead,
-      clearAllNotifications,
-      copyToNotes,
-      loadStats,
-    }),
-    [
-      notifications,
-      unreadCount,
-      stats,
-      loading,
-      hasMore,
-      filters,
-      socket,
-      isConnected,
-      loadMore,
-      applyFilters,
-      refresh,
-      markAsRead,
-      markAsUnread,
-      markAllAsRead,
-      deleteNotification,
-      deleteAllRead,
-      clearAllNotifications,
-      copyToNotes,
-      loadStats,
-    ]
-  );
+  const applyFilters = useCallback((filters) => {
+    setActiveFilters(filters);
+    pageRef.current = 1;
+    fetchNotifications(filters, 1);
+  }, [fetchNotifications]);
+
+  const copyToNotes = useCallback(async (notification) => {
+    await notificationAPI.copyToNotes({
+      title:     notification.title,
+      content:   notification.message,
+      source:    "notification",
+      source_id: notification.id,
+    });
+  }, []);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  Preferences
+  // ─────────────────────────────────────────────────────────────────────────
+  const loadPrefs = useCallback(async () => {
+    try {
+      const p = await notificationAPI.getPreferences();
+      if (p) setPrefs(prev => ({ ...prev, ...p }));
+    } catch {}
+  }, []);
+
+  const updatePrefs = useCallback(async (updates) => {
+    setPrefs(prev => ({ ...prev, ...updates }));
+    try { await notificationAPI.updatePreferences(updates); } catch {}
+  }, []);
+
+  useEffect(() => { loadPrefs(); }, []); // eslint-disable-line
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //  Expose
+  // ─────────────────────────────────────────────────────────────────────────
+  const value = useMemo(() => ({
+    // State
+    notifications,
+    unreadCount,
+    loading,
+    hasMore,
+    error,
+    isConnected,
+    prefs,
+    // Actions
+    markAsRead,
+    markAsUnread,
+    markAllAsRead,
+    deleteNotification,
+    deleteAllRead,
+    clearAllNotifications,
+    refresh,
+    loadMore,
+    applyFilters,
+    copyToNotes,
+    // Preferences
+    updatePrefs,
+    loadPrefs,
+    // Util
+    showToast,
+  }), [
+    notifications, unreadCount, loading, hasMore, error,
+    isConnected, prefs,
+    markAsRead, markAsUnread, markAllAsRead,
+    deleteNotification, deleteAllRead, clearAllNotifications,
+    refresh, loadMore, applyFilters, copyToNotes,
+    updatePrefs, loadPrefs,
+  ]);
 
   return (
     <NotificationContext.Provider value={value}>
       {children}
     </NotificationContext.Provider>
   );
-};
+}
 
 export default NotificationContext;

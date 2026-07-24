@@ -149,7 +149,7 @@ const IdeationHeader = ({
             <div className="w-full flex justify-center items-center flex-col mb-2">
               <h1 className="text-5xl  sm:text-6xl lg:text-7xl font-bold mb-8 animate-slide-up text-center w-full">
                 <span className="bg-linear-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent text-center w-full">
-                  SF Vision Board
+                  Explore Ideas
                 </span>
                 <br />
                 
@@ -198,7 +198,7 @@ const IdeationHeader = ({
             className="create-idea flex items-center justify-center gap-2 rounded-lg transition-all duration-200 w-full px-4 py-2.5  sm:w-auto font-medium shadow-lg bg-gray-200 text-black text-sm border border-white/20"
           >
             <Plus className="h-4 w-4" />
-            <span>Add Vision</span>
+            <span>Post an Idea</span>
           </button>
         </div>
       </div>

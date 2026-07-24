@@ -14,16 +14,19 @@ To maintain organized development, follow these rules:
    git clone [repo-url]
    cd [repo-name]
    git checkout -b [your-branch-name]
+   ```
 2. **Create and switch to your branch:**
    ```bash
    git clone [repo-url]
    cd [repo-name]
    git checkout -b [your-branch-name]
+   ```
 3. **Commit and push changes:**
    ```bash
    git add .
    git commit -m "Descriptive commit message"
    git push origin [your-branch-name]
+   ```
 
 ⚠️ Important Notes: 
 - Never force-push to shared branches
@@ -62,4 +65,3 @@ The following changes have been implemented as part of the ERP MVP Phase 1 (Fron
 - `src/components/pages/erp/ExecutionDashboard.jsx`: Refactored to SF-OS standard with high-fidelity proof workflow.
 - `src/components/pages/sidebars/sidebarCommons.jsx`: Added `erpSection` logic.
 - `src/components/pages/sidebars/sidebar/links.jsx`: Integrated the ERP section into the main sidebar structure.
-

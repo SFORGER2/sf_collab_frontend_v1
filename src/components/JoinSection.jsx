@@ -1,3 +1,4 @@
+
 export default function JoinSection({ title, text, ref }) {
   return <>
     <section ref={ref} className="py-24 px-6 lg:px-20 bg-gradient-to-r from-indigo-600 to-purple-700 text-center">

@@ -1,8 +1,7 @@
 export default function getNotificationsWithPreferences(notifications, user) {
   if (!notifications || !user) return [];
   console.log("Notifications:", notifications);
-  const settings = user.notificationSettings;
-  if (!settings) return [];
+  const settings = user.notificationSettings || {};
 
   const now = new Date();
   const currentTime = now.getHours() * 60 + now.getMinutes();
@@ -26,6 +25,16 @@ export default function getNotificationsWithPreferences(notifications, user) {
   // Filter notifications based on user preferences
   return notifications.filter(notif => {
     switch (notif.category) {
+      case 'system':
+      case 'warning':
+        return settings.systemWarnings !== false;
+      case 'financial':
+      case 'payout':
+        return settings.financialAlerts !== false;
+      case 'task':
+        return settings.taskReminders !== false;
+      case 'mention':
+        return settings.mentions !== false;
       case 'social':
         if (notif.message?.includes('comment')) return settings.newComments;
         if (notif.message?.includes('like')) return settings.newLikes;

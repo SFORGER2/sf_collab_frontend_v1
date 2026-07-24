@@ -35,3 +35,8 @@ package-lock.json
 # self
 ai-2.md
 ai-2.pdf
+
+# Temporary files & documentation
+TEMPORARY_CHANGES.md
+docs/
+
