@@ -1,7 +1,12 @@
 import axios from "axios";
 import { API_BASE_URL } from "../config";
-import { toast } from "react-toastify";
 
+// Local helper to dispatch toast events and prevent circular dependencies with NotificationContext
+const triggerToast = ({ type = "info", title, message, data }) => {
+  window.dispatchEvent(
+    new CustomEvent("showToast", { detail: { type, title, message, data } })
+  );
+};
 const logErrorToBackend = (error) => {
   console.error("API Error:", error);
 };
@@ -79,6 +84,57 @@ export const responseErrorInterceptor = (error) => {
     return Promise.reject(error);
   }
   // ─────────────────────────────────────────────────────────────────────────
+
+  // Trigger Toast Notification on API Errors (excluding auth redirect paths)
+  if (status && status !== 401 && status !== 403) {
+    const apiError = data?.error;
+    const message = apiError?.message || error.message || "An unexpected error occurred.";
+    const code = apiError?.code;
+
+    if (status === 404) {
+      triggerToast({
+        type: "error",
+        title: "Not Found",
+        message: message || "Requested resource was not found."
+      });
+    } else if (status === 409) {
+      triggerToast({
+        type: "warning",
+        title: "State Warning",
+        message: message || "Action invalid for current status."
+      });
+    } else if (status === 422) {
+      triggerToast({
+        type: "error",
+        title: "Validation Error",
+        message: message || "Please verify your inputs."
+      });
+    } else if (status === 429) {
+      triggerToast({
+        type: "warning",
+        title: "Rate Limit Reached",
+        message: "Try again shortly."
+      });
+    } else if (status === 502 || code === "git_orchestration_error") {
+      triggerToast({
+        type: "error",
+        title: "Delivery Error",
+        message: message || "Git push failed."
+      });
+    } else if (status >= 500) {
+      triggerToast({
+        type: "error",
+        title: "Server Error",
+        message: message || "An internal server error occurred."
+      });
+    } else {
+      triggerToast({
+        type: "error",
+        title: "Error",
+        message: message
+      });
+    }
+  }
 
   if (data) {
     console.error("API Error:", status, data);

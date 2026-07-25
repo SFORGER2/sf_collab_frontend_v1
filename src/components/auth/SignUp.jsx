@@ -407,7 +407,7 @@ export default function SignUp() {
                 </Button>
              </div>
              
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" aria-describedby={errors.submit ? "submit-error" : undefined}>
 
             {/* Divider */}
             <div className="relative">
@@ -433,10 +433,13 @@ export default function SignUp() {
                     placeholder="eg: John"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange("firstName", e.target.value)}
+                    aria-invalid={!!errors.firstName}
+                    aria-describedby={errors.firstName ? "firstName-error" : undefined}
+                    required
                     className={`border ${errors.firstName ? 'border-red-500' : 'border-gray-700'} text-white placeholder:text-gray-500 focus:border-gray-600 focus:ring-gray-600 w-full rounded px-3 py-2 pl-10`}
                   />
                 </div>
-                {errors.firstName && <p className="text-red-500 text-xs">{errors.firstName}</p>}
+                {errors.firstName && <p id="firstName-error" className="text-red-500 text-xs">{errors.firstName}</p>}
               </div>
               <div className="space-y-2">
                 <label htmlFor="lastName" className="text-white text-sm">Last Name *</label>
@@ -450,10 +453,13 @@ export default function SignUp() {
                     placeholder="eg: Francisco"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange("lastName", e.target.value)}
+                    aria-invalid={!!errors.lastName}
+                    aria-describedby={errors.lastName ? "lastName-error" : undefined}
+                    required
                     className={`border ${errors.lastName ? 'border-red-500' : 'border-gray-700'} text-white placeholder:text-gray-500 focus:border-gray-600 focus:ring-gray-600 w-full rounded px-3 py-2 pl-10`}
                   />
                 </div>
-                {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName}</p>}
+                {errors.lastName && <p id="lastName-error" className="text-red-500 text-xs">{errors.lastName}</p>}
               </div>
             </div>
 
@@ -470,10 +476,13 @@ export default function SignUp() {
                   placeholder="eg: johnfrancisco@gmail.com"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? "email-error" : undefined}
+                  required
                   className={`border ${errors.email ? 'border-red-500' : 'border-gray-700'} text-white placeholder:text-gray-500 focus:border-gray-600 focus:ring-gray-600 w-full rounded px-3 py-2 pl-10`}
                 />
               </div>
-              {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
+              {errors.email && <p id="email-error" className="text-red-500 text-xs">{errors.email}</p>}
             </div>
 
             {/* Password Field */}
@@ -487,6 +496,9 @@ export default function SignUp() {
                   label="Password *"
                   showScore={true}
                   showScoreNumber={true}
+                  aria-invalid={!!errors.password}
+                  aria-describedby={errors.password ? "password-error" : "password-hint"}
+                  required
                 />
                 {/* <input
                   id="password"
@@ -503,8 +515,8 @@ export default function SignUp() {
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button> */}
               </div>
-              {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>}
-              <p className="text-xs text-gray-500">Must be at least 8 characters.</p>
+              {errors.password && <p id="password-error" className="text-red-500 text-xs">{errors.password}</p>}
+              <p id="password-hint" className="text-xs text-gray-500">Must be at least 8 characters.</p>
             </div>
 
             {/* Terms and Conditions */}
@@ -514,6 +526,9 @@ export default function SignUp() {
                 id="agreeToTerms"
                 checked={formData.agreeToTerms}
                 onChange={(e) => handleInputChange("agreeToTerms", e.target.checked)}
+                aria-invalid={!!errors.agreeToTerms}
+                aria-describedby={errors.agreeToTerms ? "agreeToTerms-error" : undefined}
+                required
                 className="mt-1 rounded border-gray-700 bg-black text-blue-600 focus:ring-blue-500"
               />
               <label htmlFor="agreeToTerms" className="text-sm text-gray-300">
@@ -527,10 +542,10 @@ export default function SignUp() {
                 </a>
               </label>
             </div>
-            {errors.agreeToTerms && <p className="text-red-500 text-xs">{errors.agreeToTerms}</p>}
+            {errors.agreeToTerms && <p id="agreeToTerms-error" className="text-red-500 text-xs">{errors.agreeToTerms}</p>}
 
             {errors.submit && (
-              <p className="text-red-500 text-sm text-center">{errors.submit}</p>
+              <p id="submit-error" className="text-red-500 text-sm text-center" role="alert">{errors.submit}</p>
             )}
 
             {/* Sign Up Button */}

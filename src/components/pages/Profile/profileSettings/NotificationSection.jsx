@@ -6,6 +6,10 @@ export default function NotificationSection({ formData, onChange }) {
   const notificationSettings = formData.notificationSettings || {};
 
   const toggles = [
+    { key: 'systemWarnings', title: 'Warning Alerts', description: 'Get critical system and workspace warnings' },
+    { key: 'financialAlerts', title: 'Payout & Financial', description: 'Get notified about payouts and investments' },
+    { key: 'taskReminders', title: 'Task Reminders', description: 'Receive upcoming deadline and task alerts' },
+    { key: 'mentions', title: 'Mentions & Tags', description: 'Get notified when someone @mentions you' },
     { key: 'newComments', title: 'New Comments', description: 'Get notified when someone comments on your posts' },
     { key: 'newLikes', title: 'New Likes', description: 'Get notified when someone likes your content' },
     { key: 'newSuggestions', title: 'New Suggestions', description: 'Receive personalized suggestions' },
@@ -67,17 +71,17 @@ export default function NotificationSection({ formData, onChange }) {
             </div>
 
             <motion.label 
-              className="relative h-full inline-flex items-center cursor-pointer ml-4 bg-white"
+              className="relative inline-flex items-center cursor-pointer ml-4"
               whileTap={{ scale: 0.95 }}
             >
               <input 
                 type="checkbox" 
                 checked={!!notificationSettings[key]} 
                 onChange={(e) => onChange({ ...notificationSettings, [key]: e.target.checked })} 
-                className="sr-only peer text-white bg-white" 
+                className="sr-only peer" 
               />
               <div 
-                className="absolute -translate-x-10 w-11 h-6 bg-gray-600 peer-checked:bg-blue-600 rounded-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-5"
+                className="w-11 h-6 bg-gray-600 peer-checked:bg-blue-600 rounded-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-5 transition-colors duration-200"
               />
             </motion.label>
           </motion.div>
@@ -125,7 +129,7 @@ export default function NotificationSection({ formData, onChange }) {
               className="sr-only peer" 
             />
             <div 
-              className="absolute -translate-x-10 w-11 h-6 bg-gray-600 peer-checked:bg-orange-600 rounded-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-5"
+              className="w-11 h-6 bg-gray-600 peer-checked:bg-orange-600 rounded-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-5 transition-colors duration-200"
             />
           </motion.label>
         </div>

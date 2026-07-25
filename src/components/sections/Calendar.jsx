@@ -720,7 +720,7 @@ export default function Calendar() {
             spotlightColor="rgba(59, 130, 246, 0.10)"
             className="backdrop-blur-xl bg-transparent relative rounded-xl md:rounded-2xl border border-gray-700/50 overflow-hidden"
           >
-            <img loading="lazy" src="/design_2.jpg" className="absolute object-cover top-0 left-0 w-full h-fit -mt-60 opacity-15" />
+            <img loading="lazy" src="/design_2.jpg" className="absolute object-cover top-0 left-0 w-full h-fit -mt-60 opacity-15" alt="" />
             <div className="p-2 md:p-4" style={{ zIndex: 99999 }}>
               <div className="flex flex-col gap-3 md:gap-4 mb-4 md:mb-6">
                 <div className="flex flex-col sm:flex-row gap-2 md:gap-3 overflow-x-auto pb-2" data-aos='fade-left' data-aos-delay="300">

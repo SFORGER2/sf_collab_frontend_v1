@@ -84,13 +84,13 @@ export default function TopStartups() {
   }
 
   return (
-    <section className="bg-gradient-to-b from-slate-900 to-slate-950 py-20 px-6 lg:px-20">
+    <section className="bg-gradient-to-b from-slate-900 to-slate-950 py-20 px-6 lg:px-20 w-full">
       <motion.div
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: '-100px' }}
         variants={containerVariants}
-        className="max-w-7xl mx-auto"
+        className="max-w-7xl mx-auto w-full"
       >
         {/* Header */}
         <motion.div variants={itemVariants} className="text-center space-y-3 mb-16">

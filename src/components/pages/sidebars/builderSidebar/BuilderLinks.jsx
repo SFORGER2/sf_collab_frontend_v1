@@ -13,6 +13,8 @@ import {
   BarChart2,
   FolderOpen,
   Bell,
+  HardDrive,
+  Presentation,
   DollarSign,
   ShoppingCart,
   ShoppingBag,
@@ -22,9 +24,13 @@ import {
   GraduationCap,
   Search,
   Star,
+  Mail,
   Building2,
   CalendarClock,
   FileStack,
+  Activity,
+  ShieldCheck,
+  ChevronDown,
   Video,
 } from "lucide-react";
 import {
@@ -40,7 +46,7 @@ import {
 } from "../sidebarCommons";
 import { FcInvite } from "react-icons/fc";
 
-export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiveRole = () => {}, activeRole = 'builder') {
+export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiveRole = () => { }, activeRole = 'builder') {
   const erp = { ...erpSection(11), subItems: filterERPModules(erpSection(11).subItems, activeRole, userRoles) };
   return [
     dashboardLink(userRoles, setActiveRole),
@@ -110,9 +116,9 @@ export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiv
       href: "/mentors",
       label: "Mentorship",
       subItems: [
-        { id: "mentors",                href: "/mentors",                label: "Find a Mentor",    icon: <Search size={18} /> },
-        { id: "mentor-dashboard",       href: "/mentor-dashboard",       label: "Mentor Dashboard", icon: <GraduationCap size={18} /> },
-        { id: "my-mentorship-requests", href: "/my-mentorship-requests", label: "My Requests",      icon: <Star size={18} /> },
+        { id: "mentors", href: "/mentors", label: "Find a Mentor", icon: <Search size={18} /> },
+        { id: "mentor-dashboard", href: "/mentor-dashboard", label: "Mentor Dashboard", icon: <GraduationCap size={18} /> },
+        { id: "my-mentorship-requests", href: "/my-mentorship-requests", label: "My Requests", icon: <Star size={18} /> },
       ],
     },
     socialSection(7),
@@ -125,8 +131,8 @@ export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiv
       href: "/wallet",
       label: "Wallet & Store",
       subItems: [
-        { id: "wallet",      href: "/wallet",      label: "My Wallet",   icon: <Coins size={18} /> },
-        { id: "store",       href: "/store",       label: "SF Store",    icon: <ShoppingBag size={18} /> },
+        { id: "wallet", href: "/wallet", label: "My Wallet", icon: <Coins size={18} /> },
+        { id: "store", href: "/store", label: "SF Store", icon: <ShoppingBag size={18} /> },
         { id: "leaderboard", href: "/leaderboard", label: "Leaderboard", icon: <Trophy size={18} /> },
         { id: "marketplace", href: "/marketplace", label: "Marketplace", icon: <ShoppingCart size={18} /> },
       ],

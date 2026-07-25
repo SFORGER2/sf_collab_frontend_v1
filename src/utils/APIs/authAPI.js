@@ -1,11 +1,5 @@
 import axios from 'axios';
-import {
-  API_CONFIG,
-  requestInterceptor,
-  requestErrorInterceptor,
-  responseInterceptor,
-  responseErrorInterceptor,
-} from './interceptors';
+import { API_CONFIG, requestInterceptor, requestErrorInterceptor, responseInterceptor, responseErrorInterceptor } from './interceptors';
 
 const api = axios.create(API_CONFIG);
 
@@ -49,9 +43,24 @@ export const authAPI = {
     return response.data;
   },
 
-  verifyEmailRequest: async (code) => {
-    // interceptor handles the token — no manual header needed
-    const response = await api.post('/auth/verify-code', { code });
+  verifyEmailRequest: async (arg1, arg2, arg3) => {
+    // Robustly handle both signatures:
+    // 1. verifyEmailRequest(email, code, token)
+    // 2. verifyEmailRequest(code, token)
+    let email, code, token;
+    if (arg3 !== undefined) {
+      email = arg1;
+      code = arg2;
+      token = arg3;
+    } else {
+      code = arg1;
+      token = arg2;
+    }
+
+    const payload = email ? { email, code } : { code };
+    const headers = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+
+    const response = await api.post('/auth/verify-code', payload, headers);
     return response.data;
   },
 

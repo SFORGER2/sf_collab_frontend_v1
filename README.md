@@ -12,23 +12,23 @@ To maintain organized development, follow these rules:
 ## 🛠️ Setup & Development
 
 1. **Clone the repo:**
-    ```bash
-    git clone [repo-url]
-    cd [repo-name]
-    git checkout -b [your-branch-name]
-    ```
+   ```bash
+   git clone [repo-url]
+   cd [repo-name]
+   git checkout -b [your-branch-name]
+   ```
 2. **Create and switch to your branch:**
-    ```bash
-    git clone [repo-url]
-    cd [repo-name]
-    git checkout -b [your-branch-name]
-    ```
+   ```bash
+   git clone [repo-url]
+   cd [repo-name]
+   git checkout -b [your-branch-name]
+   ```
 3. **Commit and push changes:**
-    ```bash
-    git add .
-    git commit -m "Descriptive commit message"
-    git push origin [your-branch-name]
-    ```
+   ```bash
+   git add .
+   git commit -m "Descriptive commit message"
+   git push origin [your-branch-name]
+   ```
 
 ⚠️ Important Notes:
 

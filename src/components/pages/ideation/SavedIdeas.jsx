@@ -112,7 +112,7 @@ const SavedIdeas = () => {
 
   const kpis = [
   {
-    label: 'Saved Visions',
+    label: 'Saved Ideas',
     value: total,
     icon: Eye,
     color: 'from-blue-500 to-cyan-500'
@@ -154,10 +154,10 @@ const SavedIdeas = () => {
       </div>
       <div>
         <h1 className="text-5xl md:text-6xl font-bold text-white">
-        Saved Visions
+        Saved Ideas
         </h1>
         <p className="text-gray-400 text-lg mt-2">
-        Your personal collection of innovative visions
+        Your personal collection of innovative ideas
         </p>
       </div>
       </div>
@@ -212,7 +212,7 @@ const SavedIdeas = () => {
       <input
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Search saved visions..."
+        placeholder="Search saved ideas..."
         className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-white/20"
       />
       </div>
@@ -314,10 +314,10 @@ const SavedIdeas = () => {
         </div>
       </div>
       <p className="text-gray-300 text-lg font-semibold">
-        No saved visions yet
+        No saved ideas yet
       </p>
       <p className="text-gray-500 text-sm mt-2">
-        Start exploring and save visions to build your personal collection.
+        Start exploring and save ideas to build your personal collection.
       </p>
       </motion.div>
     )}

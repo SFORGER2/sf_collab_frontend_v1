@@ -30,8 +30,8 @@ export default function DesktopSidebarContent({
 
   return (
     <div
-      className="sidebar hidden lg:flex fixed left-0 top-16 h-[calc(100vh-64px)] text-white"
-      style={{ zIndex: 9999999999 }}
+      className="sidebar hidden lg:flex fixed left-0 top-16 h-[calc(100dvh-64px)] text-white"
+      style={{ zIndex: 50 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -46,11 +46,15 @@ export default function DesktopSidebarContent({
 
       {/* Sidebar container */}
       <motion.div
-        className="flex flex-col justify-between h-full overflow-hidden py-2.5"
+        className={`flex flex-col justify-between h-full overflow-hidden py-2.5 ${
+          isHovered ? 'scrollbar-visible' : 'scrollbar-hide'
+        }`}
         animate={{ width: isHovered ? 250 : 60 }}
         transition={{ duration: 0.25, ease: "easeInOut" }}
       >
-        <div className="flex flex-col gap-1 overflow-y-auto px-2.5">
+        <div className={`flex flex-col gap-1 overflow-y-auto px-2.5 ${
+          isHovered ? 'scrollbar-visible' : 'scrollbar-hide'
+        }`}>
           {links.map((link) => {
             // Section divider entries (e.g. { isSection: true, sectionLabel: "Grow" })
             // are not real nav items — skip them so they don't create a gap or label.
@@ -128,9 +132,8 @@ export default function DesktopSidebarContent({
                       className="flex flex-col gap-0.5 mt-1 ml-4 pl-3 border-l border-zinc-700/50 overflow-hidden"
                     >
                       {(link.subItems || []).map((subItem) => {
-                        const isSubActive =
-                          location.pathname === subItem.href &&
-                          location.pathname !== "/dashboard";
+                      const isSubActive = location.pathname === subItem.href;
+
 
                         return (
                           <button

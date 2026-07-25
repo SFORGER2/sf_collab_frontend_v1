@@ -148,11 +148,10 @@ export default function HiringPage() {
               <button
                 key={job.id}
                 onClick={() => setSelectedJobId(job.id)}
-                className={`w-full text-left p-3.5 rounded-xl border transition-colors ${
-                  selectedJobId === job.id
-                    ? 'bg-blue-600/15 border-blue-500/40'
-                    : 'bg-white/5 border-white/10 hover:border-white/20'
-                }`}
+                className={`w-full text-left p-3.5 rounded-xl border transition-colors ${selectedJobId === job.id
+                  ? 'bg-blue-600/15 border-blue-500/40'
+                  : 'bg-white/5 border-white/10 hover:border-white/20'
+                  }`}
               >
                 <p className="text-white text-sm font-medium truncate">{job.title}</p>
                 <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
@@ -652,11 +651,10 @@ function ReferralsModal({ jobId, onClose }) {
               </div>
               <button
                 onClick={() => handleTogglePaid(r)}
-                className={`text-[11px] px-2 py-1 rounded-full border flex-shrink-0 ${
-                  r.bonusPaid
-                    ? 'text-green-300 bg-green-500/15 border-green-500/30'
-                    : 'text-gray-400 bg-white/5 border-white/10'
-                }`}
+                className={`text-[11px] px-2 py-1 rounded-full border flex-shrink-0 ${r.bonusPaid
+                  ? 'text-green-300 bg-green-500/15 border-green-500/30'
+                  : 'text-gray-400 bg-white/5 border-white/10'
+                  }`}
               >
                 {r.bonusPaid ? 'Bonus paid' : 'Mark bonus paid'}
               </button>
@@ -714,9 +712,8 @@ function ModalShell({ title, icon: Icon, onClose, children, wide = false }) {
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className={`bg-[#0f1116] border border-white/[0.08] rounded-2xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto ${
-          wide ? 'max-w-lg' : 'max-w-md'
-        }`}
+        className={`bg-[#0f1116] border border-white/[0.08] rounded-2xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto ${wide ? 'max-w-lg' : 'max-w-md'
+          }`}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

@@ -37,3 +37,7 @@ web-2.*
 website-generator
 ai-2.md
 ai-2.pdf
+
+# Temporary files & documentation
+TEMPORARY_CHANGES.md
+docs/

@@ -316,8 +316,8 @@ const ChatInput = ({
       <div className="max-w-7xl mx-auto px-2 py-2">
         {selectedFile && <FilePreview file={selectedFile} onRemove={() => setSelectedFile(null)} />}
         
-        <form onSubmit={handleSubmit} className="flex items-end gap-1 md:gap-2">
-          <div className="flex items-center gap-0.5 md:gap-1 pb-1">
+        <form onSubmit={handleSubmit} className="flex items-center gap-1 md:gap-2">
+          <div className="flex items-center gap-0.5 md:gap-1">
             <button type="button" onClick={() => imageInputRef.current?.click()} className="p-2 hover:bg-zinc-800 rounded-full text-indigo-400 transition-colors" disabled={disabled}><ImageIcon size={18} className="md:w-5 md:h-5" /></button>
             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-zinc-800 rounded-full text-indigo-400 transition-colors" disabled={disabled}><Paperclip size={18} className="md:w-5 md:h-5" /></button>
             <input ref={imageInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
@@ -342,7 +342,7 @@ const ChatInput = ({
             </div>
           </div>
 
-          <div className="pb-1">
+          <div>
             {isUploading ? (
               <div className="p-2.5 bg-indigo-600/20 rounded-full"><Loader2 size={20} className="text-indigo-400 animate-spin" /></div>
             ) : (value.trim() || selectedFile) ? (

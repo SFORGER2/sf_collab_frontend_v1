@@ -13,8 +13,8 @@ import {
   requestInterceptor,
   responseInterceptor,
   responseErrorInterceptor,
-} from "../../../utils/APIs/interceptors";
-import BackgroundImage from "../../../assets/imgs/background-image.jpg";
+} from "@/utils/APIs/interceptors";
+import BackgroundImage from "@/assets/imgs/background-image.jpg";
 
 const mk = (base) => {
   const a = axios.create({ baseURL: base });
@@ -79,7 +79,7 @@ function TaskRow({ task }) {
   );
 }
 
-export default function ERPDashboard() {
+export default function DesktopERPDashboard() {
   const { user } = useSelector((s) => s.auth);
   const workspaceId = user?.active_workspace_id || 1;
   const [role, setRole] = useState("builder");

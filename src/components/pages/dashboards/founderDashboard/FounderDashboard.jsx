@@ -1,20 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import DashboardChangeSection from "../dashboardChangeSection";
-import OverviewWebsite from "../dashboard/OverviewWebsite";
-import AnnouncementsSection from "../dashboard/AnnouncementsSection";
+import { useIsMobile } from "../../../../utils/hooks/use-mobile";
 import { dashboardAPI } from "@/utils/APIs/dashboardAPI";
-import Calendar from "@/components/sections/Calendar";
-import WorldClock from "@/components/sections/WorldClock";
-import { FounderStats } from "./Stats";
-import { StartupSection } from "./Sections";
+import DesktopFounderDashboard from "./views/DesktopFounderDashboard";
+import MobileFounderDashboard from "./views/MobileFounderDashboard";
 
-export default function FounderDashboard({
-  userRoles,
-  activeRole,
-  setActiveRole,
-  setUserRoles
-}) {
+const FounderDashboard = (props) => {
+  const isMobile = useIsMobile();
   const { user } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(true);
   const [startups, setStartups] = useState([]);
@@ -47,48 +39,27 @@ export default function FounderDashboard({
     );
   }, [startups]);
 
-  const sections = useMemo(() => [
-    { id: "stats", component: <FounderStats totals={totals} user={user} startups={startups} /> },
-    { id: "startups", component: <StartupSection startups={startups} /> },
-    { id: "calendar", component: <Calendar /> },
-    { id: "worldclock", component: <WorldClock /> },
-  ], [startups, totals, user]);
-
   if (loading) {
-    return <div className="p-8 text-white/60">Loading founder dashboard…</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-zinc-500 gap-4">
+        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs font-black uppercase tracking-widest">Organizing ecosystem...</p>
+      </div>
+    );
   }
 
-  return (
-    <div
-      
-      className="space-y-6 px-4 py-6">
-      <OverviewWebsite />
-      <DashboardChangeSection
-        sections={userRoles.map((r) => ({
-          id: r,
-          label: r.charAt(0).toUpperCase() + r.slice(1),
-        }))}
-        setUserRoles={setUserRoles}
-        setActiveRole={setActiveRole}
-        userRoles={userRoles}
-        activeRole={activeRole}
-        onSectionChange={(r) => {
-          setActiveRole(r);
-          localStorage.setItem("activeRole", r);
-        }}
+  if (isMobile) {
+    return (
+      <MobileFounderDashboard 
+        {...props}
+        user={user}
+        startups={startups}
+        totals={totals}
       />
-      <AnnouncementsSection userRoles={userRoles} />
-      <div
-        className=".dashboard" />
-      {sections.map((section) => (
-        <div key={section.id}>
-          {section.component}
-        </div>
-      ))}
+    );
+  }
 
-      <div className="text-sm text-white/50 italic">
-        More features coming soon to enhance your founder experience!
-      </div>
-    </div>
-  );
-}
+  return <DesktopFounderDashboard {...props} />;
+};
+
+export default FounderDashboard;

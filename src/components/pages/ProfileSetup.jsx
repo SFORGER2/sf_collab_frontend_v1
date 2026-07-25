@@ -34,7 +34,7 @@ export default function ProfileSetup() {
   const [isLoading, setIsLoading]                   = useState(false);
   const [profileImage, setProfileImage]             = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(null);
-
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     firstName: "",
     lastName:  "",
@@ -61,7 +61,17 @@ export default function ProfileSetup() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
+    }
   };
 
   const handleImageChange = (e) => {
@@ -86,12 +96,20 @@ export default function ProfileSetup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      toast.error("First name and last name are required");
-      return;
+    // Validate required fields
+    const newErrors = {};
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    }
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
     }
     if (!formData.country) {
-      toast.error("Please select a country");
+      newErrors.country = "Please select a country";
+    }
+
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
       return;
     }
 
@@ -171,7 +189,13 @@ export default function ProfileSetup() {
                 </div>
                 <label className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full cursor-pointer shadow-lg transition">
                   <Camera className="w-4 h-4" />
-                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    aria-label="Upload profile image"
+                    className="hidden"
+                  />
                 </label>
               </div>
             </div>
@@ -179,83 +203,128 @@ export default function ProfileSetup() {
             {/* Name */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  <User className="w-4 h-4 inline mr-2" />First Name *
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">
+                  <User className="w-4 h-4 inline mr-2" />
+                  First Name *
                 </label>
                 <input
-                  type="text" name="firstName" value={formData.firstName}
-                  onChange={handleInputChange} placeholder="John" required
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                  id="firstName"
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  placeholder="John"
+                  aria-invalid={!!errors.firstName}
+                  aria-describedby={errors.firstName ? "firstName-error" : undefined}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  required
                 />
+                {errors.firstName && <p id="firstName-error" className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Last Name *</label>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">
+                  Last Name *
+                </label>
                 <input
-                  type="text" name="lastName" value={formData.lastName}
-                  onChange={handleInputChange} placeholder="Doe" required
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                  id="lastName"
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  placeholder="Doe"
+                  aria-invalid={!!errors.lastName}
+                  aria-describedby={errors.lastName ? "lastName-error" : undefined}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  required
                 />
+                {errors.lastName && <p id="lastName-error" className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
               </div>
             </div>
 
             {/* Email (read-only) */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                <Mail className="w-4 h-4 inline mr-2" />Email
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                <Mail className="w-4 h-4 inline mr-2" />
+                Email
               </label>
               <input
-                type="email" value={formData.email} disabled
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-gray-400 cursor-not-allowed focus:outline-none"
+                id="email"
+                type="email"
+                value={formData.email}
+                disabled
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-gray-400 placeholder-gray-500 focus:outline-none cursor-not-allowed"
               />
             </div>
 
             {/* Company + Country */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  <Building className="w-4 h-4 inline mr-2" />Company
+                <label htmlFor="company" className="block text-sm font-medium text-gray-300 mb-2">
+                  <Building className="w-4 h-4 inline mr-2" />
+                  Company
                 </label>
                 <input
-                  type="text" name="company" value={formData.company}
-                  onChange={handleInputChange} placeholder="Your Company"
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                  id="company"
+                  type="text"
+                  name="company"
+                  value={formData.company}
+                  onChange={handleInputChange}
+                  placeholder="Your Company"
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  <Globe className="w-4 h-4 inline mr-2" />Country *
+                <label htmlFor="country" className="block text-sm font-medium text-gray-300 mb-2">
+                  <Globe className="w-4 h-4 inline mr-2" />
+                  Country *
                 </label>
                 <select
-                  name="country" value={formData.country} onChange={handleInputChange} required
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                  id="country"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleInputChange}
+                  aria-invalid={!!errors.country}
+                  aria-describedby={errors.country ? "country-error" : undefined}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  required
                 >
                   <option value="">Select a country</option>
                   {COUNTRIES.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
+                {errors.country && <p id="country-error" className="text-red-500 text-xs mt-1">{errors.country}</p>}
               </div>
             </div>
 
             {/* City + Timezone + Language */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  <MapPin className="w-4 h-4 inline mr-2" />City
+                <label htmlFor="city" className="block text-sm font-medium text-gray-300 mb-2">
+                  <MapPin className="w-4 h-4 inline mr-2" />
+                  City
                 </label>
                 <input
-                  type="text" name="city" value={formData.city}
-                  onChange={handleInputChange} placeholder="Your City"
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                  id="city"
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                  placeholder="Your City"
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  <Clock className="w-4 h-4 inline mr-2" />Timezone
+                <label htmlFor="timezone" className="block text-sm font-medium text-gray-300 mb-2">
+                  <Clock className="w-4 h-4 inline mr-2" />
+                  Timezone
                 </label>
                 <select
-                  name="timezone" value={formData.timezone} onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                  id="timezone"
+                  name="timezone"
+                  value={formData.timezone}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 >
                   {TIMEZONES.map((tz) => (
                     <option key={tz} value={tz}>{tz}</option>
@@ -263,10 +332,15 @@ export default function ProfileSetup() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Language</label>
+                <label htmlFor="language" className="block text-sm font-medium text-gray-300 mb-2">
+                  Language
+                </label>
                 <select
-                  name="language" value={formData.language} onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                  id="language"
+                  name="language"
+                  value={formData.language}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 >
                   {LANGUAGES.map((lang) => (
                     <option key={lang} value={lang}>{lang}</option>
@@ -277,11 +351,17 @@ export default function ProfileSetup() {
 
             {/* Bio */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Bio</label>
+              <label htmlFor="bio" className="block text-sm font-medium text-gray-300 mb-2">
+                Bio
+              </label>
               <textarea
-                name="bio" value={formData.bio} onChange={handleInputChange}
-                placeholder="Tell us about yourself..." rows="4"
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 resize-none"
+                id="bio"
+                name="bio"
+                value={formData.bio}
+                onChange={handleInputChange}
+                placeholder="Tell us about yourself..."
+                rows="4"
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
               />
             </div>
 

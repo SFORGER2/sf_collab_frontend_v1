@@ -15,9 +15,26 @@ import { usersAPI } from '@/utils/APIs/userAPI';
 import { authAPI } from '@/utils/APIs/authAPI';
 import { useNavigate } from 'react-router-dom';
 
-const ProfileSettings = ({ back, activeSection: initialActiveSection }) => {
+const ProfileSettings = ({ back, activeSection: propActiveSection, initialActiveSection }) => {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState(initialActiveSection || 'profile');
+  const [queryParams] = useSearchParams()
+  const page = queryParams.get('page')
+  const [activeSection, setActiveSection] = useState(propActiveSection || initialActiveSection || page || 'profile');
+
+  useEffect(() => {
+    const target = propActiveSection || initialActiveSection || page || 'profile';
+    if (target === 'settings') {
+      setActiveSection('profile');
+    } else {
+      setActiveSection(target);
+    }
+  }, [propActiveSection, initialActiveSection, page]);
+
+  useEffect(() => {
+    if (activeSection === 'settings') {
+      setActiveSection('profile');
+    }
+  }, [activeSection]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { user, access_token } = useSelector((state) => state.auth);
@@ -53,6 +70,10 @@ const ProfileSettings = ({ back, activeSection: initialActiveSection }) => {
         builderPreferences: user.preferences?.builderPreferences || '',
       },
       notificationSettings: {
+        systemWarnings: user.notificationSettings?.systemWarnings ?? true,
+        financialAlerts: user.notificationSettings?.financialAlerts ?? true,
+        taskReminders: user.notificationSettings?.taskReminders ?? true,
+        mentions: user.notificationSettings?.mentions ?? true,
         newComments: user.notificationSettings?.newComments ?? true,
         newLikes: user.notificationSettings?.newLikes ?? true,
         newSuggestions: user.notificationSettings?.newSuggestions ?? true,
@@ -81,57 +102,57 @@ const ProfileSettings = ({ back, activeSection: initialActiveSection }) => {
 
   // ── API update helper ─────────────────────────────────────────────
   // In ProfileSettings.jsx
-const updateUser = async (payload, isMultipart = false) => {
-  const contentType = isMultipart ? 'multipart/form-data' : 'application/json';
-  try {
-    const response = await usersAPI.updateProfile(user.id, payload, access_token, contentType);
-    // response might be: { data: { user: ... } } or { success: true, data: { user: ... } }
-    const result = response.data || response; // unwrap if needed
+  const updateUser = async (payload, isMultipart = false) => {
+    const contentType = isMultipart ? 'multipart/form-data' : 'application/json';
+    try {
+      const response = await usersAPI.updateProfile(user.id, payload, access_token, contentType);
+      // response might be: { data: { user: ... } } or { success: true, data: { user: ... } }
+      const result = response.data || response; // unwrap if needed
 
-    // If there's an error flag, throw it
-    if (result.error) {
-      throw new Error(result.error);
-    }
-    if (result.success === false) {
-      throw new Error(result.message || 'Update failed');
-    }
+      // If there's an error flag, throw it
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      if (result.success === false) {
+        throw new Error(result.message || 'Update failed');
+      }
 
-    // Extract user from either structure
-    const updatedUser = result.user || result.data?.user || null;
-    if (updatedUser) {
-      dispatch(updateUserSlice(updatedUser));
-    } else {
-      console.warn('No user object in response, but update may have succeeded.');
+      // Extract user from either structure
+      const updatedUser = result.user || result.data?.user || null;
+      if (updatedUser) {
+        dispatch(updateUserSlice(updatedUser));
+      } else {
+        console.warn('No user object in response, but update may have succeeded.');
+      }
+      return result;
+    } catch (error) {
+      // rethrow so the caller can handle it
+      throw error;
     }
-    return result;
-  } catch (error) {
-    // rethrow so the caller can handle it
-    throw error;
-  }
-};
+  };
 
   // ── Profile picture upload ────────────────────────────────────────
   const uploadProfilePicture = async (file) => {
-  const form = new FormData();
-  form.append('profile_picture', file);
-  try {
-    const result = await updateUser(form, true);
-    // Extract updated picture URL from the result
-    const updatedUser = result.user || result.data?.user || null;
-    const pictureUrl = updatedUser?.profile?.picture || updatedUser?.profile_picture;
-    if (pictureUrl) {
-      setFormData(prev => ({
-        ...prev,
-        profile: { ...prev.profile, picture: pictureUrl },
-      }));
+    const form = new FormData();
+    form.append('profile_picture', file);
+    try {
+      const result = await updateUser(form, true);
+      // Extract updated picture URL from the result
+      const updatedUser = result.user || result.data?.user || null;
+      const pictureUrl = updatedUser?.profile?.picture || updatedUser?.profile_picture;
+      if (pictureUrl) {
+        setFormData(prev => ({
+          ...prev,
+          profile: { ...prev.profile, picture: pictureUrl },
+        }));
+      }
+      toast.success('Profile picture updated');
+      return pictureUrl;
+    } catch (e) {
+      toast.error(e.message || 'Failed to upload picture');
+      throw e;
     }
-    toast.success('Profile picture updated');
-    return pictureUrl;
-  } catch (e) {
-    toast.error(e.message || 'Failed to upload picture');
-    throw e;
-  }
-};
+  };
 
   // ── Save Profile ──────────────────────────────────────────────────
   const saveProfile = async () => {
@@ -263,9 +284,8 @@ const updateUser = async (payload, isMultipart = false) => {
                   <button
                     key={section.id}
                     onClick={() => setActiveSection(section.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                      activeSection === section.id ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeSection === section.id ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                      }`}
                   >
                     <section.icon className="w-4 h-4" />
                     {section.label}

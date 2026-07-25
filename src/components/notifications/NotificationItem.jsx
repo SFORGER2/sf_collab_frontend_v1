@@ -19,7 +19,9 @@ import {
   Eye,
   EyeOff,
   Copy,
-  FileText
+  FileText,
+  AtSign,
+  ClipboardList
 } from 'lucide-react';
 // ✅ FIX: use shared NotificationContext so markAsRead updates the bell badge instantly
 import { useNotifications } from '../../contexts/NotificationContext';
@@ -38,6 +40,8 @@ const getNotificationIcon = (notification) => {
     if (template_key.includes('team') || template_key.includes('startup')) return Users;
     if (template_key.includes('event') || template_key.includes('meeting')) return Calendar;
     if (template_key.includes('payment') || template_key.includes('invest')) return DollarSign;
+    if (template_key.includes('mention')) return AtSign;
+    if (template_key.includes('task')) return ClipboardList;
   }
   
   switch (category) {
@@ -47,6 +51,8 @@ const getNotificationIcon = (notification) => {
     case 'team': return Users;
     case 'event': return Calendar;
     case 'financial': return DollarSign;
+    case 'mention': return AtSign;
+    case 'task': return ClipboardList;
     default: break;
   }
   
@@ -60,7 +66,20 @@ const getNotificationIcon = (notification) => {
 };
 
 // Get colors based on type
-const getTypeColors = (type) => {
+const getTypeColors = (type, category) => {
+  if (category === 'financial' || category === 'payout') {
+    return { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/50' };
+  }
+  if (category === 'mention') {
+    return { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30' };
+  }
+  if (category === 'task') {
+    return { bg: 'bg-indigo-500/20', text: 'text-indigo-400', border: 'border-indigo-500/30' };
+  }
+  if (type === 'warning' || category === 'system') {
+    return { bg: 'bg-amber-500/20 animate-pulse', text: 'text-amber-400', border: 'border-amber-500/80 shadow-[0_0_10px_rgba(245,158,11,0.5)]' };
+  }
+
   switch (type) {
     case 'success': return { bg: 'bg-green-500/20', text: 'text-green-400', border: 'border-green-500/30' };
     case 'error': return { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30' };
@@ -75,86 +94,125 @@ const getNotificationLink = (notification) => {
   if (notification.link_url) {
     return notification.link_url;
   }
-  
+
+  // B1 FIX: backend sends entity_type + entity_id on every notification.
+  // Map these to routes before falling through to template_key logic.
+  const { entity_type, entity_id } = notification;
+  if (entity_type && entity_id) {
+    switch (entity_type) {
+      case 'startup':    return `/startup-details/${entity_id}`;
+      case 'idea':       return `/ideation`;
+      case 'task':       return `/erp/tasks`;
+      case 'meeting':    return `/meet`;
+      case 'post':       return `/posts/${entity_id}`;
+      case 'user':       return `/users/${entity_id}`;
+      case 'workspace':  return `/erp`;
+      case 'knowledge':  return `/knowledge/${entity_id}`;
+      case 'marketplace':return `/marketplace`;
+      case 'announcement': return null;
+      default: break;
+    }
+  }
+
   const { template_key, category, data } = notification;
-  const metadata = data || {};
-  
-  if (template_key) {
-    if (template_key.includes('message') || template_key.includes('chat')) {
-      return '/chat';
-    }
-    if (template_key.includes('friend_request') || template_key.includes('connection_request')) {
-      return '/connections';
-    }
-    if (template_key.includes('friend_accepted') || template_key.includes('connection_accepted')) {
-      if (metadata.user_id) return `/users/${metadata.user_id}`;
-      if (metadata.sender_id) return `/users/${metadata.sender_id}`;
-      return '/connections';
-    }
-    if (template_key.includes('connection_removed') || template_key.includes('friend_removed')) {
-      return '/connections';
-    }
-    if (template_key.includes('like') || template_key.includes('reaction')) {
-      return '/posts';
-    }
-    if (template_key.includes('comment') || template_key.includes('reply')) {
-      return '/posts';
-    }
-    if (template_key.includes('mention')) {
-      return '/posts';
-    }
-    if (template_key.includes('post')) {
-      return '/posts';
-    }
-    if (template_key.includes('idea')) {
-      return '/ideation';
-    }
-    if (template_key.includes('startup') || template_key.includes('team')) {
-      if (metadata.startup_id) return `/startup-details/${metadata.startup_id}`;
-      return '/discover-startups';
-    }
-    if (template_key.includes('task') || template_key.includes('project')) {
-      return '/projects';
-    }
-    if (template_key.includes('invest') || template_key.includes('funding') || template_key.includes('crowdfund')) {
-      return '/crowdfunding';
-    }
-    if (template_key.includes('application')) {
-      return '/builder/my-applications';
-    }
-    if (template_key.includes('profile') || template_key.includes('follow')) {
-      if (metadata.user_id) return `/users/${metadata.user_id}`;
-      return '/user-profile';
-    }
-    if (template_key.includes('contribution') || template_key.includes('poll')) {
-      return '/contribution';
-    }
-    if (template_key.includes('welcome') || template_key.includes('account')) {
-      return '/dashboard';
+  let metadata = {};
+  if (data) {
+    if (typeof data === 'string') {
+      try {
+        metadata = JSON.parse(data);
+      } catch (e) {
+        metadata = {};
+      }
+    } else {
+      metadata = data;
     }
   }
   
-  switch (category) {
-    case 'social':
-      if (metadata.user_id) return `/users/${metadata.user_id}`;
-      return '/connections';
-    case 'message':
+  // Template-based links
+  if (template_key) {
+    // Messages -> /chat
+    if (template_key.includes('message') || template_key.includes('chat')) {
       return '/chat';
-    case 'idea':
+    }
+    
+    // Connections -> /user-profile
+    if (template_key.includes('friend') || template_key.includes('connection')) {
+      const targetUserId = metadata.user_id || metadata.userId || metadata.actor_id || metadata.actorId;
+      if (targetUserId) {
+        return `/user-profile?userId=${targetUserId}`;
+      }
+      return '/user-profile';
+    }
+    
+    // Posts -> /posts
+    if (template_key.includes('like') || template_key.includes('comment') || template_key.includes('post') || template_key.includes('reply') || template_key.includes('reaction')) {
+      return '/posts';
+    }
+    
+    // Ideas -> /ideation
+    if (template_key.includes('idea') || template_key.includes('feedback')) {
       return '/ideation';
-    case 'team':
-      if (metadata.startup_id) return `/startup-details/${metadata.startup_id}`;
+    }
+    
+    // Startups -> /startup-details/:id
+    if (template_key.includes('startup') || template_key.includes('team')) {
+      const startupId = metadata.startup_id || metadata.startupId;
+      if (startupId) return `/startup-details/${startupId}`;
       return '/discover-startups';
-    case 'event':
-      return '/dashboard';
+    }
+    
+    // Tasks/Projects -> /projects
+    if (template_key.includes('task') || template_key.includes('project')) {
+      return '/projects';
+    }
+
+    // Applications -> /builder/my-applications
+    if (template_key.includes('application')) {
+      return '/builder/my-applications';
+    }
+    
+    // Contributions -> /contribution
+    if (template_key.includes('contribution') || template_key.includes('poll')) {
+      return '/contribution';
+    }
+
+    // Mentorship -> /help
+    if (template_key.includes('mentorship') || template_key.includes('mentor')) {
+      return '/help';
+    }
+
+    // Marketplace -> /pricing
+    if (template_key.includes('marketplace') || template_key.includes('purchase') || template_key.includes('listing')) {
+      return '/pricing';
+    }
+  }
+  
+  // Category-based fallback
+  switch (category) {
+    case 'social': {
+      const targetUserId = metadata.user_id || metadata.userId || metadata.actor_id || metadata.actorId;
+      if (targetUserId) {
+        return `/user-profile?userId=${targetUserId}`;
+      }
+      return '/user-profile';
+    }
+    case 'message': return '/chat';
+    case 'idea': return '/ideation';
+    case 'team': return '/discover-startups';
     case 'financial':
+    case 'payment':
+      return '/pricing';
+    case 'crowdfunding':
       return '/crowdfunding';
     case 'mentorship':
       return '/mentor-dashboard';
     case 'account':
       return '/setting';
+    case 'newsletter':
+      return '/notifications?tab=newsletter';
     case 'system':
-      return '/dashboard';
+    case 'warning':
+      return '/notifications?tab=warning';
     default:
       return '/dashboard';
   }
@@ -203,7 +261,7 @@ const NotificationItem = ({ notification, onDelete }) => {
   } = notification;
   
   const Icon = getNotificationIcon(notification);
-  const colors = getTypeColors(type);
+  const colors = getTypeColors(type, category);
   const linkUrl = getNotificationLink(notification);
   const timeAgo = formatRelativeTime(created_at);
   
@@ -319,14 +377,15 @@ const NotificationItem = ({ notification, onDelete }) => {
       ref={itemRef}
       onClick={handleClick}
       className={`
-        relative p-4 rounded-xl border transition-all duration-200
+        relative p-4 rounded-2xl border transition-all duration-300
         ${!is_read
-          ? 'bg-gradient-to-r from-blue-950/60 to-slate-800/80 border-l-[3px] border-l-blue-400 border-t border-r border-b border-blue-500/25 shadow-sm shadow-blue-900/20'
-          : 'bg-slate-800/40 border-slate-700/40 opacity-80'
+          ? 'bg-gradient-to-r from-blue-950/60 via-slate-800/80 to-slate-800/60 border-l-[4px] border-l-blue-400 border-t border-r border-b border-blue-500/30 shadow-md shadow-blue-950/30 backdrop-blur-md'
+          : 'bg-slate-800/30 border-slate-700/40 opacity-85 backdrop-blur-sm'
         }
-        cursor-pointer hover:bg-slate-700/60 hover:opacity-100
+        cursor-pointer hover:bg-slate-700/50 hover:opacity-100 hover:shadow-lg hover:-translate-y-0.5
         group
         ${isDeleting ? 'opacity-50 pointer-events-none' : ''}
+        ${showMenu ? '!z-[99999]' : 'z-10'}
       `}
     >
       {/* Unread indicator */}
@@ -410,7 +469,7 @@ const NotificationItem = ({ notification, onDelete }) => {
           
           {/* Dropdown menu */}
           {showMenu && (
-            <div className="menu-dropdown absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
+            <div className="menu-dropdown absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-2xl z-[999999] overflow-hidden">
               {/* Mark as read/unread */}
               <button
                 onClick={handleToggleRead}

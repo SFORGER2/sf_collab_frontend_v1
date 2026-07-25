@@ -36,8 +36,8 @@ const PermissionDeniedPage = ({ onRequestAccess }) => {
   );
 };
 
-// ── ProtectedRoute (uses Outlet for nested routes) ──────────────────────
-export const ProtectedRoute = ({ requiredPermission }) => {
+// ── ProtectedRoute (supports both children and nested Route Outlets) ──────
+export const ProtectedRoute = ({ children, requiredPermission }) => {
   const location = useLocation();
   const { access_token, loading, user } = useSelector((state) => state.auth);
   const [showAccessModal, setShowAccessModal] = useState(false);
@@ -66,8 +66,8 @@ export const ProtectedRoute = ({ requiredPermission }) => {
     }
   }
 
-  // All good → render child routes via Outlet
-  return <Outlet />;
+  // Render children if provided, otherwise Outlet for layout routes
+  return children ? children : <Outlet />;
 };
 
 // ── AuthRoute (for public routes like login/signup) ──────────────────────

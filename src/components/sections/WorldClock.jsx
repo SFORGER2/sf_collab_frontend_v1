@@ -165,7 +165,7 @@ export default function WorldClock() {
         {/* Header */}
         <Card className="relative overflow-hidden bg-transparent border-zinc-800 shadow-none mb-6">
           {/* <div className="transition-all duration-1000  opacity-15"> */}
-              <img loading="lazy" src="/world_clock.jpg" className=" absolute object-fill top-0 left-0  w-full h-fit -mt-80 opacity-15" />
+              <img loading="lazy" src="/world_clock.jpg" className=" absolute object-fill top-0 left-0  w-full h-fit -mt-80 opacity-15" alt="" />
             {/* </div> */}
           <CardContent className="p-6 relative ">
             
@@ -214,7 +214,7 @@ export default function WorldClock() {
         {/* Filters */}
         <Card className="bg-transparent relative overflow-hidden border-zinc-800 shadow-none mb-6">
           <CardContent className="p-6">
-            <img loading="lazy" src="/design_2.jpg" className=" absolute object-fill top-0 left-0  w-full h-fit -mt-80 opacity-15" />
+            <img loading="lazy" src="/design_2.jpg" className=" absolute object-fill top-0 left-0  w-full h-fit -mt-80 opacity-15" alt="" />
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Search */}
               <div className="flex-1 relative">
@@ -269,7 +269,7 @@ export default function WorldClock() {
             return (
               <Card key={city} className="bg-transparent relative border-zinc-800 shadow-none hover:shadow-xl transition-all duration-300">
                 <CardContent className="p-4 md:p-6 relative">
-                  <img loading="lazy" src="/design_3.jpg" className=" absolute object-cover top-0 left-0  w-full opacity-30" />
+                  <img loading="lazy" src="/design_3.jpg" className=" absolute object-cover top-0 left-0  w-full opacity-30" alt="" />
                   {/* Location Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">

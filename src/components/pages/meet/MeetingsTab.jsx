@@ -4,40 +4,58 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
-  Video, Plus, Calendar, Clock, Users, ChevronRight,
-  FileText, Mic, Play, Archive, Search, Filter
+  Video,
+  Plus,
+  Calendar,
+  Clock,
+  Users,
+  ChevronRight,
+  FileText,
+  Mic,
+  Play,
+  Archive,
+  Search,
+  Filter,
 } from "lucide-react";
 import { meetAPI } from "@/utils/APIs/meetAPI";
 import CreateMeetingModal from "./CreateMeetingModal";
+import { AIActions, AISidebar } from "./component/sidebar";
 
 const STATUS_COLORS = {
-  scheduled:  "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  live:       "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 animate-pulse",
+  scheduled: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  live: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 animate-pulse",
   processing: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-  indexed:    "bg-zinc-700/50 text-zinc-400 border-zinc-700",
-  ended:      "bg-zinc-700/50 text-zinc-400 border-zinc-700",
-  cancelled:  "bg-red-500/20 text-red-400 border-red-500/30",
+  indexed: "bg-zinc-700/50 text-zinc-400 border-zinc-700",
+  ended: "bg-zinc-700/50 text-zinc-400 border-zinc-700",
+  cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
 };
 
 const TYPE_LABELS = {
-  startup_team:    "Team Sync",
-  mentor_session:  "Mentor Session",
-  milestone_review:"Milestone Review",
-  customer_call:   "Customer Call",
-  investor_call:   "Investor Call",
-  vision_review:   "Vision Review",
-  internal_org:    "Internal",
-  dispute_review:  "Dispute Review",
+  startup_team: "Team Sync",
+  mentor_session: "Mentor Session",
+  milestone_review: "Milestone Review",
+  customer_call: "Customer Call",
+  investor_call: "Investor Call",
+  vision_review: "Vision Review",
+  internal_org: "Internal",
+  dispute_review: "Dispute Review",
 };
 
 function formatDate(iso) {
   if (!iso) return "—";
   const d = new Date(iso);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 function formatTime(iso) {
   if (!iso) return "";
-  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function MeetingCard({ meeting, onClick }) {
@@ -49,29 +67,41 @@ function MeetingCard({ meeting, onClick }) {
       whileHover={{ scale: 1.01 }}
       onClick={onClick}
       className={`relative cursor-pointer rounded-2xl border p-4 transition-all
-        ${isLive
-          ? "bg-emerald-950/30 border-emerald-500/40 shadow-lg shadow-emerald-500/10"
-          : "bg-zinc-900/60 border-zinc-800/60 hover:border-zinc-700"
+        ${
+          isLive
+            ? "bg-emerald-950/30 border-emerald-500/40 shadow-lg shadow-emerald-500/10"
+            : "bg-zinc-900/60 border-zinc-800/60 hover:border-zinc-700"
         }`}
     >
       {isLive && (
         <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-emerald-500 rounded-full px-2.5 py-1">
           <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
-          <span className="text-[10px] font-bold text-white tracking-wide">LIVE</span>
+          <span className="text-[10px] font-bold text-white tracking-wide">
+            LIVE
+          </span>
         </div>
       )}
 
       <div className="flex items-start gap-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
-          ${isLive ? "bg-emerald-500/20" : "bg-zinc-800"}`}>
-          <Video size={18} className={isLive ? "text-emerald-400" : "text-zinc-400"} />
+        <div
+          className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+          ${isLive ? "bg-emerald-500/20" : "bg-zinc-800"}`}
+        >
+          <Video
+            size={18}
+            className={isLive ? "text-emerald-400" : "text-zinc-400"}
+          />
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <h3 className="font-semibold text-white text-sm truncate">{meeting.title}</h3>
-            <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium
-              ${STATUS_COLORS[meeting.status] || STATUS_COLORS.indexed}`}>
+            <h3 className="font-semibold text-white text-sm truncate">
+              {meeting.title}
+            </h3>
+            <span
+              className={`text-[10px] px-2 py-0.5 rounded-full border font-medium
+              ${STATUS_COLORS[meeting.status] || STATUS_COLORS.indexed}`}
+            >
               {meeting.status}
             </span>
           </div>
@@ -124,6 +154,7 @@ export default function MeetingsTab({ startupId }) {
   const [tab, setTab] = useState("upcoming");
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     fetchMeetings();
@@ -143,24 +174,27 @@ export default function MeetingsTab({ startupId }) {
   }
 
   const now = new Date();
-  const upcoming = meetings.filter(m =>
-    ["scheduled", "live"].includes(m.status) &&
-    new Date(m.scheduled_start_at) >= now
+  const upcoming = meetings.filter(
+    (m) =>
+      ["scheduled", "live"].includes(m.status) &&
+      new Date(m.scheduled_start_at) >= now,
   );
-  const past = meetings.filter(m =>
-    ["indexed", "archived", "ended", "processing"].includes(m.status)
+  const past = meetings.filter((m) =>
+    ["indexed", "archived", "ended", "processing"].includes(m.status),
   );
 
-  const filtered = (tab === "upcoming" ? upcoming : past).filter(m =>
-    m.title.toLowerCase().includes(search.toLowerCase())
+  const filtered = (tab === "upcoming" ? upcoming : past).filter((m) =>
+    m.title.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full px-6 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Meetings</h2>
+          <h2 className="text-xl font-bold text-white tracking-tight">
+            Meetings
+          </h2>
           <p className="text-sm text-zinc-500 mt-0.5">
             {upcoming.length} upcoming · {past.length} past
           </p>
@@ -179,10 +213,13 @@ export default function MeetingsTab({ startupId }) {
 
       {/* Search */}
       <div className="relative mb-4">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+        <Search
+          size={14}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
+        />
         <input
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           placeholder="Search meetings..."
           className="w-full pl-9 pr-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl
             text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
@@ -193,20 +230,23 @@ export default function MeetingsTab({ startupId }) {
       <div className="flex gap-1 mb-5 bg-zinc-900 rounded-xl p-1">
         {[
           { id: "upcoming", label: "Upcoming", count: upcoming.length },
-          { id: "past",     label: "Past",     count: past.length },
-        ].map(t => (
+          { id: "past", label: "Past", count: past.length },
+        ].map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all
-              ${tab === t.id
-                ? "bg-zinc-800 text-white"
-                : "text-zinc-500 hover:text-zinc-300"
+              ${
+                tab === t.id
+                  ? "bg-zinc-800 text-white"
+                  : "text-zinc-500 hover:text-zinc-300"
               }`}
           >
             {t.label}
-            <span className={`text-xs px-1.5 py-0.5 rounded-md
-              ${tab === t.id ? "bg-zinc-700 text-zinc-300" : "bg-zinc-800 text-zinc-600"}`}>
+            <span
+              className={`text-xs px-1.5 py-0.5 rounded-md
+              ${tab === t.id ? "bg-zinc-700 text-zinc-300" : "bg-zinc-800 text-zinc-600"}`}
+            >
               {t.count}
             </span>
           </button>
@@ -217,7 +257,10 @@ export default function MeetingsTab({ startupId }) {
       <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-none">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-20 bg-zinc-900/60 rounded-2xl animate-pulse border border-zinc-800/60" />
+            <div
+              key={i}
+              className="h-20 bg-zinc-900/60 rounded-2xl animate-pulse border border-zinc-800/60"
+            />
           ))
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -238,7 +281,7 @@ export default function MeetingsTab({ startupId }) {
           </div>
         ) : (
           <AnimatePresence>
-            {filtered.map(m => (
+            {filtered.map((m) => (
               <MeetingCard
                 key={m.id}
                 meeting={m}
@@ -249,6 +292,8 @@ export default function MeetingsTab({ startupId }) {
         )}
       </div>
 
+      <AIActions onOpenSidebar={() => setOpen(true)} />
+      <AISidebar open={open} onClose={() => setOpen(false)} />
       {/* Create Modal */}
       <AnimatePresence>
         {showCreate && (
@@ -256,7 +301,7 @@ export default function MeetingsTab({ startupId }) {
             startupId={startupId}
             onClose={() => setShowCreate(false)}
             onCreated={(newMeeting) => {
-              setMeetings(prev => [newMeeting, ...prev]);
+              setMeetings((prev) => [newMeeting, ...prev]);
               setShowCreate(false);
               navigate(`/meet/${newMeeting.id}`);
             }}

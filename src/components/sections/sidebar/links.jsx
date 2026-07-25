@@ -10,6 +10,7 @@ import {
   Wand2,
   Database,
   BookOpen,
+  Earth,
 } from "lucide-react";
 
 import { IoChatbubbles } from "react-icons/io5";
@@ -114,6 +115,7 @@ export function createLinks(unreadMessagesCount) {
       href: "/business-plan",
       label: "Other Features",
       subItems: [
+        { id: "website-generator", href: "/website-generator", label: "Website Generator", icon: <Earth size={18} /> },
         { id: "logo-generator", href: "/logo-generator", label: "Logo Generator", icon: <Wand2 size={18} /> },
         { id: "data-scraper", href: "/data-scraper", label: "Data Scraper", icon: <Database size={18} /> },
         { id: "knowledge", href: "/knowledge", label: "Knowledge", icon: <BookOpen size={18} /> },
@@ -139,7 +141,7 @@ export function getCurrentContext(pathname) {
 
   if (["/posts", "/my-posts", "/discover-users"].some((p) => pathname.startsWith(p))) return 5;
 
-  if (["/business-plan", "/logo-generator", "/data-scraper", "/knowledge"].some((p) => pathname.startsWith(p)))
+  if (["/business-plan", "/logo-generator", "/data-scraper", "/knowledge", "/website-generator"].some((p) => pathname.startsWith(p)))
     return 6;
 
   return 1;

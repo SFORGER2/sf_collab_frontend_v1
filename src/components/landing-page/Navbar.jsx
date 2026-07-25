@@ -94,7 +94,7 @@ const Navbar = () => {
         },
       });
       document.body.classList.remove('menu-open');
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = '';
     }
   }, [isOpen]);
 
@@ -104,6 +104,7 @@ const Navbar = () => {
     { href: '/pricing', name: 'Pricing' },
     { href: '/explore_section', name: 'Explore' },
     { href: '/discover-startups', name: 'Startups' },
+    { href: '/newsletters', name: 'Newsletters' },
     { href: '/team', name: 'Team' },
     { href: '/contact', name: 'Contact' },
   ];
@@ -154,14 +155,13 @@ const Navbar = () => {
       <div className="w-[65%] h-full hidden md:flex lg:flex items-center justify-end pr-10">
         <div className="relative w-full max-w-[800px] h-[450px] rounded-2xl overflow-hidden bg-black shadow-xl">
           <video
+            src={heroAssest.herovideoOne}
             muted
             autoPlay
             loop
             playsInline
             className="absolute inset-0 w-full h-full object-contain"
-          >
-            <source src={heroAssest.herovideoOne} type="video/mp4" />
-          </video>
+          />
         </div>
       </div>
 

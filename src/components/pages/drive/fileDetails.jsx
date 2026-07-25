@@ -10,6 +10,7 @@ import {
 import driveService from '@/services/driveService';
 import axios from 'axios';
 import { requestInterceptor, requestErrorInterceptor, responseInterceptor, responseErrorInterceptor } from '@/utils/APIs/interceptors';
+import AskAIButton from '@/components/pages/assistant/AskAIButton';
 
 const driveApi = axios.create({ baseURL: '/api/drive' });
 driveApi.interceptors.request.use(requestInterceptor, requestErrorInterceptor);
@@ -114,6 +115,7 @@ const FileDetailPage = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            <AskAIButton workspaceId={user?.active_workspace_id} label="Ask AI" />
             <button onClick={handleDownload}
               className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-sm transition-all">
               <Download className="w-4 h-4" /> Download

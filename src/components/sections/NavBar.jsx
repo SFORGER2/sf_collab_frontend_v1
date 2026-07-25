@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { HelpCircle, Crown, Hammer, Megaphone, Shield, Wallet } from "lucide-react";
+import { HelpCircle, Crown, Hammer, Megaphone, Shield, Wallet, BellOff } from "lucide-react";
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 import GlareHover from "../ui/GlareHover";
@@ -7,7 +7,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logoutUser } from "../../services/auth/authThunks";
 import { useDispatch, useSelector } from "react-redux";
 import AOS from 'aos';
-import 'aos/dist/aos.css'; 
+import 'aos/dist/aos.css';
 import { IoChatbubbles } from "react-icons/io5";
 import { TiThMenu } from "react-icons/ti";
 import { ShineButton } from '../lightswind/shine-button';
@@ -17,6 +17,9 @@ import { notificationAPI } from "@/utils/APIs/notificationAPI";
 import { useUnreadCounts } from "@/utils/hooks/useUnreadCounts";
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import { plotCount } from "@/utils/plotCount";
+
+import { useNotifications } from "../../contexts/NotificationContext";
+import NotificationItem from "../notifications/NotificationItem";
 import { Grid, Search, Plus, Sparkles } from 'lucide-react';
 import AppLauncher from '@/components/app-launcher/AppLauncher';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -27,13 +30,6 @@ const BellIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
   </svg>
 );
-
-const ROLE_META = {
-  founder: { label: "Founder Mode", icon: Crown },
-  builder: { label: "Builder Mode", icon: Hammer },
-  influencer: { label: "Influencer Mode", icon: Megaphone },
-  admin: { label: "Admin Mode", icon: Shield },
-};
 
 const SettingsIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,17 +49,15 @@ const LogoutIcon = () => (
   </svg>
 );
 
-
 const NavBar = ({
   isOpen,
   setIsOpen,
   isHidden = false,
-  links,                     // added
-  isAIAssistantOpen,         // added
-  toggleAIAssistant,         // added
+  links,
+  isAIAssistantOpen,
+  toggleAIAssistant,
 }) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [notifications, setNotifications] = useState([]);
   const { notifications: notifUnread, messages: msgUnread } = useUnreadCounts();
   console.log("msgUnread =", msgUnread);
   console.log("notifUnread =", notifUnread);
@@ -76,6 +70,10 @@ const NavBar = ({
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
 
+  const { notifications: rawNotifications, markAllAsRead } = useNotifications();
+  const notifications = getNotificationsWithPreferences(rawNotifications, user);
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
   const handleLogout = async () => {
     setLoaderState(true);
     try {
@@ -84,7 +82,6 @@ const NavBar = ({
         setLoaderState(false);
       }, 1000);
       dispatch(logoutUser());
-      
     } catch (err) {
       console.error("Logout error:", err);
       setLoaderState(false);
@@ -94,7 +91,7 @@ const NavBar = ({
   useEffect(() => {
     AOS.init({ duration: 800, easing: "ease-out", once: false });
   }, []);
-  
+
   // Close dropdown when clicking outside
   useEffect(() => {
     if (!activeDropdown) return;
@@ -110,46 +107,6 @@ const NavBar = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [activeDropdown]);
 
-  const fetchNotifications = async () => {
-    if (!user) return;
-
-    try {
-      const response = await notificationAPI.getAll();
-      const notificationsData = response?.notifications || [];
-      
-      const formattedNotifications = notificationsData
-        .map(notif => ({
-          id: notif.id,
-          title: notif.title,
-          text: notif.message,
-          time: notif.createdAt,
-          unread: !notif.isRead,
-          type: notif.notification_type,
-          linkUrl: notif.linkUrl
-        }));
-        
-      setNotifications(getNotificationsWithPreferences(formattedNotifications, user));
-      
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
-      if (user?.notifications) {
-        const fallback = user.notifications
-          .map(notif => ({
-            id: notif.id,
-            title: notif.title,
-            text: notif.message,
-            time: notif.createdAt,
-            unread: !notif.isRead,
-            type: notif.notification_type
-          }));
-        setNotifications(getNotificationsWithPreferences(fallback, user));
-      }
-    }
-  };
-
-  useEffect(() => {
-    fetchNotifications();
-  }, [user]);
   const location = useLocation();
 
   useEffect(() => {
@@ -157,20 +114,10 @@ const NavBar = ({
     setIsProfileOpen(false);
   }, [location]);
 
-  const markAllRead = async () => {
-    try {
-      await notificationAPI.markAllRead();
-      setNotifications(prevNotifs => prevNotifs.map(n => ({ ...n, unread: false })));
-    } catch (error) {
-      console.error("Failed to mark notifications as read:", error);
-    }
-  };
-
   if (loaderState) return (
     <nav
-      className={`flex px-6 items-center w-full h-16 justify-between relative transition-transform duration-300 will-change-transform ${
-        isHidden ? "-translate-y-full" : "translate-y-0"
-      } lg:translate-y-0`}
+      className={`flex px-6 items-center w-full h-16 justify-between relative transition-transform duration-300 will-change-transform ${isHidden ? "-translate-y-full" : "translate-y-0"
+        } lg:translate-y-0`}
       style={{ zIndex: 10000 }}
     >
       <div
@@ -179,9 +126,6 @@ const NavBar = ({
       />
     </nav>
   );
-
-  // Derived count to fall back cleanly if hook values aren't populated yet
-  const calculatedUnreadCount = notifUnread > 0 ? notifUnread : notifications.filter(n => n.unread).length;
 
   return (
     <nav className={`fixed top-0 z-100 left-0 flex px-3 sm:px-6 items-center w-full h-16 justify-between transition-transform duration-300 will-change-transform overflow-hidden ${isHidden ? "-translate-y-full" : "translate-y-0"}`}>
@@ -199,73 +143,68 @@ const NavBar = ({
       <div className="flex items-center h-full gap-1.5 sm:gap-3 z-50">
         {user ? (
           <>
-            
+
 
             {/* Search */}
-<div className="relative hidden md:block">
-  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-  <input
-    type="text"
-    placeholder="Search..."
-    className="w-48 pl-8 pr-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-[#262626] text-sm text-white placeholder-slate-400 focus:outline-none focus:border-blue-500/50"
-  />
-</div>
+            <div className="relative hidden md:block">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-48 pl-8 pr-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-[#262626] text-sm text-white placeholder-slate-400 focus:outline-none focus:border-blue-500/50"
+              />
+            </div>
 
-{/* Quick Create */}
-<DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <button className="p-2 rounded-lg hover:bg-white/10 transition-colors text-slate-300 hover:text-white">
-      <Plus size={22} />
-    </button>
-  </DropdownMenuTrigger>
-  <DropdownMenuContent className="bg-[#1a1a1a] border border-[#262626] rounded-lg">
-    <DropdownMenuItem onClick={() => navigate('/register-startup')} className="text-white hover:bg-white/10">
-      New Startup
-    </DropdownMenuItem>
-    <DropdownMenuItem onClick={() => navigate('/posts')} className="text-white hover:bg-white/10">
-      New Post
-    </DropdownMenuItem>
-  </DropdownMenuContent>
-</DropdownMenu>
+            {/* Quick Create */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 rounded-lg hover:bg-white/10 transition-colors text-slate-300 hover:text-white">
+                  <Plus size={22} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-[#1a1a1a] border border-[#262626] rounded-lg">
+                <DropdownMenuItem onClick={() => navigate('/register-startup')} className="text-white hover:bg-white/10">
+                  New Startup
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/posts')} className="text-white hover:bg-white/10">
+                  New Post
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-{/* App Launcher */}
-<AppLauncher links={links} />
+            {/* App Launcher */}
+            <AppLauncher links={links} />
 
-{/* AI Assistant */}
-<button
-  onClick={toggleAIAssistant}
-  className={`p-2 rounded-lg transition-colors ${
-    isAIAssistantOpen
-      ? 'bg-blue-600/30 text-blue-400'
-      : 'hover:bg-white/10 text-slate-300 hover:text-white'
-  }`}
->
-  <Sparkles size={22} />
-</button>
+            {/* AI Assistant */}
+            <button
+              onClick={toggleAIAssistant}
+              className={`p-2 rounded-lg transition-colors ${isAIAssistantOpen ? 'bg-blue-600/30 text-blue-400' : 'hover:bg-white/10 text-slate-300 hover:text-white'
+                }`}
+            >
+              <Sparkles size={22} />
+            </button>
 
-{/* Chat */}
-<Tippy content="Chat" placement="bottom">
-  <button
-    type="button"
-    onClick={() => navigate('/chat')}
-    className={`relative p-2 rounded-lg transition-colors ${
-      location.pathname === '/chat'
-        ? 'bg-blue-600/30 text-blue-400'
-        : 'hover:bg-white/10 text-slate-300 hover:text-white'
-    }`}
-    aria-label="Open chat"
-  >
-    <IoChatbubbles size={22} />
+            {/* Chat */}
+            <Tippy content="Chat" placement="bottom">
+              <button
+                type="button"
+                onClick={() => navigate('/chat')}
+                className={`relative p-2 rounded-lg transition-colors ${location.pathname === '/chat'
+                  ? 'bg-blue-600/30 text-blue-400'
+                  : 'hover:bg-white/10 text-slate-300 hover:text-white'
+                  }`}
+                aria-label="Open chat"
+              >
+                <IoChatbubbles size={22} />
 
-    {false && (
-  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full border border-[#0a0a0a]">
-    TEST
-  </span>
-)}
-  </button>
-</Tippy>
-
-<div id="notification-dropdown" className="relative" ref={notificationRef}>
+                {msgUnread > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full border border-[#0a0a0a]">
+                    {msgUnread > 99 ? '99+' : msgUnread}
+                  </span>
+                )}
+              </button>
+            </Tippy>
+            <div id="notification-dropdown" className="relative" ref={notificationRef}>
               {/* 🔔 NOTIFICATIONS */}
               <Tippy
                 content={
@@ -280,49 +219,34 @@ const NavBar = ({
                       <div className="p-4 border-b border-slate-700/50">
                         <div className="flex flex-wrap items-center justify-between">
                           <h3 className="text-lg font-bold text-white">Notifications</h3>
-                          {calculatedUnreadCount > 0 && (
+                          {unreadCount > 0 && (
                             <>
                               <span className="px-2.5 py-1 bg-red-600/10 text-rose-400 text-xs font-semibold rounded-full ring-1 ring-rose-500/20">
-                                {plotCount(calculatedUnreadCount)} New
+                                {plotCount(unreadCount)} New
                               </span>
-                              <span
-                                onClick={markAllRead}
-                                className="px-2.5 py-1 bg-blue-600/10 text-blue-400 text-xs font-semibold rounded-full ring-1 ring-blue-500/20 cursor-pointer">
+                              <button
+                                type="button"
+                                onClick={markAllAsRead}
+                                className="px-2.5 py-1 bg-blue-600/10 text-blue-400 text-xs font-semibold rounded-full ring-1 ring-blue-500/20 cursor-pointer hover:bg-blue-600/20"
+                              >
                                 Mark all as read
-                              </span>
+                              </button>
                             </>
                           )}
                         </div>
                       </div>
-                      <div className="max-h-80 overflow-y-auto">
+                      <div className="max-h-80 overflow-y-auto p-3 space-y-3.5 bg-slate-900/30">
                         {notifications.length === 0 ? (
-                          <p className="p-4 text-center text-slate-400 text-sm">No new notifications</p>
+                          <div className="flex flex-col items-center justify-center p-8 text-center bg-slate-900/20 border-b border-slate-800/50">
+                            <div className="p-3 rounded-full bg-slate-800/50 text-slate-500 mb-3 ring-1 ring-slate-700/50">
+                              <BellOff className="w-6 h-6" />
+                            </div>
+                            <p className="text-sm font-medium text-slate-300">No new notifications</p>
+                            <p className="text-xs text-slate-500 mt-1">When you receive alerts, they will appear here.</p>
+                          </div>
                         ) : (
                           notifications.map((notif) => (
-                            <div
-                              onClick={() => {
-                                if (notif?.linkUrl) {
-                                  navigate(notif.linkUrl)
-                                } else {
-                                  navigate('/notifications')
-                                }
-                              }}
-                              key={notif.id} className="p-4 hover:bg-slate-800/50 border-b border-slate-800/50 last:border-0 cursor-pointer">
-                              <div className="flex items-start gap-3">
-                                <div className="p-1.5 rounded-lg bg-blue-500/10 ring-1 ring-blue-500/20">
-                                  <div className="relative">
-                                    {/* FIXED: Removed the secondary global badge here */}
-                                    <BellIcon />
-                                  </div>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-md text-white font-medium">{notif.title}</p>
-                                  <p className="text-sm text-slate-400">{notif.text}</p>
-                                  <p className="text-xs text-slate-500 mt-1">{notif.time}</p>
-                                </div>
-                                {notif.unread && <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5" />}
-                              </div>
-                            </div>
+                            <NotificationItem key={notif.id} notification={notif} />
                           ))
                         )}
                       </div>
@@ -345,17 +269,17 @@ const NavBar = ({
                     setIsProfileOpen(false);
                     setIsNotificationsOpen(v => !v);
                   }}
+                  aria-label="Notifications"
+                  aria-expanded={isNotificationsOpen}
+                  aria-haspopup="true"
                   className="relative p-2 rounded-lg bg-blue-500/10 text-slate-300 hover:text-white"
                 >
-                  <div className="relative">
-                    <BellIcon />
-                    {/* FIXED: Consolidated into a single clean notification badge */}
-                    {calculatedUnreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full border border-[#0a0a0a]">
-                        {calculatedUnreadCount > 99 ? '99+' : calculatedUnreadCount}
-                      </span>
-                    )}
-                  </div>
+                  <BellIcon />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 text-xs bg-red-500 rounded-full px-1" aria-label={`${unreadCount} unread notifications`}>
+                      {plotCount(unreadCount)}
+                    </span>
+                  )}
                 </button>
               </Tippy>
             </div>
@@ -373,7 +297,7 @@ const NavBar = ({
                   >
                     <div style={{ borderRadius: '15px' }} className="w-80 overflow-hidden z-50">
                       <div className="p-4 border-b border-slate-700/50">
-                        <div className="flex items-center gap-3">
+                        <div className="w-full mx-auto bg-white/[0.02] border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl backdrop-blur-md flex items-center gap-3">
                           <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-blue-500/30">
                             <img
                               className="h-full w-full object-cover"
@@ -397,11 +321,16 @@ const NavBar = ({
                         <Link to="/help" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 rounded-lg transition-colors duration-200">
                           <HelpCircle size={18} /> <span className="text-sm font-medium">Help</span>
                         </Link>
-                        <Link to="/user-profile?page=settings" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 rounded-lg transition-colors duration-200">
+                        {user?.isAdmin && (
+                          <Link to="/admin" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 rounded-lg transition-colors duration-200">
+                            <Shield size={18} /> <span className="text-sm font-medium">Admin</span>
+                          </Link>
+                        )}
+                        <Link to="/setting" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 rounded-lg transition-colors duration-200">
                           <SettingsIcon /> <span className="text-sm font-medium">Settings</span>
                         </Link>
                       </div>
-                      <div className="p-2 border-t border-slate-700/50">
+                      <div className="p-2 border-t border-slate-700/50 bg-slate-900/50">
                         <button onClick={handleLogout} className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-colors duration-200">
                           <LogoutIcon /> <span className="text-sm font-medium">Logout</span>
                         </button>
@@ -420,21 +349,25 @@ const NavBar = ({
                     setIsNotificationsOpen(false);
                     setIsProfileOpen(v => !v);
                   }}
+                  aria-label="User profile menu"
+                  aria-expanded={isProfileOpen}
+                  aria-haspopup="true"
                   className="w-10 h-10 rounded-lg overflow-hidden"
                 >
-                  <img loading="lazy" src={getProfilePicture(user)} className="w-full h-full object-cover" alt="avatar" />
+                  <img loading="lazy" src={getProfilePicture(user)} className="w-full h-full object-cover" alt={`${user?.firstName} ${user?.lastName}`} />
                 </button>
               </Tippy>
             </div>
 
             <div className="lg:hidden border border-blue-500/20 rounded-lg">
-              <ShineButton
+              <button
                 onClick={() => setIsOpen(!isOpen)}
-                icon={<TiThMenu size={15} />}
-                size="sm"
-                className=" border border-blue-500/20 rounded-lg"
-                bgColor="linear-gradient(325deg, #2563eb 0%, #60a5fa 55%, #2563eb 90%)"
-              />
+                aria-label="Toggle mobile menu"
+                aria-expanded={isOpen}
+                className="bg-white/[0.04] border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl backdrop-blur-lg"
+              >
+                <TiThMenu size={15} />
+              </button>
             </div>
           </>
         ) : (
@@ -447,8 +380,8 @@ const NavBar = ({
             </button>
           </div>
         )}
-      </div>
-    </nav>
+      </div >
+    </nav >
   );
 };
 

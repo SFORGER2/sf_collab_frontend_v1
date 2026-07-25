@@ -131,7 +131,7 @@ export default function MobileSidebarContent({
                     className="flex flex-col gap-0.5 mt-1 ml-4 pl-3 border-l border-zinc-700/50"
                   >
                     {(link.subItems || []).map((subItem) => {
-                      const isSubActive = location.pathname === subItem.href && location.pathname !== "/dashboard";
+                      const isSubActive = location.pathname === subItem.href;
                       const isSubUpcoming = subItem.isUpcoming;
 
                       return (
@@ -196,7 +196,7 @@ export default function MobileSidebarContent({
         )}
       </motion.div>
 
-      <BottomLinks onLinkClick={onLinkClick} callback={callback} />
+      <BottomLinks onLinkClick={onLinkClick} callback={callback} isHovered={true} />
     </div>
   );
 }

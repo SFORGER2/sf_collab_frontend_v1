@@ -61,6 +61,10 @@ export const getStartupWorkspaceModules = (startupId) => [
     label: 'Mentors',
     icon: Sparkles,
     href: `/startup-workspace/${startupId}/mentors`,
+    internal: true,
+    group: 'Growth',
+  },
+  {
     id: 'sw-candidates',
     label: 'Candidates',
     icon: Users,
