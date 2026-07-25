@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { ArrowLeft, Save, User, Bell, Shield } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useSearchParams } from 'react-router-dom';  // ← added useSearchParams
 import NotificationSection from './NotificationSection';
 import PrivacySection from './PrivacySection';
 import AppearanceSection from './AppearanceSection';
@@ -13,12 +14,11 @@ import ProfileSection from './ProfileSection';
 import { updateUser as updateUserSlice } from '@/services/auth/authSlice';
 import { usersAPI } from '@/utils/APIs/userAPI';
 import { authAPI } from '@/utils/APIs/authAPI';
-import { useNavigate } from 'react-router-dom';
 
 const ProfileSettings = ({ back, activeSection: propActiveSection, initialActiveSection }) => {
   const navigate = useNavigate();
-  const [queryParams] = useSearchParams()
-  const page = queryParams.get('page')
+  const [queryParams] = useSearchParams();  // now defined
+  const page = queryParams.get('page');
   const [activeSection, setActiveSection] = useState(propActiveSection || initialActiveSection || page || 'profile');
 
   useEffect(() => {
@@ -101,23 +101,17 @@ const ProfileSettings = ({ back, activeSection: propActiveSection, initialActive
   ];
 
   // ── API update helper ─────────────────────────────────────────────
-  // In ProfileSettings.jsx
   const updateUser = async (payload, isMultipart = false) => {
     const contentType = isMultipart ? 'multipart/form-data' : 'application/json';
     try {
       const response = await usersAPI.updateProfile(user.id, payload, access_token, contentType);
-      // response might be: { data: { user: ... } } or { success: true, data: { user: ... } }
-      const result = response.data || response; // unwrap if needed
-
-      // If there's an error flag, throw it
+      const result = response.data || response;
       if (result.error) {
         throw new Error(result.error);
       }
       if (result.success === false) {
         throw new Error(result.message || 'Update failed');
       }
-
-      // Extract user from either structure
       const updatedUser = result.user || result.data?.user || null;
       if (updatedUser) {
         dispatch(updateUserSlice(updatedUser));
@@ -126,7 +120,6 @@ const ProfileSettings = ({ back, activeSection: propActiveSection, initialActive
       }
       return result;
     } catch (error) {
-      // rethrow so the caller can handle it
       throw error;
     }
   };
@@ -137,7 +130,6 @@ const ProfileSettings = ({ back, activeSection: propActiveSection, initialActive
     form.append('profile_picture', file);
     try {
       const result = await updateUser(form, true);
-      // Extract updated picture URL from the result
       const updatedUser = result.user || result.data?.user || null;
       const pictureUrl = updatedUser?.profile?.picture || updatedUser?.profile_picture;
       if (pictureUrl) {
@@ -186,7 +178,6 @@ const ProfileSettings = ({ back, activeSection: propActiveSection, initialActive
       }
 
       back(); // go back to profile page
-      // Do NOT reload – Redux state is already updated
     } catch (e) {
       toast.error(e.message || 'Update failed');
     } finally {

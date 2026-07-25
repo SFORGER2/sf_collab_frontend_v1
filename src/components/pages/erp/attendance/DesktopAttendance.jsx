@@ -1,15 +1,14 @@
 /**
- * AttendancePage.jsx — SFCollab ERP
- * Covers: My Attendance (clock-in/out + history) + Workspace Attendance (admin)
- * API wiring: attendance.py routes at /api/attendance/*
- * Auth: uses existing JWT via interceptors.js (requestInterceptor / responseInterceptor)
+ * DesktopAttendance.jsx — SFCollab ERP
+ * Personal + Workspace attendance (desktop)
+ * Uses active_workspace_id from Redux user.
  */
 
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
 
-// ── Shared interceptor setup (match existing SFCollab pattern) ────────────────
+// ── Shared interceptor setup ─────────────────────────────────────────────────
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../../utils/APIs/interceptors";
 
 const api = axios.create({ baseURL: "/api" });
@@ -39,15 +38,14 @@ const statusLabel = {
 };
 
 // ═════════════════════════════════════════════════════════════════════════════
-// MY ATTENDANCE PAGE
+// MY ATTENDANCE PAGE (Personal)
 // ═════════════════════════════════════════════════════════════════════════════
 export function MyAttendancePage() {
-  const { user } = useSelector((s) => s.auth);
-  // Use active workspace or fallback to user.id
-  const workspaceId = user?.active_workspace_id || user?.id;
+  const user = useSelector((state) => state.auth.user);
+  const workspaceId = user?.active_workspace_id;   // ✅ correct
 
-  const [today, setToday] = useState(null);       // GET /api/attendance/today-status
-  const [history, setHistory] = useState([]);     // GET /api/attendance/history
+  const [today, setToday] = useState(null);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -65,7 +63,7 @@ export function MyAttendancePage() {
       const { data } = await api.get("/attendance/today-status", {
         params: { workspace_id: workspaceId },
       });
-      setToday(data);
+      setToday(data.data || {});
     } catch (e) {
       flash(e?.response?.data?.error || "Could not load today's status", true);
     }
@@ -77,8 +75,10 @@ export function MyAttendancePage() {
       const { data } = await api.get("/attendance/history", {
         params: { workspace_id: workspaceId, limit: 30 },
       });
-      setHistory(data.records || []);
-    } catch {/* silent */ }
+      setHistory(data.data?.records || []);
+    } catch (e) {
+      // silent
+    }
   }, [workspaceId]);
 
   useEffect(() => {
@@ -121,16 +121,13 @@ export function MyAttendancePage() {
     <div style={styles.page}>
       <PageHeader title="My Attendance" sub={new Date().toDateString()} />
 
-      {/* Flash messages */}
       {notice && <Banner type="success">{notice}</Banner>}
       {error  && <Banner type="error">{error}</Banner>}
 
-      {/* Holiday notice */}
       {isHoliday && (
         <Banner type="info">🎉 Today is a holiday: <strong>{today.holiday?.name}</strong>. No attendance required.</Banner>
       )}
 
-      {/* Today's card */}
       <div style={styles.grid2}>
         <StatCard
           label="Today's Status"
@@ -146,7 +143,6 @@ export function MyAttendancePage() {
         />
       </div>
 
-      {/* Clock buttons */}
       <div style={styles.card}>
         <h3 style={styles.cardTitle}>Clock Actions</h3>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -173,7 +169,6 @@ export function MyAttendancePage() {
         )}
       </div>
 
-      {/* History table */}
       <div style={styles.card}>
         <h3 style={styles.cardTitle}>Attendance History</h3>
         <AttendanceTable records={history} />
@@ -187,9 +182,7 @@ export function MyAttendancePage() {
 // ═════════════════════════════════════════════════════════════════════════════
 export function WorkspaceAttendancePage() {
   const { user } = useSelector((s) => s.auth);
-
-  // Use active workspace or fallback to user.id
-  const workspaceId = user?.active_workspace_id || user?.id;
+  const workspaceId = user?.active_workspace_id || user?.id; // fallback to user.id if none
 
   const [records, setRecords] = useState([]);
   const [summary, setSummary] = useState(null);
@@ -216,7 +209,7 @@ export function WorkspaceAttendancePage() {
         }),
       ]);
       setRecords(recs.data.records || []);
-      setSummary(sum.data);
+      setSummary(sum.data.data);
     } catch (e) {
       flash(e?.response?.data?.error || "Failed to load workspace attendance", true);
     } finally {
@@ -247,7 +240,6 @@ export function WorkspaceAttendancePage() {
       {notice && <Banner type="success">{notice}</Banner>}
       {error  && <Banner type="error">{error}</Banner>}
 
-      {/* Summary cards */}
       {summary && (
         <div style={styles.grid4}>
           <StatCard label="Present" value={summary.present ?? "—"} accent="#22c55e" />
@@ -257,7 +249,6 @@ export function WorkspaceAttendancePage() {
         </div>
       )}
 
-      {/* Filters & actions */}
       <div style={{ ...styles.card, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         <label style={styles.label}>Date</label>
         <input
@@ -272,7 +263,6 @@ export function WorkspaceAttendancePage() {
         </button>
       </div>
 
-      {/* Table */}
       <div style={styles.card}>
         <h3 style={styles.cardTitle}>Member Attendance — {fmtDate(dateFilter)}</h3>
         {loading ? <PageLoader label="Loading…" inline /> : <AttendanceTable records={records} showUser />}
@@ -282,7 +272,7 @@ export function WorkspaceAttendancePage() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Shared sub-components
+// Shared sub‑components (unchanged)
 // ─────────────────────────────────────────────────────────────────────────────
 
 function AttendanceTable({ records, showUser = false }) {

@@ -51,7 +51,7 @@ export function ERPLayout({ activeRole, userRoles, user }) {
   const dashboardItem = {
     id: 'erp-dashboard',
     label: 'Dashboard',
-    href: '/erp',
+    href: '/erp/member-dashboard',
     icon: <LayoutDashboard size={18} />,
   };
 
@@ -75,7 +75,15 @@ export function ERPLayout({ activeRole, userRoles, user }) {
     loadWorkspaces();
   }, []);
 
-  const workspaceName = user?.activeWorkspace?.name || (workspaces.length > 0 ? workspaces[0].name : 'My Workspace');
+  const workspaceName = useMemo(() => {
+  if (!workspaces.length) return 'My Workspace';
+  const activeId = user?.active_workspace_id;
+  if (activeId) {
+    const activeWorkspace = workspaces.find(w => w.id === activeId);
+    if (activeWorkspace) return activeWorkspace.name;
+  }
+  return workspaces[0].name;
+}, [workspaces, user?.active_workspace_id]);
 
   // If loading, show spinner
   if (loading) {
