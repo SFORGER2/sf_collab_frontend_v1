@@ -16,9 +16,10 @@ import { useNavigate } from 'react-router-dom';
 import {
   Search, Star, Users, Briefcase, Clock, CheckCircle,
   X, ChevronRight, Loader2, ArrowLeft, DollarSign,
-  Sparkles, Shield, Globe, Linkedin, MessageSquare,
+  Sparkles, Shield, Globe, MessageSquare,
   Filter, Plus, AlertCircle, TrendingUp,
 } from 'lucide-react';
+import { FaLinkedin } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
@@ -633,7 +634,7 @@ const MentorProfileModal = ({ mentor, onClose, onRequest, onDelete, currentUserI
                   <a href={mentor.linkedin_url} target="_blank" rel="noopener noreferrer"
                     onClick={e => e.stopPropagation()}
                     className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors">
-                    <Linkedin size={13} /> LinkedIn
+                    <FaLinkedin size={13} /> LinkedIn
                   </a>
                 )}
                 {mentor.website_url && (

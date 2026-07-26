@@ -1,23 +1,54 @@
-// src/components/pages/erp/AdminRevenuePools.jsx
+// src/components/pages/erp/AdminRevenuePools.jsx — REDESIGNED
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  DollarSign,
+  Plus,
+  Eye,
+  Calendar,
+  X,
+  TrendingUp,
+  Lock,
+  Clock,
+  CheckCircle2,
+  BarChart2,
+  ArrowUpRight,
+} from "lucide-react";
+
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
-import { Plus, Eye, Calendar, DollarSign, X } from "lucide-react";
+import { ERPPageHeader } from "../../erp/shared/ERPPageHeader";
+import { ERPStatusBadge } from "../../erp/shared/ERPStatusBadge";
+import { ERPEmptyState } from "../../erp/shared/ERPEmptyState";
+import { ERPSpinner } from "../../erp/shared/ERPLoadingSkeleton";
+import { ERPBanner } from "../../erp/shared/ERPBanner";
 
 const api = axios.create({ baseURL: "/api/revenue-pool" });
 api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
+const fmt$ = (v) => (v != null ? `$${Number(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—");
+
+const STATUS_ICONS = {
+  open: <Clock size={13} />,
+  calculating: <BarChart2 size={13} />,
+  pending_admin_review: <Eye size={13} />,
+  locked: <Lock size={13} />,
+  paid: <CheckCircle2 size={13} />,
+};
+
 export default function AdminRevenuePools() {
   const { user } = useSelector((s) => s.auth);
   const workspaceId = user?.active_workspace_id || 1;
   const navigate = useNavigate();
+
   const [pools, setPools] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     period_start: "",
     period_end: "",
@@ -27,7 +58,6 @@ export default function AdminRevenuePools() {
     manual_exclusions: 0,
     team_share_percentage: 40,
   });
-  const [submitting, setSubmitting] = useState(false);
 
   const loadPools = useCallback(async () => {
     setLoading(true);
@@ -37,21 +67,14 @@ export default function AdminRevenuePools() {
       setPools(data.pools || []);
     } catch (err) {
       setError(err?.response?.data?.error || "Failed to load revenue pools");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, [workspaceId]);
 
-  useEffect(() => {
-    loadPools();
-  }, [loadPools]);
+  useEffect(() => { loadPools(); }, [loadPools]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!form.period_start || !form.period_end) {
-      alert("Period start and end are required");
-      return;
-    }
+    if (!form.period_start || !form.period_end) return;
     setSubmitting(true);
     try {
       await api.post(`/workspaces/${workspaceId}/revenue-pools`, {
@@ -63,210 +86,223 @@ export default function AdminRevenuePools() {
         manual_exclusions: parseFloat(form.manual_exclusions),
         team_share_percentage: parseFloat(form.team_share_percentage),
       });
-      setShowCreateModal(false);
-      setForm({
-        period_start: "",
-        period_end: "",
-        gross_revenue: 0,
-        refunds: 0,
-        chargebacks: 0,
-        manual_exclusions: 0,
-        team_share_percentage: 40,
-      });
+      setShowModal(false);
+      setForm({ period_start: "", period_end: "", gross_revenue: 0, refunds: 0, chargebacks: 0, manual_exclusions: 0, team_share_percentage: 40 });
       loadPools();
     } catch (err) {
-      alert(err?.response?.data?.error || "Creation failed");
-    } finally {
-      setSubmitting(false);
-    }
+      setError(err?.response?.data?.error || "Creation failed");
+    } finally { setSubmitting(false); }
   };
 
-  const statusColor = {
-    open: "#22c55e",
-    calculating: "#f59e0b",
-    pending_admin_review: "#6366f1",
-    locked: "#ef4444",
-    paid: "#6b7280",
-  };
-
-  // Prevent body scroll when modal is open
   useEffect(() => {
-    if (showCreateModal) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [showCreateModal]);
+    document.body.style.overflow = showModal ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [showModal]);
+
+  // Summary metrics
+  const totalPool = pools.reduce((sum, p) => sum + (p.team_pool_amount || 0), 0);
+  const openPools = pools.filter(p => p.status === "open").length;
+  const paidPools = pools.filter(p => p.status === "paid").length;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Revenue Pools</h1>
-            <p className="text-zinc-400 mt-1">Manage workspace revenue share periods</p>
-          </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg font-semibold hover:bg-gray-200"
-          >
-            <Plus size={18} /> New Pool
-          </button>
-        </div>
+    <div className="min-h-screen bg-[#0a0a0b] text-white">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        {error && <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-6">{error}</div>}
+        <ERPPageHeader
+          icon={<DollarSign size={20} />}
+          title="Revenue Pools"
+          description="Manage workspace revenue share periods and team payouts"
+          breadcrumbs={[{ label: "ERP" }, { label: "Admin" }, { label: "Revenue Pools" }]}
+          actions={
+            <motion.button
+              whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold"
+              style={{ background: "linear-gradient(135deg, #6366f1, #4f46e5)", boxShadow: "0 4px 16px rgba(99,102,241,0.35)", color: "#fff" }}
+            >
+              <Plus size={15} />
+              New Pool
+            </motion.button>
+          }
+        />
 
-        {loading ? (
-          <div className="text-center py-20">Loading...</div>
-        ) : pools.length === 0 ? (
-          <div className="text-center py-20 text-zinc-500">No revenue pools yet. Create your first pool.</div>
-        ) : (
-          <div className="grid gap-4">
-            {pools.map((pool) => (
-              <div
-                key={pool.id}
-                className="bg-[#121215] border border-zinc-800 rounded-2xl p-6 hover:border-zinc-600 transition-colors cursor-pointer"
-                onClick={() => navigate(`/erp/admin/revenue-pools/${pool.id}`)}
+        <AnimatePresence>
+          {error && <ERPBanner message={error} type="error" onDismiss={() => setError(null)} />}
+        </AnimatePresence>
+
+        {/* Summary KPIs */}
+        {!loading && pools.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+            {[
+              { label: "Total Team Pool", value: fmt$(totalPool), accent: "#10b981", icon: <TrendingUp size={15} /> },
+              { label: "Open Pools", value: openPools, accent: "#6366f1", icon: <Clock size={15} /> },
+              { label: "Paid Out", value: paidPools, accent: "#f59e0b", icon: <CheckCircle2 size={15} /> },
+              { label: "Total Pools", value: pools.length, accent: "#06b6d4", icon: <BarChart2 size={15} /> },
+            ].map((kpi) => (
+              <motion.div
+                key={kpi.label}
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                whileHover={{ translateY: -2 }}
+                className="relative overflow-hidden p-5 rounded-2xl group"
+                style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)", borderTop: `2px solid ${kpi.accent}` }}
               >
-                <div className="flex flex-wrap justify-between items-start gap-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <Calendar size={18} className="text-zinc-400" />
-                      <span className="text-sm font-medium">
-                        {new Date(pool.period_start).toLocaleDateString()} – {new Date(pool.period_end).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 mt-2">
-                      <div className="flex items-center gap-1">
-                        <DollarSign size={16} className="text-emerald-400" />
-                        <span className="text-lg font-semibold">${pool.team_pool_amount.toLocaleString()}</span>
-                      </div>
-                      <div className="text-xs text-zinc-500">Team pool ({(pool.team_share_percentage)}%)</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="px-3 py-1 rounded-full text-xs font-semibold"
-                      style={{ background: `${statusColor[pool.status]}20`, color: statusColor[pool.status] }}
-                    >
-                      {pool.status}
-                    </span>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); navigate(`/erp/admin/revenue-pools/${pool.id}`); }}
-                      className="p-2 bg-zinc-800 rounded-lg hover:bg-zinc-700"
-                    >
-                      <Eye size={16} />
-                    </button>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                  style={{ background: `radial-gradient(ellipse at top left, ${kpi.accent}08, transparent 70%)` }} />
+                <div className="relative flex items-start justify-between mb-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">{kpi.label}</p>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${kpi.accent}18`, color: kpi.accent }}>
+                    {kpi.icon}
                   </div>
                 </div>
-              </div>
+                <p className="text-2xl font-bold tracking-tight" style={{ color: kpi.accent }}>{kpi.value}</p>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {/* Pool list */}
+        {loading ? (
+          <ERPSpinner label="Loading pools…" />
+        ) : pools.length === 0 ? (
+          <ERPEmptyState
+            icon={<DollarSign size={28} />}
+            title="No revenue pools yet"
+            sub="Create your first revenue pool to start tracking team earnings."
+            action={
+              <button onClick={() => setShowModal(true)} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 text-white">
+                <Plus size={14} /> Create First Pool
+              </button>
+            }
+          />
+        ) : (
+          <div className="space-y-3">
+            {pools.map((pool, i) => (
+              <motion.div
+                key={pool.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                whileHover={{ translateY: -1 }}
+                onClick={() => navigate(`/erp/admin/revenue-pools/${pool.id}`)}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5 rounded-2xl cursor-pointer transition-all group"
+                style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                {/* Left */}
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                    {STATUS_ICONS[pool.status] || <DollarSign size={14} />}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <span className="text-xs text-zinc-400 font-medium flex items-center gap-1.5">
+                        <Calendar size={11} />
+                        {new Date(pool.period_start).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
+                        {" — "}
+                        {new Date(pool.period_end).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl font-bold text-white">{fmt$(pool.team_pool_amount)}</span>
+                      <span className="text-xs text-zinc-500">Team pool ({pool.team_share_percentage}%)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right */}
+                <div className="flex items-center gap-3 sm:ml-auto">
+                  <ERPStatusBadge status={pool.status} />
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    onClick={(e) => { e.stopPropagation(); navigate(`/erp/admin/revenue-pools/${pool.id}`); }}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  >
+                    <ArrowUpRight size={14} />
+                  </motion.div>
+                </div>
+              </motion.div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Improved Modal – centered, with scroll lock, high z-index */}
-      {showCreateModal && (
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
-          onClick={() => setShowCreateModal(false)}
-        >
-          <div
-            className="bg-[#1a1a1a] border border-zinc-800 rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+      {/* ── Create Pool Modal ── */}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-xl p-6"
+            onClick={() => setShowModal(false)}
           >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Create Revenue Pool</h2>
-              <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-white">
-                <X size={20} />
-              </button>
-            </div>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Period Start</label>
-                <input
-                  type="date"
-                  value={form.period_start}
-                  onChange={(e) => setForm({ ...form, period_start: e.target.value })}
-                  required
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Period End</label>
-                <input
-                  type="date"
-                  value={form.period_end}
-                  onChange={(e) => setForm({ ...form, period_end: e.target.value })}
-                  required
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Gross Revenue ($)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.gross_revenue}
-                  onChange={(e) => setForm({ ...form, gross_revenue: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Refunds ($)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.refunds}
-                  onChange={(e) => setForm({ ...form, refunds: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Chargebacks ($)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.chargebacks}
-                  onChange={(e) => setForm({ ...form, chargebacks: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Manual Exclusions ($)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.manual_exclusions}
-                  onChange={(e) => setForm({ ...form, manual_exclusions: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Team Share (%)</label>
-                <input
-                  type="number"
-                  step="1"
-                  value={form.team_share_percentage}
-                  onChange={(e) => setForm({ ...form, team_share_percentage: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white"
-                />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 py-2 bg-zinc-700 rounded-lg">
-                  Cancel
-                </button>
-                <button type="submit" disabled={submitting} className="flex-1 py-2 bg-blue-600 rounded-lg font-semibold disabled:opacity-50">
-                  {submitting ? "Creating..." : "Create"}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl"
+              style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.08)" }}
+            >
+              <div className="flex items-center justify-between px-6 py-5 sticky top-0 z-10 rounded-t-2xl" style={{ background: "#111115", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                    <DollarSign size={15} className="text-indigo-400" />
+                  </div>
+                  <h2 className="text-base font-bold text-white">Create Revenue Pool</h2>
+                </div>
+                <button onClick={() => setShowModal(false)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors">
+                  <X size={14} />
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+
+              <form onSubmit={handleCreate} className="px-6 py-6 space-y-4">
+                {[
+                  { label: "Period Start", key: "period_start", type: "date" },
+                  { label: "Period End",   key: "period_end",   type: "date" },
+                  { label: "Gross Revenue ($)", key: "gross_revenue", type: "number", step: "0.01" },
+                  { label: "Refunds ($)",       key: "refunds",       type: "number", step: "0.01" },
+                  { label: "Chargebacks ($)",   key: "chargebacks",   type: "number", step: "0.01" },
+                  { label: "Manual Exclusions ($)", key: "manual_exclusions", type: "number", step: "0.01" },
+                  { label: "Team Share (%)", key: "team_share_percentage", type: "number", step: "1" },
+                ].map((f) => (
+                  <div key={f.key}>
+                    <label className="block text-[10px] font-semibold uppercase tracking-widest text-zinc-500 mb-2">{f.label}</label>
+                    <input
+                      type={f.type}
+                      step={f.step}
+                      value={form[f.key]}
+                      onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                      required={f.key === "period_start" || f.key === "period_end"}
+                      className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all"
+                      style={{ background: "#1a1a20", border: "1px solid rgba(255,255,255,0.07)", color: "#e5e7eb" }}
+                    />
+                  </div>
+                ))}
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition-colors"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  >
+                    Cancel
+                  </button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                    style={{ background: "linear-gradient(135deg, #6366f1, #4f46e5)", color: "#fff", opacity: submitting ? 0.7 : 1 }}
+                  >
+                    {submitting ? "Creating…" : "Create Pool"}
+                  </motion.button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

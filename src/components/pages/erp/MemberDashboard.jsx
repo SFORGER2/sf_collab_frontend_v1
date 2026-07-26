@@ -2,8 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { motion } from "framer-motion";
+import { Clock, AlertTriangle, CheckCircle, FileText, DollarSign, Star, LayoutDashboard } from "lucide-react";
+
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
-import { Clock, AlertTriangle, CheckCircle, FileText, DollarSign, Star } from "lucide-react";
+import { ERPPageHeader } from "../../erp/shared/ERPPageHeader";
+import { ERPStatCard } from "../../erp/shared/ERPStatCard";
+import { ERPLoadingSkeleton } from "../../erp/shared/ERPLoadingSkeleton";
 import AssistantFAB from "@/components/common/AssistantFAB";
 
 const tasksApi = axios.create({ baseURL: "/api/erp-tasks" });
@@ -35,49 +40,34 @@ export default function MemberDashboard() {
     if (!workspaceId || !userId) return;
     setLoading(true);
     try {
-      // 1. Fetch tasks assigned to the user
-      const tasksRes = await tasksApi.get("/list", {
-        params: { workspace_id: workspaceId, assigned_to: userId }
-      });
+      const tasksRes = await tasksApi.get("/list", { params: { workspace_id: workspaceId, assigned_to: userId } });
       const tasksData = tasksRes.data?.data?.tasks || tasksRes.data?.tasks || [];
       setTasks(tasksData);
 
-      // 2. Fetch today's daily update
-      const updatesRes = await updatesApi.get("/my", {
-        params: { workspace_id: workspaceId, limit: 1 }
-      });
+      const updatesRes = await updatesApi.get("/my", { params: { workspace_id: workspaceId, limit: 1 } });
       const updates = updatesRes.data?.data?.records || updatesRes.data?.records || [];
       const todayStr = new Date().toISOString().split("T")[0];
       const today = updates.find(u => u.date === todayStr);
       setTodayUpdate(today || null);
 
-      // 3. Fetch unresolved warnings
-      const alertsRes = await alertsApi.get("/list", {
-        params: { workspace_id: workspaceId, resolved: false }
-      });
+      const alertsRes = await alertsApi.get("/list", { params: { workspace_id: workspaceId, resolved: false } });
       const alertsData = alertsRes.data?.data?.alerts || alertsRes.data?.alerts || [];
       setWarnings(alertsData);
 
-      // 4. Calculate points from approved tasks
       const totalPoints = tasksData.reduce((sum, t) => sum + (t.approved_points || 0), 0);
       setPoints(totalPoints);
 
-      // 5. Fetch all payouts for the user
       const payoutApi = axios.create({ baseURL: "/api/payout" });
       payoutApi.interceptors.request.use(requestInterceptor);
       payoutApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
       try {
         const payoutRes = await payoutApi.get(`/workspaces/${workspaceId}/payouts/me`);
         const payouts = payoutRes.data?.data || [];
-        // Current estimated payout (pending or approved)
         const current = payouts.find(p => p.status === "approved" || p.status === "pending" || p.status === "pending_review");
         if (current) setEstimatedPayout(current.final_payout_amount);
-        // Total amount paid (sum of all paid payouts)
         const paidSum = payouts.reduce((sum, p) => sum + (p.status === "paid" ? (p.final_payout_amount || 0) : 0), 0);
         setTotalPaid(paidSum);
-      } catch (err) {
-        // No payouts yet – ignore
-      }
+      } catch (err) {}
     } catch (err) {
       console.error("Failed to load dashboard data", err);
     } finally {
@@ -85,126 +75,126 @@ export default function MemberDashboard() {
     }
   }, [workspaceId, userId]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  // Task counts
   const todoTasks = tasks.filter(t => t.status === "todo");
   const inProgressTasks = tasks.filter(t => t.status === "in_progress");
   const doneTasks = tasks.filter(t => t.status === "done" || t.status === "approved");
 
-  if (loading) return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">Loading...</div>;
+  if (loading) return <div className="min-h-screen bg-[#0a0a0b]"><ERPLoadingSkeleton /></div>;
 
   return (
     <>
-      <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Member Dashboard</h1>
-        <p className="text-zinc-400 mb-8">Your workspace overview</p>
+      <div className="min-h-screen bg-[#0a0a0b] text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <ERPPageHeader
+            icon={<LayoutDashboard size={20} />}
+            title="Member Dashboard"
+            description="Your personal workspace overview, tasks, and alerts."
+            breadcrumbs={[{ label: "ERP" }, { label: "My Dashboard" }]}
+          />
 
-        {/* Stats Row – now 5 cards, responsive grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <StatCard icon={CheckCircle} label="Points" value={points} accent="#22c55e" />
-          <StatCard icon={DollarSign} label="Est. Payout" value={`$${estimatedPayout?.toFixed(2) || "0.00"}`} accent="#f59e0b" />
-          <StatCard icon={DollarSign} label="Total Paid" value={`$${totalPaid.toFixed(2)}`} accent="#06b6d4" />
-          <StatCard icon={AlertTriangle} label="Open Warnings" value={warnings.length} accent="#ef4444" />
-          <StatCard icon={Clock} label="Tasks Done" value={doneTasks.length} accent="#6366f1" />
-        </div>
-
-        {/* Tasks Section (unchanged) */}
-        <div className="bg-[#121215] border border-zinc-800 rounded-2xl p-6 mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">My Tasks</h2>
-            <Link to="/erp/tasks" className="text-sm text-blue-400 hover:text-blue-300">View All →</Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <TaskColumn title="To Do" tasks={todoTasks} color="#3b82f6" />
-            <TaskColumn title="In Progress" tasks={inProgressTasks} color="#f59e0b" />
-            <TaskColumn title="Done" tasks={doneTasks} color="#22c55e" />
-          </div>
-        </div>
-
-        {/* Daily Update & Warnings Side by Side (unchanged) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Daily Update Card */}
-          <div className="bg-[#121215] border border-zinc-800 rounded-2xl p-6">
-            <h2 className="text-xl font-semibold mb-4">Today's Update</h2>
-            {todayUpdate ? (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Star className="w-5 h-5 text-yellow-500" />
-                  <span className="text-sm">Progress: {todayUpdate.progress_rating}/5</span>
-                </div>
-                <p className="text-zinc-300 mb-2">{todayUpdate.today_work}</p>
-                <p className="text-sm text-zinc-500">Next: {todayUpdate.next_plan}</p>
-                {todayUpdate.blockers && <p className="text-sm text-red-400 mt-2">Blockers: {todayUpdate.blockers}</p>}
-              </div>
-            ) : (
-              <div className="text-center py-6">
-                <FileText className="w-12 h-12 text-zinc-600 mx-auto mb-2" />
-                <p className="text-zinc-500">No update yet today.</p>
-                <Link to="/erp/updates" className="inline-block mt-3 text-blue-400 hover:text-blue-300">Log Update →</Link>
-              </div>
-            )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-6 mb-8">
+            <ERPStatCard title="Total Points" value={points.toLocaleString()} icon={<CheckCircle size={18} className="text-emerald-500" />} accentColor="#10b981" />
+            <ERPStatCard title="Est. Payout" value={`$${estimatedPayout?.toFixed(2) || "0.00"}`} icon={<DollarSign size={18} className="text-amber-500" />} accentColor="#f59e0b" />
+            <ERPStatCard title="Total Paid" value={`$${totalPaid.toFixed(2)}`} icon={<DollarSign size={18} className="text-cyan-500" />} accentColor="#06b6d4" />
+            <ERPStatCard title="Open Warnings" value={warnings.length} icon={<AlertTriangle size={18} className="text-red-500" />} accentColor="#ef4444" />
+            <ERPStatCard title="Tasks Done" value={doneTasks.length} icon={<Clock size={18} className="text-indigo-500" />} accentColor="#6366f1" />
           </div>
 
-          {/* Warnings Card */}
-          <div className="bg-[#121215] border border-zinc-800 rounded-2xl p-6">
-            <h2 className="text-xl font-semibold mb-4">Open Warnings</h2>
-            {warnings.length === 0 ? (
-              <div className="text-center py-6">
-                <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-2" />
-                <p className="text-zinc-500">No active warnings</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {warnings.slice(0, 5).map(w => (
-                  <div key={w.id} className="border-l-4 border-red-500 bg-zinc-900/50 p-3 rounded-r-lg">
-                    <p className="text-sm font-medium text-red-400">{w.type?.replace(/_/g, " ")}</p>
-                    <p className="text-xs text-zinc-400">{w.message}</p>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-6 rounded-2xl bg-[#111115] border border-white/5 mb-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-base font-bold flex items-center gap-2"><CheckCircle size={18} className="text-indigo-400" /> My Tasks</h2>
+              <Link to="/erp/tasks" className="text-xs font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-300 transition-colors">View All →</Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <TaskColumn title="To Do" tasks={todoTasks} color="#3b82f6" />
+              <TaskColumn title="In Progress" tasks={inProgressTasks} color="#f59e0b" />
+              <TaskColumn title="Done / Approved" tasks={doneTasks} color="#10b981" />
+            </div>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="p-6 rounded-2xl bg-[#111115] border border-white/5">
+              <h2 className="text-base font-bold mb-6 flex items-center gap-2"><FileText size={18} className="text-amber-400" /> Today's Update</h2>
+              {todayUpdate ? (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Star className="w-5 h-5 text-yellow-500" />
+                    <span className="text-sm font-semibold">Progress: {todayUpdate.progress_rating}/5</span>
                   </div>
-                ))}
-                {warnings.length > 5 && <Link to="/erp/alerts" className="text-xs text-blue-400">+{warnings.length - 5} more</Link>}
-              </div>
-            )}
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">What I Did Today</h4>
+                      <p className="text-sm text-zinc-300 bg-zinc-900/50 p-3 rounded-xl border border-white/5">{todayUpdate.today_work}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">Next Plan</h4>
+                      <p className="text-sm text-zinc-300 bg-zinc-900/50 p-3 rounded-xl border border-white/5">{todayUpdate.next_plan}</p>
+                    </div>
+                    {todayUpdate.blockers && (
+                      <div>
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-red-500 mb-1.5">Blockers</h4>
+                        <p className="text-sm text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20">{todayUpdate.blockers}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-10">
+                  <FileText className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
+                  <p className="text-sm text-zinc-500 font-semibold mb-4">No update yet today.</p>
+                  <Link to="/erp/updates" className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-lg text-sm font-semibold transition-colors">Log Update</Link>
+                </div>
+              )}
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="p-6 rounded-2xl bg-[#111115] border border-white/5">
+              <h2 className="text-base font-bold mb-6 flex items-center gap-2"><AlertTriangle size={18} className="text-red-400" /> Open Warnings</h2>
+              {warnings.length === 0 ? (
+                <div className="text-center py-10">
+                  <CheckCircle className="w-12 h-12 text-green-500/20 mx-auto mb-3" />
+                  <p className="text-sm text-zinc-500 font-semibold">No active warnings</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {warnings.slice(0, 5).map(w => (
+                    <div key={w.id} className="flex gap-3 p-4 rounded-xl bg-red-500/5 border border-red-500/10">
+                      <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0 shadow-[0_0_8px_#ef4444]" />
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-red-400 mb-0.5">{w.type?.replace(/_/g, " ")}</p>
+                        <p className="text-sm text-zinc-300">{w.message}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {warnings.length > 5 && <Link to="/erp/alerts" className="text-xs font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-300 mt-4 inline-block">+{warnings.length - 5} more →</Link>}
+                </div>
+              )}
+            </motion.div>
           </div>
         </div>
       </div>
-    </div>
-    <AssistantFAB workspaceId={workspaceId} label="Ask SF Assistant" />
+      <AssistantFAB workspaceId={workspaceId} label="Ask SF Assistant" />
     </>
-  );
-}
-
-function StatCard({ icon: Icon, label, value, accent }) {
-  return (
-    <div className="bg-[#121215] border border-zinc-800 rounded-2xl p-5" style={{ borderTop: `3px solid ${accent}` }}>
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="w-5 h-5" style={{ color: accent }} />
-        <span className="text-xs uppercase tracking-widest text-zinc-500">{label}</span>
-      </div>
-      <div className="text-2xl font-bold text-white">{value}</div>
-    </div>
   );
 }
 
 function TaskColumn({ title, tasks, color }) {
   return (
-    <div className="bg-zinc-900/40 rounded-xl p-3">
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="font-medium" style={{ color }}>{title}</h3>
-        <span className="text-xs text-zinc-500">{tasks.length}</span>
+    <div className="bg-zinc-900/30 border border-white/5 rounded-xl p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color }}>{title}</h3>
+        <span className="text-xs font-bold bg-[#1a1a20] px-2 py-0.5 rounded-full border border-white/10">{tasks.length}</span>
       </div>
-      <div className="space-y-2 max-h-64 overflow-y-auto">
+      <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
         {tasks.length === 0 ? (
-          <p className="text-sm text-zinc-600 text-center py-4">No tasks</p>
+          <p className="text-sm text-zinc-600 text-center py-6 font-semibold">No tasks</p>
         ) : (
           tasks.map(task => (
-            <div key={task.id} className="bg-black/30 rounded-lg p-2 text-sm">
-              <p className="font-medium truncate">{task.title}</p>
-              {task.deadline && <p className="text-xs text-zinc-500">Due: {new Date(task.deadline).toLocaleDateString()}</p>}
-            </div>
+            <motion.div whileHover={{ scale: 1.02 }} key={task.id} className="bg-[#1a1a20] border border-white/5 rounded-xl p-3 text-sm">
+              <p className="font-semibold text-white mb-1.5">{task.title}</p>
+              {task.deadline && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-1"><Clock size={10} /> {new Date(task.deadline).toLocaleDateString()}</p>}
+            </motion.div>
           ))
         )}
       </div>

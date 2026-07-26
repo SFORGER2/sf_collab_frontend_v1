@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Linkedin, Instagram, Twitter, Facebook } from "lucide-react";
+import { FaLinkedin, FaInstagram, FaTwitter, FaFacebook } from "react-icons/fa";
 import { 
   getResponsiveScrollTrigger, 
   getResponsiveDuration,
@@ -139,7 +139,6 @@ export default function TeamComponent() {
                 {person.desc}
               </p>
 
-              {/* Socials */}
               {person.socials && (
                 <div className="flex gap-4 mt-5">
                   {person.socials.linkedin && (
@@ -149,7 +148,7 @@ export default function TeamComponent() {
                       rel="noopener noreferrer"
                       className="text-gray-500 hover:text-purple-400 transition-colors"
                     >
-                      <Linkedin size={18} />
+                      <FaLinkedin size={18} />
                     </a>
                   )}
                   {person.socials.twitter && (
@@ -159,7 +158,7 @@ export default function TeamComponent() {
                       rel="noopener noreferrer"
                       className="text-gray-500 hover:text-purple-400 transition-colors"
                     >
-                      <Twitter size={18} />
+                      <FaTwitter size={18} />
                     </a>
                   )}
                   {person.socials.facebook && (
@@ -169,7 +168,7 @@ export default function TeamComponent() {
                       rel="noopener noreferrer"
                       className="text-gray-500 hover:text-purple-400 transition-colors"
                     >
-                      <Facebook size={18} />
+                      <FaFacebook size={18} />
                     </a>
                   )}
                 </div>

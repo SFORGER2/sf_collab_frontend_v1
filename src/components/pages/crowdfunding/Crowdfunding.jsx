@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Instagram, Loader2, Rocket, Bell, CheckCircle, Clock } from "lucide-react";
+import { Loader2, Rocket, Bell, CheckCircle, Clock } from "lucide-react";
+import { FaInstagram } from "react-icons/fa";
 import { API_BASE_URL } from "@/utils/config";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -127,7 +128,7 @@ export default function CrowdfundingSection() {
                 rel="noopener noreferrer"
                 className="px-6 py-2 flex gap-3 items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:opacity-90 transition"
               >
-                <Instagram size={22} />
+                <FaInstagram size={22} />
                 Instagram
               </a>
               <button

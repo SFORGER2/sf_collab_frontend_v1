@@ -1,171 +1,332 @@
-// src/components/pages/erp/AuditLogsPage.jsx
+// src/components/pages/erp/AuditLogsPage.jsx — REDESIGNED
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ScrollText,
+  Search,
+  RefreshCw,
+  ChevronDown,
+  ChevronRight,
+  Calendar,
+  User,
+  Tag,
+  Clock,
+  Filter,
+  Download,
+} from "lucide-react";
+
 import {
   requestInterceptor,
   responseInterceptor,
   responseErrorInterceptor,
 } from "../../../utils/APIs/interceptors";
+import { ERPPageHeader } from "../../erp/shared/ERPPageHeader";
+import { ERPEmptyState } from "../../erp/shared/ERPEmptyState";
+import { ERPTableSkeleton } from "../../erp/shared/ERPLoadingSkeleton";
+import { ERPBanner } from "../../erp/shared/ERPBanner";
 
 const api = axios.create({ baseURL: "/api" });
 api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
+// ── Action color map ────────────────────────────────────────────────────────────
+const ACTION_COLOR = {
+  TASK_APPROVED:    "#10b981",
+  TASK_REJECTED:    "#ef4444",
+  TASK_SUBMITTED:   "#6366f1",
+  USER_WARNED:      "#f59e0b",
+  USER_FLAGGED:     "#ef4444",
+  PAYOUT_PROCESSED: "#10b981",
+  POOL_LOCKED:      "#6366f1",
+  SETTING_UPDATED:  "#6b7280",
+  ROLE_CHANGED:     "#f59e0b",
+};
+
+function getActionColor(action) {
+  if (!action) return "#6b7280";
+  const key = Object.keys(ACTION_COLOR).find(k => action.includes(k.split("_")[0]));
+  return ACTION_COLOR[action] || ACTION_COLOR[key] || "#6b7280";
+}
+
+function formatValue(val) {
+  if (val === null || val === undefined) return "—";
+  if (typeof val === "object") return JSON.stringify(val).slice(0, 80);
+  return String(val).slice(0, 80);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AUDIT LOGS PAGE
+// ═══════════════════════════════════════════════════════════════════════════════
 export function AuditLogsPage() {
   const { user } = useSelector((s) => s.auth);
   const workspaceId = user?.active_workspace_id || 1;
+  const isAdmin = user?.role === "admin" || user?.is_global_admin;
+
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filterAction, setFilterAction] = useState("");
-  const [limit] = useState(100);
-
-  const isAdmin = user?.role === "admin" || user?.is_global_admin;
+  const [filterDate, setFilterDate] = useState("");
+  const [expandedRows, setExpandedRows] = useState(new Set());
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+  const limit = 200;
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      let url;
-      if (isAdmin) {
-        url = `/admin/audit-logs?workspace_id=${workspaceId}&limit=${limit}`;
-      } else {
-        url = `/workspaces/${workspaceId}/audit-logs?limit=${limit}`;
-      }
-      if (filterAction) {
-        url += `&action=${encodeURIComponent(filterAction)}`;
-      }
+      let url = isAdmin
+        ? `/admin/audit-logs?workspace_id=${workspaceId}&limit=${limit}`
+        : `/workspaces/${workspaceId}/audit-logs?limit=${limit}`;
+      if (filterAction) url += `&action=${encodeURIComponent(filterAction)}`;
       const res = await api.get(url);
       setLogs(res.data?.data?.logs || res.data?.logs || []);
+      setPage(1);
     } catch (err) {
       console.error("Failed to load audit logs", err);
       setError(err?.response?.data?.error || "Failed to load audit logs");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, [workspaceId, isAdmin, filterAction, limit]);
 
-  useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
+  useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
-  if (loading) return <Spinner />;
+  const toggleRow = (id) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  // Client-side date filter
+  const filtered = logs.filter(log => {
+    if (!filterDate) return true;
+    return new Date(log.created_at).toISOString().startsWith(filterDate);
+  });
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginatedLogs = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const handleExport = () => {
+    const csv = [
+      ["Timestamp", "Actor", "Action", "Entity", "Reason"].join(","),
+      ...filtered.map(l => [
+        new Date(l.created_at).toISOString(),
+        l.actor_user_id,
+        l.action,
+        `${l.entity_type}#${l.entity_id}`,
+        l.reason || "",
+      ].join(","))
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `audit-logs-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.h1}>📋 Audit Logs</h1>
+    <div className="min-h-screen bg-[#0a0a0b] text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-      <div style={styles.filterBar}>
-        <input
-          type="text"
-          placeholder="Filter by action (e.g. TASK_APPROVED)"
-          value={filterAction}
-          onChange={(e) => setFilterAction(e.target.value)}
-          style={styles.filterInput}
+        <ERPPageHeader
+          icon={<ScrollText size={20} />}
+          title="Audit Logs"
+          description="Complete audit trail of all workspace actions and changes"
+          breadcrumbs={[{ label: "Admin" }, { label: "Audit Logs" }]}
+          actions={
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExport}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-white/[0.06] text-zinc-400 hover:text-white text-sm transition-all"
+              >
+                <Download size={13} />
+                Export CSV
+              </button>
+              <button
+                onClick={fetchLogs}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-white/[0.06] text-zinc-400 hover:text-white text-sm transition-all"
+              >
+                <RefreshCw size={13} />
+              </button>
+            </div>
+          }
         />
-        <button onClick={fetchLogs} style={styles.filterBtn}>
-          Apply
-        </button>
-      </div>
 
-      {error && <div style={styles.error}>{error}</div>}
+        <AnimatePresence>
+          {error && <ERPBanner message={error} type="error" onDismiss={() => setError(null)} />}
+        </AnimatePresence>
 
-      {logs.length === 0 ? (
-        <div style={styles.empty}>No audit logs found</div>
-      ) : (
-        <div style={styles.tableWrapper}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th>Timestamp</th>
-                <th>Actor</th>
-                <th>Action</th>
-                <th>Entity</th>
-                <th>Before</th>
-                <th>After</th>
-                <th>Reason</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((log) => (
-                <tr key={log.id}>
-                  <td>{new Date(log.created_at).toLocaleString()}</td>
-                  <td>{log.actor_user_id}</td>
-                  <td>{log.action}</td>
-                  <td>{log.entity_type} #{log.entity_id}</td>
-                  <td style={styles.before}>{formatValue(log.before_value)}</td>
-                  <td style={styles.after}>{formatValue(log.after_value)}</td>
-                  <td>{log.reason || "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* ── Filters ── */}
+        <div
+          className="flex flex-wrap gap-3 items-center px-5 py-4 rounded-xl mb-6"
+          style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <Filter size={13} className="text-zinc-500 shrink-0" />
+
+          {/* Action search */}
+          <div className="relative flex-1 min-w-[180px]">
+            <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <input
+              type="text"
+              placeholder="Filter by action…"
+              value={filterAction}
+              onChange={(e) => setFilterAction(e.target.value)}
+              className="w-full bg-zinc-800 border border-white/[0.06] text-zinc-300 text-xs rounded-lg pl-8 pr-3 py-1.5 outline-none focus:border-indigo-500/50"
+            />
+          </div>
+
+          {/* Date filter */}
+          <div className="flex items-center gap-2">
+            <Calendar size={12} className="text-zinc-500" />
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="bg-zinc-800 border border-white/[0.06] text-zinc-300 text-xs rounded-lg px-3 py-1.5 outline-none focus:border-indigo-500/50"
+            />
+            {filterDate && (
+              <button onClick={() => setFilterDate("")} className="text-zinc-500 hover:text-zinc-300 text-xs">✕</button>
+            )}
+          </div>
+
+          <span className="ml-auto text-xs text-zinc-500">{filtered.length} entries</span>
         </div>
-      )}
+
+        {/* ── Table ── */}
+        <div className="rounded-2xl overflow-hidden" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+          {loading ? (
+            <ERPTableSkeleton rows={8} cols={5} />
+          ) : filtered.length === 0 ? (
+            <ERPEmptyState
+              icon={<ScrollText size={28} />}
+              title="No audit logs found"
+              sub="Audit trail entries will appear here as your team takes actions."
+              compact
+            />
+          ) : (
+            <>
+              {/* Table head */}
+              <div className="grid grid-cols-[1.5fr_1fr_1.5fr_1.5fr_1fr_28px] gap-4 px-5 py-3 border-b border-white/[0.04] text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+                <span className="flex items-center gap-1.5"><Clock size={10} /> Timestamp</span>
+                <span className="flex items-center gap-1.5"><User size={10} /> Actor</span>
+                <span className="flex items-center gap-1.5"><Tag size={10} /> Action</span>
+                <span>Entity</span>
+                <span>Reason</span>
+                <span />
+              </div>
+
+              <div>
+                <AnimatePresence initial={false}>
+                  {paginatedLogs.map((log, i) => {
+                    const color = getActionColor(log.action);
+                    const isExpanded = expandedRows.has(log.id);
+                    return (
+                      <motion.div
+                        key={log.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: i * 0.015 }}
+                      >
+                        {/* Row */}
+                        <div
+                          className="grid grid-cols-[1.5fr_1fr_1.5fr_1.5fr_1fr_28px] gap-4 px-5 py-3.5 border-b border-white/[0.03] hover:bg-white/[0.02] cursor-pointer transition-colors items-center group"
+                          onClick={() => toggleRow(log.id)}
+                        >
+                          <span className="text-xs text-zinc-400 font-mono whitespace-nowrap">
+                            {new Date(log.created_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                          <span className="text-xs text-zinc-300 truncate">
+                            {log.actor_user_id ? `#${log.actor_user_id}` : "System"}
+                          </span>
+                          <div>
+                            <span
+                              className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full"
+                              style={{ background: `${color}15`, color, border: `1px solid ${color}25` }}
+                            >
+                              {log.action}
+                            </span>
+                          </div>
+                          <span className="text-xs text-zinc-400 truncate">
+                            {log.entity_type} <span className="text-zinc-600">#{log.entity_id}</span>
+                          </span>
+                          <span className="text-xs text-zinc-500 truncate">{log.reason || "—"}</span>
+                          <motion.span animate={{ rotate: isExpanded ? 90 : 0 }} transition={{ duration: 0.15 }}>
+                            <ChevronRight size={12} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                          </motion.span>
+                        </div>
+
+                        {/* Expanded details */}
+                        <AnimatePresence initial={false}>
+                          {isExpanded && (
+                            <motion.div
+                              key="detail"
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2, ease: "easeInOut" }}
+                            >
+                              <div className="px-5 py-4 border-b border-white/[0.04]" style={{ background: "#0d0d10" }}>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                                  <div>
+                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 mb-1.5">Before</p>
+                                    <pre className="text-amber-400/80 font-mono text-xs bg-amber-500/5 border border-amber-500/10 rounded-lg p-2.5 overflow-x-auto whitespace-pre-wrap break-all">
+                                      {formatValue(log.before_value)}
+                                    </pre>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 mb-1.5">After</p>
+                                    <pre className="text-emerald-400/80 font-mono text-xs bg-emerald-500/5 border border-emerald-500/10 rounded-lg p-2.5 overflow-x-auto whitespace-pre-wrap break-all">
+                                      {formatValue(log.after_value)}
+                                    </pre>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-5 py-4 border-t border-white/[0.04]">
+                  <span className="text-xs text-zinc-500">
+                    Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setPage(p => Math.max(p - 1, 1))}
+                      disabled={page === 1}
+                      className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-xs text-zinc-300 transition-colors"
+                    >
+                      Prev
+                    </button>
+                    <span className="text-xs text-zinc-500">{page} / {totalPages}</span>
+                    <button
+                      onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                      disabled={page === totalPages}
+                      className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-xs text-zinc-300 transition-colors"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-function formatValue(val) {
-  if (val === null || val === undefined) return "—";
-  if (typeof val === "object") return JSON.stringify(val).slice(0, 50);
-  return String(val).slice(0, 50);
-}
-
-// ----------------------------------------------------------------------
-// Spinner & Styles (same style patterns as other pages)
-// ----------------------------------------------------------------------
-const Spinner = () => (
-  <div style={{ textAlign: "center", padding: 60 }}>
-    <div style={{ width: 30, height: 30, borderRadius: "50%", border: "3px solid #1f2937", borderTop: "3px solid #6366f1", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
-    <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-  </div>
-);
-
-const styles = {
-  container: { maxWidth: 1200, margin: "0 auto", padding: "28px 20px" },
-  h1: { fontSize: 24, fontWeight: 700, marginBottom: 20, color: "#f9fafb" },
-  filterBar: { display: "flex", gap: 12, marginBottom: 20 },
-  filterInput: {
-    background: "#1f2937",
-    border: "1px solid #374151",
-    borderRadius: 8,
-    padding: "8px 14px",
-    color: "#f9fafb",
-    flex: 1,
-  },
-  filterBtn: {
-    background: "#4f46e5",
-    border: "none",
-    padding: "8px 20px",
-    borderRadius: 8,
-    color: "#fff",
-    cursor: "pointer",
-  },
-  error: { background: "#450a0a", border: "1px solid #991b1b", borderRadius: 8, padding: 10, marginBottom: 16, color: "#fca5a5" },
-  empty: { textAlign: "center", padding: 60, color: "#6b7280" },
-  tableWrapper: { overflowX: "auto" },
-  table: { width: "100%", borderCollapse: "collapse", color: "#e5e7eb", fontSize: 14 },
-  before: { color: "#fbbf24" },
-  after: { color: "#34d399" },
-};
-
-// Add table header styles in a <style> tag or inline – we'll use inline for simplicity
-// but you can add th/td styles via global CSS.
-// For consistency, we can add a style block:
-document.head.insertAdjacentHTML("beforeend", `
-<style>
-  .audit-table th {
-    text-align: left;
-    padding: 12px 8px;
-    color: #9ca3af;
-    border-bottom: 1px solid #1f2937;
-  }
-  .audit-table td {
-    padding: 12px 8px;
-    border-bottom: 1px solid #1f2937;
-    vertical-align: top;
-  }
-</style>
-`);
+export default AuditLogsPage;
