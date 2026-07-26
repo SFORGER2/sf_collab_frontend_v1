@@ -46,7 +46,7 @@ import ReferPage from "./components/waitlist/referAndRanking/refer.jsx";
 import TermsAndConditions from "./components/pages/termsAndConditions/legalTerms.jsx";
 import PrivacyPolicy from "./components/pages/termsAndConditions/legalPrivacy.jsx";
 import DataCollection from "./components/pages/termsAndConditions/legalDataCollection.jsx";
-import LandingPage from "./components/landing-page/pages/Home.jsx";
+import LandingPage from "./components/landing-page/cosmos/LandingCosmos.jsx";
 import AboutPage from "./components/landing-page/pages/About.jsx";
 import TeamPage from "./components/landing-page/pages/team/TeamPage.jsx";
 import ContactPage from "./components/landing-page/pages/ContactPage.jsx";
@@ -94,6 +94,14 @@ import Crowdfunding from "./components/pages/crowdfunding/Crowdfunding.jsx";
 import Checkout from "./components/pages/checkout/Checkout.jsx";
 import ReturnPage from "./components/pages/checkout/CheckoutReturnPage.jsx";
 import Donate from "./components/pages/donate/Donate.jsx";
+import DesignSystemPage from "./components/pages/designSystem/DesignSystemPage.jsx";
+import { DEV_AUTH_BYPASS, getDevRoles } from "./services/auth/devSession.js";
+import CreditsPage from "./components/pages/billing/CreditsPage.jsx";
+import PlansPage from "./components/pages/billing/PlansPage.jsx";
+import EarnPage from "./components/pages/billing/EarnPage.jsx";
+import AdvertisePage from "./components/pages/billing/AdvertisePage.jsx";
+import DrawsPage from "./components/pages/draws/DrawsPage.jsx";
+import MentorRoleDashboard from "./components/pages/dashboards/mentorDashboard/MentorDashboard.jsx";
 
 // SF Meet
 import MeetingRoom from "./components/ui/meeting-room.jsx";
@@ -234,6 +242,13 @@ export default function App() {
   }
 
   useEffect(() => {
+    // Dev-only: the roles endpoint needs a backend. Seed them so the role
+    // switcher and per-role dashboards are reviewable offline.
+    if (DEV_AUTH_BYPASS) {
+      setUserRoles(getDevRoles());
+      return;
+    }
+
     const fetchUserRoles = async () => {
       if (access_token) {
         try {
@@ -283,6 +298,8 @@ export default function App() {
                     <Route path="/pricing" element={<Pricing />} />
                     <Route path="/waitlist" element={<Waitlist />} />
                     <Route path="/waitlist-terms" element={<WaitlistTerms />} />
+                    {/* Cosmos design-system reference — every token and primitive on one page */}
+                    <Route path="/design-system" element={<DesignSystemPage />} />
 
                     {/* ========== PROTECTED ROUTES with GLOBAL LAYOUT ========== */}
                     <Route
@@ -307,6 +324,8 @@ export default function App() {
                             <FounderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} setUserRoles={setUserRoles} />
                           ) : user && activeRole === "investor" ? (
                             <InvestorDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} setUserRoles={setUserRoles} />
+                          ) : user && activeRole === "mentor" ? (
+                            <MentorRoleDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} setUserRoles={setUserRoles} />
                           ) : (
                             <Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />
                           )
@@ -409,8 +428,13 @@ export default function App() {
                       <Route path="ai-news/:id" element={<AINewsDetailPage />} />
                       <Route path="community/ai-news" element={<AINewsPage />} />
 
-                      {/* Wallet & Store */}
+                      {/* Wallet, credits & plans */}
                       <Route path="wallet" element={<WalletDashboard />} />
+                      <Route path="credits" element={<CreditsPage />} />
+                      <Route path="plans" element={<PlansPage />} />
+                      <Route path="wallet/earn" element={<EarnPage />} />
+                      <Route path="draws" element={<DrawsPage />} />
+                      <Route path="advertise" element={<AdvertisePage />} />
                       <Route path="store" element={<StorePage />} />
                       <Route path="leaderboard" element={<LeaderboardPage />} />
                       <Route path="marketplace" element={<MarketplacePage />} />

@@ -4,6 +4,7 @@ import BottomLinks from "./BottomLinks";
 import { Crown, Lock, ChevronDown } from "lucide-react";
 import { getAllRoutes } from "./sidebar/links";
 import { useState } from "react";
+import { roleAccent, roleAccentVars } from "@/components/cosmos";
 
 export default function DesktopSidebarContent({
   links = [],
@@ -15,10 +16,20 @@ export default function DesktopSidebarContent({
   isAdmin,
   onLinkClick,
   callback,
+  role,
 }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
+
+  // The active role owns the sidebar's accent, so which profile you're working
+  // as is readable at a glance — same five colours as the landing page.
+  const accent = roleAccent(role);
+  const activeStyle = {
+    background: accent.soft,
+    color: accent.color,
+    boxShadow: `inset 2px 0 0 ${accent.color}`,
+  };
 
   const handleNavigation = (link) => {
     if (link.isUpcoming) return;
@@ -30,18 +41,15 @@ export default function DesktopSidebarContent({
 
   return (
     <div
-      className="sidebar hidden lg:flex fixed left-0 top-16 h-[calc(100dvh-64px)] text-white"
-      style={{ zIndex: 50 }}
+      className="sidebar hidden lg:flex fixed left-0 top-16 h-[calc(100dvh-64px)] text-white border-r border-white/10"
+      style={{ zIndex: 50, ...roleAccentVars(role) }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Background */}
+      {/* Background — solid panel fill with a blur, so nav sits above the atmosphere */}
       <div
-        className="absolute inset-0"
-        style={{
-          background: "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
-          zIndex: -1,
-        }}
+        className="absolute inset-0 backdrop-blur-xl"
+        style={{ background: "rgba(9, 7, 20, 0.82)", zIndex: -1 }}
       />
 
       {/* Sidebar container */}
@@ -78,13 +86,12 @@ export default function DesktopSidebarContent({
                     }
                     handleNavigation(link);
                   }}
+                  style={isActive ? activeStyle : undefined}
                   className={`
                     w-full flex items-center
                     ${isHovered ? "gap-3 px-3 justify-start" : "justify-center px-0"}
                     py-3 rounded-lg transition-colors min-w-0
-                    ${isActive
-                      ? "bg-blue-600/20 text-blue-400"
-                      : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"}
+                    ${isActive ? "" : "text-slate-400 hover:bg-white/[0.06] hover:text-star"}
                     ${isUpcoming ? upcomingClasses : ""}
                   `}
                 >
@@ -147,11 +154,10 @@ export default function DesktopSidebarContent({
                               navigate(subItem.href);
                               onLinkClick?.();
                             }}
+                            style={isSubActive ? { background: accent.soft, color: accent.color } : undefined}
                             className={`
                               flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-colors
-                              ${isSubActive
-                                ? "bg-blue-600/30 text-white"
-                                : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"}
+                              ${isSubActive ? "" : "text-slate-500 hover:bg-white/[0.06] hover:text-star"}
                             `}
                           >
                             {subItem.icon || (
@@ -174,14 +180,12 @@ export default function DesktopSidebarContent({
             <Link
               to="/admin"
               onClick={onLinkClick}
+              style={location.pathname.startsWith("/admin") ? activeStyle : undefined}
               className={`
                 w-full flex items-center
                 ${isHovered ? "gap-3 px-3 justify-start" : "justify-center px-0"}
                 py-3 rounded-lg transition-colors
-                ${location.pathname.startsWith("/admin")
-                  ? "bg-blue-600/20 text-blue-400"
-                  : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-                }
+                ${location.pathname.startsWith("/admin") ? "" : "text-slate-400 hover:bg-white/[0.06] hover:text-star"}
               `}
             >
               <div className="flex items-center justify-center w-6">

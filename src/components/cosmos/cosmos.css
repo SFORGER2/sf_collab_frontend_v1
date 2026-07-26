@@ -1,0 +1,400 @@
+/* ==========================================================================
+   COSMOS — component + motion vocabulary shared with the SFCollab landing page.
+   Colour and type tokens live in src/index.css (@theme). This file holds the
+   things Tailwind utilities can't express: the conic "spark" ring on buttons,
+   the blur-up scroll reveal, the atmosphere gradient, the journey rail.
+
+   Every animation here is disabled under `prefers-reduced-motion: reduce`.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   ATMOSPHERE — the app background. Three nebula blobs over the void, matching
+   the landing page's no-WebGL fallback. No canvas, no runtime cost.
+   -------------------------------------------------------------------------- */
+.cosmos-atmosphere {
+  background:
+    radial-gradient(60vw 40vh at 75% 12%, rgba(139, 108, 255, 0.16), transparent 60%),
+    radial-gradient(50vw 36vh at 18% 55%, rgba(79, 216, 255, 0.10), transparent 60%),
+    radial-gradient(46vw 32vh at 70% 88%, rgba(255, 79, 216, 0.08), transparent 60%),
+    radial-gradient(ellipse at 50% 35%, #0c0a20 0%, #050309 70%);
+}
+
+/* A subtler variant for nav bars and dense chrome. */
+.cosmos-atmosphere-chrome {
+  background: linear-gradient(to bottom, rgba(5, 3, 9, 0.88), rgba(5, 3, 9, 0.58));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Top/bottom vignette, as on the landing page. Purely decorative. */
+.cosmos-vignette {
+  background:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.42) 0%, transparent 7%, transparent 93%, rgba(0, 0, 0, 0.42) 100%),
+    radial-gradient(ellipse at 50% 50%, transparent 52%, rgba(0, 0, 0, 0.08) 78%, rgba(0, 0, 0, 0.28) 100%);
+}
+
+/* --------------------------------------------------------------------------
+   PANELS + CARDS
+   -------------------------------------------------------------------------- */
+.cosmos-panel {
+  background: rgba(13, 10, 26, 0.90);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 22px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 30px 90px -30px rgba(0, 0, 0, 0.85);
+}
+
+.cosmos-card {
+  background: rgba(255, 255, 255, 0.028);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
+  transition: border-color 0.25s var(--ease-cosmos), transform 0.25s var(--ease-cosmos),
+              background 0.25s var(--ease-cosmos);
+}
+
+/* Interactive cards lift and pick up their accent on hover. */
+.cosmos-card-interactive { cursor: pointer; }
+.cosmos-card-interactive:hover {
+  border-color: color-mix(in srgb, var(--cosmos-accent, #ffbf5e) 45%, transparent);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-3px);
+}
+.cosmos-card-interactive:focus-visible {
+  border-color: var(--cosmos-accent, #ffbf5e);
+}
+
+/* Accent-edged panel — a 1px top gradient rule, used to key a panel to a role. */
+.cosmos-panel-accent { position: relative; overflow: hidden; }
+.cosmos-panel-accent::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent,
+    var(--cosmos-accent, #ffbf5e) 35%, var(--cosmos-accent, #ffbf5e) 65%, transparent);
+  opacity: 0.7;
+}
+
+/* --------------------------------------------------------------------------
+   EYEBROW — the mono, wide-tracked label that sits above every heading.
+   -------------------------------------------------------------------------- */
+.cosmos-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--cosmos-accent, #ffbf5e);
+}
+
+/* --------------------------------------------------------------------------
+   BUTTONS — pill shaped, with a conic-gradient "spark" orbiting the border.
+   Structure copied from the landing page: ::before is the spinning ring,
+   ::after is the fill that masks all but a 2px rim of it.
+   -------------------------------------------------------------------------- */
+.cosmos-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.18s var(--ease-cosmos), box-shadow 0.25s, background 0.25s, border-color 0.25s;
+}
+
+.cosmos-btn:hover { transform: translateY(-1px); text-decoration: none; }
+.cosmos-btn:active { transform: translateY(0); }
+
+.cosmos-btn:disabled,
+.cosmos-btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cosmos-btn::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(100% + 10px);
+  aspect-ratio: 1 / 1;
+  z-index: -2;
+  transform: translate(-50%, -50%) rotate(0deg);
+  border-radius: 50%;
+  background: conic-gradient(transparent 0deg 292deg, var(--cosmos-spark, #ffbf5e) 334deg, #ffffff 353deg, transparent 360deg);
+  animation: cosmosBtnSpin 3.2s linear infinite;
+  pointer-events: none;
+}
+
+.cosmos-btn::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 999px;
+  z-index: -1;
+  background: var(--cosmos-fill, rgba(8, 11, 20, 0.9));
+  pointer-events: none;
+}
+
+/* The ring accelerates on hover — the main "alive" cue in the whole system. */
+.cosmos-btn:hover::before { animation-duration: 1.3s; }
+
+/* A disabled button shouldn't look mid-animation — drop the ring entirely
+   rather than freezing it as a static wedge. */
+.cosmos-btn:disabled::before,
+.cosmos-btn[aria-disabled='true']::before { display: none; }
+.cosmos-btn:disabled::after,
+.cosmos-btn[aria-disabled='true']::after { inset: 0; }
+
+@keyframes cosmosBtnSpin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ---- Variants ---- */
+.cosmos-btn-primary {
+  --cosmos-spark: #fff1d6;
+  --cosmos-fill: linear-gradient(120deg, #ffcf7d, #ffb547);
+  color: #241300;
+  box-shadow: 0 4px 26px -6px rgba(255, 181, 71, 0.55);
+}
+.cosmos-btn-primary:hover { box-shadow: 0 8px 34px -6px rgba(255, 181, 71, 0.75); }
+
+.cosmos-btn-ghost {
+  --cosmos-spark: #4fd8ff;
+  --cosmos-fill: rgba(8, 12, 22, 0.82);
+  color: var(--color-star, #f2effa);
+  box-shadow: 0 0 16px -8px rgba(79, 216, 255, 0.7);
+}
+.cosmos-btn-ghost:hover { color: #fff; box-shadow: 0 0 26px -6px rgba(79, 216, 255, 0.95); }
+
+/* The fill must be opaque — it's what masks the spinning cone down to a rim.
+   A translucent fill lets the whole conic gradient bleed through as a wedge. */
+.cosmos-btn-ai {
+  --cosmos-spark: #a68bff;
+  --cosmos-fill: linear-gradient(rgba(139, 108, 255, 0.16), rgba(139, 108, 255, 0.16)), rgba(8, 12, 22, 0.94);
+  color: #d9cfff;
+  box-shadow: 0 0 16px -8px rgba(139, 108, 255, 0.8);
+}
+.cosmos-btn-ai:hover { color: #fff; box-shadow: 0 0 26px -6px rgba(139, 108, 255, 1); }
+
+.cosmos-btn-promo {
+  --cosmos-spark: #ff9de0;
+  --cosmos-fill: rgba(8, 12, 22, 0.82);
+  color: var(--color-star, #f2effa);
+  box-shadow: 0 0 16px -8px rgba(255, 79, 216, 0.7);
+}
+.cosmos-btn-promo:hover { color: #fff; box-shadow: 0 0 26px -6px rgba(255, 79, 216, 0.95); }
+
+/* A quiet variant for toolbars and dense rows — no ring, still a pill. */
+.cosmos-btn-quiet::before { display: none; }
+.cosmos-btn-quiet {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-dim, #a9a2c2);
+}
+.cosmos-btn-quiet::after { inset: 0; background: transparent; }
+.cosmos-btn-quiet:hover {
+  border-color: rgba(255, 255, 255, 0.30);
+  color: var(--color-star, #f2effa);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ---- Sizes ---- */
+.cosmos-btn-sm { padding: 9px 18px;  font-size: 14px; }
+.cosmos-btn-md { padding: 12px 26px; font-size: 15px; }
+.cosmos-btn-lg { padding: 15px 32px; font-size: 16px; }
+.cosmos-btn-icon { padding: 0; width: 40px; height: 40px; }
+
+/* --------------------------------------------------------------------------
+   TAGS — status pills. live / dev / planned / future / demo.
+   -------------------------------------------------------------------------- */
+.cosmos-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 999px;
+  padding: 4px 11px;
+  color: var(--color-dim, #a9a2c2);
+  white-space: nowrap;
+}
+
+.cosmos-tag-live    { color: #3ee6a0; border-color: rgba(62, 230, 160, 0.40); }
+.cosmos-tag-dev     { color: #4fd8ff; border-color: rgba(79, 216, 255, 0.35); }
+.cosmos-tag-planned { color: #8b6cff; border-color: rgba(139, 108, 255, 0.40); }
+.cosmos-tag-future  { color: #a9a2c2; }
+.cosmos-tag-demo    { color: #ff4fd8; border-color: rgba(255, 79, 216, 0.40); }
+.cosmos-tag-accent  { color: #ffbf5e; border-color: rgba(255, 191, 94, 0.45); }
+
+/* Pulsing dot for genuinely-live state. */
+.cosmos-tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+  animation: cosmosPulse 2.4s ease-in-out infinite;
+}
+@keyframes cosmosPulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.8); }
+}
+
+/* --------------------------------------------------------------------------
+   STAT TILES — the gamified numbers. Unbounded gold numeral, mono caption.
+   -------------------------------------------------------------------------- */
+.cosmos-stat-value {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  line-height: 1.15;
+  color: var(--cosmos-accent, #ffbf5e);
+}
+.cosmos-stat-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-dim, #a9a2c2);
+}
+
+/* --------------------------------------------------------------------------
+   STEP PATH — numbered progression with the gold-to-violet connector.
+   Used for onboarding, milestones and the vision-to-startup journey.
+   -------------------------------------------------------------------------- */
+.cosmos-path { counter-reset: cosmos-step; }
+.cosmos-path > li {
+  list-style: none;
+  position: relative;
+  padding: 0 0 26px 46px;
+}
+.cosmos-path > li::before {
+  counter-increment: cosmos-step;
+  content: counter(cosmos-step, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #ffbf5e;
+}
+.cosmos-path > li::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 24px;
+  bottom: 4px;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(255, 191, 94, 0.5), rgba(139, 108, 255, 0.25));
+}
+.cosmos-path > li:last-child::after { display: none; }
+.cosmos-path > li[data-done='true']::before { color: #3ee6a0; }
+
+/* --------------------------------------------------------------------------
+   PROGRESS RAIL — thin gold/violet/cyan bar. Journey and completion meters.
+   -------------------------------------------------------------------------- */
+.cosmos-rail {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.cosmos-rail > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ffbf5e, #8b6cff, #4fd8ff);
+  box-shadow: 0 0 10px rgba(255, 191, 94, 0.55);
+  transition: width 0.6s var(--ease-cosmos);
+}
+
+/* --------------------------------------------------------------------------
+   REVEAL — blur-up entrance. Add `.cosmos-reveal`; a shared IntersectionObserver
+   (see useCosmosReveal) adds `.is-in` when the element scrolls into view.
+   Children marked `.cosmos-reveal-item` stagger in sequence.
+   -------------------------------------------------------------------------- */
+.cosmos-reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  filter: blur(6px);
+  transition: opacity 0.9s var(--ease-cosmos), transform 0.9s var(--ease-cosmos), filter 0.9s var(--ease-cosmos);
+}
+.cosmos-reveal.is-in { opacity: 1; transform: none; filter: none; }
+
+.cosmos-reveal-item {
+  opacity: 0;
+  transform: translateY(20px);
+  filter: blur(5px);
+  transition: opacity 0.75s var(--ease-cosmos), transform 0.75s var(--ease-cosmos), filter 0.75s var(--ease-cosmos);
+}
+.is-in > .cosmos-reveal-item,
+.cosmos-reveal.is-in .cosmos-reveal-item { opacity: 1; transform: none; filter: none; }
+
+.is-in > .cosmos-reveal-item:nth-child(2)  { transition-delay: 0.08s; }
+.is-in > .cosmos-reveal-item:nth-child(3)  { transition-delay: 0.16s; }
+.is-in > .cosmos-reveal-item:nth-child(4)  { transition-delay: 0.24s; }
+.is-in > .cosmos-reveal-item:nth-child(5)  { transition-delay: 0.32s; }
+.is-in > .cosmos-reveal-item:nth-child(6)  { transition-delay: 0.40s; }
+.is-in > .cosmos-reveal-item:nth-child(7)  { transition-delay: 0.48s; }
+.is-in > .cosmos-reveal-item:nth-child(8)  { transition-delay: 0.56s; }
+
+/* --------------------------------------------------------------------------
+   GLOW TEXT — the gold statement treatment.
+   -------------------------------------------------------------------------- */
+.cosmos-glow {
+  color: #ffbf5e;
+  text-shadow: 0 0 34px rgba(255, 191, 94, 0.4);
+}
+
+/* Animated gradient wordmark, as on the landing page's finale. */
+.cosmos-wordmark {
+  font-family: var(--font-display);
+  font-weight: 600;
+  background: linear-gradient(115deg, #ffcf7d 10%, #ff9de0 35%, #8b6cff 55%, #4fd8ff 75%, #ffcf7d 100%);
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: cosmosShine 7s linear infinite;
+}
+@keyframes cosmosShine {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 240% 50%; }
+}
+
+/* --------------------------------------------------------------------------
+   REDUCED MOTION — one guard for everything above.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .cosmos-btn,
+  .cosmos-card,
+  .cosmos-rail > span { transition: none; }
+
+  .cosmos-btn::before,
+  .cosmos-tag-dot,
+  .cosmos-wordmark { animation: none; }
+
+  .cosmos-reveal,
+  .cosmos-reveal-item {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+
+  .cosmos-card-interactive:hover { transform: none; }
+  .cosmos-btn:hover { transform: none; }
+}

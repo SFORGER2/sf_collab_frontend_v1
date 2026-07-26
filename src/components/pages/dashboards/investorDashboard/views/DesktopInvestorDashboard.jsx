@@ -1,141 +1,118 @@
-import {
-  PieChart,
-  TrendingUp,
-  AlertTriangle,
-  FileText,
-  BarChart3,
-  Layers,
-  Star,
-} from "lucide-react";
-import { Link } from "react-router-dom";
+import { useMemo } from "react";
+import { useSelector } from "react-redux";
+import { Compass, LineChart, Rocket, Users } from "lucide-react";
 import DashboardChangeSection from "../../dashboardChangeSection";
 import OverviewWebsite from "../../dashboard/OverviewWebsite";
 import AnnouncementsSection from "../../dashboard/AnnouncementsSection";
 import Calendar from "@/components/sections/Calendar";
 import WorldClock from "@/components/sections/WorldClock";
+import { AdSlot, DashboardGrid, DashboardMasthead, Tag } from "@/components/cosmos";
+import { commonWidgets } from "@/components/cosmos/dashboard/commonWidgets";
+import { QuickAction } from "../../founderDashboard/Quicks";
 
-export default function InvestorDashboard({
-  userRoles, activeRole, setActiveRole, setUserRoles
+export default function DesktopInvestorDashboard({
+  userRoles,
+  activeRole,
+  setActiveRole,
+  setUserRoles,
 }) {
+  const { user } = useSelector((state) => state.auth);
+
+  const widgets = useMemo(
+    () => [
+      {
+        id: "roles",
+        title: "Your profile",
+        eyebrow: "Switch role",
+        span: "full",
+        locked: true,
+        node: (
+          <DashboardChangeSection
+            sections={userRoles.map((role) => ({
+              id: role,
+              label: role.charAt(0).toUpperCase() + role.slice(1),
+            }))}
+            onSectionChange={(sectionId) => {
+              setActiveRole(sectionId);
+              localStorage.setItem("activeRole", sectionId);
+            }}
+            setUserRoles={setUserRoles}
+            setActiveRole={setActiveRole}
+            userRoles={userRoles}
+            activeRole={activeRole}
+          />
+        ),
+      },
+      {
+        id: "actions",
+        title: "Find opportunities",
+        eyebrow: "Quick actions",
+        span: "half",
+        node: (
+          <div className="grid grid-cols-2 gap-3.5">
+            <QuickAction label="Discover startups" href="/discover-startups" icon={Rocket} accent="#8b6cff" />
+            <QuickAction label="Explore visions" href="/ideation" icon={Compass} accent="#ffbf5e" />
+            <QuickAction label="Find founders" href="/discover-users" icon={Users} accent="#4fd8ff" />
+            <QuickAction label="Leaderboard" href="/leaderboard" icon={LineChart} accent="#3ee6a0" />
+          </div>
+        ),
+      },
+      {
+        id: "pipeline",
+        title: "Your pipeline",
+        eyebrow: "Deal flow",
+        span: "half",
+        node: (
+          <div className="flex flex-col gap-3">
+            <p className="text-dim text-[0.92rem]">
+              Follow Visions and Startups to build a watchlist. Progress signals and team activity
+              show up here as they happen.
+            </p>
+            <div className="flex flex-wrap gap-2.5">
+              <Tag tone="planned">Watchlist</Tag>
+              <Tag tone="dev">Signals</Tag>
+              <Tag tone="future">Diligence</Tag>
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: "announcements",
+        title: "Announcements",
+        eyebrow: "From the ecosystem",
+        span: "full",
+        node: <AnnouncementsSection userRoles={userRoles} />,
+      },
+      { id: "calendar", title: "Calendar", eyebrow: "Schedule", span: "half", node: <Calendar /> },
+      { id: "worldclock", title: "World clock", eyebrow: "Your network", span: "half", node: <WorldClock /> },
+      {
+        id: "platform",
+        title: "Platform overview",
+        eyebrow: "SFCollab",
+        span: "full",
+        node: <OverviewWebsite />,
+      },
+      ...commonWidgets(),
+    ],
+    [userRoles, activeRole, setActiveRole, setUserRoles]
+  );
+
   return (
-    <div className="dashboard relative my-6 space-y-10">
-      {/* Background texture */}
-      <div className="absolute inset-0 pointer-events-none
-  bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_1px)]
-  bg-[length:20px_20px]" />
-      <OverviewWebsite />
-      <DashboardChangeSection
-        sections={userRoles.map(role => ({
-          id: role,
-          label: role.charAt(0).toUpperCase() + role.slice(1)
-          }))}
-        onSectionChange={(sectionId) => {
-          setActiveRole(sectionId);
-          localStorage.setItem('activeRole', sectionId);
-        }}
-        setUserRoles={setUserRoles}
-        setActiveRole={setActiveRole}
-        userRoles={userRoles}
-        activeRole={activeRole}
+    <div className="w-full px-4 sm:px-6 py-6 max-w-[1400px] mx-auto">
+      <DashboardMasthead
+        role="investor"
+        name={user?.firstName}
+        primaryAction={{ label: "Discover startups", to: "/discover-startups" }}
+      >
+        Discover potential before it becomes obvious.
+      </DashboardMasthead>
+
+      <DashboardGrid
+        layoutKey="investor"
+        role="investor"
+        widgets={widgets}
+        header={null}
       />
-      <AnnouncementsSection userRoles={userRoles} />
-      <div className="relative z-10 space-y-8">
-      </div>
-      <div className="relative w-full mx-auto p-4 overflow-x-hidden">
-
-        <Calendar />
-        <WorldClock />
-      </div>
-      <div className="text-sm text-white/50 italic">
-        More features coming soon to enhance your builder experience!
-      </div>
     </div>
-  );
-}
-
-/* ================= SUBCOMPONENTS ================= */
-
-function Section({ icon: Icon, title, subtitle, children }) {
-  return (
-    <section className="overflow-hidden rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 backdrop-blur-sm p-5 sm:p-6 lg:p-8 space-y-4">
-      <div className="flex items-center gap-3">
-        <Icon className="w-5 h-5 text-blue-300" />
-        <div>
-          <h3 className="text-lg font-semibold text-white">{title}</h3>
-          <p className="text-xs text-white/60">{subtitle}</p>
-        </div>
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function KPI({ label, value }) {
-  return (
-    <div className="rounded-xl bg-blue-500/20 border border-blue-400/30 px-4 py-3 text-center">
-      <p className="text-xs text-white/60">{label}</p>
-      <p className="text-lg font-semibold text-white">{value}</p>
-    </div>
-  );
-}
-
-function PortfolioCard({ name, allocation, stage }) {
-  return (
-    <div className="rounded-xl bg-blue-500/10 border border-blue-400/30 p-4">
-      <p className="font-semibold text-white">{name}</p>
-      <p className="text-sm text-white/60">{stage}</p>
-      <p className="text-blue-300 font-medium mt-2">{allocation}</p>
-    </div>
-  );
-}
-
-function ProgressRow({ label, value }) {
-  return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-sm text-white">
-        <span>{label}</span>
-        <span>{value}%</span>
-      </div>
-      <div className="h-2 rounded-full bg-white/10">
-        <div
-          className="h-2 rounded-full bg-green-400"
-          style={{ width: `${value}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value, hint }) {
-  return (
-    <div className="rounded-xl bg-blue-500/10 border border-blue-400/30 p-4">
-      <p className="text-xs text-white/60">{label}</p>
-      <p className="text-lg font-semibold text-white">{value}</p>
-      {hint && <p className="text-xs text-white/40">{hint}</p>}
-    </div>
-  );
-}
-
-function DealCard({ name, tag }) {
-  return (
-    <div className="rounded-xl bg-red-500/10 border border-red-400/30 p-4 flex justify-between items-center">
-      <span className="text-white">{name}</span>
-      <span className="text-xs px-2 py-1 rounded-full bg-red-500/30 border border-red-400/40 text-white">
-        {tag}
-      </span>
-    </div>
-  );
-}
-
-function DocChip({ label, disabled }) {
-  return (
-    <span
-      className={`px-3 py-1.5 rounded-full border text-xs ${disabled
-          ? "bg-white/5 border-white/10 text-white/40"
-          : "bg-purple-500/20 border-purple-400/40 text-white"
-        }`}
-    >
-      {label}
-    </span>
   );
 }

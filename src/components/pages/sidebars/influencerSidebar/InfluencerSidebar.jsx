@@ -17,6 +17,7 @@ export default function InfluencerSidebar({
       unreadMessagesCount={unreadMessagesCount}
       links={links}
       isAdmin={isAdmin}
+      role="influencer"
     />
   );
 }

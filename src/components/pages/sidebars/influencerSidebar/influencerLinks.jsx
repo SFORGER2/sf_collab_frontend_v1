@@ -11,7 +11,11 @@ import {
   HardDrive,
   Presentation,
 } from "lucide-react";
-import { aiTools, toolsSection, dashboardLink, socialSection, wallet, ideation, sfDriveSection, sfMeetSection } from "../sidebarCommons";
+import {
+  aiTools, toolsSection, dashboardLink, socialSection, ideation,
+  sfDriveSection, sfMeetSection, learningSection, walletSection,
+  erpSection, filterERPModules, mentorshipSection,
+} from "../sidebarCommons";
 import { FcInvite } from "react-icons/fc";
 
 export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setActiveRole = () => {}, activeRole = 'influencer') {
@@ -43,7 +47,7 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
         },
       ],
     },
-    ideation(3),
+    ideation(3, "influencer"),
 
     socialSection(4),
 
@@ -90,9 +94,21 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
         { id: "assets", href: "/links-assets/assets", label: "Assets" },
       ],
     },
-    // wallet(8),
-    aiTools(9),
+    aiTools(9, "influencer"),
     toolsSection(10),
+    { id: "section-grow", sectionLabel: "Grow", isSection: true },
+    mentorshipSection(15, "influencer"),
+    learningSection(13, "influencer"),
+    { id: "section-earn", sectionLabel: "Earn", isSection: true },
+    walletSection(8),
+    { id: "section-workspace", sectionLabel: "Workspace", isSection: true },
+    // Influencers get the contributor ERP slice — they were previously the
+    // only working role with no ERP access at all, despite having tasks,
+    // daily updates and payouts.
+    {
+      ...erpSection(14),
+      subItems: filterERPModules(erpSection(14).subItems, "influencer", userRoles),
+    },
     sfDriveSection(11),
     sfMeetSection(12),
   ];

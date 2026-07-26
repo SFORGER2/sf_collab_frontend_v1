@@ -34,14 +34,17 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { startupsAPI, calendarEventsAPI } from '@/utils/APIs/startupsAPI'
 import { API_URL } from '@/utils/config'
 import DeleteConfirmationModal from '@/utils/confirm'
+import { CosmosButton } from '@/components/cosmos'
 
+// Event colours, on the cosmos palette. These are inline style values (not
+// Tailwind classes), so the global token recolour doesn't reach them.
 const colors = [
-  "#3B82F6", // Blue
-  "#10B981", // Green
-  "#F59E0B", // Yellow
-  "#EF4444", // Red
-  "#8B5CF6", // Purple
-  "#F97316", // Orange 
+  "#4fd8ff", // cyan    — structure
+  "#3ee6a0", // emerald — validated
+  "#ffbf5e", // gold    — the spark
+  "#ff6b6b", // red     — deadline, kept unmistakably red
+  "#8b6cff", // violet  — intelligence
+  "#ff4fd8", // magenta — momentum
 ]
 
 const isDateInRange = (date, start, end) => {
@@ -61,7 +64,9 @@ export default function Calendar() {
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [selectedColor, setSelectedColor] = useState(null)
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(null)
-  const [showFilters, setShowFilters] = useState(true)
+  // Collapsed by default — expanded, the filter panel pushed the calendar
+  // grid itself below the fold.
+  const [showFilters, setShowFilters] = useState(false)
   const [loading, setLoading] = useState(false)
   const [exporting, setExporting] = useState(false)
   
@@ -373,18 +378,19 @@ export default function Calendar() {
             key={day.toISOString()}
             onClick={() => handleDateClick(day)}
             className={`
-              min-h-32 border border-gray-700/50 p-2 cursor-pointer transition-all
-              ${isCurrentMonth ? 'bg-gray-800/30 hover:bg-gray-700/50' : 'bg-gray-900/20 text-gray-600'}
-              ${isToday ? 'ring-2 ring-blue-500/50' : ''}
-              hover:shadow-lg hover:scale-105 relative group
+              min-h-28 border border-white/[0.07] p-2 cursor-pointer transition-colors relative group
+              ${isCurrentMonth ? 'bg-white/[0.02] hover:bg-white/[0.05]' : 'bg-transparent'}
+              ${isToday ? 'bg-gold/[0.06]' : ''}
             `}
           >
-            <div className="flex justify-between items-center mb-1">
-              <span className={`
-                text-sm font-medium
-                ${isCurrentMonth ? 'text-white' : 'text-gray-500'}
-                ${isToday ? 'bg-blue-500 text-white px-2 py-1 rounded-full' : ''}
-              `}>
+            <div className="flex justify-between items-center mb-1.5">
+              <span
+                className={`
+                  font-mono text-[11px] tabular-nums
+                  ${isCurrentMonth ? 'text-star' : 'text-dim/50'}
+                  ${isToday ? 'text-[#241300] bg-gold px-1.5 py-0.5 rounded-full font-medium' : ''}
+                `}
+              >
                 {format(day, 'd')}
               </span>
               <TooltipProvider>
@@ -392,7 +398,7 @@ export default function Calendar() {
                   <TooltipTrigger asChild>
                     <button
                       type="button"
-                      className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 bg-transparent border-none cursor-pointer text-white hover:text-blue-400 transition-colors"
+                      className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 h-5 w-5 p-0 bg-transparent border-none cursor-pointer text-dim hover:text-gold transition-all"
                       onClick={(e) => {
                         e.stopPropagation()
                         handleDateClick(day)
@@ -416,13 +422,10 @@ export default function Calendar() {
                     e.stopPropagation()
                     handleEventClick(event, getEventColor(event))
                   }}
-                  className="text-xs p-1.5 rounded truncate cursor-pointer hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: getEventColor(event) + "33", borderLeft: `3px solid ${getEventColor(event)}` }}
+                  className="text-[11px] px-1.5 py-1 rounded-md truncate cursor-pointer transition-opacity hover:opacity-80"
+                  style={{ backgroundColor: getEventColor(event) + "22", borderLeft: `2px solid ${getEventColor(event)}` }}
                 >
-                  <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-white/80" />
-                    <span className="font-medium text-white">{event.title}</span>
-                  </div>
+                  <span className="text-star/90 truncate block leading-tight">{event.title}</span>
                 </div>
               ))}
             </div>
@@ -655,174 +658,125 @@ export default function Calendar() {
         description="Are you sure you want to delete this event? This action cannot be undone."
         type='soft'
       />
-    <div className="overflow-hidden text-white">
-      <div className="w-full mx-auto py-4 md:py-8">
-        {/* Header */}
-        <div className="flex flex-col gap-4 mb-6 md:mb-8">
-          <div>
-            <div className="flex items-center gap-2 md:gap-3 mb-2">
-              <div className="p-2 md:p-2.5 bg-blue-500/10 rounded-lg">
-                <CalendarIcon className="h-5 md:h-6 w-5 md:w-6 text-blue-400" />
-              </div>
-              <ShinyText
-                text="Calendar"
-                disabled={false}
-                speed={3}
-                className='text-xl md:text-2xl font-bold'
-              />
-            </div>
-            <p className="text-gray-400 text-sm md:text-lg ml-10 md:ml-14">Plan and organize your schedule</p>
+    <div className="text-white">
+      <div className="w-full mx-auto">
+        {/* ── Command bar ──────────────────────────────────────────────────
+            One row: where you are, how you're looking at it, what you can do.
+            The old header repeated the widget title in animated text and put
+            three export buttons above the fold; exports now live behind the
+            filter panel, where they're needed but not shouting. */}
+        <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-4">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => navigateMonth('prev')}
+              aria-label="Previous month"
+              className="p-1.5 rounded-lg text-dim hover:text-star hover:bg-white/[0.06] transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            <h2 className="font-display text-[1.05rem] text-star min-w-[7.5rem] text-center">
+              {format(currentDate, 'MMM yyyy')}
+            </h2>
+
+            <button
+              onClick={() => navigateMonth('next')}
+              aria-label="Next month"
+              className="p-1.5 rounded-lg text-dim hover:text-star hover:bg-white/[0.06] transition-colors"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
 
-          <div style={{ zIndex: 9 }} className="flex mx-8 flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3 w-full sm:w-auto">
-            <div className="flex-1 sm:flex-none" data-aos='fade-left' data-aos-delay="100">
-              <Button
-                className="rounded-md flex gap-2 w-full sm:w-[110px] items-center justify-center hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-900 cursor-pointer bg-white text-black"
-                size="sm"
-                onClick={goToToday}
+          <CosmosButton variant="quiet" size="sm" onClick={goToToday}>
+            Today
+          </CosmosButton>
+
+          {/* View switcher — mono segmented control */}
+          <div className="flex items-center gap-1 p-1 rounded-full bg-white/[0.04] border border-white/10">
+            {viewOptions.map((view) => (
+              <button
+                key={view.value}
+                onClick={() => setFilters({ ...filters, view: view.value })}
+                aria-pressed={filters.view === view.value}
+                className={`font-mono text-[10px] tracking-[0.14em] uppercase px-3 py-1.5 rounded-full transition-colors ${
+                  filters.view === view.value
+                    ? 'bg-cyan/15 text-cyan'
+                    : 'text-dim hover:text-star'
+                }`}
               >
-                <CalendarIcon size={16} className="hover:animate-pulse" /> Today
-              </Button>
-            </div>
-        
-            <div className="flex-1 sm:flex-none" data-aos='fade-left' data-aos-delay="200">
-              <ShineButton
-                className="rounded-md flex gap-2 w-full sm:w-[140px] h-8.5 items-center justify-center text-white"
-                label="New Event"
-                icon={<Plus size={16} className="hover:animate-pulse" />}
-                size="sm"
-                bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)"
-                onClick={() => {
-                  setSelectedEvent(null)
-                  setEventForm({
-                    title: '',
-                    description: '',
-                    start_date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
-                    end_date: format(new Date(new Date().getTime() + 60 * 60 * 1000), "yyyy-MM-dd'T'HH:mm"),
-                    all_day: false,
-                    category: 'event',
-                    color: '',
-                    location: '',
-                    startup_id: '',
-                    link: '',
-                    reminder_minutes: 30
-                  })
-                  setShowEventModal(true)
-                }}
-              />
-            </div>
+                {view.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1 ml-auto">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              aria-pressed={showFilters}
+              aria-label="Toggle filters"
+              className={`p-1.5 rounded-lg transition-colors ${
+                showFilters ? 'text-cyan bg-cyan/10' : 'text-dim hover:text-star hover:bg-white/[0.06]'
+              }`}
+            >
+              <Filter size={16} />
+            </button>
+
+            <button
+              onClick={fetchEvents}
+              disabled={loading}
+              aria-label="Refresh events"
+              className="p-1.5 rounded-lg text-dim hover:text-star hover:bg-white/[0.06] transition-colors disabled:opacity-40"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+
+            <CosmosButton
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                setSelectedEvent(null)
+                setEventForm({
+                  title: '',
+                  description: '',
+                  start_date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+                  end_date: format(new Date(new Date().getTime() + 60 * 60 * 1000), "yyyy-MM-dd'T'HH:mm"),
+                  all_day: false,
+                  category: 'event',
+                  color: '',
+                  location: '',
+                  startup_id: '',
+                  link: '',
+                  reminder_minutes: 30
+                })
+                setShowEventModal(true)
+              }}
+            >
+              <Plus size={14} /> New event
+            </CosmosButton>
           </div>
         </div>
 
-        {/* Filters and Controls */}
-        <div className="mb-4 md:mb-6">
-          <SpotlightCard
-            spotlightColor="rgba(59, 130, 246, 0.10)"
-            className="backdrop-blur-xl bg-transparent relative rounded-xl md:rounded-2xl border border-gray-700/50 overflow-hidden"
-          >
-            <img loading="lazy" src="/design_2.jpg" className="absolute object-cover top-0 left-0 w-full h-fit -mt-60 opacity-15" alt="" />
-            <div className="p-2 md:p-4" style={{ zIndex: 99999 }}>
-              <div className="flex flex-col gap-3 md:gap-4 mb-4 md:mb-6">
-                <div className="flex flex-col sm:flex-row gap-2 md:gap-3 overflow-x-auto pb-2" data-aos='fade-left' data-aos-delay="300">
-                  <ButtonGroup className="flex-shrink-0">
-                    <Button
-                      onClick={() => handleExportCalendar('json')}
-                      className="flex gap-1 md:gap-2 items-center justify-center bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-800 cursor-pointer text-black border-none text-xs md:text-sm"
-                    >
-                      <FileJson size={14} className="hover:animate-pulse" />
-                      <span className="hidden sm:inline">JSON</span>
-                    </Button>
-                
-                    <ButtonGroupSeparator />
-                
-                    <Button
-                      onClick={() => handleExportCalendar('csv')}
-                      className="flex gap-1 md:gap-2 items-center justify-center bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-800 cursor-pointer text-black border-none text-xs md:text-sm"
-                    >
-                      <FileSpreadsheet size={14} className="hover:animate-pulse" />
-                      <span className="hidden sm:inline">CSV</span>
-                    </Button>
-                
-                    <ButtonGroupSeparator />
-                
-                    <Button
-                      onClick={() => handleExportCalendar('ical')}
-                      className="flex gap-1 md:gap-2 items-center justify-center bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-800 cursor-pointer text-black border-none text-xs md:text-sm"
-                    >
-                      <CalendarFile size={14} className="hover:animate-pulse" />
-                      <span className="hidden sm:inline">iCal</span>
-                    </Button>
-                  </ButtonGroup>
-                </div>
+        {/* Filters — collapsed by default now; they were permanently expanded,
+            pushing the actual calendar grid below the fold. */}
+        <div className={showFilters ? 'mb-4' : 'hidden'}>
+          <div className="cosmos-card p-3 md:p-4">
+            <div className="flex flex-col gap-3 md:gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="cosmos-stat-label mr-1">Export</span>
+                <CosmosButton variant="quiet" size="sm" onClick={() => handleExportCalendar('json')}>
+                  <FileJson size={14} /> JSON
+                </CosmosButton>
+                <CosmosButton variant="quiet" size="sm" onClick={() => handleExportCalendar('csv')}>
+                  <FileSpreadsheet size={14} /> CSV
+                </CosmosButton>
+                <CosmosButton variant="quiet" size="sm" onClick={() => handleExportCalendar('ical')}>
+                  <CalendarFile size={14} /> iCal
+                </CosmosButton>
               </div>
 
-              <div className="flex flex-col gap-3 md:gap-4">
-                {/* View Controls */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3" style={{ zIndex: 99999 }}>
-                  <div className="flex items-center gap-1 md:gap-2 justify-between sm:justify-start">
-                    <Button
-                      onClick={() => navigateMonth('prev')}
-                      variant="outline"
-                      size="sm"
-                      className="border-gray-700 text-gray-600 hover:text-gray-950 hover:border-blue-500 p-2"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                
-                    <h2 className="text-lg md:text-xl font-bold text-white flex-1 sm:flex-none text-center">
-                      {format(currentDate, 'MMM yyyy')}
-                    </h2>
-                
-                    <Button
-                      onClick={() => navigateMonth('next')}
-                      variant="outline"
-                      size="sm"
-                      className="border-gray-700 text-gray-600 hover:text-gray-950 hover:border-blue-500 p-2"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {/* View Tabs - Horizontal scroll on mobile */}
-                  <Tabs value={filters.view} onValueChange={(value) => setFilters({ ...filters, view: value })} className="w-full sm:w-auto">
-                    <TabsList style={{ zIndex: 99999 }} className="bg-gray-800/50 border border-gray-700 w-full sm:w-auto grid grid-cols-3">
-                      {viewOptions.map((view) => (
-                        <TabsTrigger key={view.value} value={view.value} className={`text-xs md:text-sm py-2 ${filters.view === view.value ? '' : 'text-white'}`}>
-                          {view.icon}
-                          <span className="hidden sm:inline ml-1">{view.label}</span>
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
-
-                  {/* Filter Button */}
-                  <div className="flex items-center gap-1 md:gap-2 w-full sm:w-auto" style={{ zIndex: 99999 }}>
-                    <div className="flex-1 sm:flex-none" data-aos='fade-left' data-aos-delay="300">
-                      <Button
-                        className="rounded-md flex gap-2 w-full sm:w-[130px] items-center bg-transparent hover:bg-transparent cursor-pointer justify-center text-white text-sm"
-                        size="sm"
-                        onClick={() => setShowFilters(!showFilters)}
-                      >
-                        <Filter size={16} className="hover:animate-pulse" />
-                        <span className="hidden sm:inline">Filters</span>
-                      </Button>
-                    </div>
-                
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={fetchEvents}
-                      disabled={loading}
-                      className="p-2"
-                    >
-                      <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Advanced Filters */}
-                {showFilters && (
-                  <div className="p-3 md:p-4 border border-gray-700 rounded-lg bg-gray-800/30 relative" style={{ zIndex: 50 }}>
+                {/* Advanced filters */}
+                <div className="pt-3 border-t border-white/10 relative" style={{ zIndex: 50 }}>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                       {/* Category Filter */}
                       <div className="space-y-2">
@@ -928,124 +882,91 @@ export default function Calendar() {
                       </div>
                     </div>
             
-                    {/* Additional Filters */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-700">
+                    {/* Additional filters */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-3 md:mt-4 pt-3 md:pt-4 border-t border-white/10">
                       <div className="flex items-center gap-2">
                         <Switch
                           checked={filters.upcoming_only}
                           onCheckedChange={(checked) => setFilters({ ...filters, upcoming_only: checked })}
                         />
-                        <Label className="text-xs md:text-sm text-gray-400">Upcoming only</Label>
+                        <Label className="text-xs md:text-sm text-dim">Upcoming only</Label>
                       </div>
-                  
-                      <div className="w-full sm:w-auto" data-aos='fade-left' data-aos-delay="400">
-                        <ShineButton
-                          className="rounded-md flex gap-2 w-full sm:w-[150px] items-center justify-center text-white text-sm"
-                          label="Clear"
-                          icon={<X size={14} className="hover:animate-pulse" />}
-                          size="sm"
-                          bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)"
-                          onClick={() => {
-                            setFilters({
-                              category: 'all',
-                              startup_id: 'all',
-                              view: 'month',
-                              upcoming_only: false,
-                              search: '',
-                              start_date: null,
-                              end_date: null
-                            })
-                            setSelectedEvent(null)
-                          }}
-                        />
-                      </div>
+
+                      <CosmosButton
+                        variant="quiet"
+                        size="sm"
+                        onClick={() => {
+                          setFilters({
+                            category: 'all',
+                            startup_id: 'all',
+                            view: 'month',
+                            upcoming_only: false,
+                            search: '',
+                            start_date: null,
+                            end_date: null
+                          })
+                          setSelectedEvent(null)
+                        }}
+                      >
+                        <X size={14} /> Clear
+                      </CosmosButton>
                     </div>
                   </div>
-                )}
               </div>
             </div>
-          </SpotlightCard>
         </div>
 
-        {/* Calendar View */}
-        <div className="mb-6">
+        {/* ── Metrics strip ───────────────────────────────────────────────
+            Moved above the grid: four numbers you read at a glance, in the
+            cosmos stat treatment. They used to sit below the fold as four
+            separate bordered cards in four unrelated colours. */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          {[
+            { label: 'Total events', value: events.length, accent: '#f2effa' },
+            { label: 'Upcoming', value: events.filter(e => !e.is_past).length, accent: '#3ee6a0' },
+            {
+              label: 'This month',
+              value: events.filter(e =>
+                new Date(e.start_date).getMonth() === currentDate.getMonth() &&
+                new Date(e.start_date).getFullYear() === currentDate.getFullYear()
+              ).length,
+              accent: '#8b6cff',
+            },
+            { label: 'Today', value: getEventsForDate(new Date()).length, accent: '#ffbf5e' },
+          ].map((s) => (
+            <div key={s.label} className="cosmos-card p-3.5">
+              <span className="cosmos-stat-label">{s.label}</span>
+              <span className="cosmos-stat-value text-[1.5rem]" style={{ color: s.accent }}>
+                {s.value}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar grid */}
+        <div>
           {filters.view === 'month' && (
-            <div className="mb-4 grid grid-cols-7 gap-px bg-gray-800 rounded-lg overflow-hidden">
+            <div className="grid grid-cols-7 gap-px mb-px rounded-t-xl overflow-hidden border border-white/10 border-b-0">
               {weekDays.map((day) => (
-                <div key={day} className="p-3 text-center bg-gray-800/50 border-b border-gray-700">
-                  <span className="text-sm font-semibold text-gray-400">{day}</span>
+                <div key={day} className="py-2.5 text-center bg-white/[0.03]">
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-dim">
+                    {day.slice(0, 3)}
+                  </span>
                 </div>
               ))}
             </div>
           )}
-          
+
           {loading ? (
-            <div className="flex justify-center items-center h-96">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <div className="flex flex-col items-center justify-center h-64 gap-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-gold border-t-transparent" />
+              <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-dim">
+                Loading events
+              </span>
             </div>
           ) : (
             renderView()
           )}
-        </div>
-
-        {/* Stats Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="border-gray-700 bg-gray-800/30">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Total Events</p>
-                  <p className="text-2xl font-bold text-white">{events.length}</p>
-                </div>
-                <CalendarIcon className="h-8 w-8 text-blue-400" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-gray-700 bg-gray-800/30">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Upcoming</p>
-                  <p className="text-2xl font-bold text-green-400">
-                    {events.filter(e => !e.is_past).length}
-                  </p>
-                </div>
-                <Bell className="h-8 w-8 text-green-400" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-gray-700 bg-gray-800/30">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">This Month</p>
-                  <p className="text-2xl font-bold text-purple-400">
-                    {events.filter(e =>
-                      new Date(e.start_date).getMonth() === currentDate.getMonth() &&
-                      new Date(e.start_date).getFullYear() === currentDate.getFullYear()
-                    ).length}
-                  </p>
-                </div>
-                <CalendarDays className="h-8 w-8 text-purple-400" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-gray-700 bg-gray-800/30">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Today</p>
-                  <p className="text-2xl font-bold text-yellow-400">
-                    {getEventsForDate(new Date()).length}
-                  </p>
-                </div>
-                <Clock className="h-8 w-8 text-yellow-400" />
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
 

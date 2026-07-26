@@ -11,7 +11,11 @@ import { createBuilderLinks } from "../builderSidebar/BuilderLinks";
 import { createFounderLinks } from "../founderSidebar/FounderLinks";
 import { createInfluencerLinks } from "../influencerSidebar/influencerLinks";
 import { BsPeople } from "react-icons/bs";
-import { aiTools, dashboardLink, erpSection, ideation, socialSection, toolsSection, filterERPModules } from "../sidebarCommons";
+import {
+  aiTools, dashboardLink, erpSection, ideation, socialSection, toolsSection,
+  filterERPModules, learningSection, mentorshipSection, walletSection,
+  sfDriveSection, sfMeetSection,
+} from "../sidebarCommons";
 
 export const CONTEXT_THEME = {
   1: { pillBg: "bg-blue-600/20", pillText: "text-blue-200", activeBg: "bg-white", activeText: "text-gray-950" },
@@ -38,35 +42,21 @@ export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) 
         { id: "saved-startups", href: "/saved-startups", label: "Saved Startups", icon: <Save size={18} /> },
       ],
     },
-    ideation(4),
-    erp,
+    ideation(4, "member"),
     socialSection(6),
-    {
-      id: 7,
-      icon: <BookOpen size={22} />,
-      href: "/knowledge",
-      label: "Learning",
-      subItems: [
-        { id: "knowledge", href: "/knowledge", label: "Knowledge", icon: <BookOpen size={18} /> },
-        { id: "mentors", href: "/mentors", label: "Find a Mentor", icon: <Search size={18} /> },
-        { id: "mentor-dashboard", href: "/mentor-dashboard", label: "Mentor Dashboard", icon: <GraduationCap size={18} /> },
-        { id: "my-mentorship-requests", href: "/my-mentorship-requests", label: "My Requests", icon: <Star size={18} /> },
-      ],
-    },
-    aiTools(8),
+    aiTools(8, "member"),
     toolsSection(9),
-    {
-      id: 10,
-      icon: <Wallet size={22} />,
-      href: "/wallet",
-      label: "Wallet & Store",
-      subItems: [
-        { id: "wallet", href: "/wallet", label: "My Wallet", icon: <Coins size={18} /> },
-        { id: "store", href: "/store", label: "SF Store", icon: <ShoppingBag size={18} /> },
-        { id: "leaderboard", href: "/leaderboard", label: "Leaderboard", icon: <Trophy size={18} /> },
-        { id: "marketplace", href: "/marketplace", label: "Marketplace", icon: <ShoppingCart size={18} /> },
-      ],
-    },
+    { id: "section-grow", sectionLabel: "Grow", isSection: true },
+    mentorshipSection(7, "member"),
+    learningSection(15, "member"),
+    { id: "section-earn", sectionLabel: "Earn", isSection: true },
+    walletSection(10),
+    { id: "section-workspace", sectionLabel: "Workspace", isSection: true },
+    erp,
+    // SF Drive and SF Meet were absent from the member sidebar entirely, so
+    // the default role had no route to either product.
+    sfDriveSection(11),
+    sfMeetSection(12),
   ];
 }
 

@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import LoadingSpinner from "./LoadingSpinner";
 import AccessRequestModal from "./auth/admin/AccessRequestModal";
 import { hasPermission } from "../utils/permissionCheck";
+import { DEV_AUTH_BYPASS } from "../services/auth/devSession";
 
 // ── Permission Denied Page ────────────────────────────────────────────────
 const PermissionDeniedPage = ({ onRequestAccess }) => {
@@ -44,8 +45,10 @@ export const ProtectedRoute = ({ children, requiredPermission }) => {
 
   if (loading) return <LoadingSpinner />;
 
-  // Not authenticated → redirect to login
-  if (!access_token || !user) {
+  // Not authenticated → redirect to login.
+  // DEV_AUTH_BYPASS lets the UI be reviewed without a backend; it is statically
+  // false in production builds, so this guard is fully intact when it ships.
+  if (!DEV_AUTH_BYPASS && (!access_token || !user)) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

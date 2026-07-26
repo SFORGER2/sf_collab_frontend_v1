@@ -1,0 +1,658 @@
+<a class="skip-link" href="#positioning">Skip to SFCollab</a>
+
+<div id="loader" role="status" aria-live="polite">
+  <div class="spark" aria-hidden="true"></div>
+  <div class="phrase">Initializing a new reality…</div>
+  <button class="skip" id="loader-skip" type="button">Skip to SFCollab</button>
+</div>
+
+<canvas id="universe" aria-hidden="true"></canvas>
+<div id="vignette" aria-hidden="true"></div>
+<div id="hud" aria-hidden="true">
+  <span class="bracket tl"></span><span class="bracket tr"></span><span class="bracket bl"></span><span class="bracket br"></span>
+  <div class="hud-phase" id="hud-phase"></div>
+  <div class="hud-vel">Velocity<b id="hud-vel">0.00c</b><span class="vel-bar"><i id="hud-velbar"></i></span></div>
+  <div class="hud-dist">Distance<b id="hud-dist">0.0 AU</b></div>
+  <div class="reticle"></div>
+</div>
+<div id="transit" aria-hidden="true"></div>
+
+<nav id="nav" aria-label="Primary">
+  <a class="brand" href="/"><span class="dot" aria-hidden="true"></span>SFCollab</a>
+  <div class="nav-links">
+    <a href="#positioning">What Is SFCollab</a>
+    <a href="#visions">Active Visions</a>
+    <a href="#how">How It Works</a>
+    <a href="#profiles">Profiles</a>
+    <a href="#ai-tools">AI Tools</a>
+    <a href="#ecosystem">Ecosystem</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="/login" data-track="nav_sign_in">Sign In</a>
+  </div>
+  <a class="btn btn-primary btn-sm" href="/signup" data-track="nav_create_vision">Create a Vision</a>
+  <button id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">☰</button>
+  <div id="journey-rail">
+    <span id="mission-progress" aria-hidden="true"></span>
+    <span id="jr-rocket" aria-hidden="true"><svg viewBox="0 0 34 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path class="jr-flame" d="M1.5 8 L10 5.4 L10 10.6 Z" fill="#ffbf5e" opacity="0.9"/>
+      <path d="M10 8 c0 -3.1 4.2 -5.5 9.2 -5.5 l6.2 3.3 a2.6 2.6 0 0 1 0 4.4 l-6.2 3.3 c-5 0 -9.2 -2.4 -9.2 -5.5 Z" stroke="#ffbf5e" stroke-width="1.4" fill="rgba(255,191,94,0.12)"/>
+      <circle cx="22.4" cy="8" r="2" stroke="#4fd8ff" stroke-width="1.2" fill="rgba(79,216,255,0.25)"/>
+      <path d="M12.5 4.4 L9.4 1.4 M12.5 11.6 L9.4 14.6" stroke="#8b6cff" stroke-width="1.3" stroke-linecap="round"/>
+    </svg></span>
+  </div>
+</nav>
+<div id="mobile-menu">
+  <a href="#positioning">What Is SFCollab</a>
+  <a href="#visions">Active Visions</a>
+  <a href="#how">How It Works</a>
+  <a href="#profiles">Profiles</a>
+  <a href="#ai-tools">AI Tools</a>
+  <a href="#ecosystem">Ecosystem</a>
+  <a href="#roadmap">Roadmap</a>
+  <a href="/login">Sign In</a>
+  <a class="btn btn-primary" href="/signup">Create a Vision</a>
+</div>
+
+<main id="main">
+
+<!-- ============ CHAPTER 1 — BEFORE CREATION ============ -->
+<section class="beat" id="ch1" data-cam="dark">
+  <div class="beat-inner reveal">
+    <div class="lines">
+      <p class="statement line">In the beginning, there was no company.</p>
+      <p class="line small">No team. No product. No funding. No proof.</p>
+      <p class="statement line glow">Only an idea.</p>
+    </div>
+  </div>
+  <div class="scroll-cue" aria-hidden="true"><span></span>Scroll to begin</div>
+</section>
+
+<section class="beat" id="ch1b" data-cam="spark">
+  <div class="beat-inner reveal">
+    <div class="lines">
+      <p class="statement line">Small enough to be ignored.<br>Powerful enough to create a new reality.</p>
+      <p class="line small">At first, perhaps only one person could see it.</p>
+      <p class="line small">That is how nearly every future begins.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ IMMEDIATE POSITIONING + CTA ============ -->
+<section class="deck" id="positioning" data-cam="spark2">
+  <div class="panel reveal">
+    <p class="eyebrow">Your vision begins here</p>
+    <h1>SFCollab is the intelligence and creation layer for startups.</h1>
+    <p class="lede">Turn one idea into an operating startup — with people, AI, execution, knowledge, and opportunity connected in one intelligent system.</p>
+    <p>SFCollab connects the full startup-building journey: <strong>Vision → Validation → MVP → Content &amp; Team → Startup → Crowdfunding → V1 → Investment → Growth.</strong> Instead of separate applications for ideas, documents, meetings, AI generation, execution, networking, recruitment, promotion, and funding, everything lives in one ecosystem — so the platform's AI can understand your entire project context. The more your team builds inside SFCollab, the more useful its intelligence layer becomes.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/signup" data-track="hero_register">Create Your Vision</a>
+      <a class="btn btn-ghost" href="#visions" data-track="hero_see_visions">See Active Visions</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 2 — THE BIG BANG OF AN IDEA ============ -->
+<section class="beat" id="ch2" data-cam="bang">
+  <div class="beat-inner reveal">
+    <div class="lines">
+      <p class="statement line">An idea becomes powerful when it is given structure.</p>
+      <p class="line small">The spark becomes a vision.</p>
+    </div>
+  </div>
+</section>
+
+<section class="beat" id="ch2b" data-cam="bang-peak">
+  <div class="beat-inner reveal">
+    <div class="lines">
+      <p class="line small">The vision creates possibilities. Possibilities attract people. People create momentum.</p>
+      <p class="statement line glow">And momentum begins creating reality.</p>
+    </div>
+  </div>
+</section>
+
+<section class="deck align-r" id="vision-creation" data-cam="bang2">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapter 02 — Vision creation</p>
+    <h2>Register an idea as a Vision.</h2>
+    <p class="lede">A Vision is the beginning of a potential startup — an idea given structure, made visible to the ecosystem.</p>
+    <div class="grid grid-3">
+      <div class="card"><h4>Describe the problem</h4><p>Define the opportunity and communicate the proposed solution.</p></div>
+      <div class="card"><h4>Attract early signals</h4><p>Receive feedback, gather support, and develop the concept in the open.</p></div>
+      <div class="card"><h4>Invite others in</h4><p>Bring builders, mentors, influencers, and investors into the journey.</p></div>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/signup" data-track="ch2_launch_vision">Launch a Vision</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 3 — THE UNIVERSE OF ACTIVE VISIONS ============ -->
+<section class="beat" id="ch3" data-cam="visions-approach">
+  <div class="beat-inner reveal">
+    <div class="lines">
+      <p class="statement line">One idea is a spark.</p>
+      <p class="statement line">But no creator is alone in the universe.</p>
+      <p class="line small">Across SFCollab, people are already imagining what comes next.</p>
+    </div>
+  </div>
+</section>
+
+<section class="deck" id="visions" data-cam="visions">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapter 03 — The living universe</p>
+    <h2>Explore Active Visions</h2>
+    <p class="lede">Discover ideas at their earliest stage. Support them, challenge them, contribute your skills, or become part of what they may become.</p>
+    <p class="muted" id="visions-hint">Each star in the universe behind this panel is a real Vision on SFCollab. Select one to see it here.</p>
+    <div id="vision-cards">
+      <div class="vision-row" id="vision-row" aria-live="polite"></div>
+      <div id="visions-fallback">
+        <p>The universe is still active.</p>
+        <p style="margin-top:8px"><a href="/discover-startups" data-track="visions_fallback_open">Open Vision Discovery →</a></p>
+      </div>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-ghost" href="/discover-startups" data-track="visions_explore_all">Explore All Visions</a>
+      <a class="btn btn-primary" href="/signup" data-track="visions_register_own">Register Your Own</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 4 — THE FOUNDER'S FLIGHT ============ -->
+<section class="beat" id="ch4" data-cam="flight">
+  <div class="beat-inner reveal">
+    <div class="lines">
+      <p class="statement line">Creating the idea was only the first step.</p>
+      <p class="statement line glow">Now comes the journey.</p>
+      <p class="line small">A founder must turn uncertainty into direction. Direction into action.<br>And action into something others can believe in.</p>
+    </div>
+  </div>
+</section>
+
+<section class="deck align-l" id="journey" data-cam="flight2">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapter 04 — The mission path</p>
+    <h2>SFCollab guides the journey forward.</h2>
+    <p>You are never left staring at an empty profile. Every Vision moves along a mission path:</p>
+    <ol class="path">
+      <li><b>Create a Vision.</b><span>Give your idea structure and make it visible to the ecosystem.</span></li>
+      <li><b>Validate through community signals.</b><span>Feedback, support, and interest — while you develop the concept with structured guidance.</span></li>
+      <li><b>Launch your MVP — automatically.</b><span>SFCollab develops it from your Vision context. No empty repo, no blank page.</span></li>
+      <li><b>Build momentum.</b><span>Start with content and team building: generate content from your context, auto-post to social media, and grow your audience.</span></li>
+      <li><b>Find your people.</b><span>Attract builders — and connect with mentors at the same time.</span></li>
+      <li><b>Convert the Vision into a Startup.</b><span>Conversion unlocks crowdfunding from day one.</span></li>
+      <li><b>Complete the architecture.</b><span>Landing page, content engine, team, and operations — everything ready, in one system.</span></li>
+      <li><b>Reach V1 and raise.</b><span>Open the door to investment — with a pitch deck generated last, from the MVP, the traction, and the audience you actually built.</span></li>
+    </ol>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/signup" data-track="ch4_begin_journey">Begin the Journey</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 5 — OBSTACLES ============ -->
+<section class="beat" id="ch5" data-cam="asteroids">
+  <div class="beat-inner reveal">
+    <div class="lines">
+      <p class="statement line">Ideas rarely disappear because imagination was missing.</p>
+      <p class="line small">They disappear between disconnected tools, missing skills, forgotten decisions, and unfinished execution.</p>
+    </div>
+    <div class="obstacles" aria-label="Common startup obstacles">
+      <span>No Team</span><span>No Direction</span><span>No Validation</span>
+      <span>Missing Skills</span><span>Fragmented Tools</span><span>Lost Context</span>
+      <span>No Traction</span><span>No Funding</span><span>Execution Failure</span>
+    </div>
+  </div>
+</section>
+
+<section class="beat" id="ch5b" data-cam="asteroids2">
+  <div class="beat-inner reveal">
+    <div class="lines">
+      <p class="line small">A founder searches for builders in one place. Stores knowledge somewhere else. Uses AI that understands only the latest prompt. Runs meetings in another application. Tracks execution in another system.</p>
+      <p class="statement line">Every separation creates friction.<br>Every lost decision weakens the mission.</p>
+      <p class="statement line glow">SFCollab connects the path.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 6 — THE INTELLIGENCE LAYER ============ -->
+<section class="deck align-r" id="intelligence" data-cam="network">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapter 06 — The intelligence layer</p>
+    <h2>One system. One context. Intelligence that grows with your startup.</h2>
+    <p class="lede">Most AI tools meet your startup one prompt at a time. SFCollab is designed to understand the wider journey.</p>
+    <p>Because the Vision, team, documents, meetings, contributions, startup materials, decisions, and execution can live inside one connected ecosystem, the AI assistant can work with far more meaningful context. Instead of repeatedly explaining what the startup does, who is responsible for what, which decisions were made, what the current priorities are, and which files matter — the system gradually builds a more continuous understanding of the project.</p>
+    <div class="prompts">
+      <div class="prompt"><span class="k">Ask</span><p>"Create an investor update based on our latest milestones, meetings, and startup documents."</p></div>
+      <div class="prompt"><span class="k">Ask</span><p>"What important decisions were made about our pricing?"</p></div>
+      <div class="prompt"><span class="k">Ask</span><p>"Generate next week's content using our brand direction and launch priorities."</p></div>
+      <div class="prompt"><span class="k">Ask</span><p>"Which roles are missing from this Vision?"</p></div>
+      <div class="prompt"><span class="k">Ask</span><p>"Turn our current project context into a new pitch-deck draft."</p></div>
+    </div>
+    <p class="muted" style="margin-top:20px;font-size:.92rem">Built toward persistent organizational intelligence: designed to preserve more project context, reduce the need to repeatedly explain your startup, and help prevent knowledge from becoming fragmented.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/signup" data-track="ch6_build_with_context">Build With Context</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 7 — FIVE PROFILES ============ -->
+<section class="beat" id="ch7" data-cam="profiles-approach">
+  <div class="beat-inner reveal">
+    <div class="lines">
+      <p class="statement line">No meaningful world is created by one force alone.</p>
+      <p class="line small">A vision needs different forms of intelligence, talent, influence, and belief.</p>
+    </div>
+  </div>
+</section>
+
+<section class="deck" id="profiles" data-cam="profiles">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapter 07 — Five forces create momentum</p>
+    <h2>Choose your profile. The universe adapts to your path.</h2>
+    <div class="profile-tabs" role="tablist" aria-label="SFCollab profiles">
+      <button role="tab" id="tab-founder" aria-selected="true" aria-controls="pane-founder" style="--p:#ffbf5e"><span class="p-dot"></span>Founder</button>
+      <button role="tab" id="tab-builder" aria-selected="false" aria-controls="pane-builder" style="--p:#4fd8ff"><span class="p-dot"></span>Builder</button>
+      <button role="tab" id="tab-mentor" aria-selected="false" aria-controls="pane-mentor" style="--p:#3ee6a0"><span class="p-dot"></span>Mentor</button>
+      <button role="tab" id="tab-influencer" aria-selected="false" aria-controls="pane-influencer" style="--p:#ff4fd8"><span class="p-dot"></span>Influencer</button>
+      <button role="tab" id="tab-investor" aria-selected="false" aria-controls="pane-investor" style="--p:#8b6cff"><span class="p-dot"></span>Investor</button>
+    </div>
+
+    <div class="profile-pane active" id="pane-founder" role="tabpanel" aria-labelledby="tab-founder" style="--p:#ffbf5e">
+      <p class="tagline">Begin with an idea and turn it into a company.</p>
+      <ul>
+        <li>Register Visions and develop startup concepts</li>
+        <li>Discover collaborators and form teams</li>
+        <li>Use AI creation tools built on your context</li>
+        <li>Organize startup knowledge in one place</li>
+        <li>Progress toward Vision-to-Startup conversion</li>
+        <li>Build public credibility as you execute</li>
+      </ul>
+      <div class="cta-row"><a class="btn btn-primary" href="/signup?role=founder" data-track="profile_cta_founder">Create as a Founder</a></div>
+    </div>
+
+    <div class="profile-pane" id="pane-builder" role="tabpanel" aria-labelledby="tab-builder" style="--p:#4fd8ff">
+      <p class="tagline">Find meaningful projects and prove your ability through real work.</p>
+      <p class="muted">Developers, designers, marketers, analysts, strategists, content creators, operators — every kind of contributor.</p>
+      <ul>
+        <li>Discover Visions and Startups that need your skills</li>
+        <li>Join teams and make measurable contributions</li>
+        <li>Build reputation and earn achievements</li>
+        <li>Show proof of work, not just self-description</li>
+        <li>Become known for execution</li>
+      </ul>
+      <div class="cta-row"><a class="btn btn-primary" href="/signup?role=builder" data-track="profile_cta_builder">Join as a Builder</a></div>
+    </div>
+
+    <div class="profile-pane" id="pane-mentor" role="tabpanel" aria-labelledby="tab-mentor" style="--p:#3ee6a0">
+      <p class="tagline">Turn experience into direction for the next generation of founders.</p>
+      <ul>
+        <li>Discover projects that match your knowledge</li>
+        <li>Guide teams and review critical decisions</li>
+        <li>Contribute structured expertise</li>
+        <li>Build reputation through meaningful outcomes</li>
+      </ul>
+      <div class="cta-row"><a class="btn btn-primary" href="/signup?role=mentor" data-track="profile_cta_mentor">Guide as a Mentor</a></div>
+    </div>
+
+    <div class="profile-pane" id="pane-influencer" role="tabpanel" aria-labelledby="tab-influencer" style="--p:#ff4fd8">
+      <p class="tagline">Help valuable ideas gain the attention they need to survive.</p>
+      <ul>
+        <li>Discover emerging projects worth sharing</li>
+        <li>Collaborate with founding teams</li>
+        <li>Contribute promotion and early traction</li>
+        <li>Support launches and connect audiences with new opportunities</li>
+      </ul>
+      <div class="cta-row"><a class="btn btn-primary" href="/signup?role=influencer" data-track="profile_cta_influencer">Create Momentum</a></div>
+    </div>
+
+    <div class="profile-pane" id="pane-investor" role="tabpanel" aria-labelledby="tab-investor" style="--p:#8b6cff">
+      <p class="tagline">Discover potential before it becomes obvious.</p>
+      <ul>
+        <li>Explore emerging Visions and Startups</li>
+        <li>Follow progress and evaluate signals</li>
+        <li>Observe team activity and execution</li>
+        <li>Identify opportunities aligned with your interests</li>
+      </ul>
+      <div class="cta-row"><a class="btn btn-primary" href="/signup?role=investor" data-track="profile_cta_investor">Discover Opportunities</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 8 — VISION TO STARTUP ============ -->
+<section class="beat" id="ch8" data-cam="transform">
+  <div class="beat-inner reveal">
+    <div class="lines">
+      <p class="statement line">A Vision is not forced to pretend it is already a company.</p>
+      <p class="line small">Ideas exist at the stage they are actually in — and transform when they are ready.</p>
+    </div>
+  </div>
+</section>
+
+<section class="deck align-l" id="conversion" data-cam="transform2">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapter 08 — From possibility to organization</p>
+    <h2>From Spark to Startup.</h2>
+    <p>Begin with a Vision, gather feedback, attract collaborators, develop the concept, and build positive signals. When the project becomes ready for structured execution, it converts into a Startup — with a team, operating systems, project knowledge, and a clearer path forward.</p>
+    <div class="process">
+      <div class="step"><b>Spark</b><span>An initial thought.</span></div><span class="arrow" aria-hidden="true">→</span>
+      <div class="step"><b>Vision</b><span>A structured idea visible to the ecosystem.</span></div><span class="arrow" aria-hidden="true">→</span>
+      <div class="step"><b>Signals</b><span>Validation from the community while you develop with guidance.</span></div><span class="arrow" aria-hidden="true">→</span>
+      <div class="step"><b>MVP</b><span>Developed automatically. Content, socials, team, and mentors follow.</span></div><span class="arrow" aria-hidden="true">→</span>
+      <div class="step"><b>Startup</b><span>Conversion unlocks crowdfunding from day one.</span></div><span class="arrow" aria-hidden="true">→</span>
+      <div class="step"><b>V1</b><span>Investment-ready — pitch deck generated from real traction.</span></div>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/signup" data-track="ch8_turn_idea">Turn Your Idea Into a Vision</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 9 — AI STARTUP CREATOR ============ -->
+<section class="deck align-r" id="ai-tools" data-cam="tools">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapter 09 — AI startup creator</p>
+    <h2>Build the startup foundation without beginning from an empty page.</h2>
+    <p class="lede">Create once. Reuse the intelligence everywhere.</p>
+    <p>A company description created for your Vision helps inform every asset that follows — and each asset arrives when the journey calls for it. Landing page and content come early, with the MVP. The pitch deck comes last, at V1, once the traction it describes is real. These are not isolated AI toys — they are construction systems that share your startup's context.</p>
+    <div class="grid grid-2">
+      <div class="card"><h4>Business Plan Generator</h4><p>Transforms startup context into a structured business-plan draft.</p></div>
+      <div class="card"><h4>Landing Page Generator</h4><p>Turns the startup proposition into a launch-ready landing page — one of your first assets, live alongside the MVP.</p></div>
+      <div class="card"><h4>Pitch Deck Generator</h4><p>Structures the company story for partners and investors — generated at V1, after your MVP is live and your audience is real, from everything already in your context.</p></div>
+      <div class="card"><h4>Content Generator</h4><p>Creates content from your positioning and project context — and auto-posts to social media so the audience grows while you build.</p></div>
+    </div>
+    <p class="muted" style="margin-top:22px;font-size:.93rem">Expanding toolset: market research, competitor analysis, branding, financial planning, customer personas, launch strategy, social campaigns, validation, workflow generation, and documentation.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/signup" data-track="ch9_explore_tools">Explore AI Tools</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 10 — SF DRIVE + SF MEET ============ -->
+<section class="beat" id="ch10" data-cam="knowledge-approach">
+  <div class="beat-inner reveal">
+    <div class="lines">
+      <p class="statement line">A meeting should not disappear when the call ends.</p>
+      <p class="line small">A file should not become invisible inside a forgotten folder.<br>A decision should remain connected to the reason it was made.</p>
+    </div>
+  </div>
+</section>
+
+<section class="deck align-l" id="knowledge" data-cam="knowledge">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapter 10 — Connected knowledge</p>
+    <h2>Your startup should not forget what it learns.</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <h4>SF Drive</h4>
+        <p>Your startup's connected knowledge environment — files, plans, research, creative assets, reports, decisions, and startup documents. The difference is not storage: documents remain connected to the Vision, Startup, team, and AI context.</p>
+      </div>
+      <div class="card">
+        <h4>SF Meet</h4>
+        <p>The connected meeting environment — keeping discussions, notes, decisions, action items, and project context inside the same ecosystem your startup already lives in.</p>
+      </div>
+    </div>
+    <div class="flow" aria-label="How knowledge stays connected">
+      <span>Meetings</span><i>→</i><span>Notes</span><i>→</i><span>Decisions</span><i>→</i><span>Files</span><i>→</i><span>Execution</span><i>→</i><span>Assistant context</span>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/signup" data-track="ch10_keep_connected">Keep Knowledge Connected</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 11 — CONTRIBUTION + REPUTATION ============ -->
+<section class="beat" id="ch11" data-cam="contribution-approach">
+  <div class="beat-inner reveal">
+    <div class="lines">
+      <p class="statement line">In the old internet, people described what they could do.</p>
+      <p class="statement line glow">In SFCollab, they build a record of what they actually contributed.</p>
+    </div>
+  </div>
+</section>
+
+<section class="deck align-r" id="reputation" data-cam="contribution">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapter 11 — Execution and contribution</p>
+    <h2>Reputation should come from contribution — not only claims.</h2>
+    <div class="grid grid-3">
+      <div class="card"><h4>Contribution</h4><p>Contribute to Visions, Startups, communities, and shared goals — connected to ownership, deliverables, proof of work, outcomes, feedback, and milestones.</p></div>
+      <div class="card"><h4>Reputation</h4><p>Grows through participation and meaningful work. Not a vanity follower count — it represents reliability, contribution quality, collaboration, consistency, and ecosystem trust.</p></div>
+      <div class="card"><h4>Achievements</h4><p>Progress markers that recognize behavior and development — vision creation, collaboration, execution, mentorship, community support, growth, reliability, learning.</p></div>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/signup" data-track="ch11_build_reputation">Start Building Your Reputation</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTERS 12–13 — WALLET + REFERRALS ============ -->
+<section class="deck align-l" id="ecosystem" data-cam="value">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapters 12–13 — Value moves through the ecosystem</p>
+    <h2>Participation should create visible progress.</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <h4>Wallet, rewards &amp; store</h4>
+        <p>The place where ecosystem value connects to what you do — activity, referrals, contributions, achievements, and access to platform tools. Your participation is visible, and it accumulates.</p>
+      </div>
+      <div class="card">
+        <h4>Referrals</h4>
+        <p>The right introduction can change the direction of a startup. Invite people who build — and watch your corner of the universe expand. Referral progress is tracked in your account.</p>
+      </div>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-ghost" href="/signup" data-track="ch12_explore_ecosystem">Explore the Ecosystem</a>
+      <a class="btn btn-primary" href="/signup" data-track="ch13_invite">Invite Someone Who Builds</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 14 — WHY DIFFERENT ============ -->
+<section class="deck" id="different" data-cam="compare">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapter 14 — Why SFCollab is different</p>
+    <h2>Stop rebuilding your startup's context in every new tool.</h2>
+    <p class="lede">SFCollab is building a shared intelligence layer around the entire startup journey.</p>
+    <div class="compare">
+      <div class="side frag">
+        <h4>The fragmented way</h4>
+        <ul>
+          <li>Separate products for networking, co-founder discovery, and project management</li>
+          <li>Meetings in one app, files in another, AI generation in a third</li>
+          <li>Business plans, landing pages, and content built in disconnected tools</li>
+          <li>Reputation, contributions, and investor visibility scattered everywhere</li>
+          <li>Result: repeated explanations, duplicated information, lost context, inconsistent output, forgotten decisions, disconnected teams, higher cost</li>
+        </ul>
+      </div>
+      <div class="side one">
+        <h4>The SFCollab way</h4>
+        <ul>
+          <li>People, Visions, and Startups in one ecosystem</li>
+          <li>Execution, communication, files, and meetings connected</li>
+          <li>AI tools that share your startup's context</li>
+          <li>Contributions, reputation, achievements, referrals, and opportunities in one place</li>
+          <li>Designed to reduce fragmentation — an increasingly complete startup environment</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 15 — HOW TO USE SFCOLLAB ============ -->
+<section class="deck" id="how" data-cam="how">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapter 15 — Your first mission</p>
+    <h2>How to use SFCollab.</h2>
+    <p class="muted">Select a role to see your path. The steps below mirror the real product flow.</p>
+    <div class="profile-tabs" role="tablist" aria-label="First mission by role" id="how-tabs">
+      <button role="tab" aria-selected="true" aria-controls="how-founder" style="--p:#ffbf5e"><span class="p-dot"></span>Founder</button>
+      <button role="tab" aria-selected="false" aria-controls="how-builder" style="--p:#4fd8ff"><span class="p-dot"></span>Builder</button>
+      <button role="tab" aria-selected="false" aria-controls="how-mentor" style="--p:#3ee6a0"><span class="p-dot"></span>Mentor</button>
+      <button role="tab" aria-selected="false" aria-controls="how-influencer" style="--p:#ff4fd8"><span class="p-dot"></span>Influencer</button>
+      <button role="tab" aria-selected="false" aria-controls="how-investor" style="--p:#8b6cff"><span class="p-dot"></span>Investor</button>
+    </div>
+    <div class="profile-pane active role-steps" id="how-founder" role="tabpanel">
+      <ol>
+        <li>Create an account and select the Founder profile.</li>
+        <li>Register your idea as a Vision and complete the guided Vision information.</li>
+        <li>Validate through community signals while developing with structured guidance.</li>
+        <li>Launch your MVP — developed automatically from your Vision context.</li>
+        <li>Build content and your team; connect with mentors; auto-post to social media — all in one system.</li>
+        <li>Convert the Vision into a Startup and open crowdfunding.</li>
+        <li>Complete the architecture — landing page, content engine, team, operations.</li>
+        <li>Reach V1 and raise investment, with a pitch deck generated from real traction.</li>
+      </ol>
+    </div>
+    <div class="profile-pane role-steps" id="how-builder" role="tabpanel">
+      <ol>
+        <li>Create a Builder profile. Add skills and interests.</li>
+        <li>Explore active Visions and Startups.</li>
+        <li>Find projects that need your abilities. Join or apply.</li>
+        <li>Contribute real work.</li>
+        <li>Build reputation and achievements. Develop long-term opportunities.</li>
+      </ol>
+    </div>
+    <div class="profile-pane role-steps" id="how-mentor" role="tabpanel">
+      <ol>
+        <li>Create a Mentor profile. Define areas of expertise.</li>
+        <li>Discover relevant projects.</li>
+        <li>Guide founders and teams.</li>
+        <li>Build reputation through meaningful support.</li>
+      </ol>
+    </div>
+    <div class="profile-pane role-steps" id="how-influencer" role="tabpanel">
+      <ol>
+        <li>Create an Influencer profile. Define audience and content strengths.</li>
+        <li>Discover projects worth supporting.</li>
+        <li>Collaborate on traction and campaigns.</li>
+        <li>Record impact and build ecosystem reputation.</li>
+      </ol>
+    </div>
+    <div class="profile-pane role-steps" id="how-investor" role="tabpanel">
+      <ol>
+        <li>Create an Investor profile. Define interests and preferences.</li>
+        <li>Discover Visions and Startups.</li>
+        <li>Follow execution and project signals.</li>
+        <li>Connect with relevant teams.</li>
+      </ol>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/signup" data-track="ch15_choose_role">Choose Your Role</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 16 — PRODUCT DEMONSTRATION ============ -->
+<section class="deck" id="demo" data-cam="demo">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapter 16 — Do not only tell. Show.</p>
+    <h2>Creating a Vision takes minutes.</h2>
+    <p><span class="tag demo">Interactive demonstration</span>&nbsp; This walkthrough mirrors the real flow. The live version runs in your account after registration.</p>
+    <div class="demo-shell">
+      <div class="demo-bar"><i></i><i></i><i></i><span class="demo-url">sfcollab.com/visions/new</span></div>
+      <div class="demo-body">
+        <div class="demo-steps" id="demo-steps">
+          <span class="on">1 · Describe</span><span>2 · Structure</span><span>3 · Publish</span>
+        </div>
+        <div id="demo-pane-1">
+          <div class="demo-field">
+            <label for="demo-name">Vision name</label>
+            <input id="demo-name" type="text" placeholder="What are you building?">
+          </div>
+          <div class="demo-field">
+            <label for="demo-problem">The problem</label>
+            <textarea id="demo-problem" rows="3" placeholder="What is broken, missing, or too hard today?"></textarea>
+          </div>
+        </div>
+        <div id="demo-pane-2" hidden>
+          <div class="demo-field">
+            <label for="demo-solution">Proposed solution</label>
+            <textarea id="demo-solution" rows="3" placeholder="How does your idea solve it?"></textarea>
+          </div>
+          <div class="demo-field">
+            <label for="demo-roles">Roles you're looking for</label>
+            <input id="demo-roles" type="text" placeholder="e.g. Full-stack developer, growth marketer">
+          </div>
+        </div>
+        <div id="demo-pane-3" hidden>
+          <p style="color:var(--star)">Your Vision is ready to enter the universe — visible to builders, mentors, influencers, and investors, and connected to AI tools that already understand it.</p>
+        </div>
+        <div class="cta-row" style="margin-top:10px">
+          <button class="btn btn-ghost btn-sm" type="button" id="demo-next">Next step</button>
+          <a class="btn btn-primary btn-sm" href="/signup" data-track="demo_do_it_for_real">Do it for real</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 17 — LIVE ACTIVITY ============ -->
+<section class="deck" id="activity" data-cam="activity">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapter 17 — The universe is alive</p>
+    <h2>The next generation of companies is already beginning.</h2>
+    <div id="activity-grid" hidden></div>
+    <p id="activity-fallback">Real activity is happening across the ecosystem right now — <a href="/discover-startups" data-track="activity_open_discovery">open Vision Discovery</a> to see what people are building today.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/signup" data-track="ch17_join">Join the Ecosystem</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 18 — ROADMAP ============ -->
+<section class="deck" id="roadmap" data-cam="roadmap">
+  <div class="panel reveal">
+    <p class="eyebrow">Chapter 18 — This is the beginning, not the limit</p>
+    <h2>One ecosystem designed to keep evolving with the people building inside it.</h2>
+    <div class="roadmap" id="roadmap-grid"></div>
+  </div>
+</section>
+
+<!-- ============ CHAPTER 19 — FINAL REVEAL ============ -->
+<section class="beat" id="ch19" data-cam="blackhole">
+  <div class="beat-inner reveal">
+    <div class="lines">
+      <p class="statement line">At the beginning, there was only an idea.</p>
+      <p class="line small">One person saw what others could not yet see.</p>
+      <p class="line small">Then came knowledge. People. Creation. Contribution. Execution. Momentum.</p>
+      <p class="statement line">The idea did not simply enter the existing world.</p>
+      <p class="statement line glow">It created a new one.</p>
+    </div>
+  </div>
+</section>
+
+<section class="beat beat-empty" data-cam="hole-transit" aria-hidden="true"></section>
+<section class="beat beat-empty" data-cam="city-entry" aria-hidden="true"></section>
+<section class="beat beat-empty" data-cam="city-dive" aria-hidden="true"></section>
+
+<section class="beat" id="finale" data-cam="city">
+  <div class="beat-inner reveal">
+    <div class="lines">
+      <p class="line"><span class="logo">SFCollab</span></p>
+      <p class="line sub">The startup intelligence and creation layer</p>
+      <p class="line small">Turn your idea into a Vision. Find the people who can move it forward. Build with contextual AI. Create the essential assets. Preserve your knowledge. Execute inside one connected ecosystem.</p>
+      <p class="statement line">Do not wait for the future to arrive.<br>Create the reality that should exist.</p>
+    </div>
+    <div class="cta-row" style="justify-content:center;margin-top:44px">
+      <a class="btn btn-primary" href="/signup" data-track="final_create_vision">Create Your Vision</a>
+      <a class="btn btn-ghost" href="/discover-startups" data-track="final_explore_visions">Explore Active Visions</a>
+      <a class="btn btn-ghost" href="#profiles" data-track="final_choose_profile">Choose Your Profile</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <a class="brand" href="/"><span class="dot" aria-hidden="true"></span>SFCollab</a>
+  <div class="f-links">
+    <a href="/discover-startups">Active Visions</a>
+    <a href="#how">How It Works</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="/login">Sign In</a>
+    <a href="/signup">Create a Vision</a>
+  </div>
+  <small>© 2026 SFCollab · Success Framework Collaboration. The universe on this page is rendered live in your browser; every Vision star represents a real project on the platform.</small>
+</footer>
+
+<div id="mobile-cta"><a class="btn btn-primary" href="/signup" data-track="mobile_bar_register">Create Your Vision</a></div>

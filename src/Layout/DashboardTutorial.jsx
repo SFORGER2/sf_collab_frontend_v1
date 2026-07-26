@@ -3,9 +3,14 @@ import { Rocket } from "lucide-react";
 import { useState } from "react";
 import Joyride from "react-joyride";
 import { useSelector } from "react-redux";
+import { DEV_AUTH_BYPASS } from "@/services/auth/devSession";
 
 export default function DashboardTutorial({ activeRole }) {
-  const [isTutorialCompleted, setIsTutorialCompleted] = useState(localStorage.getItem("tutorialCompleted") === "true" || false);
+  // Treat the tour as already seen under the dev bypass — otherwise it opens on
+  // every reload while reviewing the UI.
+  const [isTutorialCompleted, setIsTutorialCompleted] = useState(
+    DEV_AUTH_BYPASS || localStorage.getItem("tutorialCompleted") === "true" || false
+  );
   const { user } = useSelector((state) => state.auth);
   // const startupStep = useMemo(() => {
   //   if (activeRole === "founder") {

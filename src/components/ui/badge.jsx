@@ -16,6 +16,17 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+
+        /* ---- Cosmos status tones -------------------------------------------
+           Mono, wide-tracked pills matching the landing page's tag set. Added
+           alongside the stock variants so existing call sites are untouched.  */
+        live: "cosmos-tag cosmos-tag-live",
+        dev: "cosmos-tag cosmos-tag-dev",
+        planned: "cosmos-tag cosmos-tag-planned",
+        future: "cosmos-tag cosmos-tag-future",
+        demo: "cosmos-tag cosmos-tag-demo",
+        accent: "cosmos-tag cosmos-tag-accent",
+        neutral: "cosmos-tag",
       },
     },
     defaultVariants: {

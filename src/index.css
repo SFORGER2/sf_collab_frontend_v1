@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @plugin 'lightswind/plugin';
 @import "tw-animate-css";
+@import "./components/cosmos/cosmos.css";
 @font-face {
   font-family: 'Inter';
   src: url('/assets/Inter.woff2') format('woff2');
@@ -24,6 +25,180 @@
   --font-inter: 'Inter', sans-serif;
 }
 
+/* ==========================================================================
+   COSMOS THEME — design tokens shared with the SFCollab landing page.
+   Single source of truth for the app's colour, type and motion vocabulary.
+   ========================================================================== */
+@theme {
+  /* ---- Base surfaces ---------------------------------------------------- */
+  --color-void: #050309;          /* deepest background — the empty universe  */
+  --color-deep: #0b1026;          /* nebula blue, used in atmosphere blends   */
+  --color-panel: #0d0a1a;         /* solid panel fill                        */
+  --color-star: #f2effa;          /* primary text                            */
+  --color-dim: #a9a2c2;           /* muted text (lifted from the landing's
+                                     #9a94b4 to clear WCAG AA at small sizes) */
+
+  /* ---- Accents — each colour carries a fixed meaning -------------------- */
+  --color-gold: #ffbf5e;          /* the spark: ideas, energy, primary CTA    */
+  --color-violet: #8b6cff;        /* the intelligence layer: AI              */
+  --color-cyan: #4fd8ff;          /* structure, product UI                   */
+  --color-magenta: #ff4fd8;       /* momentum, promotion                     */
+  --color-mint: #3ee6a0;          /* live status, validation                  */
+
+  /* ---- Semantic aliases ------------------------------------------------
+     Deliberately NOT named --color-accent: the shadcn layer further down
+     already owns that key for component hover states. */
+  --color-spark: var(--color-gold);
+  --color-ai: var(--color-violet);
+  --color-structure: var(--color-cyan);
+  --color-promo: var(--color-magenta);
+  --color-live: var(--color-mint);
+
+  /* ---- Role accents — mirrors the landing page's five profiles ---------- */
+  --color-role-founder: #ffbf5e;
+  --color-role-builder: #4fd8ff;
+  --color-role-mentor: #3ee6a0;
+  --color-role-influencer: #ff4fd8;
+  --color-role-investor: #8b6cff;
+
+  /* ---- Type system ------------------------------------------------------
+     Space Grotesk for display and Inter for body. The landing page's
+     Unbounded/Outfit pairing is beautiful at poster scale but reads as wide
+     and eccentric in dense product UI — headings looked "off" and body copy
+     lost legibility in tables. JetBrains Mono is unchanged and remains the
+     thread tying the app back to the landing page.
+     `--font-marketing` is kept for surfaces that should still feel like the
+     landing page. */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-marketing: 'Unbounded', 'Space Grotesk', system-ui, sans-serif;
+
+  /* ---- Radii — pill buttons, 22px panels, 16px cards ------------------- */
+  --radius-panel: 22px;
+  --radius-card: 16px;
+
+  /* ---- Motion ----------------------------------------------------------- */
+  --ease-cosmos: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Restored from the (never-loaded) tailwind.config.js so `animate-shimmer`
+     works again — Tailwind v4 ignores that file without an @config directive. */
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* ==========================================================================
+   GLOBAL RECOLOUR
+   The app carries ~18,000 Tailwind colour-utility usages across 781 files.
+   Rather than rewriting them, we redefine what each family *resolves to*, so
+   every existing `bg-blue-500` / `text-slate-400` lands on the cosmos palette.
+   Delete this block to revert the entire app to stock Tailwind colours.
+   ========================================================================== */
+@theme {
+  /* ---- blue + sky  ->  CYAN (structure, product UI) -------------------- */
+  --color-blue-50:  #f0fbff;  --color-sky-50:  #f0fbff;
+  --color-blue-100: #ddf6ff;  --color-sky-100: #ddf6ff;
+  --color-blue-200: #b8eeff;  --color-sky-200: #b8eeff;
+  --color-blue-300: #8ce5ff;  --color-sky-300: #8ce5ff;
+  --color-blue-400: #66ddff;  --color-sky-400: #66ddff;
+  --color-blue-500: #4fd8ff;  --color-sky-500: #4fd8ff;
+  --color-blue-600: #2fb8e6;  --color-sky-600: #2fb8e6;
+  --color-blue-700: #1f92bd;  --color-sky-700: #1f92bd;
+  --color-blue-800: #1b7396;  --color-sky-800: #1b7396;
+  --color-blue-900: #1b5e79;  --color-sky-900: #1b5e79;
+  --color-blue-950: #0c3b50;  --color-sky-950: #0c3b50;
+
+  /* ---- purple + indigo + violet  ->  VIOLET (intelligence layer) ------- */
+  --color-purple-50:  #f4f1ff;  --color-indigo-50:  #f4f1ff;  --color-violet-50:  #f4f1ff;
+  --color-purple-100: #ebe5ff;  --color-indigo-100: #ebe5ff;  --color-violet-100: #ebe5ff;
+  --color-purple-200: #d9cfff;  --color-indigo-200: #d9cfff;  --color-violet-200: #d9cfff;
+  --color-purple-300: #bfaaff;  --color-indigo-300: #bfaaff;  --color-violet-300: #bfaaff;
+  --color-purple-400: #a68bff;  --color-indigo-400: #a68bff;  --color-violet-400: #a68bff;
+  --color-purple-500: #8b6cff;  --color-indigo-500: #8b6cff;  --color-violet-500: #8b6cff;
+  --color-purple-600: #7550f0;  --color-indigo-600: #7550f0;  --color-violet-600: #7550f0;
+  --color-purple-700: #6340d2;  --color-indigo-700: #6340d2;  --color-violet-700: #6340d2;
+  --color-purple-800: #5236aa;  --color-indigo-800: #5236aa;  --color-violet-800: #5236aa;
+  --color-purple-900: #453188;  --color-indigo-900: #453188;  --color-violet-900: #453188;
+  --color-purple-950: #291c58;  --color-indigo-950: #291c58;  --color-violet-950: #291c58;
+
+  /* ---- amber + yellow + orange  ->  GOLD (the spark) ------------------- */
+  --color-amber-50:  #fffaf0;  --color-yellow-50:  #fffaf0;  --color-orange-50:  #fffaf0;
+  --color-amber-100: #fff2d8;  --color-yellow-100: #fff2d8;  --color-orange-100: #fff2d8;
+  --color-amber-200: #ffe4ae;  --color-yellow-200: #ffe4ae;  --color-orange-200: #ffe4ae;
+  --color-amber-300: #ffd287;  --color-yellow-300: #ffd287;  --color-orange-300: #ffd287;
+  --color-amber-400: #ffbf5e;  --color-yellow-400: #ffbf5e;  --color-orange-400: #ffbf5e;
+  --color-amber-500: #ffb547;  --color-yellow-500: #ffb547;  --color-orange-500: #ffb547;
+  --color-amber-600: #f09220;  --color-yellow-600: #f09220;  --color-orange-600: #f09220;
+  --color-amber-700: #c76f12;  --color-yellow-700: #c76f12;  --color-orange-700: #c76f12;
+  --color-amber-800: #9e5615;  --color-yellow-800: #9e5615;  --color-orange-800: #9e5615;
+  --color-amber-900: #7f4716;  --color-yellow-900: #7f4716;  --color-orange-900: #7f4716;
+  --color-amber-950: #452307;  --color-yellow-950: #452307;  --color-orange-950: #452307;
+
+  /* ---- pink + fuchsia + rose  ->  MAGENTA (momentum, promotion) -------- */
+  --color-pink-50:  #fff0fb;  --color-fuchsia-50:  #fff0fb;
+  --color-pink-100: #ffe2f8;  --color-fuchsia-100: #ffe2f8;
+  --color-pink-200: #ffc5f2;  --color-fuchsia-200: #ffc5f2;
+  --color-pink-300: #ff9de8;  --color-fuchsia-300: #ff9de8;
+  --color-pink-400: #ff6fdd;  --color-fuchsia-400: #ff6fdd;
+  --color-pink-500: #ff4fd8;  --color-fuchsia-500: #ff4fd8;
+  --color-pink-600: #ea2bb8;  --color-fuchsia-600: #ea2bb8;
+  --color-pink-700: #c41a95;  --color-fuchsia-700: #c41a95;
+  --color-pink-800: #a01879;  --color-fuchsia-800: #a01879;
+  --color-pink-900: #841964;  --color-fuchsia-900: #841964;
+  --color-pink-950: #520539;  --color-fuchsia-950: #520539;
+
+  /* ---- green + emerald  ->  EMERALD (live, validated) ------------------- */
+  --color-emerald-50:  #eafff5;  --color-green-50:  #eafff5;
+  --color-emerald-100: #cdfee7;  --color-green-100: #cdfee7;
+  --color-emerald-200: #9ffbd2;  --color-green-200: #9ffbd2;
+  --color-emerald-300: #66f3ba;  --color-green-300: #66f3ba;
+  --color-emerald-400: #3ee6a0;  --color-green-400: #3ee6a0;
+  --color-emerald-500: #16cd85;  --color-green-500: #16cd85;
+  --color-emerald-600: #0aa76c;  --color-green-600: #0aa76c;
+  --color-emerald-700: #0b8558;  --color-green-700: #0b8558;
+  --color-emerald-800: #0d6947;  --color-green-800: #0d6947;
+  --color-emerald-900: #0d563c;  --color-green-900: #0d563c;
+  --color-emerald-950: #023022;  --color-green-950: #023022;
+
+  /* ---- cyan + teal  ->  the cosmos cyan ramp ---------------------------
+     Kept with blue rather than emerald: these are almost always paired with
+     blue in the app's existing gradients, and splitting them apart made
+     `from-blue-600 to-cyan-600` read as two unrelated hues. */
+  --color-cyan-50:  #f0fbff;  --color-teal-50:  #f0fbff;
+  --color-cyan-100: #ddf6ff;  --color-teal-100: #ddf6ff;
+  --color-cyan-200: #b8eeff;  --color-teal-200: #b8eeff;
+  --color-cyan-300: #8ce5ff;  --color-teal-300: #8ce5ff;
+  --color-cyan-400: #66ddff;  --color-teal-400: #66ddff;
+  --color-cyan-500: #4fd8ff;  --color-teal-500: #4fd8ff;
+  --color-cyan-600: #2fb8e6;  --color-teal-600: #2fb8e6;
+  --color-cyan-700: #1f92bd;  --color-teal-700: #1f92bd;
+  --color-cyan-800: #1b7396;  --color-teal-800: #1b7396;
+  --color-cyan-900: #1b5e79;  --color-teal-900: #1b5e79;
+  --color-cyan-950: #0c3b50;  --color-teal-950: #0c3b50;
+
+  /* ---- slate + gray + zinc + neutral + stone  ->  VOID NEUTRALS --------
+     A violet-tinted dark ramp. 100-400 are text tiers, 700 is the hairline
+     border, 800-950 are panel and background fills.                       */
+  --color-slate-50:  #f7f6fb;  --color-gray-50:  #f7f6fb;  --color-zinc-50:  #f7f6fb;  --color-neutral-50:  #f7f6fb;  --color-stone-50:  #f7f6fb;
+  --color-slate-100: #f2effa;  --color-gray-100: #f2effa;  --color-zinc-100: #f2effa;  --color-neutral-100: #f2effa;  --color-stone-100: #f2effa;
+  --color-slate-200: #ded9ec;  --color-gray-200: #ded9ec;  --color-zinc-200: #ded9ec;  --color-neutral-200: #ded9ec;  --color-stone-200: #ded9ec;
+  --color-slate-300: #cfcae4;  --color-gray-300: #cfcae4;  --color-zinc-300: #cfcae4;  --color-neutral-300: #cfcae4;  --color-stone-300: #cfcae4;
+  --color-slate-400: #a9a2c2;  --color-gray-400: #a9a2c2;  --color-zinc-400: #a9a2c2;  --color-neutral-400: #a9a2c2;  --color-stone-400: #a9a2c2;
+  --color-slate-500: #8b84a3;  --color-gray-500: #8b84a3;  --color-zinc-500: #8b84a3;  --color-neutral-500: #8b84a3;  --color-stone-500: #8b84a3;
+  --color-slate-600: #6d6683;  --color-gray-600: #6d6683;  --color-zinc-600: #6d6683;  --color-neutral-600: #6d6683;  --color-stone-600: #6d6683;
+  --color-slate-700: #4a4462;  --color-gray-700: #4a4462;  --color-zinc-700: #4a4462;  --color-neutral-700: #4a4462;  --color-stone-700: #4a4462;
+  --color-slate-800: #2e2945;  --color-gray-800: #2e2945;  --color-zinc-800: #2e2945;  --color-neutral-800: #2e2945;  --color-stone-800: #2e2945;
+  --color-slate-900: #16122b;  --color-gray-900: #16122b;  --color-zinc-900: #16122b;  --color-neutral-900: #16122b;  --color-stone-900: #16122b;
+  --color-slate-950: #0b0818;  --color-gray-950: #0b0818;  --color-zinc-950: #0b0818;  --color-neutral-950: #0b0818;  --color-stone-950: #0b0818;
+
+  /* red / rose deliberately left at stock values — destructive actions must
+     stay unmistakably red and must not blend into the magenta accent. */
+}
+
 @custom-variant dark (&:is(.dark *));
 
 *{
@@ -38,13 +213,35 @@
 }
 
 html, body{
-    color: white;
-    background-color: black;
-    /* font-family: "Trade Winds", system-ui; */
+    color: var(--color-star);
+    background-color: var(--color-void);
+    font-family: var(--font-body);
+    /* Inter 400 at 15px — tuned for dense product UI. */
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.6;
+    letter-spacing: -0.006em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
+}
+
+/* Display type — headings speak in Unbounded, as on the landing page. */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+::selection { background: rgba(139, 108, 255, 0.45); }
+
+:focus-visible {
+    outline: 2px solid var(--color-cyan);
+    outline-offset: 3px;
+    border-radius: 4px;
 }
 
 html {
@@ -65,28 +262,28 @@ body::-webkit-scrollbar {
 
 html::-webkit-scrollbar-track,
 body::-webkit-scrollbar-track {
-  background: rgba(13, 26, 54, 0.5) !important;
+  background: rgba(13, 10, 26, 0.65) !important;
   border-radius: 10px !important;
 }
 
 html::-webkit-scrollbar-thumb,
 body::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%) !important;
+  background: linear-gradient(180deg, #ffbf5e 0%, #8b6cff 55%, #4fd8ff 100%) !important;
   border-radius: 10px !important;
-  border: 2px solid rgba(59, 130, 246, 0.4) !important;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3) !important;
+  border: 2px solid rgba(139, 108, 255, 0.35) !important;
+  box-shadow: 0 0 8px rgba(139, 108, 255, 0.28) !important;
 }
 
 html::-webkit-scrollbar-thumb:hover,
 body::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #2563eb 0%, #60a5fa 50%, #93c5fd 100%) !important;
-  border: 2px solid rgba(96, 165, 250, 0.6) !important;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.5) !important;
+  background: linear-gradient(180deg, #ffcf7d 0%, #a68bff 55%, #8ce5ff 100%) !important;
+  border: 2px solid rgba(79, 216, 255, 0.5) !important;
+  box-shadow: 0 0 12px rgba(139, 108, 255, 0.45) !important;
 }
 
 html, body {
   scrollbar-width: thin !important;
-  scrollbar-color: #3b82f6 rgba(13, 26, 54, 0.5) !important;
+  scrollbar-color: #8b6cff rgba(13, 10, 26, 0.65) !important;
 }
 
 /* Custom Workspace Scrollbar styling for collaboration workspace */
@@ -95,23 +292,23 @@ html, body {
   height: 10px !important;
 }
 .custom-workspace-scrollbar::-webkit-scrollbar-track {
-  background: rgba(13, 26, 54, 0.5) !important;
+  background: rgba(13, 10, 26, 0.65) !important;
   border-radius: 10px !important;
 }
 .custom-workspace-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%) !important;
+  background: linear-gradient(180deg, #ffbf5e 0%, #8b6cff 55%, #4fd8ff 100%) !important;
   border-radius: 10px !important;
-  border: 2px solid rgba(59, 130, 246, 0.4) !important;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3) !important;
+  border: 2px solid rgba(139, 108, 255, 0.35) !important;
+  box-shadow: 0 0 8px rgba(139, 108, 255, 0.28) !important;
 }
 .custom-workspace-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #2563eb 0%, #60a5fa 50%, #93c5fd 100%) !important;
-  border: 2px solid rgba(96, 165, 250, 0.6) !important;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.5) !important;
+  background: linear-gradient(180deg, #ffcf7d 0%, #a68bff 55%, #8ce5ff 100%) !important;
+  border: 2px solid rgba(79, 216, 255, 0.5) !important;
+  box-shadow: 0 0 12px rgba(139, 108, 255, 0.45) !important;
 }
 .custom-workspace-scrollbar {
   scrollbar-width: thin !important;
-  scrollbar-color: #3b82f6 rgba(13, 26, 54, 0.5) !important;
+  scrollbar-color: #8b6cff rgba(13, 10, 26, 0.65) !important;
 }
 
 
@@ -182,27 +379,27 @@ body::-webkit-scrollbar {
 }
 
 body::-webkit-scrollbar-track {
-  background: rgba(13, 26, 54, 0.5) !important;
+  background: rgba(13, 10, 26, 0.65) !important;
   border-radius: 10px !important;
 }
 
 body::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%) !important;
+  background: linear-gradient(180deg, #ffbf5e 0%, #8b6cff 55%, #4fd8ff 100%) !important;
   border-radius: 10px !important;
-  border: 2px solid rgba(59, 130, 246, 0.4) !important;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3) !important;
+  border: 2px solid rgba(139, 108, 255, 0.35) !important;
+  box-shadow: 0 0 8px rgba(139, 108, 255, 0.28) !important;
 }
 
 body::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #2563eb 0%, #60a5fa 50%, #93c5fd 100%) !important;
-  border: 2px solid rgba(96, 165, 250, 0.6) !important;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.5) !important;
+  background: linear-gradient(180deg, #ffcf7d 0%, #a68bff 55%, #8ce5ff 100%) !important;
+  border: 2px solid rgba(79, 216, 255, 0.5) !important;
+  box-shadow: 0 0 12px rgba(139, 108, 255, 0.45) !important;
 }
 
 /* Firefox Support - Apply to body only */
 body {
   scrollbar-width: thin !important;
-  scrollbar-color: #3b82f6 rgba(13, 26, 54, 0.5) !important;
+  scrollbar-color: #8b6cff rgba(13, 10, 26, 0.65) !important;
 }
 
 /* Hide body scrollbar on landing page */
@@ -224,20 +421,20 @@ body:has(#root > .landing-page) {
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(13, 26, 54, 0.5) !important;
+    background: rgba(13, 10, 26, 0.65) !important;
     border-radius: 10px !important;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%) !important;
+    background: linear-gradient(180deg, #ffbf5e 0%, #8b6cff 55%, #4fd8ff 100%) !important;
     border-radius: 10px !important;
-    border: 2px solid rgba(59, 130, 246, 0.4) !important;
-    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3) !important;
+    border: 2px solid rgba(139, 108, 255, 0.35) !important;
+    box-shadow: 0 0 8px rgba(139, 108, 255, 0.28) !important;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #2563eb 0%, #60a5fa 50%, #93c5fd 100%) !important;
-    box-shadow: 0 0 12px rgba(59, 130, 246, 0.5) !important;
+    background: linear-gradient(180deg, #ffcf7d 0%, #a68bff 55%, #8ce5ff 100%) !important;
+    box-shadow: 0 0 12px rgba(139, 108, 255, 0.45) !important;
   }
 
   .scrollbar-hide::-webkit-scrollbar {
@@ -254,23 +451,23 @@ body:has(#root > .landing-page) {
     display: block !important;
   }
   .scrollbar-visible::-webkit-scrollbar-track {
-    background: rgba(13, 26, 54, 0.5) !important;
+    background: rgba(13, 10, 26, 0.65) !important;
     border-radius: 10px !important;
   }
   .scrollbar-visible::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%) !important;
+    background: linear-gradient(180deg, #ffbf5e 0%, #8b6cff 55%, #4fd8ff 100%) !important;
     border-radius: 10px !important;
-    border: 2px solid rgba(59, 130, 246, 0.4) !important;
-    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3) !important;
+    border: 2px solid rgba(139, 108, 255, 0.35) !important;
+    box-shadow: 0 0 8px rgba(139, 108, 255, 0.28) !important;
   }
   .scrollbar-visible::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #2563eb 0%, #60a5fa 50%, #93c5fd 100%) !important;
-    border: 2px solid rgba(96, 165, 250, 0.6) !important;
-    box-shadow: 0 0 12px rgba(59, 130, 246, 0.5) !important;
+    background: linear-gradient(180deg, #ffcf7d 0%, #a68bff 55%, #8ce5ff 100%) !important;
+    border: 2px solid rgba(79, 216, 255, 0.5) !important;
+    box-shadow: 0 0 12px rgba(139, 108, 255, 0.45) !important;
   }
   .scrollbar-visible {
     scrollbar-width: thin !important;
-    scrollbar-color: #3b82f6 rgba(13, 26, 54, 0.5) !important;
+    scrollbar-color: #8b6cff rgba(13, 10, 26, 0.65) !important;
   }
 }
 
@@ -349,73 +546,87 @@ body:has(#root > .landing-page) {
     --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* --------------------------------------------------------------------------
+   shadcn token layer.
+
+   This block used to hold stock shadcn *light* values (--background: white) on
+   :root, with the dark set gated behind a `.dark` class that nothing in the app
+   ever applies. Every ui/* component therefore rendered light-on-light and had
+   to be overridden inline at each call site.
+
+   :root is now the cosmos dark theme, so Button/Card/Dialog/Select/Popover are
+   correct by default. The `.dark` block below is kept in sync as a no-op, so
+   anything that does opt into `.dark` still lands in the same place.
+   -------------------------------------------------------------------------- */
 :root {
     --radius: 0.625rem;
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --background: #050309;          /* void */
+    --foreground: #f2effa;          /* star */
+    --card: #0d0a1a;                /* panel */
+    --card-foreground: #f2effa;
+    --popover: #0d0a1a;
+    --popover-foreground: #f2effa;
+    --primary: #ffbf5e;             /* gold — the spark */
+    --primary-foreground: #241300;
+    --secondary: rgba(255, 255, 255, 0.06);
+    --secondary-foreground: #f2effa;
+    --muted: rgba(255, 255, 255, 0.05);
+    --muted-foreground: #a9a2c2;    /* dim */
+    --accent: rgba(139, 108, 255, 0.16);
+    --accent-foreground: #f2effa;
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: rgba(255, 255, 255, 0.10);
+    --input: rgba(255, 255, 255, 0.14);
+    --ring: #4fd8ff;                /* cyan focus ring */
+    --chart-1: #ffbf5e;             /* gold */
+    --chart-2: #8b6cff;             /* violet */
+    --chart-3: #4fd8ff;             /* cyan */
+    --chart-4: #ff4fd8;             /* magenta */
+    --chart-5: #3ee6a0;             /* emerald */
+    --sidebar: #090714;
+    --sidebar-foreground: #f2effa;
+    --sidebar-primary: #ffbf5e;
+    --sidebar-primary-foreground: #241300;
+    --sidebar-accent: rgba(255, 255, 255, 0.06);
+    --sidebar-accent-foreground: #f2effa;
+    --sidebar-border: rgba(255, 255, 255, 0.10);
+    --sidebar-ring: #4fd8ff;
 }
 
+/* Kept in sync with :root — the app has a single dark theme, so opting into
+   `.dark` must not change anything. */
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
+    --background: #050309;
+    --foreground: #f2effa;
+    --card: #0d0a1a;
+    --card-foreground: #f2effa;
+    --popover: #0d0a1a;
+    --popover-foreground: #f2effa;
+    --primary: #ffbf5e;
+    --primary-foreground: #241300;
+    --secondary: rgba(255, 255, 255, 0.06);
+    --secondary-foreground: #f2effa;
+    --muted: rgba(255, 255, 255, 0.05);
+    --muted-foreground: #a9a2c2;
+    --accent: rgba(139, 108, 255, 0.16);
+    --accent-foreground: #f2effa;
     --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    --border: rgba(255, 255, 255, 0.10);
+    --input: rgba(255, 255, 255, 0.14);
+    --ring: #4fd8ff;
+    --chart-1: #ffbf5e;
+    --chart-2: #8b6cff;
+    --chart-3: #4fd8ff;
+    --chart-4: #ff4fd8;
+    --chart-5: #3ee6a0;
+    --sidebar: #090714;
+    --sidebar-foreground: #f2effa;
+    --sidebar-primary: #ffbf5e;
+    --sidebar-primary-foreground: #241300;
+    --sidebar-accent: rgba(255, 255, 255, 0.06);
+    --sidebar-accent-foreground: #f2effa;
+    --sidebar-border: rgba(255, 255, 255, 0.10);
+    --sidebar-ring: #4fd8ff;
 }
 
 /* ============================================
@@ -444,12 +655,12 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 .role-tag {
   display: inline-flex;
   align-items: center;
-  background-color: rgba(59, 130, 246, 0.1);
-  color: rgb(147, 197, 253);
+  background-color: rgba(79, 216, 255, 0.12);
+  color: #8ce5ff;
   font-size: 10px;
   padding: 4px 10px;
   border-radius: 6px;
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(79, 216, 255, 0.2);
   font-weight: 600;
   letter-spacing: 0.05em;
   cursor: default;
@@ -458,8 +669,8 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 }
 
 .role-tag:hover {
-  background-color: rgba(59, 130, 246, 0.22);
-  border-color: rgba(59, 130, 246, 0.5);
+  background-color: rgba(79, 216, 255, 0.22);
+  border-color: rgba(139, 108, 255, 0.45);
   color: white;
   transform: scale(1.05);
 }
@@ -467,12 +678,12 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 .tech-tag {
   display: inline-flex;
   align-items: center;
-  background-color: rgba(168, 85, 247, 0.1);
-  color: rgb(216, 180, 254);
+  background-color: rgba(139, 108, 255, 0.1);
+  color: #bfaaff;
   font-size: 10px;
   padding: 4px 10px;
   border-radius: 6px;
-  border: 1px solid rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(139, 108, 255, 0.2);
   font-weight: 600;
   letter-spacing: 0.05em;
   cursor: default;
@@ -481,8 +692,8 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 }
 
 .tech-tag:hover {
-  background-color: rgba(168, 85, 247, 0.22);
-  border-color: rgba(168, 85, 247, 0.5);
+  background-color: rgba(139, 108, 255, 0.22);
+  border-color: rgba(139, 108, 255, 0.5);
   color: white;
   transform: scale(1.05);
 }
@@ -491,66 +702,66 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 .roles-container {
   padding: 1.25rem;
   border-radius: 1rem;
-  background-color: rgba(59, 130, 246, 0.02);
-  border: 1px solid rgba(59, 130, 246, 0.1);
+  background-color: rgba(79, 216, 255, 0.03);
+  border: 1px solid rgba(79, 216, 255, 0.12);
   transition: border-color 400ms ease, box-shadow 400ms ease, background-color 400ms ease;
 }
 .roles-container:hover {
-  border-color: rgba(59, 130, 246, 0.2);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.04), inset 0 0 8px rgba(59, 130, 246, 0.02);
-  background-color: rgba(59, 130, 246, 0.02);
+  border-color: rgba(79, 216, 255, 0.2);
+  box-shadow: 0 0 12px rgba(79, 216, 255, 0.05), inset 0 0 8px rgba(79, 216, 255, 0.03);
+  background-color: rgba(79, 216, 255, 0.03);
 }
 
 .tech-container {
   padding: 1.25rem;
   border-radius: 1rem;
-  background-color: rgba(168, 85, 247, 0.02);
-  border: 1px solid rgba(168, 85, 247, 0.1);
+  background-color: rgba(139, 108, 255, 0.02);
+  border: 1px solid rgba(139, 108, 255, 0.1);
   transition: border-color 400ms ease, box-shadow 400ms ease, background-color 400ms ease;
 }
 .tech-container:hover {
-  border-color: rgba(168, 85, 247, 0.2);
-  box-shadow: 0 0 12px rgba(168, 85, 247, 0.04), inset 0 0 8px rgba(168, 85, 247, 0.02);
-  background-color: rgba(168, 85, 247, 0.02);
+  border-color: rgba(139, 108, 255, 0.2);
+  box-shadow: 0 0 12px rgba(139, 108, 255, 0.04), inset 0 0 8px rgba(139, 108, 255, 0.02);
+  background-color: rgba(139, 108, 255, 0.02);
 }
 
 .problem-container {
   padding: 1.25rem;
   border-radius: 1rem;
-  background-color: rgba(245, 158, 11, 0.02);
-  border: 1px solid rgba(245, 158, 11, 0.1);
+  background-color: rgba(255, 191, 94, 0.02);
+  border: 1px solid rgba(255, 191, 94, 0.1);
   transition: border-color 400ms ease, box-shadow 400ms ease, background-color 400ms ease;
 }
 .problem-container:hover {
-  border-color: rgba(245, 158, 11, 0.2);
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.04), inset 0 0 8px rgba(245, 158, 11, 0.02);
-  background-color: rgba(245, 158, 11, 0.04);
+  border-color: rgba(255, 191, 94, 0.2);
+  box-shadow: 0 0 12px rgba(255, 191, 94, 0.04), inset 0 0 8px rgba(255, 191, 94, 0.02);
+  background-color: rgba(255, 191, 94, 0.04);
 }
 
 .solution-container {
   padding: 1.25rem;
   border-radius: 1rem;
-  background-color: rgba(16, 185, 129, 0.02);
-  border: 1px solid rgba(16, 185, 129, 0.1);
+  background-color: rgba(62, 230, 160, 0.02);
+  border: 1px solid rgba(62, 230, 160, 0.1);
   transition: border-color 400ms ease, box-shadow 400ms ease, background-color 400ms ease;
 }
 .solution-container:hover {
-  border-color: rgba(16, 185, 129, 0.2);
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.04), inset 0 0 8px rgba(16, 185, 129, 0.02);
-  background-color: rgba(16, 185, 129, 0.04);
+  border-color: rgba(62, 230, 160, 0.2);
+  box-shadow: 0 0 12px rgba(62, 230, 160, 0.04), inset 0 0 8px rgba(62, 230, 160, 0.02);
+  background-color: rgba(62, 230, 160, 0.04);
 }
 
 /* Overview container */
 .overview-container {
   padding: 1.25rem;
   border-radius: 1rem;
-  background-color: rgba(59, 130, 246, 0.02);
-  border: 1px solid rgba(59, 130, 246, 0.1);
+  background-color: rgba(79, 216, 255, 0.03);
+  border: 1px solid rgba(79, 216, 255, 0.12);
   transition: border-color 400ms ease, box-shadow 400ms ease, background-color 400ms ease;
 }
 
 .overview-container:hover {
-  border-color: rgba(59, 130, 246, 0.2);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.04), inset 0 0 8px rgba(59, 130, 246, 0.02);
-  background-color: rgba(59, 130, 246, 0.04);
+  border-color: rgba(79, 216, 255, 0.2);
+  box-shadow: 0 0 12px rgba(79, 216, 255, 0.05), inset 0 0 8px rgba(79, 216, 255, 0.03);
+  background-color: rgba(79, 216, 255, 0.05);
 }

@@ -33,6 +33,11 @@ import { ideaAPI } from '@/utils/APIs/ideaAPI';
 import { visionAPI } from '@/utils/APIs/visionAPI';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 import { formatFriendlyDate } from '@/utils/formatFriendlyDate';
+import { CosmosButton, Eyebrow, Tag, AdSlot } from '@/components/cosmos';
+import { useEntitlements } from '@/services/entitlements/useEntitlements';
+import VisionHero from './VisionHero';
+import VisionActions from './VisionActions';
+import VisionDiscovery from './VisionDiscovery';
 
 // ── helpers ──────────────────────────────────────────────────────────────
 
@@ -70,6 +75,68 @@ const MILESTONE_ICONS = {
   collaborator_interest: TrendingUp,
   activity: Zap,
 };
+
+/**
+ * Every readiness category the backend scores, paired with the action that
+ * earns it. The score breakdown used to render as read-only stat boxes — you
+ * could see you were short on points but not what to do about it.
+ *
+ * `openToAll` marks the ones any viewer can contribute to; the rest belong to
+ * the Vision's creator.
+ */
+const MILESTONES = [
+  {
+    key: 'problem_statement',
+    label: 'Define the problem',
+    hint: 'What is broken, missing, or too hard today.',
+    cta: 'Write it',
+    action: (id) => `/ideation-details?id=${id}#problem`,
+  },
+  {
+    key: 'outcome_goal',
+    label: 'Set the outcome',
+    hint: 'What success looks like if this works.',
+    cta: 'Set goal',
+    action: (id) => `/ideation-details?id=${id}#outcome`,
+  },
+  {
+    key: 'roadmap',
+    label: 'Build the roadmap',
+    hint: 'The steps between here and a working product.',
+    cta: 'Add steps',
+    action: (id) => `/ideation-details?id=${id}#roadmap`,
+  },
+  {
+    key: 'required_roles',
+    label: 'Name the roles you need',
+    hint: 'Matchmaking has nothing to work with until you do.',
+    cta: 'Add roles',
+    action: (id) => `/ideation-details?id=${id}#roles`,
+  },
+  {
+    key: 'collaborators',
+    label: 'Gather collaborators',
+    hint: 'People committed to building this with you.',
+    cta: 'Find people',
+    action: () => '/discover-users',
+  },
+  {
+    key: 'collaborator_interest',
+    label: 'Attract interest',
+    hint: 'Saves, follows and questions from the ecosystem.',
+    cta: 'Share it',
+    openToAll: true,
+    action: (id) => `/ideation-details?id=${id}#share`,
+  },
+  {
+    key: 'activity',
+    label: 'Keep it alive',
+    hint: 'Updates and discussion show real momentum.',
+    cta: 'Post an update',
+    openToAll: true,
+    action: (id) => `/ideation-details?id=${id}#discuss`,
+  },
+];
 
 // ── Convert to Startup modal ────────────────────────────────────────────
 
@@ -237,8 +304,13 @@ export default function VisionWorkspacePage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showConvert, setShowConvert] = useState(false);
+  const { showAds } = useEntitlements();
 
   const isCreator = idea && user && idea.creator?.id === user.id;
+
+  // The role the viewer is currently working as — this drives which actions
+  // the page offers. Distinct from `isCreator`, which is about ownership.
+  const viewerRole = localStorage.getItem('activeRole') || 'member';
 
   const load = useCallback(async () => {
     try {
@@ -323,96 +395,103 @@ export default function VisionWorkspacePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-white">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="min-h-screen text-white">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-5">
 
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 text-gray-300" />
-          </button>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-bold text-white truncate">{idea.title}</h1>
-              <span className={`text-xs px-2 py-0.5 rounded-full border ${stateConfig.color}`}>
-                {stateConfig.label}
-              </span>
-            </div>
-            <p className="text-gray-500 text-sm">{idea.industry} • {idea.stage}</p>
-          </div>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors disabled:opacity-40"
-            title="Refresh Vision Points"
-          >
-            <RefreshCw className={`w-4 h-4 text-gray-400 ${refreshing ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
+        <VisionHero
+          idea={idea}
+          readiness={readiness}
+          score={score}
+          threshold={threshold}
+          progressPct={progressPct}
+          eligible={eligible}
+          isCreator={isCreator}
+          refreshing={refreshing}
+          onBack={() => navigate(-1)}
+          onRefresh={handleRefresh}
+          onConvert={() => setShowConvert(true)}
+        />
 
-        {/* Vision Points + Progress bar */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30">
-              <Target className="w-5 h-5 text-blue-400" />
-            </div>
+        {/* What you can do here, from your role's point of view */}
+        <VisionActions viewerRole={viewerRole} isCreator={isCreator} />
+
+        {/* Signals — each milestone is a thing you can go and prove */}
+        <section className="cosmos-panel p-6">
+          <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
             <div>
-              <h2 className="text-white font-semibold">Vision Points</h2>
-              <p className="text-gray-500 text-xs">Progress toward Startup conversion</p>
+              <Eyebrow>Signals</Eyebrow>
+              <h2 className="font-display text-[1.05rem] text-star mt-1.5">
+                Prove this Vision
+              </h2>
             </div>
-          </div>
-
-          <div className="flex items-end justify-between mb-2">
-            <span className="text-3xl font-bold text-white">
-              {Math.round(score)} <span className="text-lg text-gray-500 font-normal">/ {threshold} points</span>
-            </span>
-            <span className="text-sm text-gray-400">
-              {eligible ? 'Ready to convert!' : `${Math.round(pointsRemaining)} points remaining`}
+            <span className="font-mono text-[10.5px] tracking-[0.14em] uppercase text-dim">
+              {eligible
+                ? 'Ready to convert'
+                : `${Math.round(pointsRemaining)} points to activation`}
             </span>
           </div>
 
-          <div className="h-3 bg-white/10 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full rounded-full"
-              style={{ backgroundColor: eligible ? '#22c55e' : progressPct >= 40 ? '#3b82f6' : '#f59e0b' }}
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPct}%` }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-            />
-          </div>
+          <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(215px,1fr))]">
+            {MILESTONES.map((milestone) => {
+              const Icon = MILESTONE_ICONS[milestone.key] || Circle;
+              const earned = readiness.breakdown[milestone.key] ?? 0;
+              const done = earned > 0;
+              const canAct = isCreator || viewerRole === 'founder' || milestone.openToAll;
 
-          {/* Breakdown */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
-            {Object.entries(readiness.breakdown).map(([key, value]) => {
-              const Icon = MILESTONE_ICONS[key] || Circle;
               return (
-                <div key={key} className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
-                  <Icon className="w-3.5 h-3.5 text-gray-400 mb-1.5" />
-                  <p className="text-white text-sm font-semibold">{value} pts</p>
-                  <p className="text-gray-500 text-[11px] capitalize">{key.replace(/_/g, ' ')}</p>
+                <div
+                  key={milestone.key}
+                  className="cosmos-card p-4 flex flex-col gap-2.5"
+                  style={{ '--cosmos-accent': done ? '#3ee6a0' : '#ffbf5e' }}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <Icon
+                      className="w-4 h-4 shrink-0"
+                      style={{ color: done ? '#3ee6a0' : '#a9a2c2' }}
+                    />
+                    {done ? (
+                      <Tag tone="live">{earned} pts</Tag>
+                    ) : (
+                      <Tag tone="future">0 pts</Tag>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-[0.95rem] text-star leading-tight">{milestone.label}</p>
+                    <p className="text-[0.82rem] text-dim mt-1">{milestone.hint}</p>
+                  </div>
+
+                  {canAct && (
+                    <CosmosButton
+                      variant={done ? 'quiet' : 'ghost'}
+                      size="sm"
+                      className="mt-auto self-start"
+                      asChild
+                    >
+                      <Link to={milestone.action(id)}>
+                        {done ? 'Update' : milestone.cta}
+                      </Link>
+                    </CosmosButton>
+                  )}
                 </div>
               );
             })}
           </div>
+        </section>
 
-          {/* Convert to Startup button — only when eligible */}
-          {isCreator && eligible && readiness.visionState !== 'archived' && (
-            <motion.button
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              onClick={() => setShowConvert(true)}
-              className="mt-5 w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-xl
-                         bg-green-600 hover:bg-green-500 text-white text-sm font-semibold transition-colors"
-            >
-              <Rocket className="w-4 h-4" />
-              Convert to Startup
-              <ArrowRight className="w-4 h-4" />
-            </motion.button>
-          )}
-        </div>
+        {/* Discovery, framed by the role you're viewing as. The creator always
+            gets the recruiting lens regardless of active role. */}
+        <VisionDiscovery
+          viewerRole={viewerRole}
+          isCreator={isCreator}
+          results={
+            isCreator
+              ? idea.suggestedContributors || []
+              : idea.similarVisions || idea.relatedStartups || []
+          }
+        />
+
+        {showAds && <AdSlot placement="vision-detail" format="banner" />}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 

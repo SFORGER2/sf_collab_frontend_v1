@@ -44,6 +44,11 @@ import {
   filterERPModules,
   sfDriveSection,
   sfMeetSection,
+  learningSection,
+  mentorshipSection,
+  walletSection,
+  fundraisingSection,
+  contributionSection,
 } from "../sidebarCommons";
 import { GiChecklist } from "react-icons/gi";
 
@@ -103,12 +108,12 @@ export function createFounderLinks(
         },
       ],
     },
-    ideation(3),
+    ideation(3, "founder"),
     {
       id: 4,
       icon: <UserCog size={22} />,
       href: "/founder/my-applications",
-      label: "Manage",
+      label: "Team",
       subItems: [
         {
           id: "manage-applications",
@@ -119,103 +124,35 @@ export function createFounderLinks(
         {
           id: "manage-team",
           href: "/founder/my-team",
-          label: "Team",
+          label: "My Team",
           icon: <Users size={18} />,
         },
         {
-          id: "manage-tasks",
-          href: "/erp/tasks",
-          label: "Tasks",
-          icon: <LightbulbIcon size={18} />,
+          id: "find-builders",
+          href: "/discover-users",
+          label: "Find Builders",
+          icon: <Search size={18} />,
         },
+        // Task management deliberately omitted — it lives in ERP → Task Board.
+        // This entry pointed at the same /erp/tasks route, so the sidebar
+        // offered two paths to one screen.
       ],
     },
     socialSection(5),
-    aiTools(6),
-    // ── Pitch Deck Generator (Module 1 — Navigation) ──────────────────────
-    {
-      id: 14,
-      icon: <Presentation size={22} />,
-      href: "/pitch-deck",
-      label: "Pitch Deck",
-      subItems: [
-        {
-          id: "pitch-deck-create",
-          href: "/pitch-deck/create",
-          label: "Create Deck",
-          icon: <PlusSquare size={18} />,
-        },
-        {
-          id: "pitch-deck-my-decks",
-          href: "/pitch-deck/my-decks",
-          label: "My Decks",
-          icon: <FileStack size={18} />,
-        },
-      ],
-    },
+    // Pitch Deck used to have its own top-level entry here. It is a generator,
+    // not a destination, so it now lives inside AI Tools with the others.
+    aiTools(6, "founder"),
     toolsSection(7),
-    // Mentorship
     { id: "section-grow", sectionLabel: "Grow", isSection: true },
-    {
-      id: 8,
-      icon: <GraduationCap size={22} />,
-      href: "/mentors",
-      label: "Mentorship",
-      subItems: [
-        {
-          id: "mentors",
-          href: "/mentors",
-          label: "Find a Mentor",
-          icon: <Search size={18} />,
-        },
-        {
-          id: "mentor-dashboard",
-          href: "/mentor-dashboard",
-          label: "Mentor Dashboard",
-          icon: <GraduationCap size={18} />,
-        },
-        {
-          id: "my-mentorship-requests",
-          href: "/my-mentorship-requests",
-          label: "My Requests",
-          icon: <Star size={18} />,
-        },
-      ],
-    },
+    mentorshipSection(8, "founder"),
+    learningSection(9, "founder"),
     { id: "section-earn", sectionLabel: "Earn", isSection: true },
-    // Wallet & Store
-    {
-      id: 10,
-      icon: <Wallet size={22} />,
-      href: "/wallet",
-      label: "Wallet & Store",
-      subItems: [
-        {
-          id: "wallet",
-          href: "/wallet",
-          label: "My Wallet",
-          icon: <Coins size={18} />,
-        },
-        {
-          id: "store",
-          href: "/store",
-          label: "SF Store",
-          icon: <ShoppingBag size={18} />,
-        },
-        {
-          id: "leaderboard",
-          href: "/leaderboard",
-          label: "Leaderboard",
-          icon: <Trophy size={18} />,
-        },
-        {
-          id: "marketplace",
-          href: "/marketplace",
-          label: "Marketplace",
-          icon: <ShoppingCart size={18} />,
-        },
-      ],
-    },
+    // Fundraising and Contributions are separate concerns — fundraising is
+    // raising money for your startup, contributions is the ecosystem-wide
+    // system that already has its own home. They used to be bundled.
+    fundraisingSection(15),
+    contributionSection(16),
+    walletSection(10),
     // ── SECTION BREAK: Workspace ──────────────────────────────────────────────
     { id: "section-workspace", sectionLabel: "Workspace", isSection: true },
     // ERP — founder gets full admin access
