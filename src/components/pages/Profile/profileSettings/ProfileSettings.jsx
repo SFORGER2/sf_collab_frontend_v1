@@ -14,6 +14,7 @@ import ProfileSection from './ProfileSection';
 import { updateUser as updateUserSlice } from '@/services/auth/authSlice';
 import { usersAPI } from '@/utils/APIs/userAPI';
 import { authAPI } from '@/utils/APIs/authAPI';
+import { CosmosButton, Eyebrow } from '@/components/cosmos';
 
 const ProfileSettings = ({ back, activeSection: propActiveSection, initialActiveSection }) => {
   const navigate = useNavigate();
@@ -275,40 +276,62 @@ const ProfileSettings = ({ back, activeSection: propActiveSection, initialActive
     }
   };
 
-  if (loading) return <div className="p-8 text-gray-300">Loading settings...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] grid place-items-center text-dim">Loading settings…</div>
+    );
+  }
+
+  const savable = activeSection === 'profile' || activeSection === 'notifications';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center gap-4 mb-8">
-          <button onClick={back} className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors">
+    <div className="min-h-screen text-star">
+      <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Masthead */}
+        <div className="flex flex-wrap items-center gap-3 mb-7">
+          <button
+            onClick={back}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 text-[0.85rem] text-dim hover:text-star hover:bg-white/[0.05] transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" />
-            Back to Profile
+            Back to profile
           </button>
-          <h1 className="text-3xl font-bold">Settings</h1>
+          <div className="min-w-0">
+            <Eyebrow>Account</Eyebrow>
+            <h1 className="font-display text-[1.7rem] text-star leading-tight mt-1">Settings</h1>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-1">
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-6">
-              <nav className="space-y-2">
-                {sections.map((section) => (
+        <div className="grid gap-5 lg:grid-cols-[15rem_1fr]">
+          {/* Section nav — a rail on desktop, a scrollable row on mobile */}
+          <nav className="lg:sticky lg:top-20 lg:self-start">
+            <div className="cosmos-panel p-2 flex lg:flex-col gap-1 overflow-x-auto">
+              {sections.map((section) => {
+                const isActive = activeSection === section.id;
+                return (
                   <button
                     key={section.id}
                     onClick={() => setActiveSection(section.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeSection === section.id ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                      }`}
+                    className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[0.88rem] whitespace-nowrap transition-colors shrink-0"
+                    style={
+                      isActive
+                        ? {
+                            background: 'rgba(255,191,94,0.1)',
+                            color: '#ffbf5e',
+                            boxShadow: 'inset 2px 0 0 #ffbf5e',
+                          }
+                        : { color: 'var(--color-dim)' }
+                    }
                   >
-                    <section.icon className="w-4 h-4" />
+                    <section.icon className="w-4 h-4 shrink-0" />
                     {section.label}
                   </button>
-                ))}
-              </nav>
+                );
+              })}
             </div>
-          </div>
+          </nav>
 
-          <div className="lg:col-span-3">
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-2 md:p-8">
+          <div className="min-w-0">
               {activeSection === 'profile' && (
                 <ProfileSection
                   formData={formData}
@@ -345,13 +368,20 @@ const ProfileSettings = ({ back, activeSection: propActiveSection, initialActive
               {activeSection === 'preferences' && <PreferencesSection formData={formData} onChange={(patch) => setFormData(prev => ({ ...prev, preferences: { ...prev.preferences, ...patch } }))} />}
               {activeSection === 'saved' && <SavedSection formData={formData} setFormData={setFormData} />}
 
-              <div className="flex justify-end mt-6 pt-6 border-t border-gray-700">
-                <button onClick={handleSave} className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+            {/* Save bar. Account & Security has its own per-action buttons, so
+                the generic Save is hidden there rather than showing a button
+                that only ever explains itself in a toast. */}
+            {savable && (
+              <div className="flex flex-wrap items-center justify-end gap-3 mt-5 pt-5 border-t border-white/[0.07]">
+                <span className="text-[0.8rem] text-dim mr-auto">
+                  Changes apply across the whole ecosystem.
+                </span>
+                <CosmosButton variant="primary" size="sm" onClick={handleSave} disabled={saving}>
                   <Save className="w-4 h-4" />
-                  Save Changes
-                </button>
+                  {saving ? 'Saving…' : 'Save changes'}
+                </CosmosButton>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

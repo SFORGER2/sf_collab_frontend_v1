@@ -1,10 +1,58 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import BottomLinks from "./BottomLinks";
-import { Crown, Lock, ChevronDown } from "lucide-react";
+import { Crown, Lock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { getAllRoutes } from "./sidebar/links";
 import { useState } from "react";
 import { roleAccent, roleAccentVars } from "@/components/cosmos";
+
+/**
+ * `< 2/4 >` stepper for people who hold more than one role.
+ *
+ * Sits inline on the Dashboard row. Stops the click from reaching the parent
+ * button, which would otherwise navigate or collapse the item underneath you.
+ */
+function RoleStepper({ roles, current, accent, onPick }) {
+  const index = Math.max(0, roles.indexOf(current));
+  const step = (delta) => onPick(roles[(index + delta + roles.length) % roles.length]);
+
+  const arrow =
+    "p-0.5 rounded text-dim hover:text-star hover:bg-white/10 transition-colors";
+
+  return (
+    <span className="ml-auto flex items-center gap-0.5 shrink-0">
+      <span
+        role="button"
+        tabIndex={0}
+        aria-label="Previous dashboard"
+        className={arrow}
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); step(-1); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); step(-1); } }}
+      >
+        <ChevronLeft size={14} />
+      </span>
+
+      <span
+        className="font-mono text-[9px] tabular-nums tracking-[0.08em] px-0.5"
+        style={{ color: accent }}
+        title={`${current} dashboard — ${index + 1} of ${roles.length}`}
+      >
+        {index + 1}/{roles.length}
+      </span>
+
+      <span
+        role="button"
+        tabIndex={0}
+        aria-label="Next dashboard"
+        className={arrow}
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); step(1); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); step(1); } }}
+      >
+        <ChevronRight size={14} />
+      </span>
+    </span>
+  );
+}
 
 export default function DesktopSidebarContent({
   links = [],
@@ -115,7 +163,21 @@ export default function DesktopSidebarContent({
                         {link.label}
                       </motion.span>
 
-                      {hasSubItems(link) && (
+                      {/* Dashboard with more than one role gets prev/next
+                          arrows, so switching is one click from the nav
+                          instead of expand → scan → pick. */}
+                      {link.roleSwitch?.length > 1 ? (
+                        <RoleStepper
+                          roles={link.roleSwitch}
+                          current={role}
+                          accent={accent.color}
+                          onPick={(r) => {
+                            link.onRoleSwitch?.(r);
+                            navigate(link.href || '/dashboard');
+                            onLinkClick?.();
+                          }}
+                        />
+                      ) : hasSubItems(link) && (
                         <ChevronDown
                           onClick={(e) => {
                             e.stopPropagation();

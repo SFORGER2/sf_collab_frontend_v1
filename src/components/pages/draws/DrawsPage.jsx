@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Gem, Info, Ticket, Timer, Trophy } from 'lucide-react';
+import { Dices, Gem, Info, Ticket, Timer, Trophy } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import LotteryPanel from './LotteryPanel';
 import {
   CURRENCIES, drawsForRole, PRIZE_KINDS, formatCountdown, nextClose,
   readDrawState, winChance, writeDrawState,
@@ -15,11 +17,22 @@ import {
  * top of services/draws/draws.js. Entries, RNG and settlement must move to the
  * backend before this is usable with real stakes.
  */
+const TABS = [
+  { id: 'draws', label: 'Draws', icon: Trophy },
+  { id: 'lottery', label: 'Lottery', icon: Dices },
+];
+
 export default function DrawsPage() {
   const role = localStorage.getItem('activeRole') || 'member';
   const draws = drawsForRole(role);
   const [state, setState] = useState(readDrawState);
   const [, setTick] = useState(0);
+
+  // The sidebar links straight to the lottery, so honour ?tab= on arrival.
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') === 'lottery' ? 'lottery' : 'draws';
+  const setTab = (next) =>
+    setParams(next === 'lottery' ? { tab: 'lottery' } : {}, { replace: true });
 
   // Keep countdowns live.
   useEffect(() => {
@@ -42,11 +55,45 @@ export default function DrawsPage() {
         <Eyebrow>Rewards</Eyebrow>
         <Display size="xl" className="mt-3 mb-4">Draws &amp; prizes</Display>
         <Lede>
-          Stake SF Coins or SF Crystals into a pool. When it closes, winners are drawn —
-          your odds are proportional to your stake, and every entry has a real chance.
+          {tab === 'lottery'
+            ? 'Buy a ticket, roll three reels, match three symbols. Odds are published below — they are the same numbers the roll uses.'
+            : 'Stake SF Coins or SF Crystals into a pool. When it closes, winners are drawn — your odds are proportional to your stake, and every entry has a real chance.'}
         </Lede>
       </Reveal>
 
+      {/* Two different mechanics, so two tabs rather than one long page:
+          draws are scheduled and communal, the lottery is instant and solo. */}
+      <div className="flex items-center gap-1 p-1 mt-6 rounded-full bg-white/[0.04] border border-white/10 w-fit">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            aria-pressed={tab === t.id}
+            className={`flex items-center gap-1.5 font-mono text-[10px] tracking-[0.14em] uppercase px-4 py-2 rounded-full transition-colors ${
+              tab === t.id ? 'text-star bg-white/[0.08]' : 'text-dim hover:text-star'
+            }`}
+          >
+            <t.icon size={12} /> {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'lottery' ? (
+        <div className="mt-6">
+          <LotteryPanel />
+          <AdSlot placement="lottery-page" format="banner" className="mt-6" />
+        </div>
+      ) : (
+        <DrawsTab draws={draws} state={state} enter={enter} />
+      )}
+    </div>
+  );
+}
+
+function DrawsTab({ draws, state, enter }) {
+  return (
+    <>
       <div className="flex flex-wrap gap-3 mt-6">
         {Object.values(CURRENCIES).map((c) => (
           <div key={c.id} className="cosmos-card p-4 flex items-center gap-3 flex-1 min-w-[190px]">
@@ -93,7 +140,7 @@ export default function DrawsPage() {
           earned currency only, and stakes are refunded when you don't win.
         </p>
       </Panel>
-    </div>
+    </>
   );
 }
 

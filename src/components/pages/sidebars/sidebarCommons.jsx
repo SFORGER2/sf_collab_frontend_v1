@@ -8,7 +8,7 @@ import {
   CheckCircle, LayoutDashboard, Settings, PieChart, Coins, CreditCard, FolderOpen, Video, Clock, Trash2, Star,
   Newspaper   // ✅ Added missing import
 } from "lucide-react";
-import { Trophy, ShoppingCart, ShoppingBag, GraduationCap, Search, BadgeCheck } from "lucide-react";
+import { Trophy, ShoppingCart, ShoppingBag, GraduationCap, Search, BadgeCheck, Dices } from "lucide-react";
 import { BsGear, BsPeople } from "react-icons/bs";
 import { IoChatbubbles } from "react-icons/io5";
 import { LuLayoutDashboard } from "react-icons/lu";
@@ -169,6 +169,7 @@ export function walletSection(id) {
       { id: "earn", href: "/wallet/earn", label: "Earn SF Coins", icon: <TrendingUp size={18} /> },
       { id: "credits", href: "/credits", label: "Buy Credits", icon: <CreditCard size={18} /> },
       { id: "draws", href: "/draws", label: "Draws & Prizes", icon: <Trophy size={18} /> },
+      { id: "lottery", href: "/draws?tab=lottery", label: "Lottery & Jackpot", icon: <Dices size={18} /> },
       { id: "plans", href: "/plans", label: "Plans", icon: <Award size={18} /> },
       { id: "store", href: "/store", label: "SF Store", icon: <ShoppingBag size={18} /> },
       { id: "leaderboard", href: "/leaderboard", label: "Leaderboard", icon: <BarChart3 size={18} /> },
@@ -247,6 +248,10 @@ export function dashboardLink(userRoles = [], setActiveRole) {
     icon: <LuLayoutDashboard size={22} />,
     href: "/dashboard",
     label: "Dashboard",
+    // Anyone with more than one role gets prev/next arrows on this row instead
+    // of having to expand it and pick from a list — the sidebar reads these.
+    roleSwitch: userRoles || [],
+    onRoleSwitch: (role) => setActiveRole?.(role),
     subItems: userRoles
       ? userRoles.map((role) => ({
         id: `${role}-dashboard`,
