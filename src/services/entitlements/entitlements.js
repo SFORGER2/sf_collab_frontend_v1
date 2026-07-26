@@ -18,71 +18,12 @@
  * not to storage, so that swap is a single-function change.
  */
 
-export const PLANS = {
-  free: {
-    id: 'free',
-    name: 'Explorer',
-    price: 0,
-    tagline: 'Find your footing in the ecosystem.',
-    accent: '#a9a2c2',
-    showsAds: true,
-    limits: {
-      assistantMessagesPerDay: 10,
-      matchSuggestionsPerDay: 3,
-      aiGenerationsPerDay: 2,
-      activeVisions: 1,
-      driveStorageGb: 1,
-    },
-  },
-  builder: {
-    id: 'builder',
-    name: 'Builder',
-    price: 19,
-    tagline: 'For people shipping every week.',
-    accent: '#4fd8ff',
-    showsAds: false,
-    limits: {
-      assistantMessagesPerDay: 100,
-      matchSuggestionsPerDay: 25,
-      aiGenerationsPerDay: 30,
-      activeVisions: 5,
-      driveStorageGb: 25,
-    },
-  },
-  founder: {
-    id: 'founder',
-    name: 'Founder',
-    price: 49,
-    tagline: 'Run the whole startup from one place.',
-    accent: '#ffbf5e',
-    showsAds: false,
-    popular: true,
-    limits: {
-      assistantMessagesPerDay: 500,
-      matchSuggestionsPerDay: 100,
-      aiGenerationsPerDay: 150,
-      activeVisions: 25,
-      driveStorageGb: 200,
-    },
-  },
-  scale: {
-    id: 'scale',
-    name: 'Scale',
-    price: 149,
-    tagline: 'Teams operating at full speed.',
-    accent: '#8b6cff',
-    showsAds: false,
-    limits: {
-      assistantMessagesPerDay: Infinity,
-      matchSuggestionsPerDay: Infinity,
-      aiGenerationsPerDay: Infinity,
-      activeVisions: Infinity,
-      driveStorageGb: 1000,
-    },
-  },
-};
+// Plan definitions are role-specific and live in ./plans.js — each role has its
+// own four-step ladder plus an Enterprise tier. This module resolves whichever
+// tier the account is on against the ladder for the role they are working as.
+import { plansForRole } from './plans';
 
-export const PLAN_ORDER = ['free', 'builder', 'founder', 'scale'];
+export { TIERS as PLAN_ORDER } from './plans';
 
 /**
  * Credit cost per metered action.
@@ -190,8 +131,20 @@ export function writeAccount(account) {
   window.dispatchEvent(new CustomEvent('sfc:entitlements-changed'));
 }
 
-export function getPlan(planId) {
-  return PLANS[planId] || PLANS.free;
+/**
+ * Resolve a tier id against a role's ladder.
+ *
+ * The same tier id means different limits depending on the role — "pro" gives a
+ * founder 15 Visions and a builder 50 applications. When no role is passed we
+ * fall back to whichever role the user is currently working as.
+ */
+export function getPlan(planId, role) {
+  const activeRole = role || (() => {
+    try { return localStorage.getItem('activeRole') || 'member'; } catch { return 'member'; }
+  })();
+
+  const ladder = plansForRole(activeRole);
+  return ladder.find((p) => p.id === planId) || ladder[0];
 }
 
 /**

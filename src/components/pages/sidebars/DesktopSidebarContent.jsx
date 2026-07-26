@@ -24,10 +24,14 @@ export default function DesktopSidebarContent({
 
   // The active role owns the sidebar's accent, so which profile you're working
   // as is readable at a glance — same five colours as the landing page.
+  //
+  // The active item gets a subtle fill plus an accent bar on its leading edge,
+  // but the label stays star-white. Tinting the label the accent colour made
+  // the current item read as highlighted copy rather than "you are here".
   const accent = roleAccent(role);
   const activeStyle = {
-    background: accent.soft,
-    color: accent.color,
+    background: 'rgba(255,255,255,0.06)',
+    color: 'var(--color-star)',
     boxShadow: `inset 2px 0 0 ${accent.color}`,
   };
 
@@ -154,7 +158,7 @@ export default function DesktopSidebarContent({
                               navigate(subItem.href);
                               onLinkClick?.();
                             }}
-                            style={isSubActive ? { background: accent.soft, color: accent.color } : undefined}
+                            style={isSubActive ? activeStyle : undefined}
                             className={`
                               flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-colors
                               ${isSubActive ? "" : "text-slate-500 hover:bg-white/[0.06] hover:text-star"}
@@ -202,7 +206,7 @@ export default function DesktopSidebarContent({
           )}
         </div>
 
-        <BottomLinks onLinkClick={onLinkClick} callback={callback} isHovered={isHovered} />
+        <BottomLinks onLinkClick={onLinkClick} callback={callback} isHovered={isHovered} role={role} />
       </motion.div>
     </div>
   );

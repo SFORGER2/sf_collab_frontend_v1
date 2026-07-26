@@ -125,6 +125,7 @@ import PitchDeckHome from "./components/pages/pitch-deck/PitchDeckHome.jsx";
 import PitchDeckCreate from "./components/pages/pitch-deck/PitchDeckCreate.jsx";
 import MyDecks from "./components/pages/pitch-deck/MyDecks.jsx";
 import VisionWorkspacePage from "./components/pages/vision/VisionWorkspacePage.jsx";
+import VisionCreator from "./components/pages/vision/VisionCreator.jsx";
 
 import StartupWorkspaceLayout from "./components/pages/startupWorkspace/StartupWorkspaceLayout.jsx";
 import StartupWorkspaceDashboard from "./components/pages/startupWorkspace/StartupWorkspaceDashboard.jsx";
@@ -401,7 +402,9 @@ export default function App() {
                       <Route path="discover-startups" element={<DiscoverStartups />} />
                       <Route path="my-startups" element={<DiscoverStartups myStartupsOnly={true} />} />
                       <Route path="startup-details/:id" element={<StartupDetailPage />} />
+                      <Route path="vision/new" element={<VisionCreator />} />
                       <Route path="vision/:id" element={<VisionWorkspacePage />} />
+                      <Route path="vision/:id/workspace" element={<VisionWorkspacePage />} />
                       <Route path="pitch-deck" element={<PitchDeckHome />} />
                       <Route path="pitch-deck/create" element={<PitchDeckCreate />} />
                       <Route path="pitch-deck/my-decks" element={<MyDecks />} />

@@ -82,9 +82,8 @@ export function learningSection(id, role = "member") {
       { id: "knowledge", href: "/knowledge", label: "Knowledge Base", icon: <BookOpen size={18} /> },
       { id: "video-tutorials", href: "/video-tutorials", label: "Video Tutorials", icon: <VideoIcon size={18} /> },
       roleGuides[role] || { id: "getting-started", href: "/getting-started", label: "Getting Started", icon: <Flag size={18} /> },
-      // Renamed from "Newsletters": this is the product changelog and platform
-      // announcements, which is also what the dashboard widget surfaces.
-      { id: "announcements", href: "/newsletter", label: "Announcements", icon: <Newspaper size={18} /> },
+      // Announcements deliberately absent — they live on the dashboard as the
+      // Announcements / Newsletter widget, not in the Learning menu.
       { id: "help", href: "/help", label: "Help Centre", icon: <MessageSquare size={18} /> },
     ],
   };
@@ -106,9 +105,9 @@ export function learningSection(id, role = "member") {
  */
 const MENTOR_LENS = {
   founder: {
-    label: "Founders Who Exited",
-    href: "/mentors?lens=exited",
-    hint: "Proven company builders",
+    label: "Successful Founders",
+    href: "/mentors?lens=proven",
+    hint: "People who have built and scaled companies",
   },
   builder: {
     label: "Deep Skill Mentors",
@@ -315,6 +314,10 @@ export function erpSection(id) {
       { id: "erp-attendance", href: "/erp/attendance", label: "My Attendance", icon: <CalendarClock size={18} /> },
       { id: "erp-tasks", href: "/erp/tasks", label: "Task Board", icon: <ClipboardList size={18} /> },
       { id: "erp-task-approval", href: "/erp/task-approval", label: "Task Approval", icon: <CheckCircle size={18} /> },
+      // Team management moved here from the founder sidebar's own "Team"
+      // section — running the company belongs in one workspace.
+      { id: "erp-team", href: "/founder/my-team", label: "My Team", icon: <Users size={18} /> },
+      { id: "erp-applications", href: "/founder/my-applications", label: "Applications", icon: <UserPlus size={18} /> },
       { id: "erp-updates", href: "/erp/updates", label: "Daily Updates", icon: <FileStack size={18} /> },
       { id: "erp-points", href: "/erp/points", label: "Points Dashboard", icon: <Award size={18} /> },
       { id: "erp-analytics", href: "/erp/admin-analytics", label: "Analytics", icon: <BarChart3 size={18} /> },
@@ -370,7 +373,7 @@ export function wallet(id) {
  */
 export function ideation(id, role = "member") {
   const founderExtras = [
-    { id: "create-vision", href: "/ideation?create=1", label: "Create a Vision", icon: <Lightbulb size={18} /> },
+    { id: "create-vision", href: "/vision/new", label: "Create a Vision", icon: <Lightbulb size={18} /> },
   ];
 
   return {
@@ -390,6 +393,7 @@ export function filterERPModules(modules, role, userRoles = []) {
   const allowedByRole = {
     founder: [
       'Member Dashboard', 'My Attendance', 'Task Board', 'Task Approval',
+      'My Team', 'Applications',
       'Daily Updates', 'Points Dashboard', 'Analytics', 'My Analytics',
       'Payouts', 'Documents', 'Alerts', 'Warnings', 'Flags (Admin)',
       'Audit Logs', 'Workspace Dashboard', 'Admin Settings', 'Revenue Pools',

@@ -13,10 +13,26 @@
    -------------------------------------------------------------------------- */
 .cosmos-atmosphere {
   background:
+    /* Starfield — three layers of pin-points at different scales. Pure
+       gradients, so there is no image to download and it never pixelates. */
+    radial-gradient(1px 1px at 12% 18%, rgba(242, 239, 250, 0.55), transparent 100%),
+    radial-gradient(1px 1px at 68% 8%,  rgba(207, 216, 255, 0.45), transparent 100%),
+    radial-gradient(1px 1px at 34% 62%, rgba(255, 191, 94, 0.40), transparent 100%),
+    radial-gradient(1px 1px at 84% 44%, rgba(79, 216, 255, 0.40), transparent 100%),
+    radial-gradient(1px 1px at 52% 84%, rgba(242, 239, 250, 0.35), transparent 100%),
+    radial-gradient(1px 1px at 22% 92%, rgba(139, 108, 255, 0.40), transparent 100%),
+    radial-gradient(1.5px 1.5px at 76% 72%, rgba(242, 239, 250, 0.30), transparent 100%),
+    radial-gradient(1.5px 1.5px at 44% 32%, rgba(255, 79, 216, 0.28), transparent 100%),
+    /* Nebulae */
     radial-gradient(60vw 40vh at 75% 12%, rgba(139, 108, 255, 0.16), transparent 60%),
     radial-gradient(50vw 36vh at 18% 55%, rgba(79, 216, 255, 0.10), transparent 60%),
     radial-gradient(46vw 32vh at 70% 88%, rgba(255, 79, 216, 0.08), transparent 60%),
     radial-gradient(ellipse at 50% 35%, #0c0a20 0%, #050309 70%);
+  background-repeat: repeat, repeat, repeat, repeat, repeat, repeat, repeat, repeat,
+                     no-repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 340px 340px, 420px 420px, 300px 300px, 500px 500px,
+                   380px 380px, 460px 460px, 620px 620px, 540px 540px,
+                   auto, auto, auto, auto;
 }
 
 /* A subtler variant for nav bars and dense chrome. */
@@ -36,32 +52,93 @@
 /* --------------------------------------------------------------------------
    PANELS + CARDS
    -------------------------------------------------------------------------- */
+/* Panels carry a faint neon edge in their accent colour — a 1px inset ring plus
+   a soft outer bloom. Subtle per-surface, but because every panel in the app
+   shares this rule the whole product reads as lit from within. */
 .cosmos-panel {
+  position: relative;
   background: rgba(13, 10, 26, 0.90);
   border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 22px;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 30px 90px -30px rgba(0, 0, 0, 0.85);
+  box-shadow:
+    0 30px 90px -30px rgba(0, 0, 0, 0.85),
+    inset 0 0 0 1px color-mix(in srgb, var(--cosmos-accent, #8b6cff) 12%, transparent),
+    0 0 34px -14px color-mix(in srgb, var(--cosmos-accent, #8b6cff) 40%, transparent);
+}
+
+/* A brighter neon rim for hero surfaces. Add alongside .cosmos-panel. */
+.cosmos-panel-neon {
+  border-color: color-mix(in srgb, var(--cosmos-accent, #8b6cff) 34%, transparent);
+  box-shadow:
+    0 30px 90px -30px rgba(0, 0, 0, 0.85),
+    inset 0 0 0 1px color-mix(in srgb, var(--cosmos-accent, #8b6cff) 26%, transparent),
+    inset 0 0 42px -18px color-mix(in srgb, var(--cosmos-accent, #8b6cff) 55%, transparent),
+    0 0 46px -12px color-mix(in srgb, var(--cosmos-accent, #8b6cff) 62%, transparent);
+}
+
+/* Top-edge light leak — reads as a horizon line above the surface. */
+.cosmos-panel-neon::after {
+  content: '';
+  position: absolute;
+  inset: -1px -1px auto -1px;
+  height: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--cosmos-accent, #8b6cff) 90%, transparent) 30%,
+    color-mix(in srgb, var(--cosmos-accent, #8b6cff) 90%, transparent) 70%,
+    transparent
+  );
+  pointer-events: none;
 }
 
 .cosmos-card {
   background: rgba(255, 255, 255, 0.028);
   border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 16px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cosmos-accent, #ffbf5e) 8%, transparent);
   transition: border-color 0.25s var(--ease-cosmos), transform 0.25s var(--ease-cosmos),
-              background 0.25s var(--ease-cosmos);
+              background 0.25s var(--ease-cosmos), box-shadow 0.25s var(--ease-cosmos);
 }
 
-/* Interactive cards lift and pick up their accent on hover. */
+/* Interactive cards lift and light up on hover. */
 .cosmos-card-interactive { cursor: pointer; }
 .cosmos-card-interactive:hover {
-  border-color: color-mix(in srgb, var(--cosmos-accent, #ffbf5e) 45%, transparent);
+  border-color: color-mix(in srgb, var(--cosmos-accent, #ffbf5e) 55%, transparent);
   background: rgba(255, 255, 255, 0.05);
   transform: translateY(-3px);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--cosmos-accent, #ffbf5e) 30%, transparent),
+    inset 0 0 30px -16px color-mix(in srgb, var(--cosmos-accent, #ffbf5e) 60%, transparent),
+    0 0 30px -10px color-mix(in srgb, var(--cosmos-accent, #ffbf5e) 55%, transparent);
 }
 .cosmos-card-interactive:focus-visible {
   border-color: var(--cosmos-accent, #ffbf5e);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cosmos-accent, #ffbf5e) 25%, transparent);
+}
+
+/* Standalone neon outline for anything that isn't a panel or card —
+   inputs, images, avatars, media frames. */
+.cosmos-neon {
+  border: 1px solid color-mix(in srgb, var(--cosmos-accent, #8b6cff) 40%, transparent);
+  box-shadow:
+    inset 0 0 18px -10px color-mix(in srgb, var(--cosmos-accent, #8b6cff) 70%, transparent),
+    0 0 22px -8px color-mix(in srgb, var(--cosmos-accent, #8b6cff) 60%, transparent);
+}
+
+/* A hairline neon divider. */
+.cosmos-rule {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--cosmos-accent, #8b6cff) 80%, transparent),
+    color-mix(in srgb, var(--cosmos-accent, #8b6cff) 18%, transparent) 40%,
+    transparent 75%
+  );
 }
 
 /* Accent-edged panel — a 1px top gradient rule, used to key a panel to a role. */
@@ -376,9 +453,26 @@
 }
 
 /* --------------------------------------------------------------------------
+   CONSTELLATION — the AI suite hero. Orbits rotate, nodes breathe.
+   -------------------------------------------------------------------------- */
+@keyframes cosmosOrbit {
+  to { transform: rotate(360deg); }
+}
+
+/* Opacity only — `r` is not animatable via a CSS keyframe on an SVG circle
+   without the geometry-property support that older Safari lacks. */
+@keyframes cosmosNodePulse {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1; }
+}
+
+/* --------------------------------------------------------------------------
    REDUCED MOTION — one guard for everything above.
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
+  [style*="cosmosOrbit"],
+  [style*="cosmosNodePulse"] { animation: none !important; }
+
   .cosmos-btn,
   .cosmos-card,
   .cosmos-rail > span { transition: none; }

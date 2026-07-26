@@ -5,7 +5,7 @@ import DashboardChangeSection from "../dashboardChangeSection";
 import AnnouncementsSection from "../dashboard/AnnouncementsSection";
 import Calendar from "@/components/sections/Calendar";
 import WorldClock from "@/components/sections/WorldClock";
-import { DashboardGrid, DashboardMasthead, ProgressRail, Tag } from "@/components/cosmos";
+import { AdSlot, DashboardGrid, DashboardMasthead, ProgressRail, Tag } from "@/components/cosmos";
 import { commonWidgets } from "@/components/cosmos/dashboard/commonWidgets";
 import { QuickAction, QuickStat } from "../founderDashboard/Quicks";
 
@@ -112,8 +112,8 @@ export default function MentorDashboard({
       },
       {
         id: "announcements",
-        title: "Announcements",
-        eyebrow: "From the ecosystem",
+        title: "Announcements / Newsletter",
+        eyebrow: "From SF",
         span: "half",
         node: <AnnouncementsSection userRoles={userRoles} />,
       },
@@ -133,6 +133,8 @@ export default function MentorDashboard({
       >
         Turn experience into direction for the next generation of founders.
       </DashboardMasthead>
+
+      <AdSlot placement="dashboard-top" format="banner" className="mb-5" />
 
       <DashboardGrid layoutKey="mentor" role="mentor" widgets={widgets} header={null} />
     </div>

@@ -152,8 +152,8 @@ export default function DesktopBuilderDashboard({
       },
       {
         id: "announcements",
-        title: "Announcements",
-        eyebrow: "From the ecosystem",
+        title: "Announcements / Newsletter",
+        eyebrow: "From SF",
         span: "full",
         node: <AnnouncementsSection userRoles={userRoles} />,
       },
@@ -180,6 +180,8 @@ export default function DesktopBuilderDashboard({
       >
         Prove your ability through real work.
       </DashboardMasthead>
+
+      <AdSlot placement="dashboard-top" format="banner" className="mb-5" />
 
       <DashboardGrid
         layoutKey="builder"

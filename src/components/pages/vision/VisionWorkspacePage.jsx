@@ -17,7 +17,7 @@
 //   GET  /activation/ideas/:id/eligibility
 //   POST /activation/ideas/:id/activate
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
@@ -38,6 +38,11 @@ import { useEntitlements } from '@/services/entitlements/useEntitlements';
 import VisionHero from './VisionHero';
 import VisionActions from './VisionActions';
 import VisionDiscovery from './VisionDiscovery';
+import {
+  mockMentorshipSeekers,
+  mockSimilarVisions,
+  mockSuggestedContributors,
+} from '@/services/mock/mockProfiles';
 
 // ── helpers ──────────────────────────────────────────────────────────────
 
@@ -312,6 +317,30 @@ export default function VisionWorkspacePage() {
   // the page offers. Distinct from `isCreator`, which is about ownership.
   const viewerRole = localStorage.getItem('activeRole') || 'member';
 
+  /**
+   * Results for the discovery panel, chosen by lens.
+   *
+   * In dev, when the backend returns nothing, we fall back to mock data —
+   * otherwise the metered states (10 free, then credits) are unreachable,
+   * because with fewer than 10 results there is nothing to unlock. The mock
+   * helpers return [] in production builds.
+   */
+  const discoveryResults = useMemo(() => {
+    if (!idea) return [];
+
+    const real = isCreator
+      ? idea.suggestedContributors
+      : viewerRole === 'mentor'
+        ? idea.mentorshipSeekers
+        : idea.similarVisions || idea.relatedStartups;
+
+    if (real?.length) return real;
+
+    if (isCreator) return mockSuggestedContributors();
+    if (viewerRole === 'mentor') return mockMentorshipSeekers();
+    return mockSimilarVisions();
+  }, [idea, isCreator, viewerRole]);
+
   const load = useCallback(async () => {
     try {
       const [ideaBody, commentsBody] = await Promise.all([
@@ -484,11 +513,7 @@ export default function VisionWorkspacePage() {
         <VisionDiscovery
           viewerRole={viewerRole}
           isCreator={isCreator}
-          results={
-            isCreator
-              ? idea.suggestedContributors || []
-              : idea.similarVisions || idea.relatedStartups || []
-          }
+          results={discoveryResults}
         />
 
         {showAds && <AdSlot placement="vision-detail" format="banner" />}

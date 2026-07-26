@@ -1,7 +1,6 @@
 import { GraduationCap, MessageSquare, Rocket, Star, Users } from "lucide-react";
 import {
   aiTools,
-  contributionSection,
   dashboardLink,
   erpSection,
   filterERPModules,
@@ -52,7 +51,6 @@ export function createMentorLinks(
     toolsSection(7),
     { id: "section-grow", sectionLabel: "Grow", isSection: true },
     learningSection(8, "mentor"),
-    contributionSection(9),
     { id: "section-earn", sectionLabel: "Earn", isSection: true },
     walletSection(10),
     { id: "section-workspace", sectionLabel: "Workspace", isSection: true },

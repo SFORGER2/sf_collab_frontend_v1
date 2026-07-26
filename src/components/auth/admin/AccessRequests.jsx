@@ -120,24 +120,24 @@ const AccessRequests = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-black">Access Requests</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-3xl font-bold text-star">Access Requests</h1>
+          <p className="text-dim mt-2">
             Review and manage permission access requests from users
           </p>
         </div>
         <Button
           onClick={fetchRequests}
           variant="outline"
-          className="border-black text-black hover:bg-gray-100"
+          className="border-black text-star hover:bg-white/[0.06]"
         >
           Refresh
         </Button>
       </div>
 
-      <Card className="border border-gray-200 shadow-[0_4px_14px_0_rgba(255,255,255,0.3)]">
+      <Card className="border border-white/10 shadow-[0_4px_14px_0_rgba(255,255,255,0.3)]">
         <CardHeader>
-          <CardTitle className="text-xl text-black">Pending Requests</CardTitle>
-          <CardDescription className="text-gray-600">
+          <CardTitle className="text-xl text-star">Pending Requests</CardTitle>
+          <CardDescription className="text-dim">
             {requests.length} pending request{requests.length !== 1 ? 's' : ''}
           </CardDescription>
         </CardHeader>
@@ -151,11 +151,11 @@ const AccessRequests = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="font-semibold text-black">User</TableHead>
-                    <TableHead className="font-semibold text-black">Permission</TableHead>
-                    <TableHead className="font-semibold text-black">Reason</TableHead>
-                    <TableHead className="font-semibold text-black">Requested</TableHead>
-                    <TableHead className="font-semibold text-black">Actions</TableHead>
+                    <TableHead className="font-semibold text-star">User</TableHead>
+                    <TableHead className="font-semibold text-star">Permission</TableHead>
+                    <TableHead className="font-semibold text-star">Reason</TableHead>
+                    <TableHead className="font-semibold text-star">Requested</TableHead>
+                    <TableHead className="font-semibold text-star">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -163,14 +163,14 @@ const AccessRequests = () => {
                     <TableRow key={request.id} className="border-b border-gray-100">
                       <TableCell >
                         <div>
-                          <div className="font-medium text-black">{request.user?.first_name || `User ${request.user_id}`} {request.user?.last_name || `User ${request.user_id}`}</div>
-                          <div className="text-sm text-gray-600">{request.user?.email || `User ${request.user_id}`}</div>
+                          <div className="font-medium text-star">{request.user?.first_name || `User ${request.user_id}`} {request.user?.last_name || `User ${request.user_id}`}</div>
+                          <div className="text-sm text-dim">{request.user?.email || `User ${request.user_id}`}</div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium text-black">{request.permission?.key}</div>
-                          <div className="text-sm text-gray-600">{request.permission?.description}</div>
+                          <div className="font-medium text-star">{request.permission?.key}</div>
+                          <div className="text-sm text-dim">{request.permission?.description}</div>
                         </div>
                       </TableCell>
                       <TableCell className="max-w-xs">
@@ -217,10 +217,10 @@ const AccessRequests = () => {
 
       {/* Approve Dialog */}
       <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
-        <DialogContent className="bg-white text-black">
+        <DialogContent className="bg-panel text-star">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Approve Access Request</DialogTitle>
-            <DialogDescription className="text-gray-600">
+            <DialogDescription className="text-dim">
               Are you sure you want to approve this access request?
             </DialogDescription>
           </DialogHeader>
@@ -237,7 +237,7 @@ const AccessRequests = () => {
             <Button
               variant="outline"
               onClick={() => setShowApproveDialog(false)}
-              className="border-black text-black hover:bg-gray-100"
+              className="border-black text-star hover:bg-white/[0.06]"
             >
               Cancel
             </Button>
@@ -253,10 +253,10 @@ const AccessRequests = () => {
 
       {/* Reject Dialog */}
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-        <DialogContent className="bg-white text-black">
+        <DialogContent className="bg-panel text-star">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Reject Access Request</DialogTitle>
-            <DialogDescription className="text-gray-600">
+            <DialogDescription className="text-dim">
               Please provide a reason for rejecting this request
             </DialogDescription>
           </DialogHeader>
@@ -267,12 +267,12 @@ const AccessRequests = () => {
                 <p><span className="font-semibold">Permission:</span> {selectedRequest.permission?.key}</p>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-black">Rejection Reason</label>
+                <label className="text-sm font-semibold text-star">Rejection Reason</label>
                 <Textarea
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
                   placeholder="Enter reason for rejection..."
-                  className="min-h-[100px] bg-white border border-gray-300"
+                  className="min-h-[100px] bg-panel border border-white/15"
                 />
               </div>
             </div>
@@ -284,7 +284,7 @@ const AccessRequests = () => {
                 setShowRejectDialog(false);
                 setRejectionReason("");
               }}
-              className="border-black text-black hover:bg-gray-100"
+              className="border-black text-star hover:bg-white/[0.06]"
             >
               Cancel
             </Button>

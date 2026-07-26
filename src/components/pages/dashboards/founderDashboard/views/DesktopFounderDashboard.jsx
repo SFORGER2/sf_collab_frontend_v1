@@ -126,8 +126,8 @@ export default function DesktopFounderDashboard({
       },
       {
         id: "announcements",
-        title: "Announcements",
-        eyebrow: "From the ecosystem",
+        title: "Announcements / Newsletter",
+        eyebrow: "From SF",
         span: "full",
         node: <AnnouncementsSection userRoles={userRoles} />,
       },
@@ -147,6 +147,8 @@ export default function DesktopFounderDashboard({
       >
         Turn one idea into an operating startup.
       </DashboardMasthead>
+
+      <AdSlot placement="dashboard-top" format="banner" className="mb-5" />
 
       <DashboardGrid
         layoutKey="founder"

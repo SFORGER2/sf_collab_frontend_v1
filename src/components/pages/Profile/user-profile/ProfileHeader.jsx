@@ -215,7 +215,7 @@ const ProfileHeader = ({
               >
                 <MapPin className="w-4 h-4 text-blue-400" />
                 {user?.profile?.city ?
-                  <span className="text-gray-300">{user?.profile.city}, {user?.profile.country}</span>
+                  <span className="text-gray-300">{user?.profile?.city}, {user?.profile?.country}</span>
                   :
                   <span className="text-gray-500">Location not set</span>
                 }
@@ -242,13 +242,13 @@ const ProfileHeader = ({
               </motion.div>
 
               {/* Company */}
-              {user?.profile.company && (
+              {user?.profile?.company && (
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
                 >
                   <Sparkles className="w-4 h-4 text-yellow-400" />
-                  <span className="text-gray-300">{user?.profile.company}</span>
+                  <span className="text-gray-300">{user?.profile?.company}</span>
                 </motion.div>
               )}
 
@@ -318,7 +318,9 @@ const ProfileHeader = ({
               )}
 
               {
-                currentUser.active_startups_count > 0 && currentUser.id !== user?.id && (
+                /* `currentUser` is null until the auth profile resolves, and
+                   the whole page threw here on first paint. */
+                currentUser?.active_startups_count > 0 && currentUser?.id !== user?.id && (
                   <>
                     <InviteToStartup user={user} />
                     <AddFriend user={user} />

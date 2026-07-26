@@ -1143,7 +1143,7 @@ export default function Calendar() {
                   reminder_minutes: 30
                 })
               }}
-              className="border-gray-700 text-black hover:text-white hover:bg-gray-800"
+              className="border-white/15 text-star hover:bg-white/10 hover:text-star"
             >
               Cancel
             </Button>

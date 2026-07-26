@@ -1,5 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { AnimatePresence } from 'framer-motion';
+// `motion` was used 16 times in this file but never imported, so the component
+// threw `motion is not defined` on first render and React unmounted the whole
+// tree — which is why the page was blank rather than merely broken.
+import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';

@@ -47,8 +47,6 @@ import {
   learningSection,
   mentorshipSection,
   walletSection,
-  fundraisingSection,
-  contributionSection,
 } from "../sidebarCommons";
 import { GiChecklist } from "react-icons/gi";
 
@@ -109,35 +107,9 @@ export function createFounderLinks(
       ],
     },
     ideation(3, "founder"),
-    {
-      id: 4,
-      icon: <UserCog size={22} />,
-      href: "/founder/my-applications",
-      label: "Team",
-      subItems: [
-        {
-          id: "manage-applications",
-          href: "/founder/my-applications",
-          label: "Applications",
-          icon: <GiChecklist size={18} />,
-        },
-        {
-          id: "manage-team",
-          href: "/founder/my-team",
-          label: "My Team",
-          icon: <Users size={18} />,
-        },
-        {
-          id: "find-builders",
-          href: "/discover-users",
-          label: "Find Builders",
-          icon: <Search size={18} />,
-        },
-        // Task management deliberately omitted — it lives in ERP → Task Board.
-        // This entry pointed at the same /erp/tasks route, so the sidebar
-        // offered two paths to one screen.
-      ],
-    },
+    // Team management is not a top-level nav item — applications, team and
+    // tasks all live in ERP, which is the workspace for running the company.
+    // Keeping a second "Team" section here duplicated those destinations.
     socialSection(5),
     // Pitch Deck used to have its own top-level entry here. It is a generator,
     // not a destination, so it now lives inside AI Tools with the others.
@@ -147,11 +119,9 @@ export function createFounderLinks(
     mentorshipSection(8, "founder"),
     learningSection(9, "founder"),
     { id: "section-earn", sectionLabel: "Earn", isSection: true },
-    // Fundraising and Contributions are separate concerns — fundraising is
-    // raising money for your startup, contributions is the ecosystem-wide
-    // system that already has its own home. They used to be bundled.
-    fundraisingSection(15),
-    contributionSection(16),
+    // Fundraising and Contributions are deliberately absent from the scrolling
+    // nav — they are pinned at the foot of the sidebar (BottomLinks), visible
+    // to founders and builders only.
     walletSection(10),
     // ── SECTION BREAK: Workspace ──────────────────────────────────────────────
     { id: "section-workspace", sectionLabel: "Workspace", isSection: true },

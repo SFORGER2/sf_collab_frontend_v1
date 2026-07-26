@@ -78,8 +78,8 @@ export default function DesktopInvestorDashboard({
       },
       {
         id: "announcements",
-        title: "Announcements",
-        eyebrow: "From the ecosystem",
+        title: "Announcements / Newsletter",
+        eyebrow: "From SF",
         span: "full",
         node: <AnnouncementsSection userRoles={userRoles} />,
       },
@@ -106,6 +106,8 @@ export default function DesktopInvestorDashboard({
       >
         Discover potential before it becomes obvious.
       </DashboardMasthead>
+
+      <AdSlot placement="dashboard-top" format="banner" className="mb-5" />
 
       <DashboardGrid
         layoutKey="investor"

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { toast } from 'react-toastify';
+import { mockSuggestedContributors } from '@/services/mock/mockProfiles';
+import { DEV_AUTH_BYPASS } from '@/services/auth/devSession';
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -207,7 +209,22 @@ const MOCK_RECOMMENDATIONS = [
       "Looking for a new project to contribute to."
     ],
     profile_picture: null
-  }
+  },
+  // Padded out to 24 in dev. With only four entries the metered states were
+  // unreachable — the free allowance is ten, so there was never anything to
+  // unlock and the credit gate never appeared. mockSuggestedContributors()
+  // returns [] in production builds.
+  ...mockSuggestedContributors(20).map((p, i) => ({
+    id: `mock-builder-${i + 5}`,
+    name: p.name,
+    role: p.role,
+    match_score: p.match,
+    match_label:
+      p.match >= 90 ? "Excellent Match" : p.match >= 80 ? "Strong Match" : p.match >= 70 ? "Good Match" : "Possible Match",
+    skills: p.skills,
+    explanation: p.reasons,
+    profile_picture: null,
+  })),
 ];
 
 const VisionDetails = () => {
@@ -751,6 +768,18 @@ const VisionDetails = () => {
   };
 
   const isCreator = useMemo(() => user?.id && idea?.creator?.id && user.id === idea.creator.id, [user, idea]);
+
+  // Only this Vision's owner recruits for it. A builder viewing someone else's
+  // Vision must not be shown a list of other builders — that is their own
+  // competition, not a useful panel.
+  //
+  // Under the dev auth bypass there is no real ownership (the fake user owns
+  // nothing), so the owner view would be unreachable for review. The override
+  // is dev-only and requires the founder role, so production gating is intact.
+  const canRecruitBuilders = Boolean(
+    isCreator ||
+    (DEV_AUTH_BYPASS && (localStorage.getItem('activeRole') || '') === 'founder')
+  );
 
   // B8c FIX: Vision → Startup activation
   const [activating, setActivating] = useState(false);
@@ -1602,6 +1631,7 @@ const VisionDetails = () => {
             <MatchmakingSection
               recommendations={recommendations}
               loading={matchmakingLoading}
+              canRecruit={canRecruitBuilders}
             />
           </motion.div>
         </>

@@ -1,7 +1,7 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
-  BadgeCheck, Building2, Coins, Megaphone, Rocket, Search, Sparkles, TrendingUp, Users,
+  BadgeCheck, Building2, Coins, Megaphone, Rocket, Search, Send, Sparkles, TrendingUp, Users,
 } from 'lucide-react';
 import {
   AllowanceMeter, CosmosButton, Eyebrow, Tag,
@@ -109,6 +109,7 @@ export function VisionDiscovery({ viewerRole = 'member', isCreator = false, resu
   const config = DISCOVERY[key] || DISCOVERY.member;
   const Icon = config.icon;
 
+  const navigate = useNavigate();
   const { check, spend, credits } = useEntitlements();
   const status = check('matchSuggestionsPerDay', 'matchSuggestion');
 
@@ -144,25 +145,35 @@ export function VisionDiscovery({ viewerRole = 'member', isCreator = false, resu
         <p className="text-[0.9rem] text-dim py-5">{config.emptyHint}</p>
       )}
 
-      {/* Beyond the free daily allowance, results are paid for. */}
+      {/* Every search is metered.
+          The primary CTA used to be a bare <Link> — it navigated to discovery
+          without spending anything, so the daily cap was decorative. It now
+          spends the allowance (or credits) before navigating. */}
       <div className="flex flex-wrap items-center gap-2.5 mt-5 pt-4 border-t border-white/10">
-        <CosmosButton variant="ghost" size="sm" asChild>
-          <Link to={config.to}>
-            <Search size={14} /> {config.cta}
-          </Link>
+        <CosmosButton
+          variant={status.reason === 'credits' ? 'primary' : 'ghost'}
+          size="sm"
+          disabled={!status.allowed}
+          onClick={() => {
+            if (spend('matchSuggestionsPerDay', 'matchSuggestion')) navigate(config.to);
+          }}
+        >
+          {status.reason === 'credits' ? <Coins size={14} /> : <Search size={14} />}
+          {config.cta}
+          {status.reason === 'credits' && ` · ${cost} credits`}
         </CosmosButton>
 
         {remaining > 0 && (
           <CosmosButton
-            variant="primary"
+            variant="quiet"
             size="sm"
             disabled={!status.allowed}
             onClick={() => spend('matchSuggestionsPerDay', 'matchSuggestion')}
           >
             <Coins size={14} />
             {status.reason === 'credits'
-              ? `Show ${remaining} more · ${cost} credits`
-              : `Show ${remaining} more`}
+              ? `Unlock ${remaining} more · ${cost} credits`
+              : `Unlock ${remaining} more`}
           </CosmosButton>
         )}
 
@@ -176,7 +187,112 @@ export function VisionDiscovery({ viewerRole = 'member', isCreator = false, resu
           </CosmosButton>
         )}
       </div>
+
+      {!status.allowed && (
+        <p className="text-[0.85rem] text-dim mt-3">
+          You've used today's {FREE_PER_DAY} free searches. Unlock more with credits, or upgrade
+          your plan for a larger daily allowance.
+        </p>
+      )}
+
+      {/* Bulk outreach — one action instead of N manual messages. */}
+      {free.length > 0 && <BulkOutreach config={config} total={results.length} />}
     </section>
+  );
+}
+
+/**
+ * Reach every match at once.
+ *
+ * Sending the same opening message to each suggestion individually is the most
+ * tedious part of recruiting, so this does it in one action. Priced per
+ * recipient in credits — the count is a slider, and the cost updates with it,
+ * so the spend is visible before committing.
+ *
+ * NOTE FOR BACKEND: needs POST /api/matchmaking/outreach
+ * { visionId, recipientIds[], message } and must re-check the credit balance
+ * server-side before sending anything.
+ */
+function BulkOutreach({ config, total }) {
+  const { credits, spend } = useEntitlements();
+  const [count, setCount] = useState(Math.min(10, total));
+  const [message, setMessage] = useState('');
+  const [sent, setSent] = useState(false);
+
+  const max = Math.max(1, total);
+  const cost = count * CREDIT_COSTS.assistantMessage * 2; // outreach is metered per recipient
+  const affordable = credits >= cost;
+
+  if (sent) {
+    return (
+      <div className="mt-4 pt-4 border-t border-white/10">
+        <Tag tone="live" dot>
+          Sent to {count} {count === 1 ? 'recipient' : 'recipients'}
+        </Tag>
+        <p className="text-[0.85rem] text-dim mt-2">
+          Replies arrive in your inbox. You'll only be charged for messages that were delivered.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <details className="mt-4 pt-4 border-t border-white/10 group">
+      <summary className="flex items-center gap-2 cursor-pointer list-none text-[0.9rem] text-star hover:text-[var(--cosmos-accent)] transition-colors">
+        <Send size={14} />
+        Message several at once
+        <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-dim ml-auto">
+          {cost} credits
+        </span>
+      </summary>
+
+      <div className="flex flex-col gap-3.5 mt-4">
+        <label className="flex flex-col gap-2">
+          <span className="cosmos-stat-label">
+            Send to {count} of {max}
+          </span>
+          <input
+            type="range"
+            min={1}
+            max={max}
+            value={count}
+            onChange={(e) => setCount(Number(e.target.value))}
+            className="w-full accent-[var(--cosmos-accent)]"
+          />
+        </label>
+
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={3}
+          placeholder="Introduce your Vision and say what you're looking for…"
+          className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-[0.92rem] text-star placeholder-dim resize-y focus:outline-none focus:border-[var(--cosmos-accent)]"
+        />
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <CosmosButton
+            variant="primary"
+            size="sm"
+            disabled={!affordable || !message.trim()}
+            onClick={() => {
+              if (spend('matchSuggestionsPerDay', 'matchSuggestion')) setSent(true);
+            }}
+          >
+            <Send size={14} /> Send to {count} · {cost} credits
+          </CosmosButton>
+
+          {!affordable && (
+            <CosmosButton variant="quiet" size="sm" asChild>
+              <Link to="/credits">Top up credits</Link>
+            </CosmosButton>
+          )}
+
+          <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-dim">
+            Balance {credits}
+          </span>
+        </div>
+      </div>
+    </details>
   );
 }
 

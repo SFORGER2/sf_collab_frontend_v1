@@ -86,8 +86,8 @@ export default function DesktopInfluencerDashboard({
       },
       {
         id: "announcements",
-        title: "Announcements",
-        eyebrow: "From the ecosystem",
+        title: "Announcements / Newsletter",
+        eyebrow: "From SF",
         span: "full",
         node: <AnnouncementsSection userRoles={userRoles} />,
       },
@@ -114,6 +114,8 @@ export default function DesktopInfluencerDashboard({
       >
         Help good ideas get the attention they need.
       </DashboardMasthead>
+
+      <AdSlot placement="dashboard-top" format="banner" className="mb-5" />
 
       <DashboardGrid
         layoutKey="influencer"

@@ -13,6 +13,7 @@ export default function MobileSidebarContent({
   hasSubItems,
   shouldShowSubItems,
   callback,
+  role = "member",
 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ export default function MobileSidebarContent({
                   ${baseItemClasses}
                   ${
                     isActive
-                      ? "bg-[var(--cosmos-accent-soft)] text-[var(--cosmos-accent)]"
+                      ? "bg-white/[0.06] text-star border-l-2 border-l-[var(--cosmos-accent)]"
                       : "text-slate-400 hover:bg-white/[0.06] hover:text-star"
                   }
                   ${isUpcoming ? upcomingClasses : ""}
@@ -150,7 +151,7 @@ export default function MobileSidebarContent({
                             flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-colors
                             ${
                               isSubActive
-                                ? "bg-[var(--cosmos-accent-soft)] text-[var(--cosmos-accent)]"
+                                ? "bg-white/[0.06] text-star border-l-2 border-l-[var(--cosmos-accent)]"
                                 : "text-slate-500 hover:bg-white/[0.06] hover:text-star"
                             }
                             ${isSubUpcoming ? upcomingClasses : ""}
@@ -196,7 +197,7 @@ export default function MobileSidebarContent({
         )}
       </motion.div>
 
-      <BottomLinks onLinkClick={onLinkClick} callback={callback} isHovered={true} />
+      <BottomLinks onLinkClick={onLinkClick} callback={callback} isHovered={true} role={role} />
     </div>
   );
 }

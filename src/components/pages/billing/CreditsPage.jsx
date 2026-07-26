@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Check, Coins, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { CREDIT_COSTS, CREDIT_PACKS } from '@/services/entitlements/entitlements';
+import { LIMIT_LABELS } from '@/services/entitlements/plans';
 import { useEntitlements } from '@/services/entitlements/useEntitlements';
 import { CosmosButton, Display, Eyebrow, Lede, Panel, Reveal, Tag } from '@/components/cosmos';
 
@@ -126,10 +127,10 @@ export default function CreditsPage() {
       <Panel className="p-6 mt-6">
         <Eyebrow>Included every day</Eyebrow>
         <ul className="grid gap-2 mt-4">
-          {Object.entries(plan.limits).map(([key, value]) => (
+          {Object.entries(plan.limits || {}).map(([key, value]) => (
             <li key={key} className="flex items-center gap-2.5 text-[0.9rem] text-star">
               <Check size={14} className="text-emerald-400 shrink-0" />
-              <span className="text-dim">{key.replace(/([A-Z])/g, ' $1').toLowerCase()}:</span>
+              <span className="text-dim">{LIMIT_LABELS[key] || key}:</span>
               <span className="font-mono text-[11px] text-star">
                 {value === Infinity ? 'Unlimited' : value}
               </span>

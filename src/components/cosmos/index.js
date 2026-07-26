@@ -34,6 +34,7 @@ export { ROLE_ACCENTS, ROLE_ORDER, roleAccent, roleAccentVars } from './roles';
 export { Gated, AllowanceMeter } from './Gated';
 export { AdSlot, useInterleavedAds } from './AdSlot';
 export { DraftField } from './DraftField';
+export { PageShell } from './PageShell';
 
 /* Editable dashboards — drag to reorder, resize, hide; persisted per role. */
 export { DashboardGrid } from './dashboard/DashboardGrid';

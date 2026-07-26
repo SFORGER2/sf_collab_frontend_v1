@@ -68,7 +68,7 @@ export function MeetWidget() {
  * The shared tail every role dashboard gets: SF Drive, SF Meet, and an ad slot
  * that only renders on ad-supported plans.
  */
-export function commonWidgets({ includeAd = true, includeNews = true, includeDraws = true } = {}) {
+export function commonWidgets({ includeAd = false, includeNews = true, includeDraws = true } = {}) {
   return [
     ...(includeNews
       ? [{ id: 'ainews', title: 'AI news', eyebrow: 'Signals', span: 'half', accent: '#8b6cff', node: <AINewsWidget /> }]
