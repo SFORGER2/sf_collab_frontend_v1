@@ -492,3 +492,53 @@
   .cosmos-card-interactive:hover { transform: none; }
   .cosmos-btn:hover { transform: none; }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TOUCH DEVICES
+
+   The app leans on `opacity-0 group-hover:opacity-100` to keep secondary
+   controls out of the way until you reach for them — dashboard widget
+   handles, the profile's per-field edit pencils, card overflow menus.
+
+   A touch screen has no hover. On a phone those controls never reach
+   opacity 1, so they are invisible *and* unreachable: the editable dashboard
+   could not be edited at all, and the profile could not be edited inline.
+   Counted on /dashboard alone: 35 controls in that state.
+
+   So on any device whose primary pointer can't hover, reveal them. They stop
+   being "secondary" — a phone has no room for the distinction anyway — and
+   each gets a 40px tap target via a pseudo-element, which grows the touchable
+   area without changing layout or nudging anything around it.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (hover: none) {
+  .group-hover\:opacity-100,
+  .group-hover\/field\:opacity-100,
+  .group-hover\/card\:opacity-100,
+  .group-hover\/widget\:opacity-100 {
+    opacity: 1 !important;
+  }
+
+  /* Anything small enough to be a fiddly target gets an invisible 40px pad.
+     `position: relative` is scoped to these controls rather than applied to
+     every button, so absolutely-positioned children elsewhere are untouched. */
+  button.group-hover\:opacity-100,
+  button.group-hover\/field\:opacity-100,
+  button.group-hover\/card\:opacity-100,
+  button.group-hover\/widget\:opacity-100,
+  [data-touch-target] {
+    position: relative;
+  }
+
+  button.group-hover\:opacity-100::after,
+  button.group-hover\/field\:opacity-100::after,
+  button.group-hover\/card\:opacity-100::after,
+  button.group-hover\/widget\:opacity-100::after,
+  [data-touch-target]::after {
+    content: '';
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 40px;
+    height: 40px;
+    transform: translate(-50%, -50%);
+  }
+}

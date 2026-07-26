@@ -15,7 +15,7 @@ import Preferences from "./components/pages/Preferences.jsx";
 import AccountandSecurity from "./components/pages/AccountandSecurity.jsx";
 import Login from "./components/auth/Login.jsx";
 import SignUp from "./components/auth/SignUp.jsx";
-import RegisterStartUp from "./components/pages/register-startup/RegisterStartUp.jsx";
+import RegisterStartUp from "./components/pages/register-startup/RegisterStartupGate.jsx";
 import RegisterExistingStartup from "./components/pages/register-startup/RegisterExistingStartup.jsx";
 import Ideationdetails from "./components/pages/ideation/Ideationdetails.jsx";
 import Knowledgedetails from "./components/detailspage (previous)/Knowledgedetails.jsx";

@@ -308,6 +308,37 @@ declineInvitation: async (startupId, invitationId) => {
 },
 
 
+  /**
+   * Registration requests — startup registration is request-only.
+   *
+   * BACKEND: needs two routes.
+   *   GET  /api/startups/registration-request/mine
+   *        → { success, data: { status: 'none'|'pending'|'approved'|'rejected',
+   *                             submittedAt, reviewedAt, note } }
+   *   POST /api/startups/registration-request  { pitch, stage, why, links }
+   *        → { success, data: { status: 'pending', submittedAt } }
+   *
+   * A missing route resolves to 'none' rather than throwing, so the gate can be
+   * reviewed before the backend lands. Approval must be enforced server-side on
+   * POST /startups too — a client-side gate stops nobody.
+   */
+  getMyRegistrationRequest: async () => {
+    try {
+      const response = await api.get('/startups/registration-request/mine')
+      return response.data
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        return { success: true, data: { status: 'none' } }
+      }
+      throw error
+    }
+  },
+
+  requestRegistration: async (payload) => {
+    const response = await api.post('/startups/registration-request', payload)
+    return response.data
+  },
+
   // Cancel own join request
   cancelJoinRequest: async (requestId) => {
     const response = await api.post(

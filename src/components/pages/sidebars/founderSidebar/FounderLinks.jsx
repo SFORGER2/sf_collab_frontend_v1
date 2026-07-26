@@ -83,7 +83,8 @@ export function createFounderLinks(
         {
           id: "register-startup",
           href: "/register-startup",
-          label: "Register",
+          // Request-only — the label shouldn't promise instant self-service.
+          label: "Request Registration",
           icon: <PlusSquare size={18} />,
         },
         {
