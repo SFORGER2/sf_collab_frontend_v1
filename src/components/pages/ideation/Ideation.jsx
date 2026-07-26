@@ -272,7 +272,7 @@ const Ideation = ({ activeRole }) => {
 
   return (
     <div className="min-h-screen bg-black px-4">
-      <IdeationTutorial />
+      <IdeationTutorial activeRole={activeRole} />
 
       <div className="mb-0 mt-10">
         <IdeationHeader

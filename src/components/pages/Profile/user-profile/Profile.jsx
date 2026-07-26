@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import {
   User, Award, BarChart3,
   Rocket, TrendingUp, Zap, Globe, Briefcase, ExternalLink,
-  Badge
+  Badge, IdCard
 } from 'lucide-react';
 
 import ProfileHeader from './ProfileHeader';
+import ProfileDetail from './ProfileDetail';
 import ProfileStats from './ProfileStats';
 import ProfileTabs from './ProfileTabs';
 import AchievementSection from './AchievementSection';
@@ -99,6 +100,8 @@ const Profile = () => {
 
   const tabs = useMemo(() => [
     { id: 'overview', label: 'Overview', icon: User },
+    // The full schema-driven profile — every field the assistant can fill.
+    { id: 'details', label: 'Full Profile', icon: IdCard },
     { id: 'achievements', label: 'Achievements', icon: Award },
     !isOtherUser && { id: 'activity', label: 'Activity', icon: BarChart3 },
     { id: 'startups', label: 'Startups', icon: Briefcase },
@@ -305,6 +308,16 @@ const Profile = () => {
             <ProfileTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
             <div className="min-h-150">
+              {activeTab === "details" && (
+                <ProfileDetail
+                  /* Merge the flat user record with its nested profile so the
+                     schema can read both shapes — the API splits fields across
+                     `user` and `user.profile`. */
+                  profile={{ ...(user || {}), ...(user?.profile || {}), ...(profileData || {}) }}
+                  isOwner={!isOtherUser}
+                />
+              )}
+
               {activeTab === "overview" && (
                 <div className="space-y-6">
                   <ActivityFeed
