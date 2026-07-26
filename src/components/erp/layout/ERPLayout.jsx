@@ -1,6 +1,8 @@
 // src/components/erp/layout/ERPLayout.jsx
 import { useState, useEffect, useMemo } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { AdSlot } from '@/components/cosmos';
+import { placementFor, wantsTopAd } from '@/components/cosmos/adPlacements';
 import { useSelector } from 'react-redux';
 import { LayoutDashboard } from 'lucide-react';
 import { ERPSidebar } from './ERPSidebar';
@@ -20,6 +22,9 @@ export function ERPLayout({ activeRole, userRoles, user }) {
   const [loading, setLoading] = useState(true);
   const [hasWorkspace, setHasWorkspace] = useState(false);
   const navigate = useNavigate();
+  // The router's location, not window.location — the global would not
+  // re-render this layout when the ERP route changes.
+  const location = useLocation();
 
   // Compute links based on role (same as Layout)
   const links = useMemo(() => {
@@ -122,6 +127,16 @@ export function ERPLayout({ activeRole, userRoles, user }) {
           setCollapsed={setCollapsed}
         />
         <main className="flex-1 overflow-y-auto p-6">
+          {/* ERP routes hang off their own layout, so they don't inherit the
+              shared top ad from Layout.jsx — payouts and points are exactly
+              the high-dwell screens worth advertising on. Same route policy. */}
+          {wantsTopAd(location.pathname) && (
+            <AdSlot
+              placement={placementFor(location.pathname)}
+              format="strip"
+              className="mb-5"
+            />
+          )}
           <Outlet />
         </main>
       </div>

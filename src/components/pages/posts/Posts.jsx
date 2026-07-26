@@ -13,6 +13,7 @@ import { userSocialAPI } from "@/utils/APIs/socialAPI";
 import useSocket from "../chat/useSocket";
 import PostsTutorial from "./PostsTutorial";
 import { toast } from "react-toastify";
+import { AdSlot, useInterleavedAds } from "@/components/cosmos";
 
 // ─── Settings Modal ────────────────────────────────────────────────────────────
 const SettingsModal = ({ isOpen, onClose }) => {
@@ -101,6 +102,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
 const Posts = () => {
   const { user: currentUser, access_token } = useSelector((state) => state.auth);
   const { socket, isConnected } = useSocket();
+  const withAds = useInterleavedAds();
 
   const [socialProfile,    setSocialProfile]    = useState(null);
   const [activeTab,        setActiveTab]        = useState("feed");
@@ -333,23 +335,31 @@ const Posts = () => {
                 {loading ? (
                   <div className="text-center py-8 text-zinc-400">Loading posts...</div>
                 ) : posts.length > 0 ? (
-                  posts.map((post, index) => (
-                    <motion.div
-                      key={post.id ?? post._id ?? index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                    >
-                      <PostCard
-                        post={post}
-                        onPostDeleted={(postId) =>
-                          setPosts((prev) =>
-                            prev.filter((p) => p.id !== postId && p._id !== postId)
-                          )
-                        }
-                      />
-                    </motion.div>
-                  ))
+                  /* Ads are interleaved every fifth post rather than stacked at
+                     the top — the feed is where people spend the most time, and
+                     a slot they scroll past is worth more than one they scroll
+                     over once. Returns the list untouched on paid plans. */
+                  withAds(posts, 5, 'feed').map((post, index) =>
+                    post.__ad ? (
+                      <AdSlot key={post.key} placement={post.placement} format="banner" />
+                    ) : (
+                      <motion.div
+                        key={post.id ?? post._id ?? index}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: Math.min(index, 8) * 0.05 }}
+                      >
+                        <PostCard
+                          post={post}
+                          onPostDeleted={(postId) =>
+                            setPosts((prev) =>
+                              prev.filter((p) => p.id !== postId && p._id !== postId)
+                            )
+                          }
+                        />
+                      </motion.div>
+                    )
+                  )
                 ) : (
                   <div className="text-center py-12">
                     <p className="text-zinc-400 text-lg">

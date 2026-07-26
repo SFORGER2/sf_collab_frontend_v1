@@ -32,6 +32,60 @@ export function AdSlot({ placement, format = 'banner', className }) {
 
   if (!showAds || dismissed) return null;
 
+  /**
+   * `strip` is the top-of-page placement, so it lays out as one row rather
+   * than a stacked block. Stacked, it ran to ~168px and pushed the actual page
+   * below the fold — an ad that buries the content people came for is worse
+   * than no ad, because they leave.
+   */
+  if (format === 'strip') {
+    return (
+      <aside
+        aria-label="Advertisement"
+        data-ad-placement={placement}
+        className={cn(
+          'relative flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl',
+          'border border-dashed border-white/12 bg-white/[0.02] pl-4 pr-9 py-2.5',
+          className
+        )}
+      >
+        <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-dim/60 shrink-0">
+          Ad
+        </span>
+
+        <span className="text-[0.88rem] text-star">Buy your advertisement here</span>
+
+        <span className="text-[0.82rem] text-dim hidden sm:inline">
+          Reach founders, builders and investors across SFCollab.
+        </span>
+
+        <span className="flex items-center gap-3 ml-auto shrink-0">
+          <Link
+            to="/advertise"
+            className="font-mono text-[9.5px] tracking-[0.14em] uppercase px-3 py-1 rounded-full border border-gold/45 text-gold hover:text-star hover:border-gold transition-colors"
+          >
+            Advertise
+          </Link>
+          <Link
+            to="/plans"
+            className="font-mono text-[9.5px] tracking-[0.14em] uppercase text-dim hover:text-star transition-colors"
+          >
+            Ad-free →
+          </Link>
+        </span>
+
+        <button
+          type="button"
+          onClick={() => setDismissed(true)}
+          aria-label="Dismiss advertisement"
+          className="absolute top-1/2 right-2 -translate-y-1/2 p-1 rounded-md text-dim hover:text-star hover:bg-white/[0.06] transition-colors"
+        >
+          <X size={12} />
+        </button>
+      </aside>
+    );
+  }
+
   return (
     <aside
       aria-label="Advertisement"

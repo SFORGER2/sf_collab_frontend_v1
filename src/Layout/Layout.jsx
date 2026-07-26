@@ -2,6 +2,8 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { RouteBoundary } from "@/components/cosmos/RouteErrorBoundary";
+import { AdSlot } from "@/components/cosmos";
+import { placementFor, wantsTopAd } from "@/components/cosmos/adPlacements";
 import { useSelector } from "react-redux";
 
 import NavBar from "../components/sections/NavBar";
@@ -284,6 +286,15 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
               className={`relative w-full scroll-smooth overflow-x-hidden`}
               onScroll={isRootPath ? undefined : onScroll}
             >
+              {/* Shared top ad. Placed here rather than per-page so it is
+                  always in the same position, always above the fold, and the
+                  route policy lives in one file instead of twenty. */}
+              {wantsTopAd(location.pathname) && (
+                <div className="w-full max-w-[1180px] mx-auto px-4 sm:px-6 pt-5">
+                  <AdSlot placement={placementFor(location.pathname)} format="strip" />
+                </div>
+              )}
+
               {/* Inner crash net: a page that throws loses the page, not the
                   navigation. The boundary in App.jsx is the outer backstop for
                   anything that fails above the layout. */}

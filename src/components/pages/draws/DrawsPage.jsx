@@ -7,7 +7,7 @@ import {
   readDrawState, winChance, writeDrawState,
 } from '@/services/draws/draws';
 import {
-  AdSlot, CosmosButton, Display, Eyebrow, Lede, Panel, ProgressRail, Reveal, Tag,
+  CosmosButton, Display, Eyebrow, Lede, Panel, ProgressRail, Reveal, Tag,
 } from '@/components/cosmos';
 
 /**
@@ -82,7 +82,6 @@ export default function DrawsPage() {
       {tab === 'lottery' ? (
         <div className="mt-6">
           <LotteryPanel />
-          <AdSlot placement="lottery-page" format="banner" className="mt-6" />
         </div>
       ) : (
         <DrawsTab draws={draws} state={state} enter={enter} />
@@ -124,7 +123,6 @@ function DrawsTab({ draws, state, enter }) {
         ))}
       </div>
 
-      <AdSlot placement="draws-page" format="banner" className="mt-6" />
 
       <Panel className="p-6 mt-6">
         <Eyebrow className="mb-3">How draws work</Eyebrow>

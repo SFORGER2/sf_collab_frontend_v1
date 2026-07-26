@@ -5,7 +5,7 @@ import {
   oddsLabel, pushHistory, readHistory, rtp, spin,
 } from '@/services/draws/lottery';
 import { useEntitlements } from '@/services/entitlements/useEntitlements';
-import { CosmosButton, Eyebrow, Panel, Tag } from '@/components/cosmos';
+import { AdSlot, CosmosButton, Eyebrow, Panel, Tag } from '@/components/cosmos';
 import LotteryReels from './LotteryReels';
 
 /**
@@ -118,6 +118,10 @@ export default function LotteryPanel() {
           )}
         </div>
       </Panel>
+
+      {/* Between the machine and the odds table — read on every roll, and it
+          doesn't sit between "you lost" and "roll again". */}
+      <AdSlot placement="lottery-mid" format="banner" />
 
       {/* Odds — on the page, not hidden */}
       <Panel className="p-6">
