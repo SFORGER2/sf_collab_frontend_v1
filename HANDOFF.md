@@ -301,6 +301,49 @@ merged for production use.**
 
 ---
 
+## 9b. Profile — schema, inline editing, crash net
+
+### `src/services/profile/profileSchema.js`
+56 fields in 8 groups. Every field declares `aiFill` (`infer` | `extract` |
+`ask` | `derived`) and `reuse` (which surfaces consume it), so the UI can say
+who fills what and the assistant knows what it may write.
+
+### `src/services/profile/profileAdapter.js`
+The **only** place that knows the API splits a person across three homes:
+columns on `user`, the `profile` blob, and `profile.socialLinks`.
+
+- `toSchemaProfile(...sources)` → flat object keyed by schema field keys.
+- `fieldPayload(key, value, currentUser)` → the PUT body for a one-field save.
+  Returns `null` for `derived` fields so reputation can never be posted.
+- Aliases live in `PROFILE_ALIASES` (`currentCompany` → `profile.company`,
+  `profilePicture` → `profile.picture`, `coverPhoto` → `profile.cover`).
+
+Change `ROOT` / `SOCIAL` / `PROFILE_ALIASES` there if the backend renames
+anything — no other file needs to move.
+
+### Inline editing — `Profile/user-profile/InlineField.jsx`
+A pencil per field rather than one 56-field form, because the common action is
+correcting one value. Enter commits, Escape cancels, `⌘↵` for long text.
+`ProfileDetail` keeps an optimistic overlay and rolls back if the save throws;
+`Profile.jsx` persists via `usersAPI.updateProfile(id, payload, token, 'application/json')`.
+
+**BACKEND:** wants `PATCH /api/users/:id` accepting a partial body. Today it
+PUTs a merged `profile` blob, which is why `fieldPayload` needs the current
+user — a partial blob would drop the other keys. Also still needed:
+`POST /api/profile/autofill { fields: [...] }` for the assistant pass.
+
+### `RouteErrorBoundary` — `src/components/cosmos/RouteErrorBoundary.jsx`
+There was no error boundary anywhere above the router, so one bad read
+unmounted the whole tree and left a white screen with no nav and no way back.
+`RouteBoundary` (the router-aware wrapper) is now mounted twice:
+
+- inside `Layout` around `<Outlet />` — a page crash keeps the navigation;
+- in `App.jsx` around `<Routes>` — backstop for anything above the layout.
+
+It resets on pathname change, so navigating away recovers without a reload.
+
+---
+
 ## 10. Known gaps / not done
 
 - **Nothing has been seen with real data.** Dashboards, calendar and the Vision

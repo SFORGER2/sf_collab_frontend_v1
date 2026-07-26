@@ -251,6 +251,34 @@ getMyInvitation: async (startupId) => {
   return response.data
 },
 
+/**
+ * Every invitation addressed to the signed-in user, across all startups.
+ *
+ * FIX: /invitations called this and it did not exist, so the page rendered its
+ * error state on every load. The existing `getMyInvitation` is scoped to one
+ * startup, which the inbox cannot use — it does not know the startup ids yet.
+ *
+ * BACKEND: needs GET /api/startups/invitations/mine returning
+ * { success, data: { invitations: [{ id, startup_id, startup_name, role,
+ *   invited_by, status, created_at }] } }. Falls back to an empty list rather
+ * than throwing, so a missing route shows "no invitations" instead of an error.
+ */
+getMyInvitations: async (params = {}) => {
+  try {
+    const response = await api.get('/startups/invitations/mine', {
+      params: {
+        status: params.status,
+        page: params.page || 1,
+        per_page: params.per_page || 50,
+      },
+    })
+    return response.data
+  } catch (error) {
+    if (error?.response?.status === 404) return { success: true, data: { invitations: [] } }
+    throw error
+  }
+},
+
 getInvitations: async (startupId, params = {}) => {
   const response = await api.get(
     `/startups/${startupId}/invitations`,

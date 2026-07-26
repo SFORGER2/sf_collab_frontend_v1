@@ -2,6 +2,7 @@
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { FolderExplorerUI } from "./components/explorer/FolderExplorerUI";
 import { AutoTranslateProvider } from "./components/AutoTranslateProvider.jsx";
+import { RouteBoundary } from './components/cosmos/RouteErrorBoundary';
 import ScrollToTop from "./components/sections/ScrollToTop.jsx";
 import DeliveryPanel from "./components/pages/Website_generator/DeliveryPanel.jsx";
 import Layout from "./Layout/Layout.jsx";
@@ -278,6 +279,8 @@ export default function App() {
               <AnnouncementProvider>
                 <NewsletterProvider>
                   <ScrollToTop />
+                  {/* One bad page must not blank the whole app. */}
+                  <RouteBoundary>
                   <Routes>
                     {/* ========== PUBLIC ROUTES ========== */}
                     <Route path="/" element={<LandingPage />} />
@@ -543,6 +546,7 @@ export default function App() {
                     {/* 404 */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
+                  </RouteBoundary>
 
                   <ToastContainer
                     position="bottom-center"

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Check, ChevronDown, Lock, Sparkles, Wand2 } from 'lucide-react';
 import { CosmosButton, Eyebrow, Panel, ProgressRail, Tag } from '@/components/cosmos';
+import InlineField from './InlineField';
 import {
   FIELD_GROUPS, groupCompleteness, missingUserInput, profileCompleteness,
   suggestedAutoFills,
@@ -22,14 +23,34 @@ import {
  * pass. Until then the "Let the assistant fill this" button dispatches the
  * assistant-open event so the flow is reviewable.
  */
-export default function ProfileDetail({ profile = {}, isOwner = false }) {
+export default function ProfileDetail({ profile = {}, isOwner = false, onFieldSave }) {
   const [openGroups, setOpenGroups] = useState(() => ({ identity: true, skills: true }));
 
-  const overall = useMemo(() => profileCompleteness(profile), [profile]);
-  const autoFills = useMemo(() => suggestedAutoFills(profile), [profile]);
-  const asks = useMemo(() => missingUserInput(profile), [profile]);
+  // Local overlay of saved edits, so a field updates the moment it is saved
+  // rather than waiting for the parent to refetch.
+  const [edits, setEdits] = useState({});
+  const merged = useMemo(() => ({ ...profile, ...edits }), [profile, edits]);
+
+  const overall = useMemo(() => profileCompleteness(merged), [merged]);
+  const autoFills = useMemo(() => suggestedAutoFills(merged), [merged]);
+  const asks = useMemo(() => missingUserInput(merged), [merged]);
 
   const toggle = (id) => setOpenGroups((g) => ({ ...g, [id]: !g[id] }));
+
+  const handleSave = async (key, value) => {
+    // Optimistic — InlineField re-opens with the draft intact if this throws.
+    setEdits((e) => ({ ...e, [key]: value }));
+    try {
+      await onFieldSave?.(key, value);
+    } catch (err) {
+      setEdits((e) => {
+        const next = { ...e };
+        delete next[key];
+        return next;
+      });
+      throw err;
+    }
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -86,10 +107,10 @@ export default function ProfileDetail({ profile = {}, isOwner = false }) {
 
       {/* Groups */}
       {FIELD_GROUPS.map((group) => {
-        const pct = groupCompleteness(group, profile);
+        const pct = groupCompleteness(group, merged);
         const isOpen = openGroups[group.id];
         const visible = group.fields.filter(
-          (f) => isOwner || !isEmptyValue(profile?.[f.key])
+          (f) => isOwner || !isEmptyValue(merged?.[f.key])
         );
 
         // Don't show an empty group to a visitor.
@@ -137,8 +158,9 @@ export default function ProfileDetail({ profile = {}, isOwner = false }) {
                     <FieldRow
                       key={field.key}
                       field={field}
-                      value={profile?.[field.key]}
+                      value={merged?.[field.key]}
                       isOwner={isOwner}
+                      onSave={handleSave}
                     />
                   ))}
                 </div>
@@ -162,9 +184,10 @@ const AI_BADGE = {
   derived: { label: 'Earned', tone: 'live' },
 };
 
-function FieldRow({ field, value, isOwner }) {
+function FieldRow({ field, value, isOwner, onSave }) {
   const empty = isEmptyValue(value);
   const badge = AI_BADGE[field.aiFill];
+  const editable = isOwner && field.aiFill !== 'derived';
 
   return (
     <div className="py-2 border-b border-white/[0.06]">
@@ -176,13 +199,15 @@ function FieldRow({ field, value, isOwner }) {
         {!empty && <Check size={12} className="text-emerald-400 shrink-0" />}
       </div>
 
-      {empty ? (
-        <p className="text-[0.85rem] text-dim/70 italic">
-          {isOwner ? (field.hint || 'Not set yet') : '—'}
-        </p>
-      ) : (
-        <FieldValue field={field} value={value} />
-      )}
+      <InlineField field={field} value={value} onSave={onSave} canEdit={editable}>
+        {empty ? (
+          <p className="text-[0.85rem] text-dim/70 italic">
+            {editable ? (field.hint || 'Click the pencil to add') : '—'}
+          </p>
+        ) : (
+          <FieldValue field={field} value={value} />
+        )}
+      </InlineField>
     </div>
   );
 }

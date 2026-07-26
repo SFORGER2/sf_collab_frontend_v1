@@ -40,7 +40,28 @@ const ProfileSettings = ({ back, activeSection: propActiveSection, initialActive
   const { user, access_token } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
-  const [formData, setFormData] = useState({});
+  /**
+   * Seeded with the full nested shape.
+   *
+   * This was `useState({})`, so the first render of every child section hit
+   * `formData.profile?.country` on an undefined `profile` and threw — the
+   * settings page never painted at all. The init effect below only runs *after*
+   * that first render, so the default has to be structurally complete.
+   */
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    status: 'active',
+    role: '',
+    roles: [],
+    profile: { picture: null, bio: '', company: '', socialLinks: {}, country: '', city: '' },
+    preferences: {
+      emailNotifications: true, pushNotifications: true, privacy: 'public',
+      language: 'en', timezone: 'UTC', theme: 'light', builderPreferences: '',
+    },
+    notificationSettings: {},
+  });
 
   // ── Initialize formData from user ────────────────────────────────
   useEffect(() => {
@@ -152,18 +173,18 @@ const ProfileSettings = ({ back, activeSection: propActiveSection, initialActive
     try {
       if (!formData.firstName) throw new Error('First name is required');
       if (!formData.email) throw new Error('Email is required');
-      if ((formData.profile.bio || '').length > 300) throw new Error('Bio cannot exceed 300 characters');
-      if (formData.roles.length === 0) throw new Error('At least one role must be selected');
-      if (!formData.profile.country || !formData.preferences.timezone) {
+      if ((formData.profile?.bio || '').length > 300) throw new Error('Bio cannot exceed 300 characters');
+      if ((formData.roles || []).length === 0) throw new Error('At least one role must be selected');
+      if (!formData.profile?.country || !formData.preferences?.timezone) {
         throw new Error('Location must be set (country & timezone)');
       }
 
       let requiresInfluencerApplication = false;
-      if (formData.roles.includes('influencer') && !user?.roles?.includes('influencer')) {
+      if ((formData.roles || []).includes('influencer') && !user?.roles?.includes('influencer')) {
         requiresInfluencerApplication = true;
         formData.roles = formData.roles.filter(r => r !== 'influencer');
       }
-      if (formData.roles.includes('builder') && !formData.preferences.builderPreferences) {
+      if ((formData.roles || []).includes('builder') && !formData.preferences?.builderPreferences) {
         toast.error('You must set up your Builder preferences');
         return;
       }

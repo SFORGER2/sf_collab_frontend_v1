@@ -89,9 +89,9 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
     setRoles(['influencer', 'investor', 'builder', 'founder']);
   }, []);
   const isLocationSet = useMemo(() => {
-    return !!formData.profile.country && !!formData.profile.city && !!user?.preferences?.timezone;
-  }, [formData.profile.country, formData.profile.city, user?.preferences?.timezone]);
-  console.log(isLocationSet, formData.profile.country, formData.profile.city, user?.preferences?.timezone);
+    return !!formData.profile?.country && !!formData.profile?.city && !!user?.preferences?.timezone;
+  }, [formData.profile?.country, formData.profile?.city, user?.preferences?.timezone]);
+  console.log(isLocationSet, formData.profile?.country, formData.profile?.city, user?.preferences?.timezone);
   return (
     <motion.div
       className="space-y-6"
@@ -116,8 +116,8 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
         <label className="block text-sm font-semibold text-gray-200 mb-4">Profile Picture</label>
         <div className="flex flex-wrap justify-center items-center gap-6">
           <div className="w-24 h-24 rounded-full bg-gray-700 overflow-hidden border-2 border-gray-600">
-            {(user.profile.picture || formData.profile.picture) ? (
-              <img loading="lazy" src={getProfilePicture(user) || formData.profile.picture} className="w-full h-full object-cover" alt="profile" />
+            {(user?.profile?.picture || formData.profile?.picture) ? (
+              <img loading="lazy" src={getProfilePicture(user) || formData.profile?.picture} className="w-full h-full object-cover" alt="profile" />
             ) : (
               <div className="flex items-center justify-center text-gray-400 text-sm h-full">No image</div>
             )}
@@ -131,7 +131,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
               Upload
               <input id="profileInput" type="file" accept="image/*" className="hidden" onChange={handleImage} />
             </button>
-            {formData.profile.picture && (
+            {formData.profile?.picture && (
               <button type="button" onClick={() => setFormData(prev => ({ ...prev, profile: { ...prev.profile, picture: null } }))} className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors font-medium border border-red-600/50">
                 Remove
               </button>
@@ -188,7 +188,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
       {/* Roles */}
       <motion.div variants={itemVariants}>
         <label className="block text-sm font-semibold text-gray-300 uppercase tracking-wide px-4 mb-4">Select Your Roles</label>
-        {formData.roles.length === 0 && (
+        {(formData.roles || []).length === 0 && (
           <div className="mb-4 p-3 bg-red-600/10 border border-red-600/50 rounded-lg">
             <p className="text-red-400 text-sm font-medium">You must select at least one role to continue</p>
           </div>
@@ -219,7 +219,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
         <motion.div variants={itemVariants} className="p-6 bg-linear-to-r from-purple-600/10 to-pink-600/10 rounded-xl border border-purple-700/30">
           <label className="block text-sm font-semibold text-gray-200 mb-3">Builder Focus</label>
           <select
-            value={formData.preferences.builderPreferences || ""}
+            value={formData.preferences?.builderPreferences || ""}
             onChange={(e) =>
               setFormData((prev) => ({
                 ...prev,
@@ -245,12 +245,12 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
       <motion.div variants={itemVariants}>
         <label className="block text-sm font-semibold text-gray-200 mb-2">Bio</label>
         <textarea
-          value={formData.profile.bio || ''}
+          value={formData.profile?.bio || ''}
           onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, bio: e.target.value } }))}
           rows={4}
           className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-blue-500 focus:outline-none transition-colors resize-none"
         />
-        <p className="text-xs text-gray-400 mt-2">{(formData.profile.bio || '').length}/300 characters</p>
+        <p className="text-xs text-gray-400 mt-2">{(formData.profile?.bio || '').length}/300 characters</p>
       </motion.div>
 
       {/* Location */}
@@ -268,7 +268,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-2">Country</label>
             <select
-              value={formData.profile.country || ''}
+              value={formData.profile?.country || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, country: e.target.value } }))}
               className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-green-500 focus:outline-none transition-colors"
             >
@@ -280,7 +280,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
             <label className="block text-xs font-medium text-gray-400 mb-2">City</label>
             <input
               type="text"
-              value={formData.profile.city || ''}
+              value={formData.profile?.city || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, city: e.target.value } }))}
               className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-green-500 focus:outline-none transition-colors"
             />
@@ -291,7 +291,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
               <label className="text-sm font-semibold text-gray-200">Timezone</label>
             </div>
             <select
-              value={formData.preferences.timezone}
+              value={formData.preferences?.timezone}
               onChange={(e) => setFormData(prev => ({ ...prev, preferences: { ...prev.preferences, timezone: e.target.value } }))}
               className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-indigo-500 focus:outline-none transition-colors"
             >
@@ -320,7 +320,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
           <input
             type="text"
             placeholder="Company name"
-            value={formData.profile.company || ''}
+            value={formData.profile?.company || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, company: e.target.value } }))}
             className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-orange-500 focus:outline-none transition-colors"
           />
@@ -341,7 +341,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
               key={platform}
               type="text"
               placeholder={platform}
-              value={formData.profile.socialLinks?.[platform] || ''}
+              value={formData.profile?.socialLinks?.[platform] || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, socialLinks: { ...(prev.profile.socialLinks || {}), [platform]: e.target.value } } }))}
               className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-pink-500 focus:outline-none transition-colors text-sm"
             />

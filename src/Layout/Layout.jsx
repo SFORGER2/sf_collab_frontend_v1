@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { RouteBoundary } from "@/components/cosmos/RouteErrorBoundary";
 import { useSelector } from "react-redux";
 
 import NavBar from "../components/sections/NavBar";
@@ -283,7 +284,12 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
               className={`relative w-full scroll-smooth overflow-x-hidden`}
               onScroll={isRootPath ? undefined : onScroll}
             >
-              <Outlet />
+              {/* Inner crash net: a page that throws loses the page, not the
+                  navigation. The boundary in App.jsx is the outer backstop for
+                  anything that fails above the layout. */}
+              <RouteBoundary>
+                <Outlet />
+              </RouteBoundary>
             </div>
           </main>
         </MotionDiv>
