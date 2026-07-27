@@ -762,3 +762,104 @@
   .cosmos-live-dot { animation: none; }
   .cosmos-alive-card:hover { transform: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHOWCASE CARD
+
+   The board cards had accumulated: banner, logo, streak badge, readiness badge,
+   active badge, stage tag, three tags, three stat counters, and five stacked
+   buttons. Every one defensible on its own; together, a wall of objects nobody
+   scrolls through.
+
+   The fix is subtraction plus one strong effect. A single travelling gradient
+   outline gives the card presence, and everything else gets quieter so that
+   outline is the thing you notice. Nothing here adds a new element to the card
+   — it is all border, shadow and one pseudo-element.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.cosmos-showcase {
+  --show-a: #ffbf5e;
+  --show-b: #8b6cff;
+  --show-c: #4fd8ff;
+  position: relative;
+  border-radius: 20px;
+  isolation: isolate;
+  background: linear-gradient(180deg, rgba(20,16,40,0.92) 0%, rgba(11,8,24,0.96) 100%);
+  transition: transform 380ms cubic-bezier(0.22,1,0.36,1),
+              box-shadow 380ms cubic-bezier(0.22,1,0.36,1);
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.05) inset,
+    0 14px 40px -22px rgba(0,0,0,0.9);
+}
+
+/* The travelling outline. A conic gradient rotated behind the card, masked to
+   a 1px ring — so it reads as light moving around the edge rather than a
+   border that changes colour. */
+.cosmos-showcase::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--show-angle, 0deg),
+    transparent 0deg,
+    var(--show-a) 40deg,
+    var(--show-b) 90deg,
+    var(--show-c) 140deg,
+    transparent 200deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0.42;
+  transition: opacity 380ms ease;
+  animation: cosmos-show-spin 7s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.cosmos-showcase:hover {
+  transform: translateY(-7px);
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.07) inset,
+    0 26px 60px -24px rgba(0,0,0,0.95),
+    0 0 42px -18px color-mix(in srgb, var(--show-b) 60%, transparent);
+}
+.cosmos-showcase:hover::before { opacity: 1; }
+
+/* @property lets the angle animate; without it the conic gradient snaps. */
+@property --show-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes cosmos-show-spin {
+  to { --show-angle: 360deg; }
+}
+
+/* Hot cards borrow the flame palette so the outline itself carries the heat —
+   no extra badge needed. */
+.cosmos-showcase[data-heat='warm']    { --show-a: #ffd08a; --show-b: #ffa03c; --show-c: #ffbf5e; }
+.cosmos-showcase[data-heat='hot']     { --show-a: #ffbf5e; --show-b: #ff6f3c; --show-c: #ffa03c; }
+.cosmos-showcase[data-heat='blazing'] { --show-a: #ffa03c; --show-b: #ff3c2f; --show-c: #ff6f3c; }
+.cosmos-showcase[data-heat='blazing']::before { opacity: 0.72; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cosmos-showcase::before { animation: none; opacity: 0.55; }
+  .cosmos-showcase:hover { transform: none; }
+}
+
+:root[data-theme='light'] .cosmos-showcase {
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(20,17,31,0.05),
+    0 14px 36px -22px rgba(20,17,31,0.35);
+}
+:root[data-theme='light'] .cosmos-showcase:hover {
+  box-shadow:
+    0 1px 2px rgba(20,17,31,0.06),
+    0 26px 56px -24px rgba(20,17,31,0.4),
+    0 0 40px -20px color-mix(in srgb, var(--show-b) 45%, transparent);
+}

@@ -785,15 +785,16 @@ function InterestButton({ icon: Icon, label, accent, ideaId, kind }) {
       type="button"
       onClick={toggle}
       aria-pressed={on}
-      className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-[11.5px] font-medium transition-all duration-200 border"
+      title={label}
+      aria-label={label}
+      className="grid place-items-center w-9 h-9 rounded-xl border transition-colors"
       style={
         on
           ? { borderColor: accent, background: `${accent}1a`, color: accent }
           : { borderColor: 'rgba(255,255,255,0.12)', color: 'var(--color-dim)' }
       }
     >
-      <Icon className="h-3.5 w-3.5 shrink-0" />
-      <span className="truncate">{on ? 'Noted' : label}</span>
+      <Icon className="h-4 w-4" />
     </button>
   );
 }
@@ -855,7 +856,7 @@ export default function VisionCard({ content, shouldBlur }) {
       <BurningBox
         item={content}
         onClick={() => navigate(`/ideation-details?id=${content?.id}`)}
-        className="relative block h-full rounded-2xl border border-blue-500/20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 hover:border-blue-500/50 hover:from-gray-800/80 hover:to-gray-900/80 transition-all duration-300 backdrop-blur-sm overflow-hidden cursor-pointer"
+        className="cosmos-showcase relative block h-full overflow-hidden cursor-pointer"
       >
         {shouldBlur && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 backdrop-blur-md rounded-2xl">
@@ -902,7 +903,9 @@ export default function VisionCard({ content, shouldBlur }) {
                   board conveys "alive" as cheaply as another person's presence. */}
               {(content?.collaborators || 0) > 2 && (
                 <span
-                  className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 font-mono text-[9px] tracking-[0.12em] uppercase px-2 py-1 rounded-full"
+                  /* Top-left: the logo overlaps the banner's bottom-left
+                     corner, so anything placed there is read through it. */
+                  className="absolute top-3 left-3 inline-flex items-center gap-1.5 font-mono text-[9px] tracking-[0.12em] uppercase px-2 py-1 rounded-full"
                   style={{ background: 'rgba(0,0,0,0.5)', color: '#3ee6a0' }}
                 >
                   <span className="cosmos-live-dot" />
@@ -962,9 +965,9 @@ export default function VisionCard({ content, shouldBlur }) {
 
           {content?.tags?.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {content?.tags?.slice(0, 3)?.map((tag, i) => (
+              {content?.tags?.slice(0, 2)?.map((tag, i) => (
                 <motion.span key={i} whileHover={{ scale: 1.05 }}
-                  className="text-xs text-blue-300 bg-blue-500/15 border border-blue-500/30 px-3 py-1 rounded-full font-medium">
+                  className="text-[0.72rem] text-dim bg-white/[0.05] border border-white/10 px-2.5 py-0.5 rounded-full">
                   #{tag}
                 </motion.span>
               ))}
@@ -974,81 +977,73 @@ export default function VisionCard({ content, shouldBlur }) {
             </div>
           )}
 
-          <div className="border-t border-gray-700/50 pt-4 space-y-4">
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-4 text-gray-400">
-                <motion.button whileTap={{ scale: 1.25 }} onClick={handleLike}
-                  className="flex items-center gap-1.5 hover:text-red-400 transition-colors">
-                  <Heart className={`h-4 w-4 ${liked ? "text-red-500 fill-red-500" : ""}`} />
-                  <span>{likes}</span>
-                </motion.button>
-                <span className="flex items-center gap-1.5">
-                  <MessageCircle className="h-4 w-4" />{content?.comments}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Users className="h-4 w-4" />{content?.collaborators}
-                </span>
-              </div>
-              <span className="flex items-center gap-1.5 text-gray-500">
+          {/* One quiet stats line, one primary action, one icon row.
+              This block used to stack five full-width buttons — Save, Share,
+              Contribute, Use, Invest, Connect — which is what made the board
+              read as a form rather than something to browse. Secondary actions
+              are icons now; only the primary one keeps its label. */}
+          <div className="border-t border-white/[0.07] pt-3.5 mt-auto">
+            <div className="flex items-center gap-4 text-[0.78rem] text-dim mb-3">
+              <button
+                type="button"
+                onClick={handleLike}
+                className="flex items-center gap-1.5 hover:text-red-400 transition-colors"
+              >
+                <Heart className={`h-3.5 w-3.5 ${liked ? "text-red-500 fill-red-500" : ""}`} />
+                <span className="tabular-nums">{likes}</span>
+              </button>
+              <span className="flex items-center gap-1.5">
+                <MessageCircle className="h-3.5 w-3.5" />
+                <span className="tabular-nums">{content?.comments || 0}</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5" />
+                <span className="tabular-nums">{content?.collaborators || 0}</span>
+              </span>
+              <span className="flex items-center gap-1.5 ml-auto text-dim/70">
                 <Clock className="h-3 w-3" />{content?.timeAgo}
               </span>
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                onClick={handleBookmark}
-                className={`flex-1 py-2.5 px-3 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${bookmarked
-                  ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                  : "bg-white/5 text-gray-400 border border-gray-700/50 hover:border-blue-500/30 hover:text-white"
-                  }`}>
-                <Bookmark className={`h-4 w-4 ${bookmarked ? "fill-current" : ""}`} />
-                Save
-              </motion.button>
-
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                onClick={e => {
-                  e?.preventDefault?.(); e?.stopPropagation?.();
-                  if (navigator?.share) {
-                    navigator.share({ title: content?.title, text: content?.description, url: window.location.href });
-                  } else { toast?.info?.("Share functionality not available"); }
-                }}
-                className="flex-1 py-2.5 px-3 rounded-lg bg-white/5 border border-gray-700/50 hover:border-blue-500/30 text-gray-400 hover:text-white font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2">
-                <Share2 className="h-4 w-4" />Share
-              </motion.button>
             </div>
 
             <div onClick={e => { e?.preventDefault?.(); e?.stopPropagation?.(); }}>
               <CollabButton content={content} accessToken={access_token} isOwnIdea={isOwnIdea} />
             </div>
 
-            {/* Contributing is only one way to be interested in a Vision.
-                Someone who wants to *use* the thing, or to put money behind it,
-                is a signal the founder needs just as much — and previously had
-                nowhere to express it, so it went unrecorded. */}
-            {!isOwnIdea && (
-              <div
-                className="grid grid-cols-2 gap-2"
-                onClick={e => { e?.preventDefault?.(); e?.stopPropagation?.(); }}
+            {/* Secondary signals as icons — same actions, a fifth of the space. */}
+            <div
+              className="flex items-center gap-1.5 mt-2"
+              onClick={e => { e?.preventDefault?.(); e?.stopPropagation?.(); }}
+            >
+              {!isOwnIdea && (
+                <>
+                  <InterestButton icon={Eye} label="Interested in using" accent="#4fd8ff" ideaId={content?.id} kind="use" />
+                  <InterestButton icon={TrendingUp} label="Interested in investing" accent="#3ee6a0" ideaId={content?.id} kind="invest" />
+                </>
+              )}
+              <button
+                type="button"
+                onClick={handleBookmark}
+                title={bookmarked ? 'Saved' : 'Save'}
+                aria-label="Save"
+                className="grid place-items-center w-9 h-9 rounded-xl border transition-colors"
+                style={bookmarked
+                  ? { borderColor: 'rgba(255,191,94,0.5)', background: 'rgba(255,191,94,0.12)', color: '#ffbf5e' }
+                  : { borderColor: 'rgba(255,255,255,0.12)', color: 'var(--color-dim)' }}
               >
-                <InterestButton
-                  icon={Eye}
-                  label="Interested in using"
-                  accent="#4fd8ff"
-                  ideaId={content?.id}
-                  kind="use"
-                />
-                <InterestButton
-                  icon={TrendingUp}
-                  label="Interested in investing"
-                  accent="#3ee6a0"
-                  ideaId={content?.id}
-                  kind="invest"
-                />
-              </div>
-            )}
-
-            <div onClick={e => { e?.preventDefault?.(); e?.stopPropagation?.(); }}>
-              <ConnectionButton userId={content?.author?.id || content?.creator?.id} size="sm" className="w-full" />
+                <Bookmark className={`h-4 w-4 ${bookmarked ? 'fill-current' : ''}`} />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard?.writeText(`${window.location.origin}/ideation-details?id=${content?.id}`);
+                  toast?.success?.('Link copied');
+                }}
+                title="Share"
+                aria-label="Share"
+                className="grid place-items-center w-9 h-9 rounded-xl border border-white/[0.12] text-dim hover:text-star hover:border-white/25 transition-colors"
+              >
+                <Share2 className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>

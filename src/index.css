@@ -1044,3 +1044,101 @@ a.text-black:not([class*='bg-white']):not([class*='bg-gold']):not([class*='bg-am
 :root:not([data-theme='light']) button[class*='bg-gray-1'] {
   color: #14111f;
 }
+
+/* --------------------------------------------------------------------------
+   Light mode, third pass — the surfaces added since the last one, plus the
+   patterns that kept recurring across older pages.
+   -------------------------------------------------------------------------- */
+:root[data-theme='light'] {
+  /* Chat bubbles, menus and any panel painted with a literal dark hex. */
+  --bubble-mine: rgba(184, 121, 26, 0.12);
+  --bubble-mine-border: rgba(184, 121, 26, 0.3);
+  --bubble-them: rgba(20, 17, 31, 0.045);
+  --bubble-them-border: rgba(20, 17, 31, 0.1);
+}
+
+/* Inline styles can't be themed, so the few that matter are pinned by class.
+   `rgba(255,255,255,0.0x)` fills are invisible on white — they become dark. */
+:root[data-theme='light'] [style*="rgba(255,255,255,0.05)"],
+:root[data-theme='light'] [style*="rgba(255, 255, 255, 0.05)"],
+:root[data-theme='light'] [style*="rgba(255,255,255,0.04)"],
+:root[data-theme='light'] [style*="rgba(255,255,255,0.03)"] {
+  background-color: rgba(20, 17, 31, 0.04) !important;
+}
+
+/* Popovers, dropdowns and dialog surfaces from shadcn. */
+:root[data-theme='light'] [data-radix-popper-content-wrapper] > * {
+  background: #ffffff;
+  color: var(--color-star);
+  border-color: rgba(20, 17, 31, 0.12);
+}
+
+/* Toasts were built dark-on-dark. */
+:root[data-theme='light'] .Toastify__toast {
+  background: #ffffff;
+  color: var(--color-star);
+  border: 1px solid rgba(20, 17, 31, 0.12);
+}
+
+/* Inputs and textareas: a white-alpha fill on a white page is a hairline. */
+:root[data-theme='light'] input,
+:root[data-theme='light'] textarea,
+:root[data-theme='light'] select {
+  background-color: rgba(20, 17, 31, 0.035);
+  color: var(--color-star);
+  border-color: rgba(20, 17, 31, 0.14);
+}
+
+/* Tables and list rows striped with white alphas. */
+:root[data-theme='light'] tbody tr:nth-child(even) {
+  background-color: rgba(20, 17, 31, 0.025);
+}
+
+/* Divider borders written against dark. */
+:root[data-theme='light'] [class*='divide-white/'] > * + * {
+  border-color: rgba(20, 17, 31, 0.1);
+}
+
+/* The banner scrim on cards assumes a dark page underneath it. Lightened so a
+   gradient banner doesn't turn into a black block on a white board. */
+:root[data-theme='light'] .cosmos-alive-banner > span[aria-hidden='true'] {
+  background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(20,17,31,0.45) 100%) !important;
+}
+
+/* Skeletons and placeholder blocks. */
+:root[data-theme='light'] .animate-pulse {
+  background-color: rgba(20, 17, 31, 0.06);
+}
+
+/* The sticky ad sets a dark fill inline so it reads on the void; on a light
+   page that leaves a black bar with light text floating over white content. */
+:root[data-theme='light'] aside[data-ad-placement] {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(20, 17, 31, 0.16);
+}
+:root[data-theme='light'] aside[data-ad-placement] span { color: var(--color-star); }
+:root[data-theme='light'] aside[data-ad-placement] a { color: var(--color-gold); }
+
+/* Tinted action buttons (`bg-blue-500/10 text-blue-400` and friends) were
+   picked for contrast against the void. On white the fill nearly vanishes and
+   the label goes with it, so both are darkened. */
+:root[data-theme='light'] button[class*='text-blue-4'],
+:root[data-theme='light'] button[class*='text-blue-3'],
+:root[data-theme='light'] button[class*='text-cyan-4'],
+:root[data-theme='light'] a[class*='text-blue-4'] {
+  color: #0a5f80;
+}
+:root[data-theme='light'] button[class*='bg-blue-500/1'],
+:root[data-theme='light'] button[class*='bg-blue-600/1'],
+:root[data-theme='light'] button[class*='bg-cyan-500/1'] {
+  background-color: rgba(10, 127, 168, 0.1);
+  border-color: rgba(10, 127, 168, 0.3);
+}
+
+/* Same for the green/purple/amber tinted variants. */
+:root[data-theme='light'] button[class*='text-emerald-4'],
+:root[data-theme='light'] button[class*='text-green-4'] { color: #0f7350; }
+:root[data-theme='light'] button[class*='text-purple-4'],
+:root[data-theme='light'] button[class*='text-violet-4'] { color: #5b39c4; }
+:root[data-theme='light'] button[class*='text-amber-4'],
+:root[data-theme='light'] button[class*='text-yellow-4'] { color: #9a6410; }
