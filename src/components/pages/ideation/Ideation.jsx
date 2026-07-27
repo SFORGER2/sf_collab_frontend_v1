@@ -2,6 +2,7 @@ import { WifiOff, RefreshCw, Eye, Clock, Heart, MessageCircle, Users, AlertTrian
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { byMomentum } from "@/services/vision/momentum";
 import IdeationHeader from "./IdeationHeader";
+import { Link } from "react-router-dom";
 import ScrollToTop from "../../sections/ScrollToTop";
 import { ideaAPI } from "@/utils/APIs/ideaAPI";
 import { useSelector } from "react-redux";
@@ -361,17 +362,12 @@ const Ideation = ({ activeRole }) => {
             <p className="text-sm max-w-xs mx-auto" style={{ color: "#6b7280" }}>
               Be the first to share an idea! Try adjusting your filters or post a new one.
             </p>
-            <button
-              onClick={() => setShowNewIdeaForm(true)}
-              className="px-6 py-3 rounded-xl text-sm font-semibold transition-all"
-              style={{
-                background: "linear-gradient(135deg, #3b82f6, #6366f1)",
-                color: "#fff",
-                boxShadow: "0 0 20px rgba(99,102,241,0.3)",
-              }}
+            <Link
+              to="/vision/new"
+              className="inline-block px-6 py-3 rounded-xl text-sm font-semibold transition-all border border-gold/45 bg-gold/10 text-gold hover:bg-gold/20"
             >
-              Post an Idea
-            </button>
+              Create a Vision
+            </Link>
           </div>
         </div>
       )}

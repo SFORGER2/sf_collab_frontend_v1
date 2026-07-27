@@ -8,6 +8,7 @@ import {
 import { fetchWinners, prizeFor, profileHref, timeAgo } from '@/services/draws/winners';
 import { useEntitlements } from '@/services/entitlements/useEntitlements';
 import { AdSlot, CosmosButton, Eyebrow, Panel, Tag } from '@/components/cosmos';
+import { grant as grantToInventory } from '@/services/inventory/inventory';
 import LotteryReels, { IdleReel } from './LotteryReels';
 import PrizeTile from './PrizeTile';
 
@@ -63,6 +64,8 @@ export default function LotteryPanel() {
       if (!r) return r;
       // Credit grants settle immediately; everything else is a backend grant.
       if (r.prize.grant?.credits) addCredits(r.prize.grant.credits);
+      // Everything won lands in the inventory, alongside store purchases.
+      grantToInventory(r.prize.id, 'lottery');
       setHistory(pushHistory(r.prize));
       return r;
     });

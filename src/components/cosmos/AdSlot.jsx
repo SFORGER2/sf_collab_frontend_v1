@@ -26,9 +26,12 @@ const FORMATS = {
   strip: 'min-h-[60px]',
 };
 
-export function AdSlot({ placement, format = 'banner', className }) {
+export function AdSlot({ placement, format = 'banner', className, style, onDismiss }) {
   const { showAds } = useEntitlements();
   const [dismissed, setDismissed] = React.useState(false);
+
+  /* Tell the parent too — StickyTopAd holds a spacer that must go with it. */
+  const dismiss = () => { setDismissed(true); onDismiss?.(); };
 
   if (!showAds || dismissed) return null;
 
@@ -43,6 +46,7 @@ export function AdSlot({ placement, format = 'banner', className }) {
       <aside
         aria-label="Advertisement"
         data-ad-placement={placement}
+        style={style}
         className={cn(
           'relative flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl',
           'border border-dashed border-white/12 bg-white/[0.02] pl-4 pr-9 py-2.5',
@@ -76,7 +80,7 @@ export function AdSlot({ placement, format = 'banner', className }) {
 
         <button
           type="button"
-          onClick={() => setDismissed(true)}
+          onClick={dismiss}
           aria-label="Dismiss advertisement"
           className="absolute top-1/2 right-2 -translate-y-1/2 p-1 rounded-md text-dim hover:text-star hover:bg-white/[0.06] transition-colors"
         >
@@ -99,7 +103,7 @@ export function AdSlot({ placement, format = 'banner', className }) {
     >
       <button
         type="button"
-        onClick={() => setDismissed(true)}
+        onClick={dismiss}
         aria-label="Dismiss advertisement"
         className="absolute top-2 right-2 p-1 rounded-md text-dim hover:text-star hover:bg-white/[0.06] transition-colors"
       >

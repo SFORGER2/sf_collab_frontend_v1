@@ -22,6 +22,7 @@ import { useNotifications } from "../../contexts/NotificationContext";
 import NotificationItem from "../notifications/NotificationItem";
 import { Grid, Search, Plus, Sparkles } from 'lucide-react';
 import AppLauncher from '@/components/app-launcher/AppLauncher';
+import QuickCreateMenu from './QuickCreateMenu';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CosmosButton } from '@/components/cosmos';
 
@@ -159,22 +160,8 @@ const NavBar = ({
               />
             </div>
 
-            {/* Quick Create */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="p-2 rounded-lg hover:bg-white/10 transition-colors text-slate-300 hover:text-white">
-                  <Plus size={22} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-[#1a1a1a] border border-[#262626] rounded-lg">
-                <DropdownMenuItem onClick={() => navigate('/register-startup')} className="text-white hover:bg-white/10">
-                  New Startup
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/posts')} className="text-white hover:bg-white/10">
-                  New Post
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Quick Create — grouped popover, see QuickCreateMenu */}
+            <QuickCreateMenu />
 
             {/* App Launcher */}
             <AppLauncher links={links} />
