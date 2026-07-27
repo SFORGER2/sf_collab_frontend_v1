@@ -103,6 +103,7 @@ import EarnPage from "./components/pages/billing/EarnPage.jsx";
 import AdvertisePage from "./components/pages/billing/AdvertisePage.jsx";
 import InventoryPage from "./components/pages/inventory/InventoryPage.jsx";
 import CrystalsPage from "./components/pages/wallet/CrystalsPage.jsx";
+import MemberReferralsPage from "./components/pages/referrals/ReferralsPage.jsx";
 import ProfileIntakePage from "./components/pages/Profile/ProfileIntakePage.jsx";
 import DrawsPage from "./components/pages/draws/DrawsPage.jsx";
 import MentorRoleDashboard from "./components/pages/dashboards/mentorDashboard/MentorDashboard.jsx";
@@ -447,6 +448,7 @@ export default function App() {
                       <Route path="store" element={<StorePage />} />
                       <Route path="wallet/inventory" element={<InventoryPage />} />
                       <Route path="wallet/crystals" element={<CrystalsPage />} />
+                      <Route path="refer-and-earn" element={<MemberReferralsPage />} />
                       <Route path="profile-intake" element={<ProfileIntakePage />} />
                       <Route path="leaderboard" element={<LeaderboardPage />} />
                       <Route path="marketplace" element={<MarketplacePage />} />

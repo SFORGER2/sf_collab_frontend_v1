@@ -765,3 +765,170 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   box-shadow: 0 0 12px rgba(79, 216, 255, 0.05), inset 0 0 8px rgba(79, 216, 255, 0.03);
   background-color: rgba(79, 216, 255, 0.05);
 }
+
+/* ==========================================================================
+   LIGHT MODE
+
+   Applied by putting `data-theme="light"` on <html> (see services/theme).
+
+   These are runtime overrides of the same custom properties the @theme block
+   defines, which is the whole reason the cosmos recolour was done at token
+   level in the first place: every `bg-blue-500`, `text-star` and `.cosmos-card`
+   in the app follows automatically, with no per-component light variant.
+
+   The accents are darkened rather than reused. Gold at #ffbf5e on white is
+   about 1.6:1 — invisible as text — so each accent gets a light-surface
+   counterpart that holds contrast while staying recognisably the same hue.
+   ========================================================================== */
+:root[data-theme='light'] {
+  --color-void: #f6f4fb;
+  --color-deep: #ecf0fb;
+  --color-panel: #ffffff;
+  --color-star: #14111f;
+  --color-dim: #5b5470;
+
+  --color-gold: #b8791a;
+  --color-violet: #6541d6;
+  --color-cyan: #0a7fa8;
+  --color-magenta: #c2189b;
+  --color-mint: #12855c;
+
+  /* shadcn layer, so ported components follow too */
+  --background: #f6f4fb;
+  --foreground: #14111f;
+  --card: #ffffff;
+  --card-foreground: #14111f;
+  --popover: #ffffff;
+  --popover-foreground: #14111f;
+  --muted: #ece9f5;
+  --muted-foreground: #5b5470;
+  --border: rgba(20, 17, 31, 0.12);
+  --input: rgba(20, 17, 31, 0.14);
+  --ring: #6541d6;
+}
+
+/* Panels, cards and rules are built from white-on-dark alphas — those read as
+   near-invisible on a light surface, so they invert to dark-on-light. */
+:root[data-theme='light'] body {
+  color: var(--color-star);
+  background-color: var(--color-void);
+}
+
+:root[data-theme='light'] .cosmos-panel,
+:root[data-theme='light'] .cosmos-card {
+  background: #ffffff;
+  border-color: rgba(20, 17, 31, 0.1);
+  box-shadow: 0 1px 2px rgba(20, 17, 31, 0.04), 0 8px 24px rgba(20, 17, 31, 0.06);
+}
+
+:root[data-theme='light'] .cosmos-panel-neon {
+  background: #ffffff;
+  border-color: color-mix(in srgb, var(--cosmos-accent, #6541d6) 35%, transparent);
+}
+
+/* The starfield and nebula are the one thing that cannot translate — a dark
+   sky on a light page is just a grey box. Removed rather than faked. */
+:root[data-theme='light'] .cosmos-atmosphere,
+:root[data-theme='light'] .cosmos-vignette,
+:root[data-theme='light'] .cosmos-starfield {
+  display: none;
+}
+
+:root[data-theme='light'] .cosmos-atmosphere-chrome {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(20, 17, 31, 0.08);
+}
+
+/* Utility alphas that assume a dark base */
+:root[data-theme='light'] [class*='bg-white/'] {
+  background-color: rgba(20, 17, 31, 0.04);
+}
+:root[data-theme='light'] [class*='border-white/'] {
+  border-color: rgba(20, 17, 31, 0.1);
+}
+
+/* --------------------------------------------------------------------------
+   Light mode, part two: the neutral ramp.
+
+   Most of the app predates the cosmos theme and paints surfaces with literal
+   `bg-gray-800`, `from-gray-900`, `border-gray-700`. The global recolour maps
+   those onto void neutrals, which are dark *by design* — correct for dark
+   mode, and the reason a first pass at light mode produced a white page
+   covered in dark grey cards.
+
+   So in light mode the ramp inverts: 700–950 become light surfaces, 50–300
+   become dark text. Every hard-coded utility follows without touching a single
+   component, which is the same reason the recolour was done this way at all.
+   -------------------------------------------------------------------------- */
+:root[data-theme='light'] {
+  --color-gray-50: #14111f;
+  --color-gray-100: #1d1930;
+  --color-gray-200: #2a2440;
+  --color-gray-300: #4a4363;
+  --color-gray-400: #6d6588;
+  --color-gray-500: #8b849f;
+  --color-gray-600: #b3adc4;
+  --color-gray-700: #ded9ea;
+  --color-gray-800: #efecf7;
+  --color-gray-900: #f7f5fc;
+  --color-gray-950: #ffffff;
+
+  --color-slate-50: #14111f;
+  --color-slate-100: #1d1930;
+  --color-slate-200: #2a2440;
+  --color-slate-300: #4a4363;
+  --color-slate-400: #6d6588;
+  --color-slate-500: #8b849f;
+  --color-slate-600: #b3adc4;
+  --color-slate-700: #ded9ea;
+  --color-slate-800: #efecf7;
+  --color-slate-900: #f7f5fc;
+  --color-slate-950: #ffffff;
+
+  --color-zinc-700: #ded9ea;
+  --color-zinc-800: #efecf7;
+  --color-zinc-900: #f7f5fc;
+  --color-zinc-950: #ffffff;
+
+  --color-neutral-700: #ded9ea;
+  --color-neutral-800: #efecf7;
+  --color-neutral-900: #f7f5fc;
+  --color-neutral-950: #ffffff;
+}
+
+/* Gradient-clipped headings are written light-on-dark (`from-white via-blue-100`)
+   and vanish on a light page. Fall back to solid text rather than trying to
+   invert a gradient we can't see the stops of. */
+:root[data-theme='light'] .text-transparent.bg-clip-text {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+          background-clip: initial !important;
+  -webkit-text-fill-color: var(--color-star) !important;
+  color: var(--color-star) !important;
+}
+
+/* Dark-mode scrims over imagery would darken a light layout for no reason. */
+:root[data-theme='light'] [class*='from-black/'],
+:root[data-theme='light'] [class*='via-black/'],
+:root[data-theme='light'] [class*='to-black/'] {
+  --tw-gradient-from: rgba(255, 255, 255, 0.85);
+  --tw-gradient-to: rgba(255, 255, 255, 0);
+}
+
+/* `text-white` is literal in Tailwind and is scattered across every pre-cosmos
+   page, so headings and body copy stay white on a light background.
+
+   Scoped away from buttons, links and anything painting its own background:
+   those are usually white-on-colour and are correct as they are. This catches
+   the breakage (headings, paragraphs, labels) without wrecking a gold CTA. */
+:root[data-theme='light'] .text-white:not(button):not(a):not([class*='bg-']) {
+  color: var(--color-star);
+}
+:root[data-theme='light'] .text-gray-300,
+:root[data-theme='light'] .text-gray-400,
+:root[data-theme='light'] .text-slate-300,
+:root[data-theme='light'] .text-slate-400,
+:root[data-theme='light'] .text-zinc-400 {
+  color: var(--color-dim);
+}

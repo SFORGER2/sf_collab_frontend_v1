@@ -1,3 +1,4 @@
+import { withSampleFallback } from '@/services/mock/people';
 import React, { useState, useMemo } from 'react';
 // `motion` was used 16 times in this file but never imported, so the component
 // threw `motion is not defined` on first render and React unmounted the whole
@@ -80,8 +81,17 @@ const DiscoverUsers = () => {
     enabled: !!access_token,
   });
 
+  /**
+   * Fall back to sample people when the API returns nothing.
+   *
+   * Without this the page is indistinguishable from broken whenever the
+   * backend is down or the instance is new, and the ten-result credits gate
+   * can never be seen at all. Labelled below, never silently blended.
+   */
+  const { items: shown, isSample } = withSampleFallback(users, { enabled: !loading });
+
   // Filter out current user
-  const filteredUsers = users.filter(u => u.id !== user?.id);
+  const filteredUsers = shown.filter(u => u.id !== user?.id);
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -323,6 +333,21 @@ const DiscoverUsers = () => {
         </motion.div>
 
         {/* User Grid with Infinite Scroll */}
+        {/* Say plainly when these aren't real people — someone would try to
+            message them otherwise. */}
+        {isSample && (
+          <div
+            className="mb-4 rounded-xl px-3.5 py-2.5 text-[0.83rem]"
+            style={{
+              background: 'rgba(255,191,94,0.08)',
+              border: '1px solid rgba(255,191,94,0.28)',
+              color: '#ffbf5e',
+            }}
+          >
+            Showing sample profiles — the directory is empty or the backend is unreachable.
+          </div>
+        )}
+
         <AnimatePresence mode="wait">
           {loading && filteredUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20">

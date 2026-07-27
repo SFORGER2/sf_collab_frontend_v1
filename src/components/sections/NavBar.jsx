@@ -23,6 +23,7 @@ import NotificationItem from "../notifications/NotificationItem";
 import { Grid, Search, Plus, Sparkles } from 'lucide-react';
 import AppLauncher from '@/components/app-launcher/AppLauncher';
 import QuickCreateMenu from './QuickCreateMenu';
+import ThemeToggle from './ThemeToggle';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CosmosButton } from '@/components/cosmos';
 
@@ -162,6 +163,9 @@ const NavBar = ({
 
             {/* Quick Create — grouped popover, see QuickCreateMenu */}
             <QuickCreateMenu />
+
+            {/* Dark / light */}
+            <ThemeToggle />
 
             {/* App Launcher */}
             <AppLauncher links={links} />

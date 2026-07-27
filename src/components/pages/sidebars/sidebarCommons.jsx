@@ -169,6 +169,7 @@ export function walletSection(id) {
       { id: "earn", href: "/wallet/earn", label: "Earn SF Coins", icon: <TrendingUp size={18} /> },
       { id: "inventory", href: "/wallet/inventory", label: "My Inventory", icon: <ShoppingBag size={18} /> },
       { id: "crystals", href: "/wallet/crystals", label: "Buy Crystals", icon: <Gem size={18} /> },
+      { id: "refer", href: "/refer-and-earn", label: "Refer & Earn", icon: <UserPlus size={18} /> },
       { id: "credits", href: "/credits", label: "Buy Credits", icon: <CreditCard size={18} /> },
       { id: "draws", href: "/draws", label: "Draws & Prizes", icon: <Trophy size={18} /> },
       { id: "lottery", href: "/draws?tab=lottery", label: "Lottery & Jackpot", icon: <Dices size={18} /> },
