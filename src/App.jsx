@@ -234,6 +234,19 @@ import { WarningActionsPage } from "./components/pages/erp/WarningActionsPage";
 import { FlagsPage } from "./components/pages/erp/FlagsPage";
 import { AuditLogsPage } from "./components/pages/erp/AuditLogsPage";
 
+import SharedWithMe from "./components/pages/drive/SharedWithMe";
+import RecentFiles from "./components/pages/drive/RecentFiles";
+import Starred from "./components/pages/drive/Starred";
+import Trash from "./components/pages/drive/Trash";
+import StartupDrive from "./components/pages/drive/StartupDrive";
+import AIKnowledgeHub from "./components/pages/drive/AIKnowledgeHub";
+import DriveSearch from "./components/pages/drive/DriveSearch";
+import FileDetails from "./components/pages/drive/fileDetails";
+
+import UpcomingMeetingsPage from '@/components/pages/meet/UpcomingMeetingsPage';
+import PastMeetingsPage from '@/components/pages/meet/PastMeetingsPage';
+import RecordingsPage from '@/components/pages/meet/RecordingsPage';
+
 export default function App() {
   const { access_token, user } = useSelector((state) => state.auth);
   const [userRoles, setUserRoles] = useState([]);
@@ -488,13 +501,26 @@ export default function App() {
                       <Route path="milestones" element={<MilestonePage />} />
 
                       {/* SF Drive */}
-                      <Route path="drive/file/:id" element={<FileDetailPage />} />
                       <Route path="sf-drive" element={<FolderExplorerUI />} />
+
+                      <Route path="sf-drive/shared" element={<SharedWithMe />} />
+                      <Route path="sf-drive/recent" element={<RecentFiles />} />
+                      <Route path="sf-drive/starred" element={<Starred />} />
+                      <Route path="sf-drive/trash" element={<Trash />} />
+
+                      <Route path="sf-drive/startup" element={<StartupDrive />} />
+                      <Route path="sf-drive/knowledge" element={<AIKnowledgeHub />} />
+                      <Route path="sf-drive/search" element={<DriveSearch />} />
+
+                      <Route path="sf-drive/file/:id" element={<FileDetails />} />
 
                       {/* SF Meet (inside Layout) */}
                       <Route path="meet" element={<MeetingsTab />} />
                       <Route path="meet/:id" element={<MeetingDetailPage />} />
                       <Route path="meet/:id/summary" element={<PostMeetingSummaryPage />} />
+                      <Route path="meet/upcoming" element={<UpcomingMeetingsPage />} />
+                      <Route path="meet/past" element={<PastMeetingsPage />} />
+                      <Route path="meet/recordings" element={<RecordingsPage />} />
 
                       {/* Settings */}
                       <Route path="setting" element={<Setting />}>

@@ -33,14 +33,28 @@ const ICON_FALLBACK = {
 
 const AppLauncher = ({ links }) => {
   const apps = getLauncherApps(links);
+  const [open, setOpen] = useState(false);
   const [openApp, setOpenApp] = useState(null);
 
   if (apps.length === 0) return null;
 
   const active = apps.find((a) => a.label === openApp) || null;
 
+  const closePopover = () => {
+    setOpen(false);
+    // Delay resetting the openApp so the transition doesn't flash
+    setTimeout(() => setOpenApp(null), 150);
+  };
+
+  const onPopoverOpenChange = (isOpen) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setOpenApp(null);
+    }
+  };
+
   return (
-    <Popover onOpenChange={(open) => !open && setOpenApp(null)}>
+    <Popover open={open} onOpenChange={onPopoverOpenChange}>
       <PopoverTrigger asChild>
         <button
           className="p-2 rounded-xl text-star hover:bg-white/10 hover:text-gold transition-all duration-300"
@@ -56,7 +70,7 @@ const AppLauncher = ({ links }) => {
         className="w-[min(94vw,26rem)] p-5 cosmos-panel-neon border-white/10 rounded-2xl"
       >
         {active ? (
-          <AppDetail app={active} onBack={() => setOpenApp(null)} />
+          <AppDetail app={active} onBack={() => setOpenApp(null)} closePopover={closePopover} />
         ) : (
           <>
             <div className="flex items-baseline justify-between gap-3 mb-4">
@@ -68,7 +82,12 @@ const AppLauncher = ({ links }) => {
 
             <div className="grid grid-cols-3 gap-2.5">
               {apps.map((app) => (
-                <AppTile key={app.id} app={app} onOpen={() => setOpenApp(app.label)} />
+                <AppTile
+                  key={app.id}
+                  app={app}
+                  onOpen={() => setOpenApp(app.label)}
+                  closePopover={closePopover}
+                />
               ))}
             </div>
 
@@ -83,8 +102,19 @@ const AppLauncher = ({ links }) => {
 };
 
 /** One app's shortcut list, shown in place of the grid. */
-function AppDetail({ app, onBack }) {
+function AppDetail({ app, onBack, closePopover }) {
   const items = app.subItems || [];
+
+  // Helper to wrap links with close behavior
+  const NavLink = ({ to, children, className }) => (
+    <Link
+      to={to}
+      onClick={closePopover}
+      className={className}
+    >
+      {children}
+    </Link>
+  );
 
   return (
     <div style={{ "--cosmos-accent": app.accent }}>
@@ -114,7 +144,7 @@ function AppDetail({ app, onBack }) {
         </div>
       </div>
 
-      <Link
+      <NavLink
         to={app.href}
         className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl mb-2 transition-colors"
         style={{ background: `${app.accent}14`, border: `1px solid ${app.accent}44` }}
@@ -123,11 +153,11 @@ function AppDetail({ app, onBack }) {
           Open {app.label}
         </span>
         <ArrowUpRight size={14} style={{ color: app.accent }} />
-      </Link>
+      </NavLink>
 
       <div className="flex flex-col gap-0.5 max-h-[15rem] overflow-y-auto -mr-1 pr-1">
         {items.map((item) => (
-          <Link
+          <NavLink
             key={item.id}
             to={item.href}
             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[0.85rem] text-dim hover:text-star hover:bg-white/[0.05] transition-colors"
@@ -140,14 +170,14 @@ function AppDetail({ app, onBack }) {
               )}
             </span>
             {item.label}
-          </Link>
+          </NavLink>
         ))}
       </div>
     </div>
   );
 }
 
-function AppTile({ app, onOpen }) {
+function AppTile({ app, onOpen, closePopover }) {
   return (
     <button
       type="button"
@@ -175,7 +205,10 @@ function AppTile({ app, onOpen }) {
       {/* The label opens the app directly — the tile body opens its shortcuts. */}
       <Link
         to={app.href}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          closePopover();
+        }}
         className="relative text-[0.78rem] font-medium text-star text-center leading-tight hover:text-gold transition-colors"
       >
         {app.label}

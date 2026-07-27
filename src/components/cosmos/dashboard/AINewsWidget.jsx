@@ -19,7 +19,7 @@ export default function AINewsWidget({ limit = 4 }) {
   useEffect(() => {
     let cancelled = false;
 
-    fetch(`/api/ai-news?page=1&per_page=${limit}`, { headers: { Accept: 'application/json' } })
+    fetch(`/api/ai-news/ainews?page=1&per_page=${limit}`, { headers: { Accept: 'application/json' } })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
       .then((body) => {
         if (cancelled) return;

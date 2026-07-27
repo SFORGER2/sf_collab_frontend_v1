@@ -371,13 +371,17 @@ const DiscoverUsers = () => {
                     const avatarUrl = getAvatarUrl(userItem);
                     return (
                       <UserCard
-                        key={userItem.id}
-                        user={{ ...userItem, profilePicture: avatarUrl }}
-                        onOpen={(user) => {
-                          setSelectedUser(user);
-                          setShowModal(true);
-                        }}
-                      />
+  key={userItem.id}
+  user={{
+    ...userItem,
+    profilePicture: avatarUrl,
+    disableConnection: userItem.isSample === true,
+  }}
+  onOpen={(user) => {
+    setSelectedUser(user);
+    setShowModal(true);
+  }}
+/>
                     );
                   }}
                   sentinelRef={targetRef}
@@ -448,12 +452,14 @@ const DiscoverUsers = () => {
                 </Button>
 
                 <div className="pt-2 border-t border-gray-700 w-full">
-                  <ConnectionButton
-                    userId={selectedUser.id}
-                    size="default"
-                    className="w-full"
-                  />
-                </div>
+  {!selectedUser?.isSample && (
+    <ConnectionButton
+      userId={selectedUser.id}
+      size="default"
+      className="w-full"
+    />
+  )}
+</div>
 
                 <div className="space-y-2 pt-2 border-t w-full border-gray-700">
                   <label className="text-sm font-medium text-gray-300">Send a Message</label>

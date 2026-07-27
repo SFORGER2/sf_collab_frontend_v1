@@ -322,22 +322,6 @@ declineInvitation: async (startupId, invitationId) => {
    * reviewed before the backend lands. Approval must be enforced server-side on
    * POST /startups too — a client-side gate stops nobody.
    */
-  getMyRegistrationRequest: async () => {
-    try {
-      const response = await api.get('/startups/registration-request/mine')
-      return response.data
-    } catch (error) {
-      if (error?.response?.status === 404) {
-        return { success: true, data: { status: 'none' } }
-      }
-      throw error
-    }
-  },
-
-  requestRegistration: async (payload) => {
-    const response = await api.post('/startups/registration-request', payload)
-    return response.data
-  },
 
   // Cancel own join request
   cancelJoinRequest: async (requestId) => {

@@ -53,7 +53,32 @@ const MARKETPLACE_FALLBACK = {
   ],
 };
 
-const FALLBACKS = { Marketplace: MARKETPLACE_FALLBACK };
+const DRIVE_FALLBACK = {
+  id: 'app-drive',
+  href: '/sf-drive',
+  label: 'SF Drive',
+  subItems: [
+    { id: "drive-home", href: "/sf-drive", label: "My Drive" },
+    { id: "drive-shared", href: "/sf-drive/shared", label: "Shared with Me" },
+    { id: "drive-recent", href: "/sf-drive/recent", label: "Recent" },
+    { id: "drive-starred", href: "/sf-drive/starred", label: "Starred" },
+    { id: "drive-trash", href: "/sf-drive/trash", label: "Trash" },
+  ],
+};
+
+const MEET_FALLBACK = {
+  id: 'app-meet',
+  href: '/sfmeet',
+  label: 'SF Meet',
+  subItems: [
+    { id: 'meet-home', href: '/sfmeet', label: 'Home' },
+    { id: 'meet-new', href: '/sfmeet/new', label: 'New Meeting' },
+    { id: 'meet-history', href: '/sfmeet/history', label: 'Meeting History' },
+    { id: 'meet-recordings', href: '/sfmeet/recordings', label: 'Recordings' },
+  ],
+};
+
+const FALLBACKS = { Marketplace: MARKETPLACE_FALLBACK, 'SF Drive': DRIVE_FALLBACK, 'SF Meet': MEET_FALLBACK };
 
 /**
  * Returns the launcher's apps in canonical order, with presentation metadata
@@ -67,10 +92,22 @@ export function getLauncherApps(links = []) {
     }
   }
 
-  return APP_ORDER.filter((label) => byLabel.has(label) || FALLBACKS[label]).map((label) => ({
-    ...(byLabel.get(label) || FALLBACKS[label]),
-    ...APP_META[label],
-  }));
+  return APP_ORDER
+    .filter((label) => byLabel.has(label) || FALLBACKS[label])
+    .map((label) => {
+      const sidebarApp = byLabel.get(label);
+      const fallback = FALLBACKS[label];
+
+      return {
+        ...fallback,
+        ...sidebarApp,
+        subItems:
+          sidebarApp?.subItems?.length
+            ? sidebarApp.subItems
+            : fallback?.subItems || [],
+        ...APP_META[label],
+      };
+    });
 }
 
 /**

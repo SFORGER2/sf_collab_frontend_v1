@@ -92,7 +92,7 @@ export async function chat({ message, workspaceId, conversationId, execute = fal
   }
 
   return callAPI(() =>
-    apiClient.post('/api/assistant/chat', {
+    apiClient.post('/assistant/chat', {
       message,
       workspace_id: workspaceId ?? undefined,
       conversation_id: conversationId ?? undefined,
@@ -111,7 +111,7 @@ export async function chat({ message, workspaceId, conversationId, execute = fal
  */
 export async function ask(question, workspaceId) {
   return callAPI(() =>
-    apiClient.post('/api/assistant/ask', {
+    apiClient.post('/assistant/ask', {
       question,
       workspace_id: workspaceId ?? undefined,
     })
@@ -157,7 +157,7 @@ export async function ingestFile(file, meta = {}) {
   if (meta.sensitivity) form.append('sensitivity', meta.sensitivity);
 
   return callAPI(() =>
-    apiClient.post('/api/assistant/documents/ingest', form, {
+    apiClient.post('/assistant/documents/ingest', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: meta.onProgress
         ? (e) => {
@@ -179,7 +179,7 @@ export async function ingestFile(file, meta = {}) {
  */
 export async function ingestText(title, text, meta = {}) {
   return callAPI(() =>
-    apiClient.post('/api/assistant/documents/ingest', {
+    apiClient.post('/assistant/documents/ingest', {
       title,
       text,
       workspace_id: meta.workspaceId ?? undefined,
@@ -201,7 +201,7 @@ export async function ingestText(title, text, meta = {}) {
  */
 export async function syncDrive(workspaceId) {
   return callAPI(() =>
-    apiClient.post('/api/assistant/documents/sync-drive', { workspace_id: workspaceId })
+    apiClient.post('/assistant/documents/sync-drive', { workspace_id: workspaceId })
   );
 }
 
@@ -290,7 +290,7 @@ export async function writeDocument({
   title,
 }) {
   return callAPI(() =>
-    apiClient.post('/api/assistant/write', {
+    apiClient.post('/assistant/write', {
       topic,
       instructions: instructions ?? undefined,
       document_type: documentType ?? undefined,
@@ -314,7 +314,7 @@ export async function writeDocument({
  */
 export async function executeAction(action, params) {
   return callAPI(() =>
-    apiClient.post('/api/assistant/actions/execute', { action, params })
+    apiClient.post('/assistant/actions/execute', { action, params })
   );
 }
 
@@ -345,7 +345,7 @@ export async function getWorkspaceSummary(workspaceId) {
  */
 export async function refreshWorkspaceSummary(workspaceId) {
   return callAPI(() =>
-    apiClient.post(`/api/assistant/workspaces/${workspaceId}/summary/refresh`)
+    apiClient.post(`/assistant/workspaces/${workspaceId}/summary/refresh`)
   );
 }
 
