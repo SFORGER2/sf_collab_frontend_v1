@@ -15,6 +15,30 @@
  * silently with real records.
  */
 
+/**
+ * Banners and logos are generated gradients rather than image files.
+ *
+ * There is no asset pipeline yet and stock photography would be a lie about
+ * what these are. A deterministic gradient per record gives every card a
+ * distinct, stable identity that survives a reload — and when real uploads
+ * arrive, `bannerUrl`/`logoUrl` simply take precedence.
+ */
+export const BANNERS = [
+  'linear-gradient(135deg,#ffbf5e 0%,#ff6f3c 55%,#8b6cff 100%)',
+  'linear-gradient(135deg,#4fd8ff 0%,#8b6cff 60%,#ff4fd8 100%)',
+  'linear-gradient(135deg,#3ee6a0 0%,#4fd8ff 60%,#8b6cff 100%)',
+  'linear-gradient(135deg,#ff6fd8 0%,#8b6cff 55%,#4fd8ff 100%)',
+  'linear-gradient(135deg,#ffbf5e 0%,#3ee6a0 60%,#4fd8ff 100%)',
+  'linear-gradient(135deg,#8b6cff 0%,#4fd8ff 50%,#3ee6a0 100%)',
+];
+
+/** Stable per-id, so a card keeps its colours between renders. */
+export function bannerFor(id = '') {
+  let h = 0;
+  for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return BANNERS[h % BANNERS.length];
+}
+
 const hoursAgo = (h) => new Date(Date.now() - h * 3600_000).toISOString();
 const daysAgo = (d) => new Date(Date.now() - d * 86400_000).toISOString();
 
@@ -203,6 +227,18 @@ export const SAMPLE_STARTUPS = [
     roles: { 'Analytics Engineer': 1, 'Frontend Engineer': 1 },
   },
 ];
+
+/* Give every sample a banner and a monogram logo. Done here rather than in
+   each literal so adding a record can't forget one. */
+for (const v of SAMPLE_VISIONS) {
+  v.banner = bannerFor(v.id);
+  v.logoText = v.title.slice(0, 2).toUpperCase();
+}
+for (const st of SAMPLE_STARTUPS) {
+  st.banner = bannerFor(st.id);
+  st.logoText = st.name.slice(0, 2).toUpperCase();
+  st.isSample = true;
+}
 
 /** Real records when there are any, samples when there are none. */
 export function withBoardFallback(items, samples, { enabled = true } = {}) {

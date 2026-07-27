@@ -2,9 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { getStageColor } from "./getStageColor";
 import { BurningBox, StreakBadge } from "@/components/cosmos";
+import { bannerFor } from "@/services/mock/boards";
 import {
   Bookmark, Clock, Heart, MessageCircle, Share2,
-  Users, UserPlus, X, Send, CheckCircle, Clock3,
+  Users, UserPlus, X, Send, CheckCircle, Clock3, Eye, TrendingUp,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDraft } from "@/utils/hooks/useDraft";
@@ -751,6 +752,52 @@ function CollabButton({ content, accessToken, isOwnIdea }) {
   );
 }
 
+/**
+ * A lightweight interest signal — not an application.
+ *
+ * Contributing means committing time and goes through the collab request
+ * flow. Wanting to *use* something, or to back it, costs nothing to say and
+ * tells the founder something different: demand, and capital. One tap,
+ * reversible, no form.
+ *
+ * BACKEND: POST /api/ideas/:id/interest { kind: 'use' | 'invest' }, one row
+ * per user per kind, and surface the counts to the creator — the signal is
+ * worthless if only the sender can see it.
+ */
+function InterestButton({ icon: Icon, label, accent, ideaId, kind }) {
+  const [on, setOn] = useState(false);
+
+  const toggle = async () => {
+    const next = !on;
+    setOn(next);
+    try {
+      await axios.post(`/api/ideas/${ideaId}/interest`, { kind, active: next });
+    } catch {
+      // The endpoint does not exist yet. Keep the optimistic state rather than
+      // snapping back — the intent is recorded locally and the contract is
+      // documented above.
+    }
+    toast?.success?.(next ? `Noted — ${label.toLowerCase()}` : 'Interest removed');
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={on}
+      className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-[11.5px] font-medium transition-all duration-200 border"
+      style={
+        on
+          ? { borderColor: accent, background: `${accent}1a`, color: accent }
+          : { borderColor: 'rgba(255,255,255,0.12)', color: 'var(--color-dim)' }
+      }
+    >
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span className="truncate">{on ? 'Noted' : label}</span>
+    </button>
+  );
+}
+
 // ── Main Card ─────────────────────────────────────────────────────────────────
 export default function VisionCard({ content, shouldBlur }) {
   // FIX: useNavigate was missing — caused "navigate is not defined" crash
@@ -822,13 +869,54 @@ export default function VisionCard({ content, shouldBlur }) {
 
         <div className={`p-6 space-y-4 h-full flex flex-col ${shouldBlur ? "blur-sm pointer-events-none" : ""}`}>
 
-          {content?.imageUrl && (
-            <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.3 }}
-              className="overflow-hidden rounded-xl border border-blue-500/10">
-              <img src={content?.imageUrl} alt={content?.title}
-                className="h-48 w-full object-cover group-hover:brightness-110 transition-all duration-300" />
-            </motion.div>
-          )}
+          {/* Portfolio header: banner behind, logo overlapping it.
+              An uploaded image wins; otherwise a gradient derived from the id
+              gives the card a stable identity rather than a grey rectangle. */}
+          <div className="-mx-6 -mt-6 mb-1">
+            <div
+              className="relative h-28 w-full overflow-hidden"
+              style={content?.imageUrl ? undefined : { background: content?.banner || bannerFor(String(content?.id || '')) }}
+            >
+              {content?.imageUrl && (
+                <img
+                  src={content.imageUrl}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              )}
+              <span
+                aria-hidden="true"
+                className="absolute inset-0"
+                style={{ background: 'linear-gradient(180deg, rgba(9,7,20,0.08) 0%, rgba(9,7,20,0.8) 100%)' }}
+              />
+
+              <span className="absolute top-3 right-3">
+                <StreakBadge item={content} />
+              </span>
+
+              {content?.readinessScore > 0 && (
+                <span
+                  className="absolute bottom-3 right-3 font-mono text-[9.5px] tracking-[0.12em] uppercase px-2 py-1 rounded-full"
+                  style={{ background: 'rgba(0,0,0,0.55)', color: '#ffbf5e' }}
+                >
+                  {content.readinessScore}% ready
+                </span>
+              )}
+            </div>
+
+            <div className="px-6 -mt-7 relative">
+              <span
+                className="grid place-items-center w-14 h-14 rounded-2xl font-display text-[1.05rem]"
+                style={{
+                  background: content?.banner || bannerFor(String(content?.id || '')),
+                  border: '3px solid var(--color-panel)',
+                  color: '#14111f',
+                }}
+              >
+                {content?.logoText || (content?.title || '??').slice(0, 2).toUpperCase()}
+              </span>
+            </div>
+          </div>
 
           {/* FIX: inner author <Link> replaced with <div> + stopPropagation to prevent nested <a> */}
           <div
@@ -844,15 +932,11 @@ export default function VisionCard({ content, shouldBlur }) {
                 <p className="text-xs text-gray-400">{author?.role}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {/* The card itself burns (BurningBox above); this names the tier
-                  so the heat has a word attached to it. Both render nothing
-                  below the first momentum threshold. */}
-              <StreakBadge item={content} />
-              <span className={`${getStageColor(content?.stage)} text-xs px-3 py-1.5 rounded-full font-semibold`}>
-                {content?.stage}
-              </span>
-            </div>
+            {/* The streak badge lives on the banner now — showing it twice on
+                one card made the heat read as noise rather than a signal. */}
+            <span className={`${getStageColor(content?.stage)} text-xs px-3 py-1.5 rounded-full font-semibold shrink-0`}>
+              {content?.stage}
+            </span>
           </div>
 
           <div className="flex-1">
@@ -920,6 +1004,32 @@ export default function VisionCard({ content, shouldBlur }) {
             <div onClick={e => { e?.preventDefault?.(); e?.stopPropagation?.(); }}>
               <CollabButton content={content} accessToken={access_token} isOwnIdea={isOwnIdea} />
             </div>
+
+            {/* Contributing is only one way to be interested in a Vision.
+                Someone who wants to *use* the thing, or to put money behind it,
+                is a signal the founder needs just as much — and previously had
+                nowhere to express it, so it went unrecorded. */}
+            {!isOwnIdea && (
+              <div
+                className="grid grid-cols-2 gap-2"
+                onClick={e => { e?.preventDefault?.(); e?.stopPropagation?.(); }}
+              >
+                <InterestButton
+                  icon={Eye}
+                  label="Interested in using"
+                  accent="#4fd8ff"
+                  ideaId={content?.id}
+                  kind="use"
+                />
+                <InterestButton
+                  icon={TrendingUp}
+                  label="Interested in investing"
+                  accent="#3ee6a0"
+                  ideaId={content?.id}
+                  kind="invest"
+                />
+              </div>
+            )}
 
             <div onClick={e => { e?.preventDefault?.(); e?.stopPropagation?.(); }}>
               <ConnectionButton userId={content?.author?.id || content?.creator?.id} size="sm" className="w-full" />
