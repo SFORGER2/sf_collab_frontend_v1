@@ -15,6 +15,7 @@
 export { CosmosButton, default as Button } from './CosmosButton';
 export { Reveal } from './Reveal';
 export { MomentumFlame } from './MomentumFlame';
+export { BurningBox, StreakBadge } from './BurningBox';
 export { RoleTabs } from './RoleTabs';
 export {
   Panel,

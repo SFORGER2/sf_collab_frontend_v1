@@ -56,7 +56,7 @@ export default function DrawsPage() {
         <Display size="xl" className="mt-3 mb-4">Draws &amp; prizes</Display>
         <Lede>
           {tab === 'lottery'
-            ? 'Buy a ticket, roll three reels, match three symbols. Odds are published below — they are the same numbers the roll uses.'
+            ? 'Buy a ticket and roll for one of thirty prizes — cosmetics, boosts, credits and subscriptions, up to a full year of Elite. Every prize and every odd is published below.'
             : 'Stake SF Coins or SF Crystals into a pool. When it closes, winners are drawn — your odds are proportional to your stake, and every entry has a real chance.'}
         </Lede>
       </Reveal>

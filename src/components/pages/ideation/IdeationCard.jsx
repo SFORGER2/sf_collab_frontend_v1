@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { getStageColor } from "./getStageColor";
-import { MomentumFlame } from "@/components/cosmos";
+import { BurningBox, StreakBadge } from "@/components/cosmos";
 import {
   Bookmark, Clock, Heart, MessageCircle, Share2,
   Users, UserPlus, X, Send, CheckCircle, Clock3,
@@ -802,7 +802,11 @@ export default function VisionCard({ content, shouldBlur }) {
       className="h-full group relative"
     >
       {/* FIX: outer <Link> replaced with <div onClick navigate> to prevent nested <a> tags */}
-      <div
+      {/* The whole card catches fire when the Vision is on a run — see
+          cosmos.css → BURNING BOXES. Renders as a plain wrapper below the
+          first momentum tier, which is most cards. */}
+      <BurningBox
+        item={content}
         onClick={() => navigate(`/ideation-details?id=${content?.id}`)}
         className="relative block h-full rounded-2xl border border-blue-500/20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 hover:border-blue-500/50 hover:from-gray-800/80 hover:to-gray-900/80 transition-all duration-300 backdrop-blur-sm overflow-hidden cursor-pointer"
       >
@@ -841,9 +845,10 @@ export default function VisionCard({ content, shouldBlur }) {
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {/* Momentum. Renders nothing unless this Vision has earned it —
-                  a flame on every card would carry no information. */}
-              <MomentumFlame item={content} size={15} />
+              {/* The card itself burns (BurningBox above); this names the tier
+                  so the heat has a word attached to it. Both render nothing
+                  below the first momentum threshold. */}
+              <StreakBadge item={content} />
               <span className={`${getStageColor(content?.stage)} text-xs px-3 py-1.5 rounded-full font-semibold`}>
                 {content?.stage}
               </span>
@@ -921,7 +926,7 @@ export default function VisionCard({ content, shouldBlur }) {
             </div>
           </div>
         </div>
-      </div>
+      </BurningBox>
     </motion.div>
   );
 }

@@ -1,26 +1,31 @@
-import React, { useCallback, useState } from 'react';
-import { Coins, Info, Sparkles, Ticket, TrendingUp } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ExternalLink, Info, Ticket, Trophy } from 'lucide-react';
 import {
-  JACKPOT_CREDITS, NEAR_MISS_COINS, SYMBOLS, SYMBOLS_BY_ID, TICKET_COST,
-  oddsLabel, pushHistory, readHistory, rtp, spin,
+  JACKPOT, PRIZES_BY_ID, RARITIES, TICKET_COST,
+  beatTheStake, byRarity, oddsLabel, pushHistory, readHistory, roll, rtp,
 } from '@/services/draws/lottery';
+import { fetchWinners, prizeFor, profileHref, timeAgo } from '@/services/draws/winners';
 import { useEntitlements } from '@/services/entitlements/useEntitlements';
 import { AdSlot, CosmosButton, Eyebrow, Panel, Tag } from '@/components/cosmos';
-import LotteryReels from './LotteryReels';
+import LotteryReels, { IdleReel } from './LotteryReels';
+import PrizeTile from './PrizeTile';
 
 /**
- * The lottery tab.
+ * The lottery.
  *
- * One ticket, three reels, match three to win. The odds table is on the page
- * rather than behind a link, because a prize mechanic that hides its odds is
- * one you should not trust — and the return-to-player figure is computed from
- * the same table the roll uses, so it cannot drift out of sync with reality.
+ * One roll, one prize out of thirty. Most are worth less than the ticket, a
+ * few are worth far more, and the top of the table is a year of Elite rather
+ * than a pile of credits — because paying 25 credits to win 30 credits is
+ * arithmetic, and paying 25 for a shot at a year of Elite is a decision.
  *
- * NOTE FOR BACKEND: the roll happens client-side today (see the warning in
- * services/draws/lottery.js). The real flow is
- * `POST /api/lottery/spin` → server debits the ticket, rolls, settles, returns
- * `{ reels, outcome, payout, coins, balance }`. The reels component takes the
- * result as a prop precisely so swapping the source changes nothing visual.
+ * Odds are on the page, computed from the same table the roll uses, so they
+ * cannot drift out of sync with what actually happens.
+ *
+ * NOTE FOR BACKEND: `POST /api/lottery/roll` debits the ticket, rolls, grants
+ * the prize and returns `{ prizeId, rollId, balance }`. The reel takes the
+ * result as a prop and `rollWith(prizeId)` scores a server answer, so moving
+ * the roll server-side changes nothing visual.
  */
 export default function LotteryPanel() {
   const { credits, addCredits } = useEntitlements();
@@ -29,38 +34,36 @@ export default function LotteryPanel() {
   const [spinning, setSpinning] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [history, setHistory] = useState(readHistory);
+  const [winners, setWinners] = useState({ winners: [], isSample: true });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchWinners(12).then((w) => { if (!cancelled) setWinners(w); });
+    return () => { cancelled = true; };
+  }, []);
 
   const balance = typeof credits === 'number' ? credits : credits?.balance ?? 0;
   const canAfford = balance >= TICKET_COST;
   const returnPct = Math.round(rtp() * 100);
 
-  const roll = () => {
+  const doRoll = () => {
     if (spinning || !canAfford) return;
-
     setRevealed(false);
     setSpinning(true);
-
-    // Debit up front — the ticket is spent whether or not it wins. Winnings are
-    // credited on reveal, not here, so the balance doesn't change before the
-    // reels have shown why.
     addCredits(-TICKET_COST);
 
-    const outcome = spin();
-
-    // One frame of pure motion before the landing positions are committed,
-    // so the reels are visibly spinning rather than jumping straight to rest.
-    setTimeout(() => {
-      setResult(outcome);
-      setSpinning(false);
-    }, 90);
+    const outcome = roll();
+    // One frame of motion before the landing position is committed.
+    setTimeout(() => { setResult(outcome); setSpinning(false); }, 60);
   };
 
   const onSettled = useCallback(() => {
     setRevealed(true);
     setResult((r) => {
       if (!r) return r;
-      if (r.payout > 0) addCredits(r.payout);
-      setHistory(pushHistory(r));
+      // Credit grants settle immediately; everything else is a backend grant.
+      if (r.prize.grant?.credits) addCredits(r.prize.grant.credits);
+      setHistory(pushHistory(r.prize));
       return r;
     });
   }, [addCredits]);
@@ -68,151 +71,139 @@ export default function LotteryPanel() {
   return (
     <div className="flex flex-col gap-5">
       {/* The machine */}
-      <Panel className="cosmos-panel-neon p-6" accent="#ffbf5e">
+      <Panel className="cosmos-panel-neon p-6" accent={RARITIES[JACKPOT.rarity].accent}>
         <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
-          <div>
-            <Eyebrow>Jackpot</Eyebrow>
-            <h2 className="font-display text-[2rem] text-gold leading-none mt-1.5">
-              {JACKPOT_CREDITS.toLocaleString()}
-              <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-dim ml-2">
-                credits
-              </span>
+          <div className="min-w-0">
+            <Eyebrow>Top prize</Eyebrow>
+            <h2
+              className="font-display text-[1.75rem] leading-none mt-1.5"
+              style={{ color: RARITIES[JACKPOT.rarity].accent }}
+            >
+              {JACKPOT.name}
             </h2>
-            <p className="text-[0.88rem] text-dim mt-1.5 max-w-[46ch]">
-              Three Novas takes the lot. Any three matching symbols pays out; two
-              matching returns your ticket in SF Coins.
+            <p className="text-[0.88rem] text-dim mt-1.5 max-w-[48ch]">
+              Every roll wins one of 30 items. Most are worth less than the ticket —
+              the tail is where it gets interesting.
             </p>
           </div>
 
-          <div className="text-right">
-            <span className="cosmos-stat-label block">Your balance</span>
+          <div className="text-right shrink-0">
+            <span className="cosmos-stat-label block">Your credits</span>
             <span className="font-display text-[1.3rem] text-star tabular-nums">
               {balance.toLocaleString()}
             </span>
           </div>
         </div>
 
-        <LotteryReels result={result} spinning={spinning} onSettled={onSettled} />
+        {result ? (
+          <LotteryReels result={result} spinning={spinning} onSettled={onSettled} />
+        ) : (
+          <IdleReel />
+        )}
 
-        {/* Outcome line — reserved height so the panel doesn't jump on reveal */}
-        <div className="min-h-[3.25rem] grid place-items-center mt-4">
+        {/* Outcome — reserved height so the panel doesn't jump on reveal */}
+        <div className="min-h-[4.5rem] grid place-items-center mt-4">
           {revealed && result ? (
-            <Outcome result={result} />
+            <Outcome prize={result.prize} />
           ) : (
             <p className="text-[0.85rem] text-dim">
-              {spinning ? 'Rolling…' : 'Match three symbols to win.'}
+              {spinning ? 'Rolling…' : 'One roll, one prize. 30 items in the pool.'}
             </p>
           )}
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
-          <CosmosButton variant="primary" onClick={roll} disabled={spinning || !canAfford}>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <CosmosButton variant="primary" onClick={doRoll} disabled={spinning || !canAfford}>
             <Ticket size={15} />
             {spinning ? 'Rolling…' : `Roll — ${TICKET_COST} credits`}
           </CosmosButton>
 
           {!canAfford && (
-            <span className="text-[0.82rem] text-dim">
-              Not enough credits for a ticket.
-            </span>
+            <CosmosButton variant="ghost" size="sm" asChild>
+              <Link to="/credits">Top up credits</Link>
+            </CosmosButton>
           )}
         </div>
       </Panel>
 
-      {/* Between the machine and the odds table — read on every roll, and it
-          doesn't sit between "you lost" and "roll again". */}
       <AdSlot placement="lottery-mid" format="banner" />
 
-      {/* Odds — on the page, not hidden */}
+      {/* Winners — names link to real profiles */}
+      <WinnersFeed data={winners} />
+
+      {/* The full table */}
       <Panel className="p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-3 mb-4">
-          <Eyebrow>Prizes & odds</Eyebrow>
+          <Eyebrow>All 30 prizes & odds</Eyebrow>
           <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-dim">
             {returnPct}% returns to players
           </span>
         </div>
 
-        <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
-          {SYMBOLS.map((s) => (
-            <div
-              key={s.id}
-              className="cosmos-card p-3.5 flex items-center gap-3"
-              style={{ '--cosmos-accent': s.accent }}
-            >
-              <span
-                className="grid place-items-center w-11 h-11 rounded-xl shrink-0 text-[1.4rem] leading-none"
-                style={{ background: `${s.accent}18`, border: `1px solid ${s.accent}33`, color: s.accent }}
-              >
-                {s.glyph}{s.glyph}{s.glyph}
-              </span>
-              <span className="min-w-0">
-                <span className="cosmos-stat-label block">{s.name} × 3</span>
-                <span className="block text-[0.88rem] text-star mt-0.5">{s.prize}</span>
-                <span className="block font-mono text-[10px] tracking-[0.1em] uppercase text-dim mt-0.5">
-                  {oddsLabel(s)}
+        <div className="flex flex-col gap-5">
+          {byRarity().map(({ rarity, items, chance }) => (
+            <div key={rarity.id}>
+              <div className="flex items-center gap-2.5 mb-2.5">
+                <span
+                  className="font-mono text-[10px] tracking-[0.16em] uppercase"
+                  style={{ color: rarity.accent }}
+                >
+                  {rarity.label}
                 </span>
-              </span>
+                <span className="h-px flex-1" style={{ background: `${rarity.accent}33` }} />
+                <span className="font-mono text-[10px] tracking-[0.1em] uppercase text-dim">
+                  {(chance * 100).toFixed(chance < 0.01 ? 3 : 1)}% of rolls
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {items.map((p) => (
+                  <div key={p.id} className="flex flex-col items-center gap-1">
+                    <PrizeTile prize={p} width={96} compact />
+                    <span className="font-mono text-[9px] tracking-[0.08em] uppercase text-dim">
+                      {oddsLabel(p)}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
-
-          <div className="cosmos-card p-3.5 flex items-center gap-3">
-            <span
-              className="grid place-items-center w-11 h-11 rounded-xl shrink-0"
-              style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--color-dim)' }}
-            >
-              <Coins size={18} />
-            </span>
-            <span className="min-w-0">
-              <span className="cosmos-stat-label block">Any two matching</span>
-              <span className="block text-[0.88rem] text-star mt-0.5">
-                {NEAR_MISS_COINS} SF Coins back
-              </span>
-              <span className="block font-mono text-[10px] tracking-[0.1em] uppercase text-dim mt-0.5">
-                Roughly 1 in 4
-              </span>
-            </span>
-          </div>
         </div>
 
-        <p className="flex items-start gap-2 text-[0.83rem] text-dim mt-4">
+        <p className="flex items-start gap-2 text-[0.83rem] text-dim mt-5">
           <Info size={13} className="shrink-0 mt-0.5" />
           Tickets are bought with credits you have earned or purchased for platform use, and
-          prizes pay out in credits and SF Coins — never cash. The odds above are the actual
-          numbers the roll uses.
+          prizes are platform items — subscriptions, cosmetics, boosts and credits. Never cash,
+          and nothing is exchangeable for money. The odds above are the actual numbers the
+          roll uses.
         </p>
       </Panel>
 
-      {/* Recent rolls */}
+      {/* The player's own rolls */}
       {history.length > 0 && (
         <Panel className="p-6">
-          <Eyebrow className="mb-3.5">Your recent rolls</Eyebrow>
-          <div className="flex flex-col gap-1.5">
-            {history.map((h) => (
-              <div
-                key={h.at}
-                className="flex flex-wrap items-center gap-3 py-2 border-b border-white/[0.06] last:border-0"
-              >
-                <span className="flex gap-1 text-[1.05rem] leading-none">
-                  {h.reels.map((id, i) => (
-                    <span key={i} style={{ color: SYMBOLS_BY_ID[id]?.accent }}>
-                      {SYMBOLS_BY_ID[id]?.glyph}
-                    </span>
-                  ))}
-                </span>
-
-                <span className="text-[0.85rem] text-dim flex-1 min-w-0">
-                  {h.payout > 0
-                    ? `Won ${h.payout.toLocaleString()} credits`
-                    : h.coins > 0
-                    ? `Two matched — ${h.coins} SF Coins back`
-                    : 'No match'}
-                </span>
-
-                <span className="font-mono text-[10px] tracking-[0.1em] uppercase text-dim">
-                  {new Date(h.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-            ))}
+          <Eyebrow className="mb-3.5">Your rolls</Eyebrow>
+          <div className="flex flex-col gap-1">
+            {history.map((h) => {
+              const p = PRIZES_BY_ID[h.prizeId];
+              if (!p) return null;
+              const rarity = RARITIES[p.rarity];
+              return (
+                <div
+                  key={h.at}
+                  className="flex flex-wrap items-center gap-3 py-2 border-b border-white/[0.06] last:border-0"
+                >
+                  <span className="text-[1.05rem] leading-none w-5 text-center" style={{ color: rarity.accent }}>
+                    {p.glyph}
+                  </span>
+                  <span className="text-[0.88rem] text-star flex-1 min-w-0 truncate">{p.name}</span>
+                  <Tag tone="neutral">{rarity.label}</Tag>
+                  <span className="font-mono text-[10px] tracking-[0.1em] uppercase text-dim">
+                    {timeAgo(h.at)}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </Panel>
       )}
@@ -220,34 +211,98 @@ export default function LotteryPanel() {
   );
 }
 
-function Outcome({ result }) {
-  if (result.outcome === 'jackpot') {
-    return (
-      <p className="flex items-center gap-2 font-display text-[1.2rem] text-gold">
-        <Sparkles size={18} /> Jackpot — {result.payout.toLocaleString()} credits
-      </p>
-    );
-  }
+function Outcome({ prize }) {
+  const rarity = RARITIES[prize.rarity];
+  const beat = beatTheStake(prize);
 
-  if (result.outcome === 'triple') {
-    return (
-      <p
-        className="flex items-center gap-2 font-display text-[1.1rem]"
-        style={{ color: result.symbol.accent }}
+  return (
+    <div className="flex flex-col items-center gap-1.5 text-center">
+      <span
+        className="font-display text-[1.25rem] leading-tight"
+        style={{ color: rarity.accent }}
       >
-        <TrendingUp size={16} /> Three {result.symbol.name}s — {result.symbol.prize}
-      </p>
-    );
-  }
+        {prize.name}
+      </span>
+      <span className="flex flex-wrap items-center justify-center gap-2">
+        <Tag tone="neutral">{rarity.label}</Tag>
+        <span className="text-[0.82rem] text-dim">
+          {beat ? 'Worth more than your ticket.' : 'Worth less than your ticket — roll again?'}
+        </span>
+      </span>
+      {prize.note && <span className="text-[0.8rem] text-dim/80">{prize.note}</span>}
+    </div>
+  );
+}
 
-  if (result.outcome === 'near') {
-    return (
-      <p className="flex flex-wrap items-center justify-center gap-2 text-[0.92rem] text-star">
-        <Tag tone="accent">So close</Tag>
-        Two {result.symbol.name}s — {result.coins} SF Coins back.
-      </p>
-    );
-  }
+/**
+ * Recent winners.
+ *
+ * Every name is a link to that person's profile. An anonymous "someone just won
+ * Elite" banner is indistinguishable from marketing and gets read that way; a
+ * name you can click and a profile you can look at is evidence.
+ */
+function WinnersFeed({ data }) {
+  const { winners, isSample } = data;
+  if (!winners?.length) return null;
 
-  return <p className="text-[0.9rem] text-dim">No match this time.</p>;
+  return (
+    <Panel className="p-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-3 mb-3.5">
+        <span className="flex items-center gap-2">
+          <Trophy size={13} className="text-gold" />
+          <Eyebrow>Recent winners</Eyebrow>
+        </span>
+        {isSample && (
+          <Tag tone="future" title="The winners endpoint does not exist yet">
+            Sample data
+          </Tag>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-0.5 max-h-[22rem] overflow-y-auto -mr-1 pr-1">
+        {winners.map((w) => {
+          const prize = prizeFor(w);
+          if (!prize) return null;
+          const rarity = RARITIES[prize.rarity];
+          const href = profileHref(w.user);
+          const name = [w.user?.firstName, w.user?.lastName].filter(Boolean).join(' ') || 'Someone';
+
+          return (
+            <div
+              key={w.id}
+              className="flex flex-wrap items-center gap-3 py-2.5 border-b border-white/[0.06] last:border-0"
+            >
+              <span
+                className="grid place-items-center w-9 h-9 rounded-lg shrink-0 text-[1.05rem]"
+                style={{ background: `${rarity.accent}18`, border: `1px solid ${rarity.accent}33`, color: rarity.accent }}
+              >
+                {prize.glyph}
+              </span>
+
+              <span className="min-w-0 flex-1">
+                {href ? (
+                  <Link
+                    to={href}
+                    className="inline-flex items-center gap-1 text-[0.9rem] text-star hover:text-gold transition-colors"
+                  >
+                    {name}
+                    <ExternalLink size={10} className="opacity-50" />
+                  </Link>
+                ) : (
+                  <span className="text-[0.9rem] text-star">{name}</span>
+                )}
+                <span className="block text-[0.82rem] truncate" style={{ color: rarity.accent }}>
+                  {prize.name}
+                </span>
+              </span>
+
+              <span className="font-mono text-[10px] tracking-[0.1em] uppercase text-dim shrink-0">
+                {timeAgo(w.wonAt)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </Panel>
+  );
 }
