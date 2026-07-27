@@ -18,6 +18,7 @@ import SignUp from "./components/auth/SignUp.jsx";
 import RegisterStartUp from "./components/pages/register-startup/RegisterStartupGate.jsx";
 import RegisterExistingStartup from "./components/pages/register-startup/RegisterExistingStartup.jsx";
 import Ideationdetails from "./components/pages/ideation/Ideationdetails.jsx";
+import VisionDetailPage from "./components/pages/vision/VisionDetailPage.jsx";
 import Knowledgedetails from "./components/detailspage (previous)/Knowledgedetails.jsx";
 import ProjectDetails from "./components/detailspage (previous)/ProjectDetails.jsx";
 import Posts from "./components/pages/posts/Posts.jsx";
@@ -373,7 +374,8 @@ export default function App() {
                       <Route path="project-details" element={<ProjectDetails />} />
                       <Route path="ideation" element={<Ideation activeRole={activeRole} />} />
                       <Route path="saved-ideas" element={<SavedIdeas />} />
-                      <Route path="ideation-details" element={<Ideationdetails />} />
+                      <Route path="ideation-details" element={<VisionDetailPage />} />
+                      <Route path="ideation-details/legacy" element={<Ideationdetails />} />
 
                       {/* Knowledge */}
                       <Route path="knowledge" element={<Knowledge />} />

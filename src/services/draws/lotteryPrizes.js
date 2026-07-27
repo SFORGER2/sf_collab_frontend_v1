@@ -88,6 +88,20 @@ export const PRIZES = [
   { id: 'credits-5000', name: '5,000 Credits', glyph: '◈', kind: KINDS.credits, rarity: 'legendary', value: 5000, weight: 14, grant: { credits: 5000 } },
   { id: 'crown-founder', name: "Founder's Crown", glyph: '♛', kind: KINDS.cosmetic, rarity: 'legendary', value: 5000, weight: 12, note: 'Unique animated frame' },
   { id: 'sub-elite-year', name: 'Elite Plan · 1 YEAR', glyph: '☄', kind: KINDS.subscription, rarity: 'mythic', value: 15000, weight: 4, grant: { plan: 'elite', months: 12 }, jackpot: true },
+  // ── Added pool: crystals, SF Coins and more plan time. Weights chosen to
+  //    keep RTP in band — re-run rtp() after touching any of them.
+  { id: 'crystals-50', name: '50 Crystals', glyph: '◆', kind: KINDS.credits, rarity: 'common', value: 5, weight: 9000, grant: { crystals: 50 } },
+  { id: 'crystals-150', name: '150 Crystals', glyph: '◆', kind: KINDS.credits, rarity: 'common', value: 15, weight: 3000, grant: { crystals: 150 } },
+  { id: 'coins-500', name: '500 SF Coins', glyph: '●', kind: KINDS.coins, rarity: 'uncommon', value: 40, weight: 600, grant: { coins: 500 } },
+  { id: 'crystals-400', name: '400 Crystals', glyph: '◆', kind: KINDS.credits, rarity: 'uncommon', value: 40, weight: 500, grant: { crystals: 400 } },
+  { id: 'coins-1200', name: '1,200 SF Coins', glyph: '●', kind: KINDS.coins, rarity: 'rare', value: 110, weight: 150, grant: { coins: 1200 } },
+  { id: 'crystals-1200', name: '1,200 Crystals', glyph: '◆', kind: KINDS.credits, rarity: 'rare', value: 120, weight: 100, grant: { crystals: 1200 } },
+  { id: 'sub-starter-3', name: 'Starter Plan · 3 months', glyph: '✦', kind: KINDS.subscription, rarity: 'rare', value: 540, weight: 60, grant: { plan: 'starter', months: 3 } },
+  { id: 'sub-pro-3', name: 'Pro Plan · 3 months', glyph: '✦', kind: KINDS.subscription, rarity: 'epic', value: 1400, weight: 20, grant: { plan: 'pro', months: 3 } },
+  { id: 'sub-elite-1', name: 'Elite Plan · 1 month', glyph: '✦', kind: KINDS.subscription, rarity: 'epic', value: 1490, weight: 20, grant: { plan: 'elite', months: 1 } },
+  { id: 'crystals-6000', name: '6,000 Crystals', glyph: '◆', kind: KINDS.credits, rarity: 'legendary', value: 600, weight: 25, grant: { crystals: 6000 } },
+  { id: 'sub-pro-year', name: 'Pro Plan · 1 YEAR', glyph: '☄', kind: KINDS.subscription, rarity: 'legendary', value: 5400, weight: 3, grant: { plan: 'pro', months: 12 } },
+  { id: 'coins-25000', name: '25,000 SF Coins', glyph: '●', kind: KINDS.coins, rarity: 'legendary', value: 2000, weight: 5, grant: { coins: 25000 } },
 ];
 
 export const PRIZES_BY_ID = Object.fromEntries(PRIZES.map((p) => [p.id, p]));

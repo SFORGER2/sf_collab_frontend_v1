@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Dices, Gem, Info, Ticket, Timer, Trophy } from 'lucide-react';
+import { Dices, Gem, Info, Ticket, Timer, Trophy, Zap } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import LotteryPanel from './LotteryPanel';
+import JackpotPanel from './JackpotPanel';
 import {
   CURRENCIES, drawsForRole, PRIZE_KINDS, formatCountdown, nextClose,
   readDrawState, winChance, writeDrawState,
@@ -20,6 +21,10 @@ import {
 const TABS = [
   { id: 'draws', label: 'Draws', icon: Trophy },
   { id: 'lottery', label: 'Lottery', icon: Dices },
+  // Separate from the lottery because it is the opposite shape: there every
+  // roll wins something small, here most spins win nothing and the tail is
+  // the whole point.
+  { id: 'jackpot', label: 'Jackpot', icon: Zap },
 ];
 
 export default function DrawsPage() {
@@ -30,9 +35,10 @@ export default function DrawsPage() {
 
   // The sidebar links straight to the lottery, so honour ?tab= on arrival.
   const [params, setParams] = useSearchParams();
-  const tab = params.get('tab') === 'lottery' ? 'lottery' : 'draws';
+  const raw = params.get('tab');
+  const tab = raw === 'lottery' || raw === 'jackpot' ? raw : 'draws';
   const setTab = (next) =>
-    setParams(next === 'lottery' ? { tab: 'lottery' } : {}, { replace: true });
+    setParams(next === 'draws' ? {} : { tab: next }, { replace: true });
 
   // Keep countdowns live.
   useEffect(() => {
@@ -55,8 +61,10 @@ export default function DrawsPage() {
         <Eyebrow>Rewards</Eyebrow>
         <Display size="xl" className="mt-3 mb-4">Draws &amp; prizes</Display>
         <Lede>
-          {tab === 'lottery'
-            ? 'Buy a ticket and roll for one of thirty prizes — cosmetics, boosts, credits and subscriptions, up to a full year of Elite. Every prize and every odd is published below.'
+          {tab === 'jackpot'
+            ? 'Three reels, three matches. Most spins win nothing — the top of the table is a full year of Elite.'
+            : tab === 'lottery'
+            ? 'Buy a ticket and roll for one of forty-two prizes — cosmetics, boosts, credits and subscriptions, up to a full year of Elite. Every prize and every odd is published below.'
             : 'Stake SF Coins or SF Crystals into a pool. When it closes, winners are drawn — your odds are proportional to your stake, and every entry has a real chance.'}
         </Lede>
       </Reveal>
@@ -80,9 +88,9 @@ export default function DrawsPage() {
       </div>
 
       {tab === 'lottery' ? (
-        <div className="mt-6">
-          <LotteryPanel />
-        </div>
+        <div className="mt-6"><LotteryPanel /></div>
+      ) : tab === 'jackpot' ? (
+        <div className="mt-6"><JackpotPanel /></div>
       ) : (
         <DrawsTab draws={draws} state={state} enter={enter} />
       )}
