@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+import { SAMPLE_STARTUPS, withBoardFallback } from "@/services/mock/boards";
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -124,7 +125,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   };
 
   const {
-    items: startups,
+    items: rawStartups,
     total: totalStartups,
     loading,
     targetRef,
@@ -146,6 +147,16 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
     objectKey: 'startups',
     enabled: !!access_token && mode === 'myStartups',
   });
+
+  /**
+   * Sample startups when the API returns none. An empty board is
+   * indistinguishable from a broken one, and it makes every feature sitting on
+   * top of it — momentum flames, filters, sorting — impossible to review.
+   * Labelled in the UI, never blended with real records.
+   */
+  const { items: startups, isSample } = withBoardFallback(
+    rawStartups, SAMPLE_STARTUPS, { enabled: !loading }
+  );
 
   const fetchFilters = async () => {
     try {
@@ -465,6 +476,19 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                     </motion.button>
                   )}
                 </div>
+
+                {isSample && (
+                  <div
+                    className="mb-4 rounded-xl px-3.5 py-2.5 text-[0.83rem]"
+                    style={{
+                      background: 'rgba(255,191,94,0.08)',
+                      border: '1px solid rgba(255,191,94,0.28)',
+                      color: '#ffbf5e',
+                    }}
+                  >
+                    Showing sample startups — none registered yet, or the backend is unreachable.
+                  </div>
+                )}
 
                 {loading && startups.length === 0 ? (
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">

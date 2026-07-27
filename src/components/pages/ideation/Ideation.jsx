@@ -1,6 +1,7 @@
 import { WifiOff, RefreshCw, Eye, Clock, Heart, MessageCircle, Users, AlertTriangle } from "lucide-react";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { byMomentum } from "@/services/vision/momentum";
+import { SAMPLE_VISIONS } from "@/services/mock/boards";
 import IdeationHeader from "./IdeationHeader";
 import { Link } from "react-router-dom";
 import ScrollToTop from "../../sections/ScrollToTop";
@@ -11,77 +12,9 @@ import IdeationCard from "./IdeationCard";
 import IdeationTutorial from "./IdeationTutorial";
 import { motion } from "framer-motion";
 
-const MOCK_IDEAS = [
-  {
-    id: "mock-idea-1",
-    title: "Founder Match: Find Your Tech Co-Founder",
-    description:
-      "A simple tool that connects non-technical founders with developers based on actual skills and shared interests, not just resume buzzwords.",
-    projectDetails:
-      "We're building a platform to solve the biggest headache for early-stage startups: finding a technical co-founder. Instead of endless networking events, we use smart matching to connect you with builders who have the right skills, tech stack, and vibe.",
-    stage: "Prototype",
-    category: "AI / SaaS",
-    privacy: "public",
-    creatorId: "mock-user-1",
-    imageUrl: "",
-    creator: { id: "mock-user-1", firstName: "Alex", lastName: "Mercer" },
-    author: { name: "Alex Mercer", avatar: "", id: "mock-user-1", role: "Founder & CEO" },
-    createdAt: new Date().toISOString(),
-    lastActivityAt: new Date().toISOString(),
-    timeAgo: "1 hour ago",
-    // Engagement high enough to earn a momentum flame, so the signal is
-    // visible in the mock fallback rather than only against live data.
-    likes: 184,
-    hasLiked: false,
-    hasBookmarked: false,
-    comments: 37,
-    teamMembers: [],
-    collaborators: 6,
-    views: 3100,
-    tags: ["Matchmaking", "Startup Tool", "Community"],
-    visionState: "public",
-    readinessScore: 85,
-    isConverted: false,
-    problemStatement: "Non-technical founders struggle to find developers who are not only skilled but actually interested in their startup's domain and values. Endlessly browsing LinkedIn or spamming Discord channels leads to low-quality matches and wasted time.",
-    solution: "A tailored matching system that analyzes both tech stack requirements and soft-skill alignments (like builder consistency, streak metrics, and sector interests) to introduce founders to verified co-developers.",
-    requiredRoles: ["Fullstack Engineer", "Product Designer", "Growth Marketer"],
-    techStack: ["React", "Node.js", "MongoDB", "Tailwind CSS", "WebSockets"]
-  },
-  {
-    id: "mock-idea-2",
-    title: "Builder Rep: Verified Portfolios",
-    description:
-      "A transparent way for builders to prove their track record. We track real project outcomes and consistency so founders know who they can trust.",
-    projectDetails:
-      "Our platform lets builders build a verified portfolio of their work. We track client satisfaction, real revenue generated, and consistency. This gives founders a transparent, BS-free way to evaluate a builder's actual experience before teaming up.",
-    stage: "Concept",
-    category: "Web3",
-    privacy: "public",
-    creatorId: "mock-user-2",
-    imageUrl: "",
-    creator: { id: "mock-user-2", firstName: "Elena", lastName: "Rostova" },
-    author: { name: "Elena Rostova", avatar: "", id: "mock-user-2", role: "Product Lead" },
-    createdAt: new Date().toISOString(),
-    lastActivityAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-    timeAgo: "2 days ago",
-    // Deliberately below the flame threshold — the contrast against the card
-    // above is the point.
-    likes: 31,
-    hasLiked: false,
-    hasBookmarked: false,
-    comments: 4,
-    teamMembers: [],
-    collaborators: 1,
-    tags: ["Trust Engine", "SaaS", "Portfolio"],
-    visionState: "public",
-    readinessScore: 50,
-    isConverted: false,
-    problemStatement: "It is currently impossible for a founder to verify a builder's actual track record of completed projects, code consistency, and client satisfaction. Portfolios are easily faked or embellished.",
-    solution: "A decentralized trust platform that logs real project milestones, client ratings, and developer stats on-chain, creating a verified 'Builder Reputation' score.",
-    requiredRoles: ["Solidity Developer", "React Developer", "UX Researcher"],
-    techStack: ["Solidity", "Ethers.js", "React", "Next.js", "Tailwind CSS"]
-  },
-];
+/* Twelve sample Visions spread across stage, industry and engagement — a
+   board where everything burns says as little as one where nothing does. */
+const MOCK_IDEAS = SAMPLE_VISIONS;
 
 const calculateTimeAgo = (createdAt) => {
   const now = new Date();

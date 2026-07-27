@@ -14,7 +14,7 @@ import ProfileSection from './ProfileSection';
 import { updateUser as updateUserSlice } from '@/services/auth/authSlice';
 import { usersAPI } from '@/utils/APIs/userAPI';
 import { authAPI } from '@/utils/APIs/authAPI';
-import { CosmosButton, Eyebrow } from '@/components/cosmos';
+import { CosmosButton, Eyebrow, TutorialsControl } from '@/components/cosmos';
 
 const ProfileSettings = ({ back, activeSection: propActiveSection, initialActiveSection }) => {
   const navigate = useNavigate();

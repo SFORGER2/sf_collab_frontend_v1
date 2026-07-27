@@ -19,8 +19,29 @@ import { AdSlot } from './AdSlot';
 const NAV_H = 64;   // navbar is h-16
 const BAR_H = 60;   // strip (45px) + vertical padding
 
+/**
+ * Dismissal has to outlive the route change.
+ *
+ * The banner is remounted on every navigation, so component state reset it and
+ * the ad came straight back — closing it did nothing you could feel. It now
+ * stays shut for the rest of the session, which is what "close" means to the
+ * person clicking it. Session, not forever: a permanent opt-out is what the
+ * paid plan is for, and that path is one click away in the banner itself.
+ */
+const DISMISS_KEY = 'sfc.ads.dismissed';
+
+function readDismissed() {
+  try { return sessionStorage.getItem(DISMISS_KEY) === '1'; } catch { return false; }
+}
+
 export function StickyTopAd({ placement }) {
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(readDismissed);
+
+  const dismiss = () => {
+    try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch { /* blocked */ }
+    setDismissed(true);
+  };
+
   if (dismissed) return null;
 
   return (
@@ -41,7 +62,7 @@ export function StickyTopAd({ placement }) {
             format="strip"
             className="backdrop-blur-xl"
             style={{ background: 'rgba(16,12,34,0.92)' }}
-            onDismiss={() => setDismissed(true)}
+            onDismiss={dismiss}
           />
         </div>
       </div>

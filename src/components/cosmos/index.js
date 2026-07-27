@@ -35,10 +35,12 @@ export { ROLE_ACCENTS, ROLE_ORDER, roleAccent, roleAccentVars } from './roles';
    the backend must enforce the same limits. */
 export { Gated, AllowanceMeter } from './Gated';
 export { AdSlot, useInterleavedAds } from './AdSlot';
+export { ProfilePrompt } from './ProfilePrompt';
 export { StickyTopAd } from './StickyTopAd';
 export { DraftField } from './DraftField';
 export { PageShell } from './PageShell';
 export { PageTour, openTour } from './PageTour';
+export { TutorialsControl, TutorialsResetButton, resetTours } from './TutorialsControl';
 export * as tours from './tours';
 
 /* Editable dashboards — drag to reorder, resize, hide; persisted per role. */

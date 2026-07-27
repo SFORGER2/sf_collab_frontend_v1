@@ -5,7 +5,7 @@ import Calendar from "@/components/sections/Calendar";
 import WorldClock from "@/components/sections/WorldClock";
 import AnnouncementsSection from "../../dashboard/AnnouncementsSection";
 import DashboardChangeSection from "../../dashboardChangeSection";
-import { AdSlot, DashboardGrid, DashboardMasthead, ProgressRail } from "@/components/cosmos";
+import { ProfilePrompt, AdSlot, DashboardGrid, DashboardMasthead, ProgressRail } from "@/components/cosmos";
 import { commonWidgets } from "@/components/cosmos/dashboard/commonWidgets";
 import { FounderStats, FounderQuickActions } from "../Stats";
 import { StartupSection } from "../Sections";
@@ -149,6 +149,8 @@ export default function DesktopFounderDashboard({
       </DashboardMasthead>
 
       <AdSlot placement="dashboard-top" format="banner" className="mb-5" />
+      {/* Only shows while the profile is too thin for matchmaking to work. */}
+      <ProfilePrompt className="mb-5" />
 
       <DashboardGrid
         layoutKey="founder"

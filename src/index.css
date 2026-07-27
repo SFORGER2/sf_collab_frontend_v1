@@ -932,3 +932,115 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 :root[data-theme='light'] .text-zinc-400 {
   color: var(--color-dim);
 }
+
+/* ==========================================================================
+   GLOBAL SCROLLBARS
+
+   The gradient scrollbar was only on html/body, so every *inner* scroller —
+   the App Center rail, the wallet panels, dropdown menus, modal bodies, the
+   winners feed — fell back to the browser default and read as a different
+   application. One rule for everything now; opt out with `.scrollbar-hide`.
+   ========================================================================== */
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(13, 10, 26, 0.5);
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ffbf5e 0%, #8b6cff 55%, #4fd8ff 100%);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ffcf7d 0%, #a68bff 55%, #8ce5ff 100%);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner { background: transparent; }
+
+* { scrollbar-width: thin; scrollbar-color: #8b6cff rgba(13, 10, 26, 0.5); }
+
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { scrollbar-width: none; }
+
+:root[data-theme='light'] *::-webkit-scrollbar-track {
+  background: rgba(20, 17, 31, 0.06);
+}
+:root[data-theme='light'] * {
+  scrollbar-color: #6541d6 rgba(20, 17, 31, 0.06);
+}
+
+/* ==========================================================================
+   LIGHT MODE — remaining gaps
+
+   The token overrides handle surfaces; these are the specific patterns that
+   still broke, each one a literal colour the recolour can't reach.
+   ========================================================================== */
+
+/* Buttons painted with a literal dark fill and light text — inverted, the text
+   disappeared. These keep a dark fill in light mode so the label survives. */
+:root[data-theme='light'] .bg-black,
+:root[data-theme='light'] .bg-\[\#1a1a1a\],
+:root[data-theme='light'] .bg-\[\#0a0a0a\],
+:root[data-theme='light'] .bg-\[\#1A1A1A\],
+:root[data-theme='light'] .bg-\[\#09090B\] {
+  background-color: #1d1930;
+  color: #f2effa;
+}
+
+/* Anything sitting on a coloured/gradient fill keeps white text — inverting it
+   would put dark text on a saturated background. */
+:root[data-theme='light'] [class*='bg-gradient'] .text-white,
+:root[data-theme='light'] [class*='bg-linear'] .text-white,
+:root[data-theme='light'] [class*='bg-gradient'],
+:root[data-theme='light'] [class*='bg-linear'] {
+  --tw-text-opacity: 1;
+}
+
+/* Placeholders and disabled states were tuned for a dark field. */
+:root[data-theme='light'] input::placeholder,
+:root[data-theme='light'] textarea::placeholder {
+  color: rgba(91, 84, 112, 0.75);
+}
+
+/* Borders written as white alphas vanish entirely on white. */
+:root[data-theme='light'] .border-white\/10,
+:root[data-theme='light'] .border-white\/20,
+:root[data-theme='light'] .border-gray-700,
+:root[data-theme='light'] .border-gray-800,
+:root[data-theme='light'] .border-zinc-800 {
+  border-color: rgba(20, 17, 31, 0.12);
+}
+
+/* Modal/overlay scrims: a black scrim over a light page is still correct, but
+   the panel underneath must not stay dark. */
+:root[data-theme='light'] .bg-zinc-900,
+:root[data-theme='light'] .bg-neutral-900 {
+  background-color: #ffffff;
+  color: var(--color-star);
+}
+
+/* ==========================================================================
+   BUTTON TEXT CONTRAST (both themes)
+
+   `variant="outline"` from shadcn resolves its text to `bg-background`, which
+   after the cosmos recolour is the void — black text on a dark button. This is
+   the "invisible button" class of bug; force a readable label instead.
+   ========================================================================== */
+button.text-black:not([class*='bg-white']):not([class*='bg-gold']):not([class*='bg-amber']),
+a.text-black:not([class*='bg-white']):not([class*='bg-gold']):not([class*='bg-amber']) {
+  color: var(--color-star);
+}
+
+:root:not([data-theme='light']) button[class*='bg-gray-2'],
+:root:not([data-theme='light']) button[class*='bg-slate-2'],
+:root:not([data-theme='light']) button[class*='bg-gray-1'] {
+  color: #14111f;
+}

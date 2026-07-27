@@ -14,7 +14,7 @@ import AnnouncementsSection from "../AnnouncementsSection";
 import DashboardSummaryCard from "../DashboardSummarySection";
 import OverviewWebsite from "../OverviewWebsite";
 
-import { AdSlot, DashboardGrid, DashboardMasthead } from "@/components/cosmos";
+import { ProfilePrompt, AdSlot, DashboardGrid, DashboardMasthead } from "@/components/cosmos";
 import { commonWidgets } from "@/components/cosmos/dashboard/commonWidgets";
 
 const Dashboard = ({ activeRole, setActiveRole, userRoles, setUserRoles }) => {
@@ -121,6 +121,8 @@ const Dashboard = ({ activeRole, setActiveRole, userRoles, setUserRoles }) => {
         </DashboardMasthead>
 
       <AdSlot placement="dashboard-top" format="banner" className="mb-5" />
+      {/* Only shows while the profile is too thin for matchmaking to work. */}
+      <ProfilePrompt className="mb-5" />
 
         <DashboardGrid
           layoutKey="member"

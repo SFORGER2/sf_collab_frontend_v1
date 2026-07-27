@@ -7,7 +7,7 @@ import OverviewWebsite from "../../dashboard/OverviewWebsite";
 import AnnouncementsSection from "../../dashboard/AnnouncementsSection";
 import Calendar from "@/components/sections/Calendar";
 import WorldClock from "@/components/sections/WorldClock";
-import { AdSlot, DashboardGrid, DashboardMasthead, Tag } from "@/components/cosmos";
+import { ProfilePrompt, AdSlot, DashboardGrid, DashboardMasthead, Tag } from "@/components/cosmos";
 import { commonWidgets } from "@/components/cosmos/dashboard/commonWidgets";
 import { QuickAction } from "../../founderDashboard/Quicks";
 
@@ -116,6 +116,8 @@ export default function DesktopInfluencerDashboard({
       </DashboardMasthead>
 
       <AdSlot placement="dashboard-top" format="banner" className="mb-5" />
+      {/* Only shows while the profile is too thin for matchmaking to work. */}
+      <ProfilePrompt className="mb-5" />
 
       <DashboardGrid
         layoutKey="influencer"
