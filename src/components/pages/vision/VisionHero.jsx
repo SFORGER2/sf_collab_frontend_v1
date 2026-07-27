@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowLeft, RefreshCw, Rocket } from 'lucide-react';
-import { CosmosButton, Display, Eyebrow, Tag } from '@/components/cosmos';
+import { CosmosButton, Display, Eyebrow, MomentumFlame, Tag } from '@/components/cosmos';
 
 const STATE_TONE = {
   draft: 'future',
@@ -76,6 +76,10 @@ export function VisionHero({
             <Tag tone={STATE_TONE[readiness.visionState] || 'dev'} dot={eligible}>
               {STATE_LABEL[readiness.visionState] || 'Public'}
             </Tag>
+            {/* Momentum sits next to state because they answer different
+                questions: state is how far along, momentum is whether anyone
+                is actually pushing. A Vision can be "team forming" and dead. */}
+            <MomentumFlame item={idea} size={16} showLabel />
           </div>
 
           <Display size="xl" className="mb-3">{idea.title}</Display>

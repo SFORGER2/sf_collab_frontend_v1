@@ -17,7 +17,9 @@ import {
   ROLE_ACCENTS,
   ROLE_ORDER,
   roleAccentVars,
+  MomentumFlame,
 } from '@/components/cosmos';
+import { momentumOf } from '@/services/vision/momentum';
 
 /**
  * Live reference for the cosmos design system — every token, primitive and
@@ -36,6 +38,16 @@ const SWATCHES = [
   { name: 'emerald', hex: '#3ee6a0', use: 'Live status — validation' },
   { name: 'star', hex: '#f2effa', use: 'Primary text' },
   { name: 'dim', hex: '#a9a2c2', use: 'Muted text' },
+];
+
+/* Sample items for the momentum flame reference below. Timestamps are
+   generated at render so the recency decay is always "just now". */
+const NOW = new Date().toISOString();
+const MOMENTUM_SAMPLES = [
+  { label: 'Quiet', item: { likes: 4, comments: 1, collaborators: 0, lastActivityAt: NOW } },
+  { label: 'Rising', item: { likes: 40, comments: 6, collaborators: 1, lastActivityAt: NOW } },
+  { label: 'Hot', item: { likes: 60, comments: 15, collaborators: 3, lastActivityAt: NOW } },
+  { label: 'Blazing', item: { likes: 200, comments: 40, collaborators: 8, views: 4000, lastActivityAt: NOW } },
 ];
 
 const JOURNEY = [
@@ -281,6 +293,28 @@ export default function DesignSystemPage() {
                 <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
                   <StatTile label="Wallet" value="1,204" hint="SF points" icon={<Wallet size={16} />} />
                   <StatTile label="Team" value="7" hint="Active builders" icon={<Users size={16} />} />
+                </div>
+              </div>
+
+              <div>
+                <Eyebrow className="mb-4">Momentum flame</Eyebrow>
+                <p className="text-dim text-[0.9rem] mb-4 max-w-[54ch]">
+                  Marks Visions and startups with real recent pull. Three tiers, and nothing
+                  below the first threshold — if everything burns, the flame says nothing.
+                  Weighting lives in <code className="font-mono text-[0.82rem] text-gold">services/vision/momentum.js</code>.
+                </p>
+                <div className="flex flex-col gap-3">
+                  {MOMENTUM_SAMPLES.map(({ label, item }) => (
+                    <div key={label} className="flex items-center gap-4">
+                      <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-dim w-24 shrink-0">
+                        {label}
+                      </span>
+                      <MomentumFlame item={item} size={22} showLabel />
+                      {!momentumOf(item).tier && (
+                        <span className="text-[0.85rem] text-dim/60">nothing rendered</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

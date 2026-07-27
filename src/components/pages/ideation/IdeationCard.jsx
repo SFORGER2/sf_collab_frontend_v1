@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { getStageColor } from "./getStageColor";
+import { MomentumFlame } from "@/components/cosmos";
 import {
   Bookmark, Clock, Heart, MessageCircle, Share2,
   Users, UserPlus, X, Send, CheckCircle, Clock3,
@@ -839,9 +840,14 @@ export default function VisionCard({ content, shouldBlur }) {
                 <p className="text-xs text-gray-400">{author?.role}</p>
               </div>
             </div>
-            <span className={`${getStageColor(content?.stage)} text-xs px-3 py-1.5 rounded-full font-semibold`}>
-              {content?.stage}
-            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Momentum. Renders nothing unless this Vision has earned it —
+                  a flame on every card would carry no information. */}
+              <MomentumFlame item={content} size={15} />
+              <span className={`${getStageColor(content?.stage)} text-xs px-3 py-1.5 rounded-full font-semibold`}>
+                {content?.stage}
+              </span>
+            </div>
           </div>
 
           <div className="flex-1">

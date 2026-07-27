@@ -1,5 +1,6 @@
 import { WifiOff, RefreshCw, Eye, Clock, Heart, MessageCircle, Users, AlertTriangle } from "lucide-react";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { byMomentum } from "@/services/vision/momentum";
 import IdeationHeader from "./IdeationHeader";
 import ScrollToTop from "../../sections/ScrollToTop";
 import { ideaAPI } from "@/utils/APIs/ideaAPI";
@@ -25,13 +26,17 @@ const MOCK_IDEAS = [
     creator: { id: "mock-user-1", firstName: "Alex", lastName: "Mercer" },
     author: { name: "Alex Mercer", avatar: "", id: "mock-user-1", role: "Founder & CEO" },
     createdAt: new Date().toISOString(),
+    lastActivityAt: new Date().toISOString(),
     timeAgo: "1 hour ago",
-    likes: 12,
+    // Engagement high enough to earn a momentum flame, so the signal is
+    // visible in the mock fallback rather than only against live data.
+    likes: 184,
     hasLiked: false,
     hasBookmarked: false,
-    comments: [],
+    comments: 37,
     teamMembers: [],
-    collaborators: 1,
+    collaborators: 6,
+    views: 3100,
     tags: ["Matchmaking", "Startup Tool", "Community"],
     visionState: "public",
     readinessScore: 85,
@@ -56,13 +61,16 @@ const MOCK_IDEAS = [
     creator: { id: "mock-user-2", firstName: "Elena", lastName: "Rostova" },
     author: { name: "Elena Rostova", avatar: "", id: "mock-user-2", role: "Product Lead" },
     createdAt: new Date().toISOString(),
+    lastActivityAt: new Date(Date.now() - 2 * 86400000).toISOString(),
     timeAgo: "2 days ago",
-    likes: 8,
+    // Deliberately below the flame threshold — the contrast against the card
+    // above is the point.
+    likes: 31,
     hasLiked: false,
     hasBookmarked: false,
-    comments: [],
+    comments: 4,
     teamMembers: [],
-    collaborators: 0,
+    collaborators: 1,
     tags: ["Trust Engine", "SaaS", "Portfolio"],
     visionState: "public",
     readinessScore: 50,
@@ -134,6 +142,9 @@ const Ideation = ({ activeRole }) => {
           year: "numeric",
         }),
         timeAgo: calculateTimeAgo(idea.createdAt),
+        // Raw ISO, kept alongside the formatted `createdAt` above — momentum
+        // decays signals by age, so it needs a real timestamp to parse.
+        lastActivityAt: idea.updatedAt || idea.updated_at || idea.createdAt,
         likes: idea.likes,
         hasLiked: idea.hasLiked || false,
         hasBookmarked: idea.hasBookmarked || false,
@@ -161,6 +172,17 @@ const Ideation = ({ activeRole }) => {
   useEffect(() => {
     fetchIdeas();
   }, [fetchIdeas]);
+
+  /**
+   * "Moving now" is sorted here rather than server-side, because momentum is a
+   * frontend weighting for now (services/vision/momentum.js) — the backend has
+   * no equivalent ordering yet. Every other sort is already applied by the API,
+   * so those pass through untouched.
+   */
+  const orderedIdeas = useMemo(
+    () => (sortBy === 'momentum' ? [...ideas].sort(byMomentum) : ideas),
+    [ideas, sortBy]
+  );
 
   const handleCreateIdea = async (payload) => {
     try {
@@ -305,7 +327,7 @@ const Ideation = ({ activeRole }) => {
 
       {/* Card grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 max-sm:p-2">
-        {ideas.map((content) => {
+        {orderedIdeas.map((content) => {
           const isPrivate = content.privacy === "private";
           const isCreator = user?.id && content.creatorId && user.id === content.creatorId;
           const shouldBlur = isPrivate && !isCreator;

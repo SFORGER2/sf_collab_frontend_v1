@@ -12,6 +12,7 @@ import {
   Users,
   Zap,
   Lightbulb,
+  Flame,
 } from "lucide-react";
 import { IoOptionsOutline } from "react-icons/io5";
 import SearchBar from "../../sections/SearchBar";
@@ -59,6 +60,10 @@ const IdeationHeader = ({
   ];
 
   const sortOptions = [
+    // "Moving now" ranks by momentum — recent pull, team joins and discussion,
+    // decayed by age. Distinct from "Trending", which the API scores its own
+    // way, and from "Most Liked", which a year-old idea can still win.
+    { value: "momentum", label: "Moving Now", icon: Flame },
     { value: "trending", label: "Trending", icon: TrendingUp },
     { value: "latest", label: "Latest", icon: Clock },
     { value: "popular", label: "Most Liked", icon: Heart },

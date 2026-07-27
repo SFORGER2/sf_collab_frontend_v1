@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import ApplyToStartupModal from "./ApplyToStartupModal";
+import { MomentumFlame } from "@/components/cosmos";
 const stageColors = [
   'bg-red-500/20 text-red-300',
   'bg-orange-500/20 text-orange-300',
@@ -139,6 +140,12 @@ export default function StartupCard({
               <Badge className={`text-xs ${getStageBadgeVariant(startup?.id || 1)}`}>
                 {startup?.stage ? startup.stage[0].toUpperCase() + startup.stage.slice(1) : 'Active'}
               </Badge>
+            </div>
+
+            {/* Momentum, top-right over the banner. Renders nothing unless the
+                startup has earned it, so it stays a signal rather than chrome. */}
+            <div className="absolute top-3 right-3">
+              <MomentumFlame item={startup} size={16} />
             </div>
           </div>
 

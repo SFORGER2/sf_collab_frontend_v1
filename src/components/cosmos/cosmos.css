@@ -542,3 +542,53 @@
     transform: translate(-50%, -50%);
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   MOMENTUM FLAME
+
+   Marks Visions with real recent pull (see services/vision/momentum.js).
+   The two paths animate on different, non-round durations so they drift out
+   of phase — flames animating in lockstep read as a pulsing icon, not fire.
+   ───────────────────────────────────────────────────────────────────────── */
+.cosmos-flame {
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--flame) 55%, transparent));
+}
+
+.cosmos-flame-svg {
+  transform-origin: 50% 85%;
+  animation: cosmos-flame-sway 1.9s ease-in-out infinite;
+}
+
+.cosmos-flame-outer {
+  transform-origin: 50% 85%;
+  animation: cosmos-flame-body 1.37s ease-in-out infinite;
+}
+
+.cosmos-flame-inner {
+  transform-origin: 50% 90%;
+  animation: cosmos-flame-core 0.83s ease-in-out infinite;
+}
+
+@keyframes cosmos-flame-sway {
+  0%, 100% { transform: rotate(-2.5deg); }
+  50%      { transform: rotate(2.5deg); }
+}
+
+@keyframes cosmos-flame-body {
+  0%, 100% { transform: scale(1, 1);        opacity: 0.9; }
+  40%      { transform: scale(0.92, 1.09);  opacity: 1; }
+  70%      { transform: scale(1.05, 0.95);  opacity: 0.84; }
+}
+
+@keyframes cosmos-flame-core {
+  0%, 100% { transform: scale(1, 1)        translateY(0);      opacity: 0.75; }
+  50%      { transform: scale(0.85, 1.15)  translateY(-0.5px); opacity: 1; }
+}
+
+/* A flame that holds still is just an icon, which is fine — the tier colour
+   and the count still carry the signal without any motion. */
+@media (prefers-reduced-motion: reduce) {
+  .cosmos-flame-svg,
+  .cosmos-flame-outer,
+  .cosmos-flame-inner { animation: none; }
+}
