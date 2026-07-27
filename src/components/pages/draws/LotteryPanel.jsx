@@ -6,7 +6,7 @@ import {
   beatTheStake, byRarity, oddsLabel, pushHistory, readHistory, roll, rtp,
 } from '@/services/draws/lottery';
 import { fetchWinners, prizeFor, profileHref, timeAgo } from '@/services/draws/winners';
-import { useEntitlements } from '@/services/entitlements/useEntitlements';
+import { balance as crystalBalance, spend as spendCrystals, add as addCrystals, subscribe as subCrystals } from '@/services/wallet/crystals';
 import { AdSlot, CosmosButton, Eyebrow, Panel, Tag } from '@/components/cosmos';
 import { grant as grantToInventory } from '@/services/inventory/inventory';
 import LotteryReels, { IdleReel } from './LotteryReels';
@@ -29,7 +29,8 @@ import PrizeTile from './PrizeTile';
  * the roll server-side changes nothing visual.
  */
 export default function LotteryPanel() {
-  const { credits, addCredits } = useEntitlements();
+  const [crystals, setCrystals] = useState(crystalBalance);
+  useEffect(() => subCrystals(setCrystals), []);
 
   const [result, setResult] = useState(null);
   const [spinning, setSpinning] = useState(false);
@@ -43,15 +44,14 @@ export default function LotteryPanel() {
     return () => { cancelled = true; };
   }, []);
 
-  const balance = typeof credits === 'number' ? credits : credits?.balance ?? 0;
-  const canAfford = balance >= TICKET_COST;
+  const canAfford = crystals >= TICKET_COST;
   const returnPct = Math.round(rtp() * 100);
 
   const doRoll = () => {
     if (spinning || !canAfford) return;
     setRevealed(false);
     setSpinning(true);
-    addCredits(-TICKET_COST);
+    if (!spendCrystals(TICKET_COST)) return;
 
     const outcome = roll();
     // One frame of motion before the landing position is committed.
@@ -63,13 +63,14 @@ export default function LotteryPanel() {
     setResult((r) => {
       if (!r) return r;
       // Credit grants settle immediately; everything else is a backend grant.
-      if (r.prize.grant?.credits) addCredits(r.prize.grant.credits);
+      // Credit prizes pay out in crystals now that the ticket is crystals.
+      if (r.prize.grant?.credits) addCrystals(r.prize.grant.credits * 10);
       // Everything won lands in the inventory, alongside store purchases.
       grantToInventory(r.prize.id, 'lottery');
       setHistory(pushHistory(r.prize));
       return r;
     });
-  }, [addCredits]);
+  }, []);
 
   return (
     <div className="flex flex-col gap-5">
@@ -91,9 +92,9 @@ export default function LotteryPanel() {
           </div>
 
           <div className="text-right shrink-0">
-            <span className="cosmos-stat-label block">Your credits</span>
+            <span className="cosmos-stat-label block">Your crystals</span>
             <span className="font-display text-[1.3rem] text-star tabular-nums">
-              {balance.toLocaleString()}
+              {crystals.toLocaleString()}
             </span>
           </div>
         </div>
@@ -118,12 +119,12 @@ export default function LotteryPanel() {
         <div className="flex flex-wrap items-center justify-center gap-3">
           <CosmosButton variant="primary" onClick={doRoll} disabled={spinning || !canAfford}>
             <Ticket size={15} />
-            {spinning ? 'Rolling…' : `Roll — ${TICKET_COST} credits`}
+            {spinning ? 'Rolling…' : `Roll — ${TICKET_COST} crystals`}
           </CosmosButton>
 
           {!canAfford && (
             <CosmosButton variant="ghost" size="sm" asChild>
-              <Link to="/credits">Top up credits</Link>
+              <Link to="/wallet/crystals">Get crystals</Link>
             </CosmosButton>
           )}
         </div>
@@ -175,7 +176,7 @@ export default function LotteryPanel() {
 
         <p className="flex items-start gap-2 text-[0.83rem] text-dim mt-5">
           <Info size={13} className="shrink-0 mt-0.5" />
-          Tickets are bought with credits you have earned or purchased for platform use, and
+          Tickets are bought with SF Crystals, a platform currency, and
           prizes are platform items — subscriptions, cosmetics, boosts and credits. Never cash,
           and nothing is exchangeable for money. The odds above are the actual numbers the
           roll uses.

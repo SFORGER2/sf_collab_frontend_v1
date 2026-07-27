@@ -1,11 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, Coins, Gem, Package, Palette, Rocket, Sparkles, Store, Ticket } from 'lucide-react';
+import { ArrowLeftRight, Check, Coins, Gem, Package, Palette, Rocket, Sparkles, Store, Ticket, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import {
   SLOTS, SOURCES, equip, groupByKind, readResolved, slotOf, subscribe, unequip,
 } from '@/services/inventory/inventory';
 import { RARITIES } from '@/services/draws/lotteryPrizes';
+import {
+  TRADE_FEE_PCT, balance as crystalBalance, cancelTrade, feeFor, listForTrade,
+  readTrades, subscribe as subCrystals,
+} from '@/services/wallet/crystals';
 import { AdSlot, CosmosButton, Display, Eyebrow, Lede, Panel, Reveal, Tag } from '@/components/cosmos';
 
 /**
@@ -45,9 +49,27 @@ const SOURCE_ICON = {
 export default function InventoryPage() {
   const [, bump] = useState(0);
   const [filter, setFilter] = useState('all');
+  const [crystals, setCrystals] = useState(crystalBalance);
+  const [trades, setTrades] = useState(readTrades);
+  const [listing, setListing] = useState(null);   // item being listed
+  const [ask, setAsk] = useState('');
 
   // Any surface can grant; re-read when one does rather than polling.
   useEffect(() => subscribe(() => bump((n) => n + 1)), []);
+  useEffect(() => subCrystals(setCrystals), []);
+
+  const listedIds = new Set(trades.filter((t) => t.status === 'pending').map((t) => t.itemId));
+
+  const submitListing = () => {
+    const price = Number(ask);
+    if (!price || price < 10) { toast.error('Ask at least 10 crystals'); return; }
+    listForTrade({ itemId: listing.itemId, askCrystals: price });
+    setTrades(readTrades());
+    setListing(null); setAsk('');
+    toast.success(`Listed for ${price} crystals`);
+  };
+
+  const unlist = (id) => { setTrades(cancelTrade(id)); toast.success('Listing removed'); };
 
   const all = readResolved();
   const groups = useMemo(groupByKind, [all.length, filter]);
@@ -119,6 +141,43 @@ export default function InventoryPage() {
             )}
           </Panel>
 
+          {/* Crystals + listings — trading is crystals-only, one token to
+              reason about instead of three. */}
+          <div className="grid gap-3 mt-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+            <Link to="/wallet/crystals" className="cosmos-card p-4 flex items-center gap-3 group" style={{ '--cosmos-accent': '#4fd8ff' }}>
+              <span className="grid place-items-center w-10 h-10 rounded-xl shrink-0 transition-transform group-hover:scale-105"
+                    style={{ background: 'rgba(79,216,255,0.14)', border: '1px solid rgba(79,216,255,0.3)', color: '#4fd8ff' }}>
+                <Gem size={16} />
+              </span>
+              <span className="min-w-0">
+                <span className="cosmos-stat-label block">SF Crystals</span>
+                <span className="font-display text-[1.15rem] text-cyan tabular-nums">{crystals.toLocaleString()}</span>
+                <span className="block text-[0.75rem] text-dim">Buy more</span>
+              </span>
+            </Link>
+
+            {trades.filter((t) => t.status === 'pending').length > 0 && (
+              <div className="cosmos-card p-4" style={{ '--cosmos-accent': '#ffbf5e' }}>
+                <Eyebrow className="mb-2">Listed for trade</Eyebrow>
+                <div className="flex flex-col gap-1.5">
+                  {trades.filter((t) => t.status === 'pending').map((t) => {
+                    const item = all.find((r) => r.itemId === t.itemId)?.item;
+                    return (
+                      <div key={t.id} className="flex items-center gap-2 text-[0.82rem]">
+                        <span className="text-star truncate flex-1 min-w-0">{item?.name || t.itemId}</span>
+                        <span className="font-mono text-cyan tabular-nums">{t.askCrystals}</span>
+                        <button type="button" onClick={() => unlist(t.id)} aria-label="Remove listing"
+                                className="text-dim hover:text-red-400 transition-colors">
+                          <X size={12} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Filter */}
           <div className="flex items-center gap-1 p-1 mt-6 rounded-full bg-white/[0.04] border border-white/10 w-fit overflow-x-auto">
             {['all', ...KIND_ORDER.filter((k) => groups[k]?.length)].map((k) => (
@@ -149,7 +208,13 @@ export default function InventoryPage() {
 
                 <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(200px,1fr))]">
                   {groups[kind].map((row) => (
-                    <ItemCard key={row.itemId} row={row} onToggle={() => toggle(row)} />
+                    <ItemCard
+                      key={row.itemId}
+                      row={row}
+                      listed={listedIds.has(row.itemId)}
+                      onToggle={() => toggle(row)}
+                      onList={() => { setListing(row); setAsk(''); }}
+                    />
                   ))}
                 </div>
               </section>
@@ -159,11 +224,56 @@ export default function InventoryPage() {
           <AdSlot placement="inventory-mid" format="banner" className="mt-7" />
         </>
       )}
+
+      {/* List for trade */}
+      {listing && (
+        <div className="fixed inset-0 z-50 grid place-items-center p-4"
+             style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)' }}
+             onClick={() => setListing(null)}>
+          <div className="cosmos-panel cosmos-panel-neon p-6 w-full max-w-[26rem]"
+               style={{ '--cosmos-accent': '#4fd8ff', '--field-accent': '#4fd8ff' }}
+               onClick={(e) => e.stopPropagation()}>
+            <Eyebrow className="mb-1">List for trade</Eyebrow>
+            <h3 className="font-display text-[1.15rem] text-star mb-1">{listing.item.name}</h3>
+            <p className="text-[0.82rem] text-dim mb-4">
+              Other members pay in SF Crystals. The item leaves your inventory only when a
+              trade is accepted.
+            </p>
+
+            <label className="block">
+              <span className="cosmos-stat-label block mb-1.5">Asking price in crystals</span>
+              <input
+                type="number"
+                min="10"
+                value={ask}
+                autoFocus
+                onChange={(e) => setAsk(e.target.value)}
+                placeholder="500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-cyan/40 text-[0.92rem] text-star focus:outline-none focus:border-cyan"
+              />
+            </label>
+
+            {Number(ask) > 0 && (
+              <p className="text-[0.8rem] text-dim mt-2.5">
+                {TRADE_FEE_PCT}% platform fee: <span className="text-star">{feeFor(Number(ask))}</span> crystals.
+                You receive <span className="text-cyan">{Number(ask) - feeFor(Number(ask))}</span>.
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-2.5 mt-5">
+              <CosmosButton variant="primary" size="sm" onClick={submitListing}>
+                <ArrowLeftRight size={13} /> List it
+              </CosmosButton>
+              <CosmosButton variant="quiet" size="sm" onClick={() => setListing(null)}>Cancel</CosmosButton>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function ItemCard({ row, onToggle }) {
+function ItemCard({ row, onToggle, onList, listed }) {
   const { item } = row;
   const rarity = RARITIES[item.rarity] || RARITIES.common;
   const slot = slotOf(row.itemId);
@@ -203,14 +313,25 @@ function ItemCard({ row, onToggle }) {
         <Tag tone="neutral" className="!py-0.5 w-fit">{rarity.label}</Tag>
 
         {slot ? (
-          <CosmosButton
-            variant={row.equipped ? 'quiet' : 'ghost'}
-            size="sm"
-            className="mt-auto"
-            onClick={onToggle}
-          >
-            {row.equipped ? <><Check size={12} /> Equipped</> : 'Equip'}
-          </CosmosButton>
+          <div className="mt-auto flex flex-col gap-1.5">
+            <CosmosButton
+              variant={row.equipped ? 'quiet' : 'ghost'}
+              size="sm"
+              onClick={onToggle}
+            >
+              {row.equipped ? <><Check size={12} /> Equipped</> : 'Equip'}
+            </CosmosButton>
+            {/* Equipped items can't be listed — unequip first, so nobody
+                accidentally trades away the frame they are wearing. */}
+            {listed ? (
+              <span className="font-mono text-[9px] tracking-[0.12em] uppercase text-cyan text-center">Listed</span>
+            ) : !row.equipped && (
+              <button type="button" onClick={onList}
+                      className="font-mono text-[9px] tracking-[0.12em] uppercase text-dim hover:text-cyan transition-colors py-0.5">
+                Trade for crystals
+              </button>
+            )}
+          </div>
         ) : (
           <span className="font-mono text-[9px] tracking-[0.12em] uppercase text-dim mt-auto pt-1.5">
             {SOURCES[row.source]?.label || 'Owned'}

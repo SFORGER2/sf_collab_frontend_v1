@@ -27,34 +27,51 @@ import { PRIZES, PRIZES_BY_ID, TOTAL_WEIGHT, chanceOf } from './lotteryPrizes';
 export { PRIZES, PRIZES_BY_ID, JACKPOT, RARITIES, KINDS, oddsLabel, byRarity, chanceOf }
   from './lotteryPrizes';
 
-/** Credits per ticket. */
-export const TICKET_COST = 25;
+/**
+ * SF Crystals per ticket — crystals, not credits.
+ *
+ * The lottery moved onto crystals so the gambling surface never competes with
+ * the credits people need for actual work; nobody should have to choose
+ * between a pitch deck and a roll. At 100 crystals per dollar that puts a roll
+ * at about $2.50.
+ */
+export const TICKET_COST = 250;
+
+/**
+ * Prize `value` in lotteryPrizes.js is a *credit*-equivalent worth, kept on
+ * that scale so the catalogue stays readable ("900 Credits" really is 900).
+ * Crystals are the scarcer token, so converting the two needs this factor —
+ * without it RTP silently reads 8.9% and the table looks broken when it isn't.
+ */
+export const CRYSTALS_PER_VALUE_UNIT = 10;
 
 /** What should come back to players, as a fraction of stakes. */
 export const RTP_TARGET = 0.85;
 
 /**
- * Return to player: expected credit-equivalent value per credit staked.
+ * Return to player: expected crystal-equivalent value per crystal staked.
  *
  * Worth stating plainly — most items are worth less than the ticket, so the
  * table only balances because of the rare tail. Check this after any change to
- * a weight or a value; five numbers interacting with thirty probabilities is
- * very easy to get quietly wrong.
+ * a weight, a value or the ticket price; thirty weights against thirty values
+ * is very easy to get quietly wrong.
  */
 export function rtp() {
-  const expected = PRIZES.reduce((sum, p) => sum + chanceOf(p) * p.value, 0);
-  return expected / TICKET_COST;
+  return expectedValue() / TICKET_COST;
 }
 
-/** Expected credit value of a single roll. */
+/** Expected crystal value of a single roll. */
 export function expectedValue() {
-  return PRIZES.reduce((sum, p) => sum + chanceOf(p) * p.value, 0);
+  return PRIZES.reduce(
+    (sum, p) => sum + chanceOf(p) * p.value * CRYSTALS_PER_VALUE_UNIT,
+    0
+  );
 }
 
 /** How much of the return comes from the rare tail rather than the filler. */
 export function tailShare() {
-  const rare = PRIZES.filter((p) => ['rare', 'epic', 'legendary', 'mythic'].includes(p.rarity));
-  const fromTail = rare.reduce((sum, p) => sum + chanceOf(p) * p.value, 0);
+  const rare = PRIZES.filter((p) => ["rare", "epic", "legendary", "mythic"].includes(p.rarity));
+  const fromTail = rare.reduce((sum, p) => sum + chanceOf(p) * p.value * CRYSTALS_PER_VALUE_UNIT, 0);
   return fromTail / expectedValue();
 }
 
@@ -79,7 +96,7 @@ export function rollWith(prizeId) {
 
 /** Did this roll beat the ticket price? Drives the win/loss framing. */
 export function beatTheStake(prize) {
-  return prize.value > TICKET_COST;
+  return prize.value * CRYSTALS_PER_VALUE_UNIT > TICKET_COST;
 }
 
 /**

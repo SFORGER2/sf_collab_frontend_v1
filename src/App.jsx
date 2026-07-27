@@ -102,6 +102,7 @@ import PlansPage from "./components/pages/billing/PlansPage.jsx";
 import EarnPage from "./components/pages/billing/EarnPage.jsx";
 import AdvertisePage from "./components/pages/billing/AdvertisePage.jsx";
 import InventoryPage from "./components/pages/inventory/InventoryPage.jsx";
+import CrystalsPage from "./components/pages/wallet/CrystalsPage.jsx";
 import ProfileIntakePage from "./components/pages/Profile/ProfileIntakePage.jsx";
 import DrawsPage from "./components/pages/draws/DrawsPage.jsx";
 import MentorRoleDashboard from "./components/pages/dashboards/mentorDashboard/MentorDashboard.jsx";
@@ -444,7 +445,8 @@ export default function App() {
                       <Route path="draws" element={<DrawsPage />} />
                       <Route path="advertise" element={<AdvertisePage />} />
                       <Route path="store" element={<StorePage />} />
-                      <Route path="inventory" element={<InventoryPage />} />
+                      <Route path="wallet/inventory" element={<InventoryPage />} />
+                      <Route path="wallet/crystals" element={<CrystalsPage />} />
                       <Route path="profile-intake" element={<ProfileIntakePage />} />
                       <Route path="leaderboard" element={<LeaderboardPage />} />
                       <Route path="marketplace" element={<MarketplacePage />} />

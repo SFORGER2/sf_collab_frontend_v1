@@ -8,7 +8,7 @@ import {
   CheckCircle, LayoutDashboard, Settings, PieChart, Coins, CreditCard, FolderOpen, Video, Clock, Trash2, Star,
   Newspaper   // ✅ Added missing import
 } from "lucide-react";
-import { Trophy, ShoppingCart, ShoppingBag, GraduationCap, Search, BadgeCheck, Dices } from "lucide-react";
+import { Trophy, ShoppingCart, ShoppingBag, GraduationCap, Search, BadgeCheck, Dices, Gem } from "lucide-react";
 import { BsGear, BsPeople } from "react-icons/bs";
 import { IoChatbubbles } from "react-icons/io5";
 import { LuLayoutDashboard } from "react-icons/lu";
@@ -167,6 +167,8 @@ export function walletSection(id) {
     subItems: [
       { id: "wallet", href: "/wallet", label: "My Wallet", icon: <Coins size={18} /> },
       { id: "earn", href: "/wallet/earn", label: "Earn SF Coins", icon: <TrendingUp size={18} /> },
+      { id: "inventory", href: "/wallet/inventory", label: "My Inventory", icon: <ShoppingBag size={18} /> },
+      { id: "crystals", href: "/wallet/crystals", label: "Buy Crystals", icon: <Gem size={18} /> },
       { id: "credits", href: "/credits", label: "Buy Credits", icon: <CreditCard size={18} /> },
       { id: "draws", href: "/draws", label: "Draws & Prizes", icon: <Trophy size={18} /> },
       { id: "lottery", href: "/draws?tab=lottery", label: "Lottery & Jackpot", icon: <Dices size={18} /> },

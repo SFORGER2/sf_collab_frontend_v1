@@ -4,7 +4,7 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from '@/components/ui/popover';
 import {
-  Plus, Sparkles, Rocket, FileStack, MessageSquareHeart, Video, Users,
+  Plus, Sparkles, Rocket, MessageSquareHeart, Video, Users,
   Lightbulb, ClipboardList, Store, FolderPlus,
 } from 'lucide-react';
 import { Eyebrow } from '@/components/cosmos';
@@ -17,9 +17,10 @@ import { Eyebrow } from '@/components/cosmos';
  * now request-gated anyway. That is not a create menu, it's a stub.
  *
  * Now it's the fast path to everything worth starting, grouped by what you're
- * actually doing: putting an idea out, getting work done, or making something
- * with the assistant. The first item is the one most people want — a Vision —
- * so it gets the primary treatment.
+ * actually doing: putting an idea out, sharing, or getting work done. The first
+ * item is the one most people want — a Vision — so it gets the primary
+ * treatment. AI generation is deliberately absent: those are metered tools
+ * that belong in AI Tools, not one click from every screen.
  *
  * Kept as a popover rather than a dropdown so the grouping, descriptions and
  * accents have room; a dropdown of ten unlabelled rows is worse than two.
@@ -57,13 +58,6 @@ const GROUPS = [
       { icon: Video, label: 'Start a call', to: '/meet?start=1', accent: '#ff6fd8', desc: 'SF Meet' },
       { icon: FolderPlus, label: 'Upload to Drive', to: '/sf-drive', accent: '#4fd8ff', desc: 'Files and decks' },
       { icon: Users, label: 'Find people', to: '/discover-users', accent: '#8b6cff', desc: 'Builders, mentors, investors' },
-    ],
-  },
-  {
-    label: 'Make with AI',
-    items: [
-      { icon: FileStack, label: 'Pitch deck', to: '/pitch-deck/create', accent: '#8b6cff', desc: 'Generated from your Vision' },
-      { icon: ClipboardList, label: 'Business plan', to: '/business-plan', accent: '#8b6cff', desc: 'Full plan, editable' },
     ],
   },
 ];
