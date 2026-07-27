@@ -144,6 +144,36 @@ export function PageTour({ tourKey, role = 'member', steps = [], autoStart = tru
               </h2>
               <p className="text-[0.95rem] text-star/85">{step.body}</p>
 
+              {/* A legend, for steps that explain icon-only controls. The
+                  redesign traded labels for space; this is where that debt is
+                  paid back rather than leaving people to guess. */}
+              {step.legend && (
+                <div className="flex flex-col gap-2.5 mt-5">
+                  {step.legend.map((row) => (
+                    <div key={row.label} className="flex items-start gap-3">
+                      <span
+                        className="grid place-items-center w-8 h-8 rounded-xl shrink-0"
+                        style={{
+                          background: 'rgba(255,191,94,0.12)',
+                          border: '1px solid rgba(255,191,94,0.28)',
+                          color: '#ffbf5e',
+                        }}
+                      >
+                        <row.icon size={15} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-[0.88rem] text-star leading-tight">
+                          {row.label}
+                        </span>
+                        <span className="block text-[0.8rem] text-dim leading-snug mt-0.5">
+                          {row.text}
+                        </span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {step.cta && (
                 <CosmosButton variant="quiet" size="sm" className="mt-5" asChild>
                   <Link to={step.cta.to} onClick={finish}>

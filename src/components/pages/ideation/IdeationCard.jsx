@@ -1044,6 +1044,18 @@ export default function VisionCard({ content, shouldBlur }) {
               >
                 <Share2 className="h-4 w-4" />
               </button>
+
+              {/* Connect with the creator. This was dropped in the card
+                  simplification, which was a deletion rather than a redesign —
+                  restored, as an icon so it costs the same space as the rest. */}
+              {!isOwnIdea && (
+                <span className="ml-auto" title="Connect with the creator">
+                  <ConnectionButton
+                    userId={content?.author?.id || content?.creator?.id}
+                    size="sm"
+                  />
+                </span>
+              )}
             </div>
           </div>
         </div>

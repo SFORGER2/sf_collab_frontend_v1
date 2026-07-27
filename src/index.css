@@ -1142,3 +1142,157 @@ a.text-black:not([class*='bg-white']):not([class*='bg-gold']):not([class*='bg-am
 :root[data-theme='light'] button[class*='text-violet-4'] { color: #5b39c4; }
 :root[data-theme='light'] button[class*='text-amber-4'],
 :root[data-theme='light'] button[class*='text-yellow-4'] { color: #9a6410; }
+
+/* ==========================================================================
+   LIGHT MODE — the palette, redone
+
+   Earlier passes patched individual patterns and the result still read as
+   "the dark theme with the lights turned on": a flat cold grey page, cards
+   barely distinguishable from it, and no depth anywhere.
+
+   Three changes fix most of it, and they are all colour:
+
+   1. The page is a warm off-white with a faint tint, not #f6f4fb grey. Cards
+      are pure white *against* it, so the card edge is visible without needing
+      a heavy border.
+   2. Text is a warm near-black, not blue-black. Cold text on a cold page is
+      what made it feel washed out.
+   3. Light mode gets its own atmosphere. Deleting the starfield left a
+      dead flat backdrop; a very soft accent wash gives the page the same
+      sense of depth the dark theme has.
+
+   These override the earlier block by source order — deliberately, so the
+   history of what was tried stays readable.
+   ========================================================================== */
+:root[data-theme='light'] {
+  --color-void: #faf8f5;      /* warm paper, not grey */
+  --color-deep: #f2eef8;
+  --color-panel: #ffffff;
+  --color-star: #1a1520;      /* warm near-black */
+  --color-dim: #635a70;       /* warm grey, AA on white at 14px */
+
+  /* Accents: darkened for white, but kept warm so they still feel cosmos. */
+  --color-gold: #a8690f;
+  --color-violet: #5b34cf;
+  --color-cyan: #06718f;
+  --color-magenta: #b31489;
+  --color-mint: #0b7550;
+
+  --background: #faf8f5;
+  --foreground: #1a1520;
+  --card: #ffffff;
+  --card-foreground: #1a1520;
+  --popover: #ffffff;
+  --popover-foreground: #1a1520;
+  --muted: #f1ecf7;
+  --muted-foreground: #635a70;
+  --border: rgba(26, 21, 32, 0.11);
+  --input: rgba(26, 21, 32, 0.13);
+  --ring: #5b34cf;
+}
+
+/* Depth, restored. The dark theme has a starfield; light gets a soft wash so
+   the page isn't a dead flat sheet. */
+:root[data-theme='light'] body {
+  background-color: var(--color-void);
+  background-image:
+    radial-gradient(60vw 40vh at 78% 8%, rgba(91, 52, 207, 0.055), transparent 62%),
+    radial-gradient(52vw 36vh at 12% 52%, rgba(6, 113, 143, 0.045), transparent 62%),
+    radial-gradient(46vw 32vh at 68% 92%, rgba(168, 105, 15, 0.04), transparent 62%);
+  background-attachment: fixed;
+}
+
+/* Cards read by elevation rather than by a hard outline — a 1px grey box on a
+   grey page is exactly what made this look cheap. */
+:root[data-theme='light'] .cosmos-panel,
+:root[data-theme='light'] .cosmos-card,
+:root[data-theme='light'] .cosmos-showcase {
+  background: #ffffff;
+  border-color: rgba(26, 21, 32, 0.08);
+  box-shadow:
+    0 1px 2px rgba(26, 21, 32, 0.04),
+    0 12px 28px -18px rgba(26, 21, 32, 0.28);
+}
+
+:root[data-theme='light'] .cosmos-panel-neon {
+  background: #ffffff;
+  border-color: color-mix(in srgb, var(--cosmos-accent, #5b34cf) 30%, transparent);
+  box-shadow:
+    0 1px 2px rgba(26, 21, 32, 0.05),
+    0 18px 44px -22px color-mix(in srgb, var(--cosmos-accent, #5b34cf) 45%, transparent);
+}
+
+/* The navbar was translucent-over-void; on paper it needs to be paper. */
+:root[data-theme='light'] .cosmos-atmosphere-chrome {
+  background: rgba(250, 248, 245, 0.9);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(26, 21, 32, 0.08);
+}
+
+/* Sidebar shares the chrome treatment. */
+:root[data-theme='light'] .sidebar > div[class*='absolute'] {
+  background: rgba(250, 248, 245, 0.94) !important;
+}
+
+/* Eyebrows and mono labels were tuned to glow on black. */
+:root[data-theme='light'] .cosmos-eyebrow {
+  color: color-mix(in srgb, var(--cosmos-accent, #a8690f) 88%, #1a1520);
+}
+
+/* Active nav item: an inset white glow is invisible on paper. */
+:root[data-theme='light'] .sidebar button[style*='inset 2px'] {
+  background: rgba(26, 21, 32, 0.05) !important;
+}
+
+/* Hover states written as white alphas do nothing on white. */
+:root[data-theme='light'] [class*='hover\:bg-white\/']:hover {
+  background-color: rgba(26, 21, 32, 0.05) !important;
+}
+
+/* The wordmark ships as a white SVG, so it disappears on paper. Inverting is
+   correct here rather than a hack: it is a monochrome mark, and inverting
+   white gives exactly the near-black the rest of the type uses. */
+:root[data-theme='light'] img[src*='logo_white'] {
+  filter: invert(1) brightness(0.16);
+}
+
+/* Page headers written as `text-white` on a heading element. The earlier rule
+   excluded anything with a `bg-` class, which let gradient-clipped and
+   wrapped headings slip through. */
+:root[data-theme='light'] h1,
+:root[data-theme='light'] h2,
+:root[data-theme='light'] h3,
+:root[data-theme='light'] h4 {
+  color: var(--color-star);
+}
+
+/* Eyebrows inherit an accent that was tuned to glow on black. On paper the
+   pale end of that range is unreadable, so they take the text colour with a
+   touch of accent rather than the accent itself. */
+:root[data-theme='light'] .cosmos-eyebrow,
+:root[data-theme='light'] [class*='cosmos-stat-label'] {
+  color: #4a4058;
+}
+
+/* Ghost/quiet buttons were transparent-with-light-text. */
+:root[data-theme='light'] .cosmos-btn {
+  color: var(--color-star);
+}
+:root[data-theme='light'] .cosmos-btn[class*='quiet'],
+:root[data-theme='light'] .cosmos-btn[class*='ghost'] {
+  border-color: rgba(26, 21, 32, 0.16);
+}
+
+/* Anything still relying on a white text colour inside a light panel. */
+:root[data-theme='light'] .cosmos-panel .text-white,
+:root[data-theme='light'] .cosmos-card .text-white,
+:root[data-theme='light'] .cosmos-showcase .text-white {
+  color: var(--color-star);
+}
+
+/* Disabled/secondary text that was `text-gray-500` against black. */
+:root[data-theme='light'] .text-gray-500,
+:root[data-theme='light'] .text-slate-500,
+:root[data-theme='light'] .text-zinc-500 {
+  color: #6b6278;
+}

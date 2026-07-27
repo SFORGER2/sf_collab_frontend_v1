@@ -12,9 +12,9 @@
  * Steps: { icon, eyebrow, title, body, cta?, points?, closing?, finishLabel? }
  */
 import {
-  BadgeCheck, BrainCircuit, Check, Coins, FolderOpen, GraduationCap, Heart,
-  Lightbulb, Megaphone, MessageSquare, Rocket, Search, Sparkles, Target,
-  TrendingUp, Users, Video,
+  BadgeCheck, Bookmark, BrainCircuit, Check, Coins, Eye, FolderOpen,
+  GraduationCap, Heart, Lightbulb, Megaphone, MessageSquare, Rocket, Search,
+  Share2, Sparkles, Target, TrendingUp, UserPlus, Users, Video,
 } from 'lucide-react';
 
 /** The shared closing promise. Reused by every tour. */
@@ -113,6 +113,26 @@ export function visionTour(role = 'member') {
       title: 'Anyone can move a Vision forward.',
       body:
         'Saving, following, asking a good question and sharing all count as real signal. Support here is measurable, and it is remembered.',
+    },
+    /**
+     * The card's secondary actions became icons in the redesign, which saved a
+     * lot of space and cost their labels. Anything whose meaning is not obvious
+     * from its icon alone gets explained here — Save and Share do not need it,
+     * the two interest signals absolutely do.
+     */
+    {
+      icon: Eye,
+      eyebrow: 'The buttons on a card',
+      title: 'Four ways to say you are interested.',
+      body:
+        'Interested in Contributing is the big one — it starts a real application with a role and your availability. The three icons beside it are one-tap signals that need no form.',
+      legend: [
+        { icon: UserPlus, label: 'Interested in Contributing', text: 'Apply to join the team. Asks for a role and hours.' },
+        { icon: Eye, label: 'Interested in using', text: 'You would use this if it existed. Tells the founder there is demand.' },
+        { icon: TrendingUp, label: 'Interested in investing', text: 'You would back it. Tells the founder there is capital.' },
+        { icon: Bookmark, label: 'Save', text: 'Keeps it in Saved Ideas for later.' },
+        { icon: Share2, label: 'Share', text: 'Copies a direct link to the Vision.' },
+      ],
     },
     PROMISE_STEP,
   ];

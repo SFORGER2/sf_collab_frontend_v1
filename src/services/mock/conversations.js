@@ -88,6 +88,55 @@ export const SAMPLE_CONVERSATIONS = [
   },
 ];
 
+/**
+ * Group threads.
+ *
+ * Kept as a separate list rather than a flag on the same array, because the
+ * two behave differently everywhere it matters: a group has many members, a
+ * name of its own, and "delete for everyone" is a moderation action rather
+ * than an undo. Filtering one array by a boolean would have hidden that.
+ */
+export const SAMPLE_GROUPS = [
+  {
+    id: 'g1',
+    isGroup: true,
+    user: { id: 'g1', name: 'Founder Match · Core Team', role: '6 members', online: true },
+    members: ['Ada Okonkwo', 'Mikkel Rasmussen', 'Priya Raghavan', 'Sofia Marchetti', 'You'],
+    unread: 3,
+    lastAt: min(11),
+    messages: [
+      { id: 'gm1', from: 'sample-1', author: 'Ada Okonkwo', at: hr(4), text: 'Scoring doc is up. Read before Thursday and bring objections, not agreement.' },
+      { id: 'gm2', from: 'sample-3', author: 'Priya Raghavan', at: hr(3), text: 'One objection already: weighting availability that heavily punishes people in the wrong timezone.', reactions: [{ emoji: '👀', by: ['me'] }] },
+      { id: 'gm3', from: 'me', author: 'You', at: hr(2), text: 'Agreed. Timezone should be a filter, not a score input.' },
+      { id: 'gm4', from: 'sample-2', author: 'Mikkel Rasmussen', at: min(40), text: 'I can split it out this week if nobody objects.' },
+      { id: 'gm5', from: 'sample-1', author: 'Ada Okonkwo', at: min(11), text: 'Do it. Ship behind a flag so we can compare both scorings on the same cohort.', reactions: [{ emoji: '🔥', by: ['me', 'sample-2'] }] },
+    ],
+  },
+  {
+    id: 'g2',
+    isGroup: true,
+    user: { id: 'g2', name: 'Climate Builders', role: '18 members', online: false },
+    members: ['Nora Lindqvist', 'Kwame Boateng', 'Aisha Rahman', 'You', '+14'],
+    unread: 0,
+    lastAt: hr(20),
+    messages: [
+      { id: 'gm1', from: 'sample-10', author: 'Nora Lindqvist', at: day(1), text: 'Anyone here dealt with Scope 3 verification for sub-50-person manufacturers?' },
+      { id: 'gm2', from: 'sample-7', author: 'Kwame Boateng', at: hr(20), text: 'Yes, painfully. The short answer is auditors want provenance, not totals — happy to write it up.' },
+    ],
+  },
+  {
+    id: 'g3',
+    isGroup: true,
+    user: { id: 'g3', name: 'Design Systems', role: '9 members', online: true },
+    members: ['Sofia Marchetti', 'Lena Hoffmann', 'You', '+6'],
+    unread: 1,
+    lastAt: day(2),
+    messages: [
+      { id: 'gm1', from: 'sample-8', author: 'Sofia Marchetti', at: day(2), text: 'Shipped the v3 tokens. Breaking change on spacing — read the migration note before you pull.' },
+    ],
+  },
+];
+
 /** Reactions people actually reach for, in the order they reach for them. */
 export const QUICK_REACTIONS = ['👍', '🔥', '❤️', '🎉', '👀', '😄', '🙏', '🚀'];
 

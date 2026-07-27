@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ArrowLeft, Check, Copy, CornerUpLeft, MoreVertical, Paperclip, Pencil,
-  Search, Send, Smile, SmilePlus, Trash2, Flag, X,
+  ArrowLeft, Check, Copy, CornerUpLeft, MessageSquare, MoreVertical, Paperclip,
+  Pencil, Search, Send, Smile, SmilePlus, Trash2, Users, Flag, X,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import {
-  EMOJI_GROUPS, ME, QUICK_REACTIONS, SAMPLE_CONVERSATIONS, timeLabel,
+  EMOJI_GROUPS, ME, QUICK_REACTIONS, SAMPLE_CONVERSATIONS, SAMPLE_GROUPS, timeLabel,
 } from '@/services/mock/conversations';
 import { Eyebrow, Tag } from '@/components/cosmos';
 
@@ -33,8 +33,18 @@ import { Eyebrow, Tag } from '@/components/cosmos';
  * row per user per emoji, and DELETE .../messages/:id for removal.
  */
 export default function CosmosChatPage() {
-  const [threads, setThreads] = useState(SAMPLE_CONVERSATIONS);
+  /**
+   * Direct messages and groups are separate tabs, not one merged list.
+   * A group has members, a name of its own, and different moderation rules —
+   * flattening them into one inbox loses all three.
+   */
+  const [tab, setTab] = useState('dms');
+  const [dms, setDms] = useState(SAMPLE_CONVERSATIONS);
+  const [groups, setGroups] = useState(SAMPLE_GROUPS);
   const [activeId, setActiveId] = useState(SAMPLE_CONVERSATIONS[0].id);
+
+  const threads = tab === 'groups' ? groups : dms;
+  const setThreads = tab === 'groups' ? setGroups : setDms;
   const [query, setQuery] = useState('');
   const [draft, setDraft] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -44,6 +54,7 @@ export default function CosmosChatPage() {
   const endRef = useRef(null);
 
   const active = threads.find((t) => t.id === activeId) || threads[0];
+  const isGroup = !!active?.isGroup;
 
   const filtered = useMemo(() => {
     if (!query.trim()) return threads;
@@ -106,9 +117,28 @@ export default function CosmosChatPage() {
       })
     );
 
-  const remove = (messageId) => {
+  /**
+   * Two different actions that a single "Delete" conflates.
+   *
+   * "For me" hides it from my view only — the other person still has it, so
+   * pretending otherwise would be a lie. "For everyone" retracts it, and
+   * leaves a tombstone rather than a silent gap, because a message vanishing
+   * without trace is how you get an argument about what was said.
+   */
+  const removeForMe = (messageId) => {
     patchMessages((ms) => ms.filter((m) => m.id !== messageId));
-    toast.success('Message deleted');
+    toast.success('Deleted for you');
+  };
+
+  const removeForEveryone = (messageId) => {
+    patchMessages((ms) =>
+      ms.map((m) =>
+        m.id === messageId
+          ? { ...m, text: 'This message was deleted', deleted: true, reactions: [], attachment: null }
+          : m
+      )
+    );
+    toast.success('Deleted for everyone');
   };
 
   const startEdit = (m) => { setEditing(m.id); setDraft(m.text); setReplyTo(null); };
@@ -138,6 +168,37 @@ export default function CosmosChatPage() {
           }`}
         >
           <div className="p-3 border-b border-white/[0.07] shrink-0">
+            <div className="flex items-center gap-1 p-1 mb-2.5 rounded-full bg-white/[0.04] border border-white/10">
+              {[
+                { id: 'dms', label: 'Direct', icon: MessageSquare, count: dms.reduce((n, t) => n + t.unread, 0) },
+                { id: 'groups', label: 'Groups', icon: Users, count: groups.reduce((n, t) => n + t.unread, 0) },
+              ].map((x) => (
+                <button
+                  key={x.id}
+                  type="button"
+                  onClick={() => {
+                    setTab(x.id);
+                    const list = x.id === 'groups' ? groups : dms;
+                    setActiveId(list[0]?.id);
+                  }}
+                  aria-pressed={tab === x.id}
+                  className={`flex-1 flex items-center justify-center gap-1.5 font-mono text-[9.5px] tracking-[0.14em] uppercase px-2 py-1.5 rounded-full transition-colors ${
+                    tab === x.id ? 'text-star bg-white/[0.09]' : 'text-dim hover:text-star'
+                  }`}
+                >
+                  <x.icon size={11} /> {x.label}
+                  {x.count > 0 && (
+                    <span
+                      className="grid place-items-center min-w-[15px] h-[15px] px-1 rounded-full font-mono text-[8.5px]"
+                      style={{ background: '#ffbf5e', color: '#14111f' }}
+                    >
+                      {x.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
             <label className="relative block">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-dim" />
               <input
@@ -161,7 +222,7 @@ export default function CosmosChatPage() {
                   className="w-full flex items-start gap-3 px-3 py-3 text-left border-b border-white/[0.04] transition-colors hover:bg-white/[0.03]"
                   style={isActive ? { background: 'rgba(255,191,94,0.08)', boxShadow: 'inset 2px 0 0 #ffbf5e' } : undefined}
                 >
-                  <Avatar user={t.user} />
+                  <Avatar user={t.user} isGroup={t.isGroup} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                       <span className="text-[0.88rem] text-star truncate flex-1 min-w-0">{t.user.name}</span>
@@ -204,17 +265,23 @@ export default function CosmosChatPage() {
               <ArrowLeft size={18} />
             </button>
 
-            <Avatar user={active.user} />
+            <Avatar user={active.user} isGroup={isGroup} />
             <div className="min-w-0 flex-1">
-              <Link
-                to={`/user-profile?userId=${active.user.id}`}
-                className="block text-[0.95rem] text-star hover:text-gold transition-colors truncate"
-              >
-                {active.user.name}
-              </Link>
+              {isGroup ? (
+                <span className="block text-[0.95rem] text-star truncate">{active.user.name}</span>
+              ) : (
+                <Link
+                  to={`/user-profile?userId=${active.user.id}`}
+                  className="block text-[0.95rem] text-star hover:text-gold transition-colors truncate"
+                >
+                  {active.user.name}
+                </Link>
+              )}
               <span className="flex items-center gap-1.5 text-[0.78rem] text-dim truncate">
                 {active.user.online && <span className="cosmos-live-dot text-emerald-400" />}
-                {active.user.online ? 'Active now' : active.user.role}
+                {isGroup
+                  ? `${active.user.role} · ${(active.members || []).slice(0, 3).join(', ')}`
+                  : active.user.online ? 'Active now' : active.user.role}
               </span>
             </div>
           </header>
@@ -228,10 +295,12 @@ export default function CosmosChatPage() {
                 message={m}
                 prev={active.messages[i - 1]}
                 thread={active}
+                isGroup={isGroup}
                 onReact={(emoji) => react(m.id, emoji)}
                 onReply={() => setReplyTo(m)}
                 onEdit={() => startEdit(m)}
-                onDelete={() => remove(m.id)}
+                onDeleteForMe={() => removeForMe(m.id)}
+                onDeleteForEveryone={() => removeForEveryone(m.id)}
               />
             ))}
             <div ref={endRef} />
@@ -312,15 +381,19 @@ export default function CosmosChatPage() {
   );
 }
 
-function Avatar({ user }) {
+function Avatar({ user, isGroup }) {
   const initials = user.name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
   return (
     <span className="relative shrink-0">
       <span
         className="grid place-items-center w-9 h-9 sm:w-10 sm:h-10 rounded-full font-mono text-[11px]"
-        style={{ background: 'rgba(139,108,255,0.18)', color: '#8b6cff' }}
+        style={
+          isGroup
+            ? { background: 'rgba(62,230,160,0.16)', color: '#3ee6a0' }
+            : { background: 'rgba(139,108,255,0.18)', color: '#8b6cff' }
+        }
       >
-        {initials}
+        {isGroup ? <Users size={15} /> : initials}
       </span>
       {user.online && (
         <span
@@ -340,7 +413,7 @@ function Avatar({ user }) {
  * width always and only becomes visible on hover or focus, so the bubble
  * doesn't shift when the controls appear.
  */
-function Bubble({ message, prev, thread, onReact, onReply, onEdit, onDelete }) {
+function Bubble({ message, prev, thread, isGroup, onReact, onReply, onEdit, onDeleteForMe, onDeleteForEveryone }) {
   const mine = message.from === 'me';
   const grouped = prev && prev.from === message.from && message.at - prev.at < 5 * 60_000;
   const [menu, setMenu] = useState(null); // 'react' | 'more' | null
@@ -358,6 +431,13 @@ function Bubble({ message, prev, thread, onReact, onReply, onEdit, onDelete }) {
       }`}
     >
       <div className={`flex flex-col min-w-0 ${mine ? 'items-end' : 'items-start'}`} style={{ maxWidth: 'min(78%, 34rem)' }}>
+        {/* In a group you need to know who is speaking; in a DM it is noise. */}
+        {isGroup && !mine && !grouped && (
+          <span className="font-mono text-[9px] tracking-[0.12em] uppercase text-dim mb-1 px-1">
+            {message.author}
+          </span>
+        )}
+
         {replied && (
           <span className="flex items-center gap-1.5 mb-1 px-2 py-1 rounded-lg bg-white/[0.03] border-l-2 border-white/20 max-w-full">
             <CornerUpLeft size={10} className="text-dim shrink-0" />
@@ -373,7 +453,9 @@ function Bubble({ message, prev, thread, onReact, onReply, onEdit, onDelete }) {
               : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: 'var(--color-star)' }
           }
         >
-          {message.text}
+          <span style={message.deleted ? { fontStyle: 'italic', opacity: 0.55 } : undefined}>
+            {message.text}
+          </span>
 
           {message.attachment && (
             <span className="flex items-center gap-2 mt-2 px-2.5 py-2 rounded-xl bg-white/[0.05] border border-white/10 max-w-full">
@@ -474,13 +556,23 @@ function Bubble({ message, prev, thread, onReact, onReply, onEdit, onDelete }) {
               />
               {mine ? (
                 <>
-                  <MenuItem icon={Pencil} label="Edit" onClick={() => { onEdit(); close(); }} />
+                  {!message.deleted && (
+                    <MenuItem icon={Pencil} label="Edit" onClick={() => { onEdit(); close(); }} />
+                  )}
                   <MenuItem
                     icon={Trash2}
-                    label="Delete"
+                    label="Delete for me"
                     danger
-                    onClick={() => { onDelete(); close(); }}
+                    onClick={() => { onDeleteForMe(); close(); }}
                   />
+                  {!message.deleted && (
+                    <MenuItem
+                      icon={Trash2}
+                      label="Delete for everyone"
+                      danger
+                      onClick={() => { onDeleteForEveryone(); close(); }}
+                    />
+                  )}
                 </>
               ) : (
                 <MenuItem
