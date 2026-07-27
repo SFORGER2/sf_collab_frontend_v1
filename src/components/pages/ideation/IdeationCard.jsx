@@ -846,7 +846,7 @@ export default function VisionCard({ content, shouldBlur }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
       whileHover={{ y: -5, transition: { duration: 0.2 } }}
-      className="h-full group relative"
+      className="h-full group relative cosmos-alive-card"
     >
       {/* FIX: outer <Link> replaced with <div onClick navigate> to prevent nested <a> tags */}
       {/* The whole card catches fire when the Vision is on a run — see
@@ -874,8 +874,12 @@ export default function VisionCard({ content, shouldBlur }) {
               gives the card a stable identity rather than a grey rectangle. */}
           <div className="-mx-6 -mt-6 mb-1">
             <div
-              className="relative h-28 w-full overflow-hidden"
-              style={content?.imageUrl ? undefined : { background: content?.banner || bannerFor(String(content?.id || '')) }}
+              className="cosmos-alive-banner relative h-28 w-full overflow-hidden"
+              style={{
+                ...(content?.imageUrl ? {} : { background: content?.banner || bannerFor(String(content?.id || '')) }),
+                // Stagger the sheen so a grid doesn't shimmer in lockstep.
+                '--sheen-delay': `${(String(content?.id || '').length % 5) * 1.1}s`,
+              }}
             >
               {content?.imageUrl && (
                 <img
@@ -893,6 +897,18 @@ export default function VisionCard({ content, shouldBlur }) {
               <span className="absolute top-3 right-3">
                 <StreakBadge item={content} />
               </span>
+
+              {/* Someone else is looking at this right now. Nothing else on a
+                  board conveys "alive" as cheaply as another person's presence. */}
+              {(content?.collaborators || 0) > 2 && (
+                <span
+                  className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 font-mono text-[9px] tracking-[0.12em] uppercase px-2 py-1 rounded-full"
+                  style={{ background: 'rgba(0,0,0,0.5)', color: '#3ee6a0' }}
+                >
+                  <span className="cosmos-live-dot" />
+                  {content.collaborators} active
+                </span>
+              )}
 
               {content?.readinessScore > 0 && (
                 <span

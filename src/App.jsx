@@ -60,6 +60,7 @@ import ImplementationPlans from "./components/landing-page/pages/ImplementationP
 import FeaturedProjects from "./components/landing-page/pages/FeaturedProjects.jsx";
 import PDFSigningApp from "./components/pages/PDF_Signing/PDFSigningApp.jsx";
 import ChatPage from "./components/pages/chat/ChatPage.jsx";
+import CosmosChatPage from "./components/pages/chat/CosmosChatPage.jsx";
 import Explore_Section from "./components/landing-page/pages/Explore_Section.jsx";
 import NewsletterArchive from "./components/pages/NewsletterArchive.jsx";
 import { NewsletterDashboard } from "./components/newsletter/NewsletterDashboard.jsx";
@@ -399,7 +400,8 @@ export default function App() {
                       <Route path="video-tutorials" element={<VideoTutorials />} />
 
                       {/* Chat & Social */}
-                      <Route path="chat" element={<ChatPage />} />
+                      <Route path="chat" element={<CosmosChatPage />} />
+                      <Route path="chat/legacy" element={<ChatPage />} />
                       <Route path="connections" element={<ConnectionsPage />} />
                       <Route path="notifications" element={<NotificationPage />} />
                       <Route path="posts" element={<Posts />} />

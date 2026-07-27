@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import StartupCard from './StartupCard';
+import TrendingRail from './TrendingRail';
 import StartupCardSkeleton from './StartupCardSkeleton';
 import StartupsHeader from './StartupsHeader';
 import StartupSearchAndFilter from './StartupSearchAndFilter';
@@ -411,17 +412,15 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                        {/* Section: Trending Now */}
                        {feedWithSamples.sections?.fastGrowing && feedWithSamples.sections.fastGrowing.length > 0 && (
                           <motion.div variants={containerVariants} initial="hidden" animate="visible">
-                              <div className="flex items-center gap-2 mb-6">
-                                <Flame className="w-6 h-6 text-orange-500" />
-                                <h2 className="text-2xl font-bold text-white tracking-tight">Trending Now</h2>
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {/* One row, paged with arrows. A wrapping grid
+                                  made "trending" fill half the screen and push
+                                  the rest of the board out of sight — trending
+                                  is a glance, not a section. */}
+                              <TrendingRail>
                                  {feedWithSamples.sections.fastGrowing.map((startup, i) => (
-                                    <motion.div key={startup.id} variants={itemVariants}>
-                                      <StartupCard startup={startup} index={i} getStageBadgeVariant={getStageBadgeVariant} mode={mode} />
-                                    </motion.div>
+                                    <StartupCard key={startup.id} startup={startup} index={i} getStageBadgeVariant={getStageBadgeVariant} mode={mode} />
                                  ))}
-                              </div>
+                              </TrendingRail>
                           </motion.div>
                        )}
 

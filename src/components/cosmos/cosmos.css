@@ -697,3 +697,68 @@
   .cosmos-burning::after,
   .cosmos-streak { animation: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ALIVE — the board should feel like it has a pulse
+
+   Static cards read as an archive. These are the small, cheap signals that
+   make a board feel like something is happening in it right now: a heartbeat
+   on live counters, a sheen that crosses a banner, and a breathing ring on
+   anything currently active. All are slow and low-contrast on purpose — a
+   board that flashes is a board nobody can read.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Counter that just changed — a single soft thump, not a loop. */
+@keyframes cosmos-thump {
+  0%   { transform: scale(1);    }
+  35%  { transform: scale(1.22); }
+  100% { transform: scale(1);    }
+}
+.cosmos-thump { animation: cosmos-thump 620ms cubic-bezier(0.2, 1.4, 0.4, 1); }
+
+/* Slow sheen crossing a banner. Reads as light moving over a surface. */
+@keyframes cosmos-sheen {
+  0%   { transform: translateX(-130%) skewX(-18deg); }
+  100% { transform: translateX(230%)  skewX(-18deg); }
+}
+.cosmos-alive-banner { position: relative; overflow: hidden; }
+.cosmos-alive-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 38%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+  animation: cosmos-sheen 5.5s ease-in-out infinite;
+  animation-delay: var(--sheen-delay, 0s);
+  pointer-events: none;
+}
+
+/* Live dot — for "3 people viewing", "active now". */
+@keyframes cosmos-live-ring {
+  0%   { box-shadow: 0 0 0 0 currentColor; opacity: 0.85; }
+  70%  { box-shadow: 0 0 0 7px transparent; opacity: 1; }
+  100% { box-shadow: 0 0 0 0 transparent; opacity: 0.85; }
+}
+.cosmos-live-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  animation: cosmos-live-ring 2.1s ease-out infinite;
+}
+
+/* Cards lift and warm on hover rather than just changing border colour. */
+.cosmos-alive-card {
+  transition: transform 260ms cubic-bezier(0.22,1,0.36,1), box-shadow 260ms ease;
+}
+.cosmos-alive-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 42px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cosmos-thump,
+  .cosmos-alive-banner::after,
+  .cosmos-live-dot { animation: none; }
+  .cosmos-alive-card:hover { transform: none; }
+}
