@@ -69,7 +69,7 @@ export function WorkspaceEmptyState({
 
           {showBackToDashboard && (
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/dashboard')}
               className="w-full sm:w-auto px-6 py-3 rounded-xl border border-white/10 text-star hover:bg-white/10 text-sm font-medium transition-colors"
             >
               Return to Dashboard

@@ -72,11 +72,12 @@ export default function DesktopSidebarContent({
   const [isHovered, setIsHovered] = useState(false);
   const { hasVision, loading: visionLoading } = useUserVision();
 
-  // Workspace section item IDs — these are locked until the user registers a Vision.
-  // IDs match what sidebarCommons.jsx and links.jsx assign.
-  const WORKSPACE_LINK_IDS = new Set([5, 11, 12, 'erp', 'sf-drive', 'sf-meet']);
+  // Workspace section labels — locked until the user registers a Vision.
+  // Using LABELS not IDs because IDs vary per role-sidebar file
+  // (ERP is id=5 in member, id=11 in founder/builder, id=14 in investor/influencer).
+  const WORKSPACE_LINK_LABELS = new Set(['ERP', 'SF Drive', 'SF Meet']);
   const isWorkspaceLocked = (link) =>
-    !visionLoading && !hasVision && WORKSPACE_LINK_IDS.has(link.id);
+    !visionLoading && !hasVision && WORKSPACE_LINK_LABELS.has(link.label);
 
   // The active role owns the sidebar's accent, so which profile you're working
   // as is readable at a glance — same five colours as the landing page.
