@@ -16,6 +16,7 @@ import { createBuilderLinks } from '@/components/pages/sidebars/builderSidebar/B
 import { createInfluencerLinks } from '@/components/pages/sidebars/influencerSidebar/influencerLinks';
 import { createInvestorLinks } from '@/components/pages/sidebars/investorSidebar/InvestorLinks';
 import { filterERPModules } from '@/components/pages/sidebars/sidebarCommons';
+import { VisionWorkspaceGuard } from '@/components/workspace/VisionWorkspaceGuard';
 
 // ── Animated background particles (optional decorative element) ──────────
 const BackgroundGlow = () => (
@@ -111,7 +112,7 @@ export function ERPLayout({ activeRole, userRoles, user }) {
     );
   }
 
-  // ── No workspace ──────────────────────────────────────────────────────────
+  // ── No workspace → Task 5: redirect through Vision registration guard ──────
   if (!hasWorkspace) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center p-8">
@@ -120,12 +121,17 @@ export function ERPLayout({ activeRole, userRoles, user }) {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <CreateWorkspaceForm
-            onSuccess={() => {
-              setHasWorkspace(true);
-              navigate('/erp');
-            }}
-          />
+          <VisionWorkspaceGuard>
+            {/* Guard redirects to /vision/create if no vision exists.
+                If vision exists but workspace doesn't, CreateWorkspaceForm
+                now handles the Vision-first redirect automatically. */}
+            <CreateWorkspaceForm
+              onSuccess={() => {
+                setHasWorkspace(true);
+                navigate('/erp');
+              }}
+            />
+          </VisionWorkspaceGuard>
         </motion.div>
       </div>
     );

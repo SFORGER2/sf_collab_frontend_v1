@@ -427,6 +427,8 @@ export default function App() {
                       <Route path="my-startups" element={<DiscoverStartups myStartupsOnly={true} />} />
                       <Route path="startup-details/:id" element={<StartupDetailPage />} />
                       <Route path="vision/new" element={<VisionCreator />} />
+                      {/* Task 5: /vision/create is the canonical URL all locked-workspace CTAs point to */}
+                      <Route path="vision/create" element={<VisionCreator />} />
                       <Route path="vision/:id" element={<VisionWorkspacePage />} />
                       <Route path="vision/:id/workspace" element={<VisionWorkspacePage />} />
                       <Route path="pitch-deck" element={<PitchDeckHome />} />

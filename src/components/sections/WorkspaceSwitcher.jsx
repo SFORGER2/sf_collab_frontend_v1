@@ -2,10 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, Plus, Building2, X } from "lucide-react";
+import { ChevronDown, Building2, Sparkles } from "lucide-react";
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
-import { createPortal } from 'react-dom';
 import { workspaceAPI } from '../../services/workspaceAPI';
 import { setUser } from '../../services/auth/authSlice';
 import { fetchUserProfile } from '../../services/auth/authThunks';
@@ -18,10 +17,6 @@ const WorkspaceSwitcher = () => {
   const [workspaces, setWorkspaces] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newWorkspaceName, setNewWorkspaceName] = useState('');
-  const [newWorkspaceSlug, setNewWorkspaceSlug] = useState('');
-  const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
 
   const currentWorkspace = workspaces.find(w => w.id === currentWorkspaceId);
@@ -72,29 +67,11 @@ const WorkspaceSwitcher = () => {
     }
   };
 
-  const handleCreateWorkspace = async (e) => {
-    e.preventDefault();
-    if (!newWorkspaceName.trim()) {
-      setError('Workspace name is required');
-      return;
-    }
-    const slug = newWorkspaceSlug.trim() || newWorkspaceName.toLowerCase().replace(/\s+/g, '-');
-    setCreating(true);
-    setError('');
-    try {
-      await workspaceAPI.createWorkspace(newWorkspaceName, slug);
-      await loadWorkspaces();
-      const userData = await dispatch(fetchUserProfile()).unwrap();
-      dispatch(setUser(userData));
-      setShowCreateModal(false);
-      setNewWorkspaceName('');
-      setNewWorkspaceSlug('');
-      navigate('/erp');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create workspace');
-    } finally {
-      setCreating(false);
-    }
+  const handleCreateWorkspace = () => {
+    // Task 5: Workspace creation is only possible after registering a Vision.
+    // Redirect to Vision creation instead of opening the manual workspace form.
+    setIsOpen(false);
+    navigate('/vision/create');
   };
 
   // Optimistic toggle: UI updates immediately, reverts on error
@@ -194,15 +171,16 @@ const WorkspaceSwitcher = () => {
               )}
             </div>
 
-            <div className="border-t border-[#262626] p-2">
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-400 hover:bg-[#262626] rounded-lg transition-colors"
-              >
-                <Plus size={16} />
-                Create New Workspace
-              </button>
-            </div>
+              <div className="border-t border-[#262626] p-2">
+                {/* Task 5: Create Workspace only via Vision — redirect to Vision creator */}
+                <button
+                  onClick={handleCreateWorkspace}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gold hover:bg-[#262626] rounded-lg transition-colors"
+                >
+                  <Sparkles size={16} />
+                  Create Vision to Unlock Workspace
+                </button>
+              </div>
           </div>
         }
         visible={isOpen}
@@ -232,79 +210,6 @@ const WorkspaceSwitcher = () => {
           <ChevronDown size={14} />
         </button>
       </Tippy>
-
-      {/* Create workspace modal */}
-      {showCreateModal &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
-          >
-            <div className="bg-[#1a1a1a] border border-[#262626] rounded-2xl p-8 w-full max-w-md shadow-2xl relative z-[99999]">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-white">Create New Workspace</h2>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              <form onSubmit={handleCreateWorkspace}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Workspace Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={newWorkspaceName}
-                    onChange={(e) => setNewWorkspaceName(e.target.value)}
-                    className="w-full bg-[#0a0a0a] border border-[#262626] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
-                    placeholder="My Workspace"
-                    autoFocus
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Slug (URL identifier)
-                  </label>
-                  <input
-                    type="text"
-                    value={newWorkspaceSlug}
-                    onChange={(e) => setNewWorkspaceSlug(e.target.value)}
-                    className="w-full bg-[#0a0a0a] border border-[#262626] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
-                    placeholder="my-workspace"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Auto‑generated from name. Can be edited.
-                  </p>
-                </div>
-                {error && (
-                  <div className="mb-4 p-2 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-                    {error}
-                  </div>
-                )}
-                <div className="flex gap-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    className="flex-1 py-2 bg-[#262626] text-white rounded-lg hover:bg-[#333] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={creating || !newWorkspaceName.trim()}
-                    className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                  >
-                    {creating ? 'Creating...' : 'Create Workspace'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>,
-          document.body
-        )}
 
       {/* Custom scrollbar styles */}
       <style>{`
