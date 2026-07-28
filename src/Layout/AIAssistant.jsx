@@ -170,7 +170,7 @@ const ErrorBanner = ({ message, isBusy, onRetry }) => (
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function AIAssistant({ isOpen, onClose, isMobile = false, callback = () => {} }) {
+export default function AIAssistant({ isOpen, onClose }) {
   const { user: currentUser } = useSelector((state) => state.auth);
 
 
@@ -407,10 +407,7 @@ export default function AIAssistant({ isOpen, onClose, isMobile = false, callbac
                 </div>
 
                 <button
-                  onClick={() => {
-                    onClose();
-                    if (isMobile) callback();
-                  }}
+                  onClick={onClose}
                   className={cn(
                     'p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition-all duration-200',
                     FOCUS_RING
