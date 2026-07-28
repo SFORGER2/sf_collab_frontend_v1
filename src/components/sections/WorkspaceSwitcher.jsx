@@ -38,15 +38,8 @@ const WorkspaceSwitcher = () => {
     if (isOpen) loadWorkspaces();
   }, [isOpen, user]);
 
-  useEffect(() => {
-    if (newWorkspaceName) {
-      const generatedSlug = newWorkspaceName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
-      setNewWorkspaceSlug(generatedSlug);
-    }
-  }, [newWorkspaceName]);
+
+
 
   const handleSwitch = async (workspaceId) => {
     setLoading(true);
