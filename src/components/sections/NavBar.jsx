@@ -170,6 +170,12 @@ const NavBar = ({
             {/* App Launcher */}
             <AppLauncher links={links} />
 
+            {/* Workspace Switcher — desktop only. Lets users switch workspaces and
+                shows "Create Vision" CTA for users without a registered Vision. */}
+            <div className="hidden md:block">
+              <WorkspaceSwitcher />
+            </div>
+
             {/* AI Assistant */}
             {/* Violet is the intelligence layer's colour — anything AI wears it */}
             <button
