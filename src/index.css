@@ -11,18 +11,65 @@
 }
 
 @theme {
-  /* Primary Colors – for accents, highlights, and interactive elements */
-  --color-primary-accent: oklch(77.1% 95.0 203);      /* #00D5FF – Neon Blue */
-  --color-primary-highlight: oklch(55.0% 95.0 288);   /* #8C00FF – Electric Violet (slightly toned) */
-  --color-primary-alert: oklch(65.0% 90.0 326);       /* #FF00D8 – Neon Pink (slightly less intense) */
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(0 0% 0%);
+  --color-primary: hsl(0 0% 0%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(0 0% 96%);
+  --color-secondary-foreground: hsl(0 0% 0%);
+  --color-muted: hsl(0 0% 96%);
+  --color-muted-foreground: hsl(0 0% 45%);
+  --color-accent: hsl(0 0% 96%);
+  --color-accent-foreground: hsl(0 0% 0%);
+  --color-destructive: hsl(0 84% 60%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-success: hsl(142 76% 36%);
+  --color-success-foreground: hsl(0 0% 100%);
+  --color-border: hsl(0 0% 90%);
+  --color-ring: hsl(0 0% 0%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(0 0% 0%);
+  --color-card-hover: hsl(0 0% 98%);
+  --color-nav: hsl(0 0% 100%);
+  --color-nav-border: hsl(0 0% 90%);
+  --color-brand: #503c8c;
+  --color-brand-foreground: hsl(0 0% 100%);
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 2rem;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-heading: "Audiowide", "Trade Winds", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+}
 
-  /* Secondary Colors – backgrounds, text, and supporting UI elements */
-  --color-secondary-accent: oklch(85.0% 80.0 147);    /* #00E568 – Energy Green (slightly softer) */
-  --color-secondary-dark: oklch(15.0% 50.0 289);      /* #2B0057 – Deep Space Purple */
-  --color-secondary-black: oklch(0.5% 2.0 270);       /* #000012 – Black Void */
-  --color-secondary-light: oklch(98.8% 1.2 268);      /* #F2F2FF – Star White */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: hsl(0 0% 0%);
+    --color-foreground: hsl(0 0% 100%);
+    --color-primary: hsl(0 0% 100%);
+    --color-primary-foreground: hsl(0 0% 0%);
+    --color-secondary: hsl(0 0% 15%);
+    --color-secondary-foreground: hsl(0 0% 100%);
+    --color-muted: hsl(0 0% 15%);
+    --color-muted-foreground: hsl(0 0% 65%);
+    --color-accent: hsl(0 0% 15%);
+    --color-accent-foreground: hsl(0 0% 100%);
+    --color-border: hsl(0 0% 20%);
+    --color-ring: hsl(0 0% 100%);
+    --color-card: hsl(0 0% 5%);
+    --color-card-foreground: hsl(0 0% 100%);
+    --color-card-hover: hsl(0 0% 10%);
+    --color-nav: hsl(0 0% 5%);
+    --color-nav-border: hsl(0 0% 20%);
+    --color-destructive: hsl(0 72% 51%);
+    --color-success: hsl(142 76% 36%);
 
-  --font-inter: 'Inter', sans-serif;
+  }
 }
 
 /* ==========================================================================
@@ -247,11 +294,24 @@ h1, h2, h3, h4, h5, h6 {
 html {
   overflow: hidden;
 }
+
 body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-y: scroll;
   overflow-x: hidden;
   height: 100vh;
 }
+
+::selection {
+  background-color: var(--color-foreground);
+  color: var(--color-background);
+}
+
+/* ============================================ */
+/* SCROLLBAR THEME - DARK SPACE DESIGN          */
+/* ============================================ */
 
 /* HTML and Body scrollbar for landing page and website theme */
 html::-webkit-scrollbar,
@@ -286,86 +346,77 @@ html, body {
   scrollbar-color: #8b6cff rgba(13, 10, 26, 0.65) !important;
 }
 
-/* Custom Workspace Scrollbar styling for collaboration workspace */
+/* Landing page - body scrolls but scrollbar is hidden */
+body.hide-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+
+body.hide-scrollbar {
+  scrollbar-width: none !important;
+  overflow-y: scroll !important;
+}
+
+/* Hide body scrollbar on landing page */
+body:has(#root > .landing-page)::-webkit-scrollbar {
+  display: none !important;
+}
+
+body:has(#root > .landing-page) {
+  scrollbar-width: none !important;
+}
+
+/* Custom Workspace Scrollbar */
 .custom-workspace-scrollbar::-webkit-scrollbar {
   width: 10px !important;
   height: 10px !important;
 }
+
 .custom-workspace-scrollbar::-webkit-scrollbar-track {
   background: rgba(13, 10, 26, 0.65) !important;
   border-radius: 10px !important;
 }
+
 .custom-workspace-scrollbar::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #ffbf5e 0%, #8b6cff 55%, #4fd8ff 100%) !important;
   border-radius: 10px !important;
   border: 2px solid rgba(139, 108, 255, 0.35) !important;
   box-shadow: 0 0 8px rgba(139, 108, 255, 0.28) !important;
 }
+
 .custom-workspace-scrollbar::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #ffcf7d 0%, #a68bff 55%, #8ce5ff 100%) !important;
   border: 2px solid rgba(79, 216, 255, 0.5) !important;
   box-shadow: 0 0 12px rgba(139, 108, 255, 0.45) !important;
 }
+
 .custom-workspace-scrollbar {
   scrollbar-width: thin !important;
   scrollbar-color: #8b6cff rgba(13, 10, 26, 0.65) !important;
 }
 
+/* ============================================ */
 
-/* Landing page - body scrolls but scrollbar is hidden */
-body.hide-scrollbar::-webkit-scrollbar {
-  display: none !important;
-}
-body.hide-scrollbar {
-  scrollbar-width: none !important;
-  overflow-y: scroll !important;
-}
-
+/* Tippy tooltip styles */
 label {
   all: unset;
   color: white;
 }
-/* Add this in your globals.css or tailwind.css */
-
 
 .tippy-box[data-theme~='custom-dark'] {
-  background: #78787900;   /* slate-900 */
-
+  background: #78787900;
   color: white;
-  /* border: 1px solid #334155;   slate-700 */
-  padding:0;
+  padding: 0;
   border-radius: 20px;
 }
-/* .qs{
-background:rgba(58, 58, 58, 0.283);
-backdrop-filter: blur(10);
-} */
-
 
 .tippy-box[data-theme~='custom-dark'] .tippy-arrow {
-  background:rgba(58, 58, 58, 0.098);
+  background: rgba(58, 58, 58, 0.098);
   backdrop-filter: blur(10px);
-  z-index:9999999999999999999999 !important;
-
-}
-
-.tippy-box[data-theme~='custom'] {
-  background: rgba(58, 58, 58, 0.514);   /* slate-900 */
-  
-  /* color: white; */
-  border: 1px solid #334155;   
-  padding:0;
-  backdrop-filter: blur(10px);
-  
-  border-radius: 20px;
-  z-index:9999999999999999999999 !important;
-
+  z-index: 9999999999999999999999 !important;
 }
 
 .tippy-box[data-theme~='custom'] .tippy-arrow {
-  /* background: ; */
   backdrop-filter: blur(10px);
-  /* z-index:99999999 !important; */
 }
 
 /* ============================================ */
@@ -440,39 +491,40 @@ body:has(#root > .landing-page) {
   .scrollbar-hide::-webkit-scrollbar {
     display: none !important;
   }
+
   .scrollbar-hide {
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;
   }
 
-  /* Visible scrollbar for sidebar when open */
   .scrollbar-visible::-webkit-scrollbar {
     width: 8px !important;
     display: block !important;
   }
+
   .scrollbar-visible::-webkit-scrollbar-track {
     background: rgba(13, 10, 26, 0.65) !important;
     border-radius: 10px !important;
   }
+
   .scrollbar-visible::-webkit-scrollbar-thumb {
     background: linear-gradient(180deg, #ffbf5e 0%, #8b6cff 55%, #4fd8ff 100%) !important;
     border-radius: 10px !important;
     border: 2px solid rgba(139, 108, 255, 0.35) !important;
     box-shadow: 0 0 8px rgba(139, 108, 255, 0.28) !important;
   }
+
   .scrollbar-visible::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(180deg, #ffcf7d 0%, #a68bff 55%, #8ce5ff 100%) !important;
     border: 2px solid rgba(79, 216, 255, 0.5) !important;
     box-shadow: 0 0 12px rgba(139, 108, 255, 0.45) !important;
   }
+
   .scrollbar-visible {
     scrollbar-width: thin !important;
     scrollbar-color: #8b6cff rgba(13, 10, 26, 0.65) !important;
   }
 }
-
-
-
 
 /* Line clamp utilities */
 .line-clamp-1 {
@@ -639,7 +691,6 @@ input[type="datetime-local"] {
   color-scheme: light;
 }
 
-/* Chrome / Edge / Brave */
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
@@ -648,8 +699,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 }
 
 /* ============================================ */
-/* PROJECT DETAILS BADGE HOVER EFFECTS           */
-/* Flat CSS to bypass Tailwind v4 nesting issue  */
+/* BADGE & TAG HOVER EFFECTS                    */
 /* ============================================ */
 
 .role-tag {
@@ -698,7 +748,10 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   transform: scale(1.05);
 }
 
-/* Container boxes for Required Roles & Tech Stack */
+/* ============================================ */
+/* CONTAINER BOXES                              */
+/* ============================================ */
+
 .roles-container {
   padding: 1.25rem;
   border-radius: 1rem;
@@ -706,6 +759,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   border: 1px solid rgba(79, 216, 255, 0.12);
   transition: border-color 400ms ease, box-shadow 400ms ease, background-color 400ms ease;
 }
+
 .roles-container:hover {
   border-color: rgba(79, 216, 255, 0.2);
   box-shadow: 0 0 12px rgba(79, 216, 255, 0.05), inset 0 0 8px rgba(79, 216, 255, 0.03);
@@ -719,6 +773,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   border: 1px solid rgba(139, 108, 255, 0.1);
   transition: border-color 400ms ease, box-shadow 400ms ease, background-color 400ms ease;
 }
+
 .tech-container:hover {
   border-color: rgba(139, 108, 255, 0.2);
   box-shadow: 0 0 12px rgba(139, 108, 255, 0.04), inset 0 0 8px rgba(139, 108, 255, 0.02);
@@ -732,6 +787,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   border: 1px solid rgba(255, 191, 94, 0.1);
   transition: border-color 400ms ease, box-shadow 400ms ease, background-color 400ms ease;
 }
+
 .problem-container:hover {
   border-color: rgba(255, 191, 94, 0.2);
   box-shadow: 0 0 12px rgba(255, 191, 94, 0.04), inset 0 0 8px rgba(255, 191, 94, 0.02);
@@ -745,13 +801,13 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   border: 1px solid rgba(62, 230, 160, 0.1);
   transition: border-color 400ms ease, box-shadow 400ms ease, background-color 400ms ease;
 }
+
 .solution-container:hover {
   border-color: rgba(62, 230, 160, 0.2);
   box-shadow: 0 0 12px rgba(62, 230, 160, 0.04), inset 0 0 8px rgba(62, 230, 160, 0.02);
   background-color: rgba(62, 230, 160, 0.04);
 }
 
-/* Overview container */
 .overview-container {
   padding: 1.25rem;
   border-radius: 1rem;
