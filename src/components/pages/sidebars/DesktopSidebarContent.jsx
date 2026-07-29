@@ -1,10 +1,11 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import BottomLinks from "./BottomLinks";
-import { Crown, Lock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Crown, Lock, ChevronDown, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { getAllRoutes } from "./sidebar/links";
 import { useState } from "react";
 import { roleAccent, roleAccentVars } from "@/components/cosmos";
+import { useUserVision } from "@/hooks/useUserVision";
 
 /**
  * `< 2/4 >` stepper for people who hold more than one role.
@@ -69,6 +70,14 @@ export default function DesktopSidebarContent({
   const location = useLocation();
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
+  const { hasVision, loading: visionLoading } = useUserVision();
+
+  // Workspace section labels — locked until the user registers a Vision.
+  // Using LABELS not IDs because IDs vary per role-sidebar file
+  // (ERP is id=5 in member, id=11 in founder/builder, id=14 in investor/influencer).
+  const WORKSPACE_LINK_LABELS = new Set(['ERP', 'SF Drive', 'SF Meet']);
+  const isWorkspaceLocked = (link) =>
+    !visionLoading && !hasVision && WORKSPACE_LINK_LABELS.has(link.label);
 
   // The active role owns the sidebar's accent, so which profile you're working
   // as is readable at a glance — same five colours as the landing page.
@@ -120,6 +129,41 @@ export default function DesktopSidebarContent({
             // are not real nav items — skip them so they don't create a gap or label.
             if (link.isSection) {
               return null;
+            }
+
+            // Task 5: Workspace links are locked until user registers a Vision
+            if (isWorkspaceLocked(link)) {
+              return (
+                <div key={link.id}>
+                  <button
+                    onClick={() => navigate('/vision/create')}
+                    title="Create a Vision to unlock this Workspace feature"
+                    className={`
+                      w-full flex items-center
+                      ${isHovered ? "gap-3 px-3 justify-start" : "justify-center px-0"}
+                      py-3 rounded-lg transition-colors min-w-0
+                      text-slate-600 hover:text-gold hover:bg-gold/5
+                      opacity-60 hover:opacity-90
+                    `}
+                  >
+                    <div className="flex items-center justify-center w-6">
+                      <Lock size={20} className="text-slate-600" />
+                    </div>
+                    {isHovered && (
+                      <>
+                        <motion.span
+                          initial={false}
+                          animate={{ opacity: 1 }}
+                          className="text-xs font-medium whitespace-nowrap overflow-hidden text-slate-500"
+                        >
+                          {link.label}
+                        </motion.span>
+                        <Sparkles size={12} className="ml-auto text-gold/60 shrink-0" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              );
             }
 
             // FIX: removed duplicate declarations; expandedId → expandedItems[link.id]

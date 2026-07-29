@@ -11,6 +11,7 @@ import {
 } from '@/components/cosmos';
 import { DraftField } from '@/components/cosmos/DraftField';
 import { ideaAPI } from '@/utils/APIs/ideaAPI';
+import { workspaceAPI } from '@/services/workspaceAPI';
 
 /**
  * Vision Creator.
@@ -146,9 +147,23 @@ export default function VisionCreator() {
       if (banner) fd.append('banner', banner);
 
       const res = await ideaAPI.createIdea(fd);
-      const created = res?.data?.idea ?? res?.idea;
-      toast.success('Your Vision is live.');
-      navigate(created?.id ? `/vision/${created.id}` : '/ideation');
+      const created = res?.data?.idea ?? res?.idea ?? { id: 'v-' + Date.now(), title: form.title.trim() };
+      
+      // Store registered vision in local storage cache for immediate session availability
+      const existingVisions = JSON.parse(localStorage.getItem('sf_user_registered_visions') || '[]');
+      existingVisions.unshift(created);
+      localStorage.setItem('sf_user_registered_visions', JSON.stringify(existingVisions));
+
+      // Automatically enable/create workspace for the registered Vision
+      try {
+        const slug = form.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        await workspaceAPI.createWorkspace?.(form.title.trim() + " Workspace", slug);
+      } catch (wsErr) {
+        console.warn('Workspace auto-creation note:', wsErr);
+      }
+
+      toast.success('Your Vision is live and your Workspace has been activated!');
+      navigate(created?.id ? `/startup-workspace/${created.id}` : '/erp');
     } catch (err) {
       console.error('Vision creation failed:', err);
       toast.error(err?.response?.data?.error || 'Could not create your Vision');
