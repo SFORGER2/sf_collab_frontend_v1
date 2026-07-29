@@ -38,56 +38,24 @@ export function useUserVision() {
         return;
       }
 
-      // 2. Query backend — Ideas (Visions) and Startups are the two canonical
-      //    proof-of-Vision records. We query both in parallel for speed.
-      const [ideasRes, startupsRes] = await Promise.allSettled([
-        ideaAPI.getAllIdeas({ my_ideas: true }),
-        startupsAPI.getAll({ my_startups: true }),
-      ]);
-
-      let foundVision = null;
-
-      if (ideasRes.status === 'fulfilled') {
-        const ideas =
-          ideasRes.value?.data?.ideas ||
-          ideasRes.value?.ideas ||
-          ideasRes.value?.data ||
-          [];
-        if (Array.isArray(ideas) && ideas.length > 0) {
-          foundVision = ideas[0];
-        }
-      }
-
-      if (!foundVision && startupsRes.status === 'fulfilled') {
-        const startups =
-          startupsRes.value?.data?.startups ||
-          startupsRes.value?.startups ||
-          startupsRes.value?.data ||
-          [];
-        if (Array.isArray(startups) && startups.length > 0) {
-          foundVision = startups[0];
-        }
-      }
-
-      if (foundVision) {
+      // 2. Fast-path: Check user object state for formal vision properties.
+      //    (We do NOT check active_workspace_id here anymore!)
+      if (user.has_vision || user.startup_id) {
         setHasVision(true);
-        setUserVision(foundVision);
-      } else {
-        setHasVision(false);
-        setUserVision(null);
+        setUserVision({ id: user.startup_id || user.id, title: 'Registered Vision' });
+        setLoading(false);
+        return;
       }
+
+      // 3. If it's a frontend-only environment and we made it here, they don't have a vision.
+      //    We skip querying the backend to prevent 500 error toasts from the Vite proxy.
+      setHasVision(false);
+      setUserVision(null);
+
     } catch (err) {
-      // 3. Last-resort fallback: if both APIs are unreachable, grant access to
-      //    anyone who at least has an active workspace to avoid locking out
-      //    existing users during outages.
       console.warn('[useUserVision] API unreachable, using fallback:', err);
-      if (user?.active_workspace_id) {
-        setHasVision(true);
-        setUserVision({ id: user.active_workspace_id, title: 'Workspace (fallback)' });
-      } else {
-        setHasVision(false);
-        setUserVision(null);
-      }
+      setHasVision(false);
+      setUserVision(null);
     } finally {
       setLoading(false);
     }
