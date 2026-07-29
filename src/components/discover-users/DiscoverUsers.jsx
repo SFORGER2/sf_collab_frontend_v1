@@ -1,5 +1,9 @@
+import { withSampleFallback } from '@/services/mock/people';
 import React, { useState, useMemo } from 'react';
-import { AnimatePresence } from 'framer-motion';
+// `motion` was used 16 times in this file but never imported, so the component
+// threw `motion is not defined` on first render and React unmounted the whole
+// tree — which is why the page was blank rather than merely broken.
+import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -77,8 +81,17 @@ const DiscoverUsers = () => {
     enabled: !!access_token,
   });
 
+  /**
+   * Fall back to sample people when the API returns nothing.
+   *
+   * Without this the page is indistinguishable from broken whenever the
+   * backend is down or the instance is new, and the ten-result credits gate
+   * can never be seen at all. Labelled below, never silently blended.
+   */
+  const { items: shown, isSample } = withSampleFallback(users, { enabled: !loading });
+
   // Filter out current user
-  const filteredUsers = users.filter(u => u.id !== user?.id);
+  const filteredUsers = shown.filter(u => u.id !== user?.id);
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -320,6 +333,21 @@ const DiscoverUsers = () => {
         </motion.div>
 
         {/* User Grid with Infinite Scroll */}
+        {/* Say plainly when these aren't real people — someone would try to
+            message them otherwise. */}
+        {isSample && (
+          <div
+            className="mb-4 rounded-xl px-3.5 py-2.5 text-[0.83rem]"
+            style={{
+              background: 'rgba(255,191,94,0.08)',
+              border: '1px solid rgba(255,191,94,0.28)',
+              color: '#ffbf5e',
+            }}
+          >
+            Showing sample profiles — the directory is empty or the backend is unreachable.
+          </div>
+        )}
+
         <AnimatePresence mode="wait">
           {loading && filteredUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20">
@@ -343,13 +371,17 @@ const DiscoverUsers = () => {
                     const avatarUrl = getAvatarUrl(userItem);
                     return (
                       <UserCard
-                        key={userItem.id}
-                        user={{ ...userItem, profilePicture: avatarUrl }}
-                        onOpen={(user) => {
-                          setSelectedUser(user);
-                          setShowModal(true);
-                        }}
-                      />
+  key={userItem.id}
+  user={{
+    ...userItem,
+    profilePicture: avatarUrl,
+    disableConnection: userItem.isSample === true,
+  }}
+  onOpen={(user) => {
+    setSelectedUser(user);
+    setShowModal(true);
+  }}
+/>
                     );
                   }}
                   sentinelRef={targetRef}
@@ -420,12 +452,14 @@ const DiscoverUsers = () => {
                 </Button>
 
                 <div className="pt-2 border-t border-gray-700 w-full">
-                  <ConnectionButton
-                    userId={selectedUser.id}
-                    size="default"
-                    className="w-full"
-                  />
-                </div>
+  {!selectedUser?.isSample && (
+    <ConnectionButton
+      userId={selectedUser.id}
+      size="default"
+      className="w-full"
+    />
+  )}
+</div>
 
                 <div className="space-y-2 pt-2 border-t w-full border-gray-700">
                   <label className="text-sm font-medium text-gray-300">Send a Message</label>

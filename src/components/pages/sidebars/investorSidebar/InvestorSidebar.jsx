@@ -18,6 +18,7 @@ const InvestorSidebar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin, user
       unreadMessagesCount={unreadMessagesCount}
       links={links || localLinks}
       isAdmin={isAdmin}
+      role="investor"
     />
   );
 };

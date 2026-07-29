@@ -1,3 +1,5 @@
+import { init as initTheme } from './services/theme/theme';
+initTheme();
 //import { createRoot } from "react-dom/client";
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client'; 

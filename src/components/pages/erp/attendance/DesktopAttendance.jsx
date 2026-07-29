@@ -1,22 +1,43 @@
 /**
- * AttendancePage.jsx — SFCollab ERP
- * Covers: My Attendance (clock-in/out + history) + Workspace Attendance (admin)
- * API wiring: attendance.py routes at /api/attendance/*
- * Auth: uses existing JWT via interceptors.js (requestInterceptor / responseInterceptor)
+ * DesktopAttendance.jsx — SFCollab ERP
+ * Personal + Workspace attendance (desktop)
+ * Uses active_workspace_id from Redux user.
  */
 
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
+import {
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
+  RefreshCw,
+} from "lucide-react";
 
-// ── Shared interceptor setup (match existing SFCollab pattern) ────────────────
-import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../../utils/APIs/interceptors";
+import {
+  requestInterceptor,
+  responseInterceptor,
+  responseErrorInterceptor,
+} from "../../../../utils/APIs/interceptors";
+
+// ── Shared UI components ──
+import {
+  PageHeader,
+  GlassCard,
+  StatCard,
+  Button,
+  Badge,
+  Spinner,
+  EmptyState,
+} from "@/components/erp/ui";
 
 const api = axios.create({ baseURL: "/api" });
 api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────
 const fmt = (iso) => {
   if (!iso) return "—";
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -25,29 +46,98 @@ const fmtDate = (iso) => {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
 };
-const statusColor = {
+
+const STATUS_CONFIG = {
+  present: { label: "Present", color: "green", icon: "✅" },
+  late: { label: "Late", color: "yellow", icon: "⚠️" },
+  absent: { label: "Absent", color: "red", icon: "❌" },
+  not_clocked_in: { label: "Not Clocked In", color: "gray", icon: "⏰" },
+};
+
+const statusColorMap = {
   present: "#22c55e",
   late: "#f59e0b",
   absent: "#ef4444",
   not_clocked_in: "#6b7280",
 };
-const statusLabel = {
-  present: "Present",
-  late: "Late",
-  absent: "Absent",
-  not_clocked_in: "Not Clocked In",
+
+// ── Shared sub‑components ──────────────────────────────────────────────────
+const StatusPill = ({ status }) => {
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.not_clocked_in;
+  return <Badge color={cfg.color}>{cfg.icon} {cfg.label}</Badge>;
 };
 
-// ═════════════════════════════════════════════════════════════════════════════
-// MY ATTENDANCE PAGE
-// ═════════════════════════════════════════════════════════════════════════════
-export function MyAttendancePage() {
-  const { user } = useSelector((s) => s.auth);
-  // Use active workspace or fallback to user.id
-  const workspaceId = user?.active_workspace_id || user?.id;
+const AttendanceTable = ({ records, showUser = false }) => {
+  if (!records.length) {
+    return (
+      <EmptyState
+        icon="📋"
+        title="No records"
+        description="No attendance records found for this period."
+      />
+    );
+  }
 
-  const [today, setToday] = useState(null);       // GET /api/attendance/today-status
-  const [history, setHistory] = useState([]);     // GET /api/attendance/history
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead className="text-zinc-400 border-b border-zinc-800">
+          <tr>
+            {showUser && <th className="text-left py-3 px-4 font-medium">Member</th>}
+            <th className="text-left py-3 px-4 font-medium">Date</th>
+            <th className="text-left py-3 px-4 font-medium">Status</th>
+            <th className="text-left py-3 px-4 font-medium">Clock In</th>
+            <th className="text-left py-3 px-4 font-medium">Clock Out</th>
+            <th className="text-left py-3 px-4 font-medium">Hours</th>
+          </tr>
+        </thead>
+        <tbody>
+          {records.map((r) => (
+            <tr key={r.id} className="border-b border-zinc-800 hover:bg-zinc-900/30 transition-colors">
+              {showUser && <td className="py-3 px-4 text-zinc-300">{r.user?.name || "—"}</td>}
+              <td className="py-3 px-4 text-zinc-300">{fmtDate(r.date)}</td>
+              <td className="py-3 px-4">
+                <StatusPill status={r.status} />
+              </td>
+              <td className="py-3 px-4 text-zinc-300">{fmt(r.clock_in_time)}</td>
+              <td className="py-3 px-4 text-zinc-300">{fmt(r.clock_out_time)}</td>
+              <td className="py-3 px-4 text-zinc-300">{r.duration_hours ? `${r.duration_hours}h` : "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+// ── Banner ──────────────────────────────────────────────────────────────────
+const Banner = ({ type, children }) => {
+  const styles = {
+    success: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+    error: "bg-red-500/10 border-red-500/20 text-red-400",
+    info: "bg-blue-500/10 border-blue-500/20 text-blue-400",
+  };
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className={`p-4 rounded-xl border ${styles[type] || styles.info} mb-4`}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MY ATTENDANCE PAGE (Personal)
+// ═══════════════════════════════════════════════════════════════════════════
+export function MyAttendancePage() {
+  const user = useSelector((state) => state.auth.user);
+  const workspaceId = user?.active_workspace_id;
+
+  const [today, setToday] = useState(null);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -65,7 +155,7 @@ export function MyAttendancePage() {
       const { data } = await api.get("/attendance/today-status", {
         params: { workspace_id: workspaceId },
       });
-      setToday(data);
+      setToday(data.data || {});
     } catch (e) {
       flash(e?.response?.data?.error || "Could not load today's status", true);
     }
@@ -77,8 +167,10 @@ export function MyAttendancePage() {
       const { data } = await api.get("/attendance/history", {
         params: { workspace_id: workspaceId, limit: 30 },
       });
-      setHistory(data.records || []);
-    } catch {/* silent */ }
+      setHistory(data.data?.records || []);
+    } catch (e) {
+      // silent
+    }
   }, [workspaceId]);
 
   useEffect(() => {
@@ -112,83 +204,90 @@ export function MyAttendancePage() {
     }
   };
 
-  if (loading) return <PageLoader label="Loading attendance…" />;
+  if (loading) return <Spinner label="Loading attendance…" />;
 
   const att = today?.attendance || {};
   const isHoliday = today?.is_holiday;
 
   return (
-    <div style={styles.page}>
-      <PageHeader title="My Attendance" sub={new Date().toDateString()} />
+    <div className="min-h-screen bg-[#0a0a0a] text-white p-6">
+      <div className="max-w-4xl mx-auto">
+        <PageHeader title="My Attendance" subtitle={new Date().toDateString()} />
 
-      {/* Flash messages */}
-      {notice && <Banner type="success">{notice}</Banner>}
-      {error  && <Banner type="error">{error}</Banner>}
+        <AnimatePresence>
+          {notice && <Banner type="success">{notice}</Banner>}
+          {error && <Banner type="error">{error}</Banner>}
+          {isHoliday && (
+            <Banner type="info">
+              🎉 Today is a holiday: <strong>{today.holiday?.name}</strong>. No attendance required.
+            </Banner>
+          )}
+        </AnimatePresence>
 
-      {/* Holiday notice */}
-      {isHoliday && (
-        <Banner type="info">🎉 Today is a holiday: <strong>{today.holiday?.name}</strong>. No attendance required.</Banner>
-      )}
-
-      {/* Today's card */}
-      <div style={styles.grid2}>
-        <StatCard
-          label="Today's Status"
-          value={statusLabel[att.status] || "—"}
-          accent={statusColor[att.status] || "#6b7280"}
-          sub={att.status === "late" ? `Threshold: 09:00` : undefined}
-        />
-        <StatCard
-          label="Hours Worked"
-          value={att.duration_hours ? `${att.duration_hours}h` : "—"}
-          accent="#6366f1"
-          sub={att.clock_in_time ? `In: ${fmt(att.clock_in_time)}` : "Not clocked in yet"}
-        />
-      </div>
-
-      {/* Clock buttons */}
-      <div style={styles.card}>
-        <h3 style={styles.cardTitle}>Clock Actions</h3>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <ActionButton
-            label="Clock In"
-            icon="⏱"
-            disabled={!today?.can_clock_in || actionLoading}
-            onClick={clockIn}
-            color="#22c55e"
+        {/* Stats Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <StatCard
+            icon={Clock}
+            label="Today's Status"
+            value={STATUS_CONFIG[att.status]?.label || "—"}
+            accent={statusColorMap[att.status] || "#6b7280"}
+            sub={att.status === "late" ? "Threshold: 09:00" : undefined}
           />
-          <ActionButton
-            label="Clock Out"
-            icon="🏁"
-            disabled={!today?.can_clock_out || actionLoading}
-            onClick={clockOut}
-            color="#ef4444"
+          <StatCard
+            icon={Clock}
+            label="Hours Worked"
+            value={att.duration_hours ? `${att.duration_hours}h` : "—"}
+            accent="#6366f1"
+            sub={att.clock_in_time ? `In: ${fmt(att.clock_in_time)}` : "Not clocked in yet"}
           />
         </div>
-        {att.clock_in_time && (
-          <p style={styles.meta}>
-            Clocked in at <strong>{fmt(att.clock_in_time)}</strong>
-            {att.clock_out_time && <> · Clocked out at <strong>{fmt(att.clock_out_time)}</strong></>}
-          </p>
-        )}
-      </div>
 
-      {/* History table */}
-      <div style={styles.card}>
-        <h3 style={styles.cardTitle}>Attendance History</h3>
-        <AttendanceTable records={history} />
+        {/* Clock Actions */}
+        <GlassCard className="mb-6">
+          <h3 className="text-sm font-semibold text-white mb-4">Clock Actions</h3>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="success"
+              disabled={!today?.can_clock_in || actionLoading}
+              onClick={clockIn}
+              className="flex items-center gap-2"
+            >
+              <Clock size={18} /> Clock In
+            </Button>
+            <Button
+              variant="danger"
+              disabled={!today?.can_clock_out || actionLoading}
+              onClick={clockOut}
+              className="flex items-center gap-2"
+            >
+              <Clock size={18} /> Clock Out
+            </Button>
+          </div>
+          {att.clock_in_time && (
+            <p className="text-xs text-zinc-500 mt-4">
+              Clocked in at <strong className="text-zinc-300">{fmt(att.clock_in_time)}</strong>
+              {att.clock_out_time && (
+                <> · Clocked out at <strong className="text-zinc-300">{fmt(att.clock_out_time)}</strong></>
+              )}
+            </p>
+          )}
+        </GlassCard>
+
+        {/* History */}
+        <GlassCard>
+          <h3 className="text-sm font-semibold text-white mb-4">Attendance History</h3>
+          <AttendanceTable records={history} />
+        </GlassCard>
       </div>
     </div>
   );
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
 // WORKSPACE ATTENDANCE (Admin)
-// ═════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
 export function WorkspaceAttendancePage() {
   const { user } = useSelector((s) => s.auth);
-
-  // Use active workspace or fallback to user.id
   const workspaceId = user?.active_workspace_id || user?.id;
 
   const [records, setRecords] = useState([]);
@@ -199,7 +298,8 @@ export function WorkspaceAttendancePage() {
   const [error, setError] = useState(null);
 
   const flash = (msg, isError = false) => {
-    if (isError) setError(msg); else setNotice(msg);
+    if (isError) setError(msg);
+    else setNotice(msg);
     setTimeout(() => { setError(null); setNotice(null); }, 4000);
   };
 
@@ -216,7 +316,7 @@ export function WorkspaceAttendancePage() {
         }),
       ]);
       setRecords(recs.data.records || []);
-      setSummary(sum.data);
+      setSummary(sum.data.data);
     } catch (e) {
       flash(e?.response?.data?.error || "Failed to load workspace attendance", true);
     } finally {
@@ -240,215 +340,55 @@ export function WorkspaceAttendancePage() {
     }
   };
 
+  if (loading) return <Spinner label="Loading workspace attendance…" />;
+
   return (
-    <div style={styles.page}>
-      <PageHeader title="Workspace Attendance" sub="Admin view — all members" />
+    <div className="min-h-screen bg-[#0a0a0a] text-white p-6">
+      <div className="max-w-5xl mx-auto">
+        <PageHeader title="Workspace Attendance" subtitle="Admin view — all members" />
 
-      {notice && <Banner type="success">{notice}</Banner>}
-      {error  && <Banner type="error">{error}</Banner>}
+        <AnimatePresence>
+          {notice && <Banner type="success">{notice}</Banner>}
+          {error && <Banner type="error">{error}</Banner>}
+        </AnimatePresence>
 
-      {/* Summary cards */}
-      {summary && (
-        <div style={styles.grid4}>
-          <StatCard label="Present" value={summary.present ?? "—"} accent="#22c55e" />
-          <StatCard label="Late"    value={summary.late    ?? "—"} accent="#f59e0b" />
-          <StatCard label="Absent"  value={summary.absent  ?? "—"} accent="#ef4444" />
-          <StatCard label="Total"   value={summary.total   ?? "—"} accent="#6366f1" />
-        </div>
-      )}
+        {/* Summary Stats */}
+        {summary && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            <StatCard label="Present" value={summary.present ?? "—"} accent="#22c55e" />
+            <StatCard label="Late" value={summary.late ?? "—"} accent="#f59e0b" />
+            <StatCard label="Absent" value={summary.absent ?? "—"} accent="#ef4444" />
+            <StatCard label="Total" value={summary.total ?? "—"} accent="#6366f1" />
+          </div>
+        )}
 
-      {/* Filters & actions */}
-      <div style={{ ...styles.card, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-        <label style={styles.label}>Date</label>
-        <input
-          type="date"
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-          style={styles.input}
-        />
-        <button onClick={load} style={styles.btnSecondary}>Refresh</button>
-        <button onClick={bulkMarkAbsent} style={{ ...styles.btnDanger, marginLeft: "auto" }}>
-          Bulk Mark Absent
-        </button>
+        {/* Filters & Actions */}
+        <GlassCard className="mb-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="text-sm text-zinc-400 font-medium">Date</label>
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500/50"
+            />
+            <Button variant="secondary" onClick={load}>
+              Refresh
+            </Button>
+            <Button variant="danger" onClick={bulkMarkAbsent} className="ml-auto">
+              Bulk Mark Absent
+            </Button>
+          </div>
+        </GlassCard>
+
+        {/* Member Table */}
+        <GlassCard>
+          <h3 className="text-sm font-semibold text-white mb-4">
+            Member Attendance — {fmtDate(dateFilter)}
+          </h3>
+          <AttendanceTable records={records} showUser />
+        </GlassCard>
       </div>
-
-      {/* Table */}
-      <div style={styles.card}>
-        <h3 style={styles.cardTitle}>Member Attendance — {fmtDate(dateFilter)}</h3>
-        {loading ? <PageLoader label="Loading…" inline /> : <AttendanceTable records={records} showUser />}
-      </div>
     </div>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Shared sub-components
-// ─────────────────────────────────────────────────────────────────────────────
-
-function AttendanceTable({ records, showUser = false }) {
-  if (!records.length)
-    return <p style={styles.empty}>No attendance records found.</p>;
-
-  return (
-    <div style={styles.tableWrap}>
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            {showUser && <Th>Member</Th>}
-            <Th>Date</Th>
-            <Th>Status</Th>
-            <Th>Clock In</Th>
-            <Th>Clock Out</Th>
-            <Th>Hours</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {records.map((r) => (
-            <tr key={r.id} style={styles.tr}>
-              {showUser && <Td>{r.user?.name || "—"}</Td>}
-              <Td>{fmtDate(r.date)}</Td>
-              <Td>
-                <StatusPill status={r.status} />
-              </Td>
-              <Td>{fmt(r.clock_in_time)}</Td>
-              <Td>{fmt(r.clock_out_time)}</Td>
-              <Td>{r.duration_hours ? `${r.duration_hours}h` : "—"}</Td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function StatusPill({ status }) {
-  return (
-    <span style={{
-      background: statusColor[status] + "22",
-      color: statusColor[status],
-      border: `1px solid ${statusColor[status]}44`,
-      padding: "2px 10px",
-      borderRadius: 99,
-      fontSize: 12,
-      fontWeight: 600,
-    }}>
-      {statusLabel[status] || status}
-    </span>
-  );
-}
-
-function StatCard({ label, value, accent, sub }) {
-  return (
-    <div style={{ ...styles.card, borderTop: `3px solid ${accent}` }}>
-      <p style={{ color: "#9ca3af", fontSize: 12, marginBottom: 4 }}>{label}</p>
-      <p style={{ fontSize: 28, fontWeight: 700, color: accent, margin: 0 }}>{value}</p>
-      {sub && <p style={styles.meta}>{sub}</p>}
-    </div>
-  );
-}
-
-function ActionButton({ label, icon, disabled, onClick, color }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        background: disabled ? "#1f2937" : color,
-        color: disabled ? "#6b7280" : "#fff",
-        border: "none",
-        borderRadius: 8,
-        padding: "10px 22px",
-        fontSize: 14,
-        fontWeight: 600,
-        cursor: disabled ? "not-allowed" : "pointer",
-        display: "flex",
-        gap: 8,
-        alignItems: "center",
-        transition: "opacity .2s",
-        opacity: disabled ? 0.5 : 1,
-      }}
-    >
-      <span>{icon}</span> {label}
-    </button>
-  );
-}
-
-function Banner({ type, children }) {
-  const bg = { success: "#052e16", error: "#450a0a", info: "#0c1a2e" };
-  const border = { success: "#166534", error: "#991b1b", info: "#1d4ed8" };
-  return (
-    <div style={{
-      background: bg[type] || bg.info,
-      border: `1px solid ${border[type] || border.info}`,
-      borderRadius: 8,
-      padding: "10px 16px",
-      fontSize: 14,
-      color: "#e5e7eb",
-      marginBottom: 12,
-    }}>
-      {children}
-    </div>
-  );
-}
-
-function PageHeader({ title, sub }) {
-  return (
-    <div style={{ marginBottom: 24 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: "#f9fafb", margin: 0 }}>{title}</h1>
-      {sub && <p style={{ color: "#9ca3af", fontSize: 13, marginTop: 4 }}>{sub}</p>}
-    </div>
-  );
-}
-
-function PageLoader({ label, inline }) {
-  return (
-    <div style={{ textAlign: "center", padding: inline ? "20px 0" : 80, color: "#6b7280" }}>
-      <div style={{
-        width: 28, height: 28, borderRadius: "50%",
-        border: "3px solid #374151", borderTop: "3px solid #6366f1",
-        animation: "spin 0.8s linear infinite", margin: "0 auto 12px",
-      }} />
-      <p style={{ fontSize: 13 }}>{label}</p>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
-}
-
-const Th = ({ children }) => (
-  <th style={{ padding: "10px 14px", textAlign: "left", fontSize: 11,
-    fontWeight: 600, color: "#9ca3af", textTransform: "uppercase",
-    letterSpacing: "0.05em", borderBottom: "1px solid #1f2937" }}>
-    {children}
-  </th>
-);
-
-const Td = ({ children }) => (
-  <td style={{ padding: "12px 14px", fontSize: 13, color: "#d1d5db",
-    borderBottom: "1px solid #111827" }}>
-    {children}
-  </td>
-);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Styles
-// ─────────────────────────────────────────────────────────────────────────────
-const styles = {
-  page: { padding: "28px 32px", maxWidth: 1100, margin: "0 auto", fontFamily: "'DM Sans', sans-serif" },
-  card: { background: "#111827", border: "1px solid #1f2937", borderRadius: 12,
-    padding: 20, marginBottom: 16 },
-  cardTitle: { fontSize: 14, fontWeight: 600, color: "#f3f4f6", marginBottom: 16, marginTop: 0 },
-  grid2: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12, marginBottom: 16 },
-  grid4: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 16 },
-  meta: { fontSize: 12, color: "#6b7280", marginTop: 6, marginBottom: 0 },
-  empty: { color: "#6b7280", fontSize: 13, textAlign: "center", padding: "20px 0" },
-  tableWrap: { overflowX: "auto" },
-  table: { width: "100%", borderCollapse: "collapse" },
-  tr: { transition: "background .15s" },
-  label: { fontSize: 13, color: "#9ca3af" },
-  input: { background: "#1f2937", border: "1px solid #374151", borderRadius: 6,
-    padding: "8px 12px", color: "#f9fafb", fontSize: 13 },
-  btnSecondary: { background: "#1f2937", border: "1px solid #374151", borderRadius: 6,
-    padding: "8px 16px", color: "#d1d5db", fontSize: 13, cursor: "pointer" },
-  btnDanger: { background: "#450a0a", border: "1px solid #991b1b", borderRadius: 6,
-    padding: "8px 16px", color: "#fca5a5", fontSize: 13, cursor: "pointer" },
-};

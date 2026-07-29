@@ -12,10 +12,12 @@ import {
   Users,
   Zap,
   Lightbulb,
+  Flame,
 } from "lucide-react";
 import { IoOptionsOutline } from "react-icons/io5";
 import SearchBar from "../../sections/SearchBar";
 import NewIdeaForm from "./NewIdeaForm";
+import { Link } from "react-router-dom";
 
 const IdeationHeader = ({
   searchQuery,
@@ -59,6 +61,10 @@ const IdeationHeader = ({
   ];
 
   const sortOptions = [
+    // "Moving now" ranks by momentum — recent pull, team joins and discussion,
+    // decayed by age. Distinct from "Trending", which the API scores its own
+    // way, and from "Most Liked", which a year-old idea can still win.
+    { value: "momentum", label: "Moving Now", icon: Flame },
     { value: "trending", label: "Trending", icon: TrendingUp },
     { value: "latest", label: "Latest", icon: Clock },
     { value: "popular", label: "Most Liked", icon: Heart },
@@ -193,17 +199,25 @@ const IdeationHeader = ({
             }
             onSelect={setSelectedIndustry}
           />
-          <button
-            onClick={() => setShowNewIdeaForm(true)}
-            className="create-idea flex items-center justify-center gap-2 rounded-lg transition-all duration-200 w-full px-4 py-2.5  sm:w-auto font-medium shadow-lg bg-gray-200 text-black text-sm border border-white/20"
+          {/* Was a modal "Post an Idea" form. Visions are what this ecosystem
+              actually creates — structured, with roles, a banner and a roadmap —
+              so this now goes to the Vision creator instead of a cut-down
+              duplicate that produced half a Vision. */}
+          <Link
+            to="/vision/new"
+            className="create-idea flex items-center justify-center gap-2 rounded-xl transition-all duration-200 w-full px-4 py-2.5 sm:w-auto text-sm font-medium border border-gold/45 bg-gold/10 text-gold hover:bg-gold/20 hover:border-gold/70"
           >
             <Plus className="h-4 w-4" />
-            <span>Post an Idea</span>
-          </button>
+            <span>Create a Vision</span>
+          </Link>
         </div>
       </div>
 
-      {showNewIdeaForm && <NewIdeaForm
+      {/* The old cut-down "new idea" modal produced half a Vision — no banner,
+          no roles, no roadmap — and then people had to redo it properly. It is
+          disabled rather than deleted so nothing that still references
+          `showNewIdeaForm` breaks; delete both once no caller sets it. */}
+      {false && showNewIdeaForm && <NewIdeaForm
         onClose={() => setShowNewIdeaForm(false)}
         onCreateIdea={onCreateIdea}
         industries={industries}

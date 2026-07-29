@@ -13,8 +13,8 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="border-b border-gray-200">
+    <div className="min-h-screen bg-panel">
+      <div className="border-b border-white/10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-8">
@@ -22,7 +22,7 @@ const AdminDashboard = () => {
                 <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold">A</span>
                 </div>
-                <span className="text-xl font-bold text-black">Admin Panel</span>
+                <span className="text-xl font-bold text-star">Admin Panel</span>
               </Link>
               <nav className="hidden md:flex space-x-4">
                 {navItems.map((item) => (
@@ -32,7 +32,7 @@ const AdminDashboard = () => {
                     className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
                       location.pathname === item.path
                         ? "bg-black text-white"
-                        : "text-gray-600 hover:bg-gray-100"
+                        : "text-dim hover:bg-white/[0.06]"
                     }`}
                   >
                     <span>{item.icon}</span>
@@ -42,7 +42,7 @@ const AdminDashboard = () => {
               </nav>
             </div>
             <Link to="/dashboard">
-              <Button variant="outline" className="border-black text-black hover:bg-gray-100">
+              <Button variant="outline" className="border-black text-star hover:bg-white/[0.06]">
                 ← Back to App
               </Button>
             </Link>

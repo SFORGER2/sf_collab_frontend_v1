@@ -1,14 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BrainCircuit } from 'lucide-react';
 import { matchmakingAPI } from '@/utils/APIs/matchmakingAPI';
 import DynamicMatchCategories from '@/components/matchmaking/DynamicMatchCategories';
-import { MatchCardSkeleton } from '@/components/matchmaking/MatchmakingSkeleton';
+import { MatchSectionSkeleton } from '@/components/matchmaking/MatchmakingSkeleton';
 import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 
 // Helper: returns true when the response contains at least one non-empty category.
-// DynamicMatchCategories expects { [categoryTitle]: MatchCard[] }.
-// It silently skips empty arrays, so "no visible content" means all arrays are empty.
 function hasVisibleCategories(data) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
   return Object.values(data).some(
@@ -20,31 +19,39 @@ export default function AIMatchmakingPage() {
   const [matchData, setMatchData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const fetchRecommendations = useCallback(async () => {
-  setLoading(true);
-  setError(null);
-  try {
-    const response = await matchmakingAPI.getForMe({ explain: 0, limit: 10 });
-    if (response.success) {
-      setMatchData(response.data); // ✅ now matchData is the categories object
-    } else {
-      setError(new Error(response.error || 'Unknown error'));
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await matchmakingAPI.getForMe({ explain: 0, limit: 10 });
+      if (response?.success) {
+        setMatchData(response.data);
+      } else if (response?.data) {
+        setMatchData(response.data);
+      } else {
+        setError(new Error(response?.error || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('AIMatchmakingPage: failed to fetch recommendations', err);
+      // Redirect to login on 401 Unauthorized
+      if (err?.response?.status === 401) {
+        navigate('/login');
+        return;
+      }
+      setError(err);
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error('AIMatchmakingPage: failed to fetch recommendations', err);
-    setError(err);
-  } finally {
-    setLoading(false);
-  }
-}, []);
+  }, [navigate]);
 
   useEffect(() => {
     fetchRecommendations();
   }, [fetchRecommendations]);
 
   return (
-    <div className="min-h-screen w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="min-h-screen w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 sm:space-y-8">
 
       {/* Page header */}
       <div className="border-b border-white/5 pb-6">
@@ -59,26 +66,24 @@ export default function AIMatchmakingPage() {
 
       {/* Content area */}
       {loading ? (
-        /* Loading — two skeleton cards in a responsive grid */
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <MatchCardSkeleton />
-          <MatchCardSkeleton />
+        <div className="space-y-8">
+          <MatchSectionSkeleton count={2} />
+          <MatchSectionSkeleton count={1} />
         </div>
       ) : error ? (
         <ErrorState
           title="Failed to Load Recommendations"
-          message="An error occurred while fetching your AI matches. Please try again."
+          message="Unable to load recommendations. Please try again later."
           onRetry={fetchRecommendations}
           type="server"
         />
       ) : !hasVisibleCategories(matchData) ? (
-  <EmptyState
-    title="No Recommendations Yet"
-    description="Our AI engine couldn't find any suitable matches at the moment. We'll recommend people, projects, and opportunities as they become available."
-    icon={BrainCircuit}
-  />
-) : (
-        /* Pass data directly — no transformation. DynamicMatchCategories owns the rendering. */
+        <EmptyState
+          title="No Recommendations Yet"
+          description="No suitable collaborators found. Try updating your Required Roles, Industry, or Technology Stack."
+          icon={BrainCircuit}
+        />
+      ) : (
         <DynamicMatchCategories matchData={matchData} />
       )}
     </div>

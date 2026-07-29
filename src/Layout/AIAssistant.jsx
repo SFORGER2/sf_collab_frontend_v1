@@ -423,7 +423,7 @@ export default function AIAssistant({ isOpen, onClose, isMobile = false, callbac
 
               {/* Messages */}
               <div
-                className="flex-1 overflow-y-auto overscroll-contain py-3 px-3 space-y-3 bg-zinc-950/40"
+                className="flex-1 overflow-y-auto overscroll-contain py-3 px-3 space-y-3 bg-zinc-950/40 scrollbar-visible"
                 role="log"
                 aria-label="Conversation"
                 aria-live="polite"

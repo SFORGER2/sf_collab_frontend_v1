@@ -1,15 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import CrowdfundingSection from "./CrowdfundingSection";
-import DonationSection from "./DonationSection";
-import WaitlistSection from "./WaitlistSection";
 import { useSelector } from "react-redux";
-import JoinSFSection from "./JoinSFSection";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Zap, Users, FileText, ChevronDown, Mail, Megaphone, Trash2, Edit2, X, ArrowUpRight } from "lucide-react";
-import InfluencerProfileSection from "./InfluencerSection";
+import { Mail, Megaphone, Trash2, Edit2, X, ArrowUpRight } from "lucide-react";
 import notificationAPI from "@/utils/APIs/notificationAPI";
-import { Link } from "react-router-dom";
-import { plotCount } from "@/utils/plotCount";
 import { formatFriendlyDate } from "@/utils/formatFriendlyDate";
 import DeleteConfirmationModal from "@/utils/confirm";
 import { useAnnouncements } from '@/contexts/AnnouncementContext';
@@ -55,36 +48,38 @@ function EditItemModal({ isOpen, onClose, item, type, onSave }) {
         animate={{ scale: 1 }}
         exit={{ scale: 0.95 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-md backdrop-blur-xl shadow-2xl"
+        className="cosmos-panel p-6 w-full max-w-md"
       >
-        <h2 className="text-xl font-semibold text-white mb-4">Edit {type === 'announcement' ? 'Announcement' : 'Newsletter'}</h2>
+        <h2 className="font-display text-lg text-star mb-4">
+          Edit {type === 'announcement' ? 'Announcement' : 'Newsletter'}
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">Title</label>
+            <label className="cosmos-stat-label block mb-2">Title</label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition"
-              placeholder="Enter title..."
+              className="w-full px-4 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-star placeholder-dim focus:outline-none focus:border-violet transition"
+              placeholder="Enter title…"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">Message</label>
+            <label className="cosmos-stat-label block mb-2">Message</label>
             <textarea
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition resize-none h-32"
-              placeholder="Enter content..."
+              className="w-full px-4 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-star placeholder-dim focus:outline-none focus:border-violet transition resize-none h-32"
+              placeholder="Enter content…"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">Link URL (optional)</label>
+            <label className="cosmos-stat-label block mb-2">Link URL (optional)</label>
             <input
               type="text"
               value={formData.linkUrl}
               onChange={(e) => setFormData({ ...formData, linkUrl: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition"
+              className="w-full px-4 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-star placeholder-dim focus:outline-none focus:border-violet transition"
               placeholder="https://example.com"
             />
           </div>
@@ -92,16 +87,16 @@ function EditItemModal({ isOpen, onClose, item, type, onSave }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition"
+              className="flex-1 px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/10 text-star border border-white/10 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white transition disabled:opacity-50"
+              className="flex-1 px-4 py-2 rounded-full bg-gradient-to-r from-[#ffcf7d] to-[#ffb547] text-[#241300] font-medium transition disabled:opacity-50"
             >
-              {loading ? 'Saving...' : 'Save'}
+              {loading ? 'Saving…' : 'Save'}
             </button>
           </div>
         </form>
@@ -127,36 +122,36 @@ function ReadItemModal({ isOpen, onClose, item, type }) {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-2xl bg-[#0d0d0d] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+        className="relative w-full max-w-2xl cosmos-panel overflow-hidden flex flex-col max-h-[80vh] p-0"
       >
         {/* Header */}
-        <div className="p-6 border-b border-white/10 flex items-center justify-between bg-white/[0.01]">
+        <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
+            <div className="flex items-center gap-2 font-mono text-[10.5px] tracking-[0.14em] uppercase text-dim">
               <span>{formatFriendlyDate(item.createdAt)}</span>
               {item.category && (
                 <>
-                  <span className="w-1 h-1 rounded-full bg-gray-700" />
-                  <span className="text-purple-400 font-medium uppercase">{item.category}</span>
+                  <span className="w-1 h-1 rounded-full bg-white/25" />
+                  <span className="text-violet">{item.category}</span>
                 </>
               )}
             </div>
-            <h2 className="text-xl md:text-2xl font-bold text-white leading-tight">
+            <h2 className="font-display text-xl md:text-2xl text-star leading-tight">
               {item.title}
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
+            className="p-2 hover:bg-white/10 rounded-full text-dim hover:text-star transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 md:p-8 overflow-y-auto flex-1 text-gray-300 space-y-4">
+        <div className="p-6 md:p-8 overflow-y-auto flex-1 text-star/85 space-y-4 scrollbar-visible">
           {(item.message || item.content)?.split("\n\n").map((para, i) => (
-            <p key={i} className="leading-relaxed text-sm md:text-base font-light whitespace-pre-wrap">
+            <p key={i} className="leading-relaxed text-sm md:text-base whitespace-pre-wrap">
               {para}
             </p>
           ))}
@@ -166,7 +161,7 @@ function ReadItemModal({ isOpen, onClose, item, type }) {
                 href={item.linkUrl || item.link_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-[#ffcf7d] to-[#ffb547] text-[#241300] text-sm font-medium transition-opacity hover:opacity-90"
               >
                 Open Link <ArrowUpRight className="w-4 h-4" />
               </a>
@@ -175,11 +170,13 @@ function ReadItemModal({ isOpen, onClose, item, type }) {
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-white/10 bg-white/[0.01] flex items-center justify-between text-xs text-gray-500">
-          <span>SFCollab {type === 'announcement' ? 'Announcement' : 'Newsletter'} Update</span>
+        <div className="px-6 py-4 border-t border-white/10 flex items-center justify-between">
+          <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-dim">
+            SFCollab {type === 'announcement' ? 'Announcement' : 'Newsletter'}
+          </span>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-all"
+            className="px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/10 text-star text-sm transition-all"
           >
             Close
           </button>
@@ -189,7 +186,16 @@ function ReadItemModal({ isOpen, onClose, item, type }) {
   );
 }
 
-
+/**
+ * Announcements / Newsletter — the dashboard's "from SF" feed.
+ *
+ * Exactly two tabs: platform Announcements, and the SF Newsletter. The other
+ * notification categories (waitlist, crowdfunding, applications) belong to the
+ * notifications page, not here — this widget is the channel through which
+ * SFCollab itself speaks to users.
+ *
+ * Lives on the dashboard only; it was removed from the Learning menu.
+ */
 export default function AnnouncementsSection({ userRoles }) {
   const { user } = useSelector((state) => state.auth);
   const isAdmin = useMemo(() => user?.role === 'admin', [user]);
@@ -208,214 +214,208 @@ export default function AnnouncementsSection({ userRoles }) {
     refresh: refreshNewsletter,
   } = useNewsletter();
 
-  const [announcementFilter, setAnnouncementFilter] = useState('all');
-  const [newsletterFilter, setNewsletterFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState(
+    () => localStorage.getItem('announcements:activeTab') || 'announcements'
+  );
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, type: null, id: null });
-  const [editModal, setEditModal] = useState({ isOpen: false, announcement: null });
-  const [hideInfluencerInfo, setHideInfluencerInfo] = useState(false);
-  const [hideShowJobApplication, setHideJobApplication] = useState(false);
-
-  const [isExpanded, setIsExpanded] = useState(() => {
-    const stored = localStorage.getItem('preferences:announcementsExpanded');
-    return stored === null ? true : stored === 'true';
-  });
-  const [userMinimized, setUserMinimized] = useState(() =>
-    localStorage.getItem('announcements:userMinimized') === 'true'
-  );
-  const [lastSeenId, setLastSeenId] = useState(() =>
-    localStorage.getItem('announcements:lastSeenId') || null
-  );
-
-  // Active tab stored in localStorage (UI preference)
-  const [activeTab, setActiveTab] = useState('crowdfunding');
-
-  const [visitedTabs, setVisitedTabs] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('announcements:visitedTabs')) || {};
-    } catch { return {}; }
-  });
-
-  const [serverUnread, setServerUnread] = useState({ waitlist: 0, crowdfunding: 0, applications: 0 });
-
-  // Fetch server unread counts for other tabs
-  useEffect(() => {
-    const fetchServerUnread = async () => {
-      try {
-        const [accessRes, fundingRes, appRes] = await Promise.all([
-          notificationAPI.getByCategory('access'),
-          notificationAPI.getByCategory('funding'),
-          notificationAPI.getByCategory('application'),
-        ]);
-        const countUnread = (res) => {
-          const items = res?.notifications || res?.data?.notifications || [];
-          return items.filter(n => !n.is_read).length;
-        };
-        setServerUnread({
-          waitlist: countUnread(accessRes),
-          crowdfunding: countUnread(fundingRes),
-          applications: countUnread(appRes),
-        });
-      } catch (err) {
-        console.error('Failed to fetch server unread counts', err);
-      }
-    };
-    fetchServerUnread();
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('preferences:announcementsExpanded', isExpanded);
-  }, [isExpanded]);
+  const [editModal, setEditModal] = useState({ isOpen: false, announcement: null, type: 'announcement' });
+  const [readModal, setReadModal] = useState({ isOpen: false, item: null, type: 'announcement' });
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('announcements:activeTab', activeTab);
   }, [activeTab]);
 
+  // Jump to whichever tab has unread items when they arrive.
   useEffect(() => {
-    if (announcementsUnread > 0 || newsletterUnread > 0) {
-      setIsExpanded(true);
-    }
+    if (announcementsUnread > 0) setActiveTab('announcements');
+    else if (newsletterUnread > 0) setActiveTab('newsletter');
   }, [announcementsUnread, newsletterUnread]);
 
-  useEffect(() => {
-    if (announcementsUnread > 0) {
-      setActiveTab('announcements');
-    } else if (newsletterUnread > 0) {
-      setActiveTab('newsletter');
-    } else {
-      const stored = localStorage.getItem('announcements:activeTab');
-      if (stored) {
-        setActiveTab(stored);
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+    setShowAll(false);
+    if (tabId === 'announcements') markAnnouncementsRead();
+    else markNewsletterRead();
+  };
+
+  const tabs = [
+    { id: 'announcements', label: 'Announcements', icon: Megaphone, badge: announcementsUnread },
+    { id: 'newsletter', label: 'Newsletter · from SF', icon: Mail, badge: newsletterUnread },
+  ];
+
+  const items = activeTab === 'announcements' ? announcements : newsletters;
+  const shown = showAll ? items : items.slice(0, 4);
+  const modalType = activeTab === 'announcements' ? 'announcement' : 'newsletter';
+
+  const handleDelete = async (id) => {
+    try {
+      if (deleteModal.type === 'announcement') {
+        await notificationAPI.deleteAnnouncement(id);
+        refreshAnnouncements();
+      } else {
+        await notificationAPI.deleteNewsletter(id);
+        refreshNewsletter();
       }
-    }
-  }, [announcementsUnread, newsletterUnread]);
-
-  // Mark a tab as visited
-  const markTabVisited = (tabId) => {
-    setVisitedTabs(prev => {
-      const next = { ...prev, [tabId]: true };
-      localStorage.setItem('announcements:visitedTabs', JSON.stringify(next));
-      return next;
-    });
-  };
-
-  const handleTabClick = (newTabId) => {
-    setActiveTab(newTabId);
-    markTabVisited(newTabId);
-
-    if (newTabId === 'announcements') {
-      markAnnouncementsRead();
-    } else if (newTabId === 'newsletter') {
-      markNewsletterRead();
-    } else if (newTabId === 'waitlist') {
-      notificationAPI.markAllRead('access').catch(() => { });
-      setServerUnread(prev => ({ ...prev, waitlist: 0 }));
-    } else if (newTabId === 'crowdfunding') {
-      notificationAPI.markAllRead('funding').catch(() => { });
-      setServerUnread(prev => ({ ...prev, crowdfunding: 0 }));
-    } else if (newTabId === 'applications') {
-      notificationAPI.markAllRead('application').catch(() => { });
-      setServerUnread(prev => ({ ...prev, applications: 0 }));
+    } catch (error) {
+      console.error('Failed to delete item', error);
+    } finally {
+      setDeleteModal({ isOpen: false, type: null, id: null });
     }
   };
 
-
-// Tabs definition with badge counts
-const tabs = useMemo(() => [
-  { id: 'announcements', label: 'Announcements', icon: Megaphone, badge: announcementsUnread },
-  { id: 'newsletter', label: 'Newsletter', icon: Mail, badge: newsletterUnread },
-  { id: 'waitlist', label: 'Waitlist', icon: Bell, badge: serverUnread.waitlist },
-  { id: 'crowdfunding', label: 'Crowdfunding', icon: Zap, badge: serverUnread.crowdfunding },
-  { id: 'applications', label: 'Applications', icon: FileText, badge: serverUnread.applications },
-], [announcementsUnread, newsletterUnread, serverUnread]);
-
-// Filtering (by priority) – keep as before
-const filteredAnnouncements = useMemo(() => {
-  if (announcementFilter === 'all' || announcementFilter === '') return announcements;
-  return announcements.filter(a => a.priority === announcementFilter);
-}, [announcements, announcementFilter]);
-
-const filteredNewsletter = useMemo(() => {
-  if (newsletterFilter === 'all') return newsletters;
-  return newsletters.filter(n => n.priority === newsletterFilter);
-}, [newsletters, newsletterFilter]);
-
-// Group by month
-const groupByMonth = (items) => {
-  const grouped = {};
-  items.forEach(item => {
-    const date = new Date(item.createdAt);
-    const monthKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
-    if (!grouped[monthKey]) {
-      grouped[monthKey] = [];
-    }
-    grouped[monthKey].push(item);
-  });
-  return grouped;
-};
-
-const announcementsByMonth = useMemo(() => groupByMonth(filteredAnnouncements), [filteredAnnouncements]);
-const newsletterByMonth = useMemo(() => groupByMonth(filteredNewsletter), [filteredNewsletter]);
-
-const handleDeleteAnnouncement = async (id) => {
-  try {
-    await notificationAPI.deleteAnnouncement(id);
-    refreshAnnouncements();
-    setDeleteModal({ isOpen: false, type: null, id: null });
-  } catch (error) {
-    console.error('Failed to delete announcement', error);
-  }
-};
-
-const handleDeleteNewsletter = async (id) => {
-  try {
-    await notificationAPI.deleteNewsletter(id);
-    refreshNewsletter();
-    setDeleteModal({ isOpen: false, type: null, id: null });
-  } catch (error) {
-    console.error('Failed to delete newsletter', error);
-  }
-};
-
-const handleClearAll = async (type) => {
-  try {
-    if (type === 'announcements') {
-      await notificationAPI.clearAllAnnouncements();
+  const handleEdit = async (formData) => {
+    try {
+      await notificationAPI.updateAnnouncement(editModal.announcement.id, formData);
       refreshAnnouncements();
-    } else if (type === 'newsletter') {
-      await notificationAPI.clearAllNewsletters();
-      refreshNewsletter();
+    } catch (error) {
+      console.error('Failed to update announcement', error);
+    } finally {
+      setEditModal({ isOpen: false, announcement: null, type: 'announcement' });
     }
-    setDeleteModal({ isOpen: false, type: null, id: null });
-  } catch (error) {
-    console.error('Failed to clear all', error);
-  }
-};
+  };
 
-const handleEditAnnouncement = async (formData) => {
-  try {
-    await notificationAPI.updateAnnouncement(editModal.announcement.id, formData);
-    refreshAnnouncements();
-    setEditModal({ isOpen: false, announcement: null });
-  } catch (error) {
-    console.error('Failed to update announcement', error);
-  }
-};
+  return (
+    <div className="flex flex-col gap-4" style={{ '--cosmos-accent': '#ffbf5e' }}>
+      {/* Two-tab switcher — mono segmented control, same as the calendar's */}
+      <div className="flex items-center gap-1 p-1 rounded-full bg-white/[0.04] border border-white/10 self-start">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabClick(tab.id)}
+              aria-pressed={active}
+              className={`flex items-center gap-1.5 font-mono text-[10px] tracking-[0.14em] uppercase px-3 py-1.5 rounded-full transition-colors ${
+                active ? 'bg-gold/15 text-gold' : 'text-dim hover:text-star'
+              }`}
+            >
+              <Icon size={12} />
+              {tab.label}
+              {tab.badge > 0 && (
+                <span className="min-w-[16px] h-4 px-1 rounded-full bg-gold text-[#241300] text-[9px] font-bold flex items-center justify-center">
+                  {tab.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
 
-// Toggle the expand/collapse of the whole section (header chevron button).
-// If the user manually collapses it, remember that via userMinimized so
-// we don't auto re-expand until a genuinely new announcement arrives.
-const handleToggleExpanded = () => {
-  setIsExpanded((prev) => {
-    const next = !prev;
-    setUserMinimized(!next);
-    localStorage.setItem('announcements:userMinimized', String(!next));
-    return next;
-  });
-};
+      {/* Feed */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.18 }}
+          className="flex flex-col divide-y divide-white/[0.07]"
+        >
+          {shown.length === 0 && (
+            <p className="text-[0.9rem] text-dim py-6 text-center">
+              {activeTab === 'announcements'
+                ? 'No announcements right now.'
+                : 'No newsletters yet — the next SF update lands here.'}
+            </p>
+          )}
 
-const totalUnread = announcementsUnread + newsletterUnread;
+          {shown.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setReadModal({ isOpen: true, item, type: modalType })}
+              className="group flex items-start gap-3 py-3 text-left w-full"
+            >
+              {!item.isRead && (
+                <span className="w-1.5 h-1.5 rounded-full bg-gold shrink-0 mt-2" aria-label="Unread" />
+              )}
+              <span className="min-w-0 flex-1">
+                <span className="block text-[0.95rem] text-star leading-snug line-clamp-1 group-hover:text-gold transition-colors">
+                  {item.title}
+                </span>
+                <span className="block text-[0.85rem] text-dim line-clamp-1 mt-0.5">
+                  {item.message || item.content}
+                </span>
+                <span className="block font-mono text-[10px] tracking-[0.1em] uppercase text-dim mt-1">
+                  {formatFriendlyDate(item.createdAt)}
+                </span>
+              </span>
 
-return (
-  <div>placeholder</div>
-);
+              {isAdmin && (
+                <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  {activeTab === 'announcements' && (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditModal({ isOpen: true, announcement: item, type: modalType });
+                      }}
+                      className="p-1.5 rounded-md text-dim hover:text-cyan hover:bg-cyan/10 transition-colors"
+                    >
+                      <Edit2 size={13} />
+                    </span>
+                  )}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteModal({ isOpen: true, type: modalType, id: item.id });
+                    }}
+                    className="p-1.5 rounded-md text-dim hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                  >
+                    <Trash2 size={13} />
+                  </span>
+                </span>
+              )}
+            </button>
+          ))}
+        </motion.div>
+      </AnimatePresence>
+
+      {items.length > 4 && (
+        <button
+          type="button"
+          onClick={() => setShowAll(!showAll)}
+          className="self-start font-mono text-[10px] tracking-[0.14em] uppercase text-dim hover:text-gold transition-colors"
+        >
+          {showAll ? 'Show fewer' : `Show all ${items.length}`}
+        </button>
+      )}
+
+      {/* Modals */}
+      <AnimatePresence>
+        {readModal.isOpen && (
+          <ReadItemModal
+            isOpen={readModal.isOpen}
+            onClose={() => setReadModal({ isOpen: false, item: null, type: 'announcement' })}
+            item={readModal.item}
+            type={readModal.type}
+          />
+        )}
+        {editModal.isOpen && (
+          <EditItemModal
+            isOpen={editModal.isOpen}
+            onClose={() => setEditModal({ isOpen: false, announcement: null, type: 'announcement' })}
+            item={editModal.announcement}
+            type={editModal.type}
+            onSave={handleEdit}
+          />
+        )}
+      </AnimatePresence>
+
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, type: null, id: null })}
+        onConfirm={() => handleDelete(deleteModal.id)}
+        title={`Delete ${deleteModal.type === 'announcement' ? 'Announcement' : 'Newsletter'}`}
+        description="Are you sure? This cannot be undone."
+        type="soft"
+      />
+    </div>
+  );
 }

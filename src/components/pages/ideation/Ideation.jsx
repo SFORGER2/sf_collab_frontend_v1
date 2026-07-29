@@ -1,6 +1,9 @@
 import { WifiOff, RefreshCw, Eye, Clock, Heart, MessageCircle, Users, AlertTriangle } from "lucide-react";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { byMomentum } from "@/services/vision/momentum";
+import { SAMPLE_VISIONS } from "@/services/mock/boards";
 import IdeationHeader from "./IdeationHeader";
+import { Link } from "react-router-dom";
 import ScrollToTop from "../../sections/ScrollToTop";
 import { ideaAPI } from "@/utils/APIs/ideaAPI";
 import { useSelector } from "react-redux";
@@ -9,70 +12,9 @@ import IdeationCard from "./IdeationCard";
 import IdeationTutorial from "./IdeationTutorial";
 import { motion } from "framer-motion";
 
-const MOCK_IDEAS = [
-  {
-    id: "mock-idea-1",
-    title: "Founder Match: Find Your Tech Co-Founder",
-    description:
-      "A simple tool that connects non-technical founders with developers based on actual skills and shared interests, not just resume buzzwords.",
-    projectDetails:
-      "We're building a platform to solve the biggest headache for early-stage startups: finding a technical co-founder. Instead of endless networking events, we use smart matching to connect you with builders who have the right skills, tech stack, and vibe.",
-    stage: "Prototype",
-    category: "AI / SaaS",
-    privacy: "public",
-    creatorId: "mock-user-1",
-    imageUrl: "",
-    creator: { id: "mock-user-1", firstName: "Alex", lastName: "Mercer" },
-    author: { name: "Alex Mercer", avatar: "", id: "mock-user-1", role: "Founder & CEO" },
-    createdAt: new Date().toISOString(),
-    timeAgo: "1 hour ago",
-    likes: 12,
-    hasLiked: false,
-    hasBookmarked: false,
-    comments: [],
-    teamMembers: [],
-    collaborators: 1,
-    tags: ["Matchmaking", "Startup Tool", "Community"],
-    visionState: "public",
-    readinessScore: 85,
-    isConverted: false,
-    problemStatement: "Non-technical founders struggle to find developers who are not only skilled but actually interested in their startup's domain and values. Endlessly browsing LinkedIn or spamming Discord channels leads to low-quality matches and wasted time.",
-    solution: "A tailored matching system that analyzes both tech stack requirements and soft-skill alignments (like builder consistency, streak metrics, and sector interests) to introduce founders to verified co-developers.",
-    requiredRoles: ["Fullstack Engineer", "Product Designer", "Growth Marketer"],
-    techStack: ["React", "Node.js", "MongoDB", "Tailwind CSS", "WebSockets"]
-  },
-  {
-    id: "mock-idea-2",
-    title: "Builder Rep: Verified Portfolios",
-    description:
-      "A transparent way for builders to prove their track record. We track real project outcomes and consistency so founders know who they can trust.",
-    projectDetails:
-      "Our platform lets builders build a verified portfolio of their work. We track client satisfaction, real revenue generated, and consistency. This gives founders a transparent, BS-free way to evaluate a builder's actual experience before teaming up.",
-    stage: "Concept",
-    category: "Web3",
-    privacy: "public",
-    creatorId: "mock-user-2",
-    imageUrl: "",
-    creator: { id: "mock-user-2", firstName: "Elena", lastName: "Rostova" },
-    author: { name: "Elena Rostova", avatar: "", id: "mock-user-2", role: "Product Lead" },
-    createdAt: new Date().toISOString(),
-    timeAgo: "2 days ago",
-    likes: 8,
-    hasLiked: false,
-    hasBookmarked: false,
-    comments: [],
-    teamMembers: [],
-    collaborators: 0,
-    tags: ["Trust Engine", "SaaS", "Portfolio"],
-    visionState: "public",
-    readinessScore: 50,
-    isConverted: false,
-    problemStatement: "It is currently impossible for a founder to verify a builder's actual track record of completed projects, code consistency, and client satisfaction. Portfolios are easily faked or embellished.",
-    solution: "A decentralized trust platform that logs real project milestones, client ratings, and developer stats on-chain, creating a verified 'Builder Reputation' score.",
-    requiredRoles: ["Solidity Developer", "React Developer", "UX Researcher"],
-    techStack: ["Solidity", "Ethers.js", "React", "Next.js", "Tailwind CSS"]
-  },
-];
+/* Twelve sample Visions spread across stage, industry and engagement — a
+   board where everything burns says as little as one where nothing does. */
+const MOCK_IDEAS = SAMPLE_VISIONS;
 
 const calculateTimeAgo = (createdAt) => {
   const now = new Date();
@@ -134,6 +76,9 @@ const Ideation = ({ activeRole }) => {
           year: "numeric",
         }),
         timeAgo: calculateTimeAgo(idea.createdAt),
+        // Raw ISO, kept alongside the formatted `createdAt` above — momentum
+        // decays signals by age, so it needs a real timestamp to parse.
+        lastActivityAt: idea.updatedAt || idea.updated_at || idea.createdAt,
         likes: idea.likes,
         hasLiked: idea.hasLiked || false,
         hasBookmarked: idea.hasBookmarked || false,
@@ -161,6 +106,17 @@ const Ideation = ({ activeRole }) => {
   useEffect(() => {
     fetchIdeas();
   }, [fetchIdeas]);
+
+  /**
+   * "Moving now" is sorted here rather than server-side, because momentum is a
+   * frontend weighting for now (services/vision/momentum.js) — the backend has
+   * no equivalent ordering yet. Every other sort is already applied by the API,
+   * so those pass through untouched.
+   */
+  const orderedIdeas = useMemo(
+    () => (sortBy === 'momentum' ? [...ideas].sort(byMomentum) : ideas),
+    [ideas, sortBy]
+  );
 
   const handleCreateIdea = async (payload) => {
     try {
@@ -272,7 +228,7 @@ const Ideation = ({ activeRole }) => {
 
   return (
     <div className="min-h-screen bg-black px-4">
-      <IdeationTutorial />
+      <IdeationTutorial activeRole={activeRole} />
 
       <div className="mb-0 mt-10">
         <IdeationHeader
@@ -305,7 +261,7 @@ const Ideation = ({ activeRole }) => {
 
       {/* Card grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 max-sm:p-2">
-        {ideas.map((content) => {
+        {orderedIdeas.map((content) => {
           const isPrivate = content.privacy === "private";
           const isCreator = user?.id && content.creatorId && user.id === content.creatorId;
           const shouldBlur = isPrivate && !isCreator;
@@ -339,17 +295,12 @@ const Ideation = ({ activeRole }) => {
             <p className="text-sm max-w-xs mx-auto" style={{ color: "#6b7280" }}>
               Be the first to share an idea! Try adjusting your filters or post a new one.
             </p>
-            <button
-              onClick={() => setShowNewIdeaForm(true)}
-              className="px-6 py-3 rounded-xl text-sm font-semibold transition-all"
-              style={{
-                background: "linear-gradient(135deg, #3b82f6, #6366f1)",
-                color: "#fff",
-                boxShadow: "0 0 20px rgba(99,102,241,0.3)",
-              }}
+            <Link
+              to="/vision/new"
+              className="inline-block px-6 py-3 rounded-xl text-sm font-semibold transition-all border border-gold/45 bg-gold/10 text-gold hover:bg-gold/20"
             >
-              Post an Idea
-            </button>
+              Create a Vision
+            </Link>
           </div>
         </div>
       )}

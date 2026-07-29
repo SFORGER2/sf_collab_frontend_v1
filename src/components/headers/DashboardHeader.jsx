@@ -53,7 +53,7 @@ const DashboardHeader = ({ searchQuery, onSearchChange }) => {
               className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/15 backdrop-blur-md hover:bg-white/20 rounded-lg transition-all duration-200 text-white shadow-lg hover:shadow-xl w-full sm:w-auto"
             >
               <Plus className="h-4 w-4" />
-              <span>Register Startup</span>
+              <span>Request registration</span>
             </Link>
           </div>
         </div>

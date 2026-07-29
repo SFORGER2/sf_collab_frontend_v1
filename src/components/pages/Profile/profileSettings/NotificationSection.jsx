@@ -1,167 +1,151 @@
 import { Bell, Clock, Mail } from 'lucide-react';
-// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
+import { Field, FieldGrid, SectionHead, Select, SettingsCard, TextInput, Toggle } from './SettingsUI';
+
+/**
+ * Notification settings.
+ *
+ * Rebuilt on the shared settings primitives — was three differently-coloured
+ * gradient panels with `bg-gray-700` controls.
+ *
+ * The toggle list is grouped rather than a flat run of eleven switches, because
+ * "warn me about payouts" and "tell me who liked my post" are not the same kind
+ * of decision and shouldn't sit in one undifferentiated column.
+ */
+
+const GROUPS = [
+  {
+    label: 'Important',
+    hint: 'Things that need you to act. Turning these off is rarely a good idea.',
+    accent: '#ffbf5e',
+    items: [
+      { key: 'systemWarnings', title: 'Warnings', description: 'Critical system and workspace alerts' },
+      { key: 'financialAlerts', title: 'Payouts & money', description: 'Payouts, investments and wallet activity' },
+      { key: 'taskReminders', title: 'Task reminders', description: 'Deadlines and assignments coming due' },
+      { key: 'approvals', title: 'Approvals', description: 'Something is waiting on your decision' },
+      { key: 'joinRequests', title: 'Join requests', description: 'People asking to join your startups' },
+    ],
+  },
+  {
+    label: 'Social',
+    hint: 'Activity on the things you post and share.',
+    accent: '#ff6fd8',
+    items: [
+      { key: 'mentions', title: 'Mentions', description: 'When someone @mentions you' },
+      { key: 'newComments', title: 'Comments', description: 'Replies on your posts' },
+      { key: 'newLikes', title: 'Likes', description: 'Reactions to your content' },
+      { key: 'postEngagement', title: 'Post engagement', description: 'Reach and interaction summaries' },
+      { key: 'storyViews', title: 'Story views', description: 'When your stories are viewed' },
+    ],
+  },
+  {
+    label: 'Suggestions',
+    hint: 'Proactive nudges from the assistant and matchmaking.',
+    accent: '#8b6cff',
+    items: [
+      { key: 'newSuggestions', title: 'Personalised suggestions', description: 'Matches, opportunities and ideas picked for you' },
+    ],
+  },
+];
+
+const container = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+};
+const item = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.28 } },
+};
 
 export default function NotificationSection({ formData, onChange }) {
-  const notificationSettings = formData.notificationSettings || {};
+  const settings = formData.notificationSettings || {};
+  const quiet = settings.quietHours || {};
 
-  const toggles = [
-    { key: 'systemWarnings', title: 'Warning Alerts', description: 'Get critical system and workspace warnings' },
-    { key: 'financialAlerts', title: 'Payout & Financial', description: 'Get notified about payouts and investments' },
-    { key: 'taskReminders', title: 'Task Reminders', description: 'Receive upcoming deadline and task alerts' },
-    { key: 'mentions', title: 'Mentions & Tags', description: 'Get notified when someone @mentions you' },
-    { key: 'newComments', title: 'New Comments', description: 'Get notified when someone comments on your posts' },
-    { key: 'newLikes', title: 'New Likes', description: 'Get notified when someone likes your content' },
-    { key: 'newSuggestions', title: 'New Suggestions', description: 'Receive personalized suggestions' },
-    { key: 'joinRequests', title: 'Join Requests', description: 'Get notified of new join requests' },
-    { key: 'approvals', title: 'Approvals', description: 'Receive approval notifications' },
-    { key: 'storyViews', title: 'Story Views', description: 'Get notified when your stories are viewed' },
-    { key: 'postEngagement', title: 'Post Engagement', description: 'Receive updates on post engagement' }
-  ];
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
-  };
+  const set = (patch) => onChange({ ...settings, ...patch });
 
   return (
-    <motion.div 
-      className="space-y-6"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
-      <motion.div variants={itemVariants}>
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 bg-blue-600/20 rounded-lg">
-            <Bell className="w-6 h-6 text-blue-400" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold">Notification Settings</h2>
-            <p className="text-sm text-gray-400 mt-1">Manage how you receive updates</p>
-          </div>
-        </div>
+    <motion.div className="flex flex-col gap-4" initial="hidden" animate="visible" variants={container}>
+      <motion.div variants={item}>
+        <SectionHead
+          icon={Bell}
+          title="Notifications"
+          description="What reaches you, and when."
+          accent="#ffbf5e"
+        />
       </motion.div>
 
-      <motion.div className="space-y-4" variants={itemVariants}>
-        <div className="text-sm font-semibold text-gray-300 uppercase tracking-wide px-4">Notification Types</div>
-        
-        {toggles.map(({ key, title, description }) => (
-          <motion.div
-            key={key}
-            variants={itemVariants}
-            whileHover={{ x: 4 }}
-            className="flex items-center justify-between p-4 bg-linear-to-r from-gray-700/20 to-gray-700/10 hover:from-gray-700/30 hover:to-gray-700/20 rounded-xl border border-gray-700/50 transition-colors"
-          >
-            <div className="flex flex-col flex-1">
-              <div className="font-medium text-gray-100">
-                {title}
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                {description}
-              </div>
+      {GROUPS.map((group) => (
+        <motion.div key={group.label} variants={item}>
+          <SettingsCard title={group.label} hint={group.hint} accent={group.accent}>
+            <div className="flex flex-col gap-2">
+              {group.items.map((t) => (
+                <Toggle
+                  key={t.key}
+                  label={t.title}
+                  description={t.description}
+                  checked={settings[t.key]}
+                  onChange={(v) => set({ [t.key]: v })}
+                  accent={group.accent}
+                />
+              ))}
             </div>
-
-            <motion.label 
-              className="relative inline-flex items-center cursor-pointer ml-4"
-              whileTap={{ scale: 0.95 }}
-            >
-              <input 
-                type="checkbox" 
-                checked={!!notificationSettings[key]} 
-                onChange={(e) => onChange({ ...notificationSettings, [key]: e.target.checked })} 
-                className="sr-only peer" 
-              />
-              <div 
-                className="w-11 h-6 bg-gray-600 peer-checked:bg-blue-600 rounded-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-5 transition-colors duration-200"
-              />
-            </motion.label>
-          </motion.div>
-        ))}
-      </motion.div>
-
-      {/* Email Digest */}
-      <motion.div variants={itemVariants} className="p-6 bg-linear-to-r from-purple-600/10 to-pink-600/10 rounded-xl border border-purple-700/30">
-        <div className="flex items-center gap-3 mb-4">
-          <Mail className="w-5 h-5 text-purple-400" />
-          <label className="block text-sm font-semibold text-gray-200">Email Digest</label>
-        </div>
-        <select 
-          value={notificationSettings.emailDigest} 
-          onChange={(e) => onChange({ ...notificationSettings, emailDigest: e.target.value })} 
-          className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-purple-500 focus:outline-none transition-colors"
-        >
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-        </select>
-      </motion.div>
-
-      {/* Quiet Hours */}
-      <motion.div 
-        variants={itemVariants} 
-        className="p-6 bg-linear-to-r from-orange-600/10 to-red-600/10 rounded-xl border border-orange-700/30"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <Clock className="w-5 h-5 text-orange-400" />
-            <div>
-              <div className="font-semibold text-gray-200">Quiet Hours</div>
-              <div className="text-xs text-gray-500 mt-1">Suppress notifications during this period</div>
-            </div>
-          </div>
-          <motion.label 
-            className="relative inline-flex items-center cursor-pointer"
-            whileTap={{ scale: 0.95 }}
-          >
-            <input 
-              type="checkbox" 
-              checked={!!notificationSettings.quietHours?.enabled} 
-              onChange={(e) => onChange({ ...notificationSettings, quietHours: { ...(notificationSettings.quietHours || {}), enabled: e.target.checked } })} 
-              className="sr-only peer" 
-            />
-            <div 
-              className="w-11 h-6 bg-gray-600 peer-checked:bg-orange-600 rounded-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:h-5 after:w-5 after:rounded-full after:transition-all peer-checked:after:translate-x-5 transition-colors duration-200"
-            />
-          </motion.label>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={notificationSettings.quietHours?.enabled ? { opacity: 1, height: 'auto' } : { opacity: 0, height: 0 }}
-          transition={{ duration: 0.3 }}
-          className="overflow-hidden"
-        >
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-gray-400 mb-2 block">Start Time</label>
-              <input 
-                type="time" 
-                value={notificationSettings.quietHours?.start || ''} 
-                onChange={(e) => onChange({ ...notificationSettings, quietHours: { ...(notificationSettings.quietHours || {}), start: e.target.value } })} 
-                className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-orange-500 focus:outline-none transition-colors"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-400 mb-2 block">End Time</label>
-              <input 
-                type="time" 
-                value={notificationSettings.quietHours?.end || ''} 
-                onChange={(e) => onChange({ ...notificationSettings, quietHours: { ...(notificationSettings.quietHours || {}), end: e.target.value } })} 
-                className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-orange-500 focus:outline-none transition-colors"
-              />
-            </div>
-          </div>
+          </SettingsCard>
         </motion.div>
+      ))}
+
+      <motion.div variants={item}>
+        <SettingsCard title="Email digest" accent="#4fd8ff">
+          <Field label="How often" hint="A single roundup instead of individual emails.">
+            <Select
+              value={settings.emailDigest || 'weekly'}
+              onChange={(e) => set({ emailDigest: e.target.value })}
+              placeholder={null}
+              options={[
+                { value: 'daily', label: 'Daily' },
+                { value: 'weekly', label: 'Weekly' },
+                { value: 'monthly', label: 'Monthly' },
+                { value: 'never', label: 'Never' },
+              ]}
+            />
+          </Field>
+        </SettingsCard>
       </motion.div>
+
+      <motion.div variants={item}>
+        <SettingsCard title="Quiet hours" accent="#3ee6a0">
+          <Toggle
+            label="Hold notifications overnight"
+            description="Anything that arrives in this window waits until it ends."
+            checked={quiet.enabled}
+            onChange={(v) => set({ quietHours: { ...quiet, enabled: v } })}
+            accent="#3ee6a0"
+          />
+
+          {quiet.enabled && (
+            <FieldGrid className="mt-4">
+              <Field label="From">
+                <TextInput
+                  type="time"
+                  value={quiet.start || ''}
+                  onChange={(e) => set({ quietHours: { ...quiet, start: e.target.value } })}
+                />
+              </Field>
+              <Field label="Until">
+                <TextInput
+                  type="time"
+                  value={quiet.end || ''}
+                  onChange={(e) => set({ quietHours: { ...quiet, end: e.target.value } })}
+                />
+              </Field>
+            </FieldGrid>
+          )}
+        </SettingsCard>
+      </motion.div>
+
+      <p className="flex items-center gap-2 text-[0.78rem] text-dim px-1">
+        <Mail size={12} /> Email delivery follows your digest setting.
+        <Clock size={12} className="ml-2" /> Times use your profile timezone.
+      </p>
     </motion.div>
   );
 }

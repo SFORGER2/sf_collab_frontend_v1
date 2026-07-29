@@ -3,8 +3,23 @@ import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
-import { Plus, Eye, Calendar, DollarSign, X } from "lucide-react";
+import {
+  requestInterceptor,
+  responseInterceptor,
+  responseErrorInterceptor,
+} from "../../../utils/APIs/interceptors";
+import { Plus, Eye, Calendar, DollarSign } from "lucide-react";
+
+// ── Shared UI components ──
+import {
+  PageHeader,
+  GlassCard,
+  Badge,
+  Button,
+  Spinner,
+  EmptyState,
+  Modal,
+} from "@/components/erp/ui";
 
 const api = axios.create({ baseURL: "/api/revenue-pool" });
 api.interceptors.request.use(requestInterceptor);
@@ -14,6 +29,7 @@ export default function AdminRevenuePools() {
   const { user } = useSelector((s) => s.auth);
   const workspaceId = user?.active_workspace_id || 1;
   const navigate = useNavigate();
+
   const [pools, setPools] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -29,14 +45,17 @@ export default function AdminRevenuePools() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  // ── Data loading ──────────────────────────────────────────────────────────
   const loadPools = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get(`/workspaces/${workspaceId}/revenue-pools`);
       const data = res.data?.data || res.data;
       setPools(data.pools || []);
     } catch (err) {
       setError(err?.response?.data?.error || "Failed to load revenue pools");
+      setPools([]);
     } finally {
       setLoading(false);
     }
@@ -46,6 +65,7 @@ export default function AdminRevenuePools() {
     loadPools();
   }, [loadPools]);
 
+  // ── Create pool ──────────────────────────────────────────────────────────
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!form.period_start || !form.period_end) {
@@ -81,54 +101,54 @@ export default function AdminRevenuePools() {
     }
   };
 
-  const statusColor = {
-    open: "#22c55e",
-    calculating: "#f59e0b",
-    pending_admin_review: "#6366f1",
-    locked: "#ef4444",
-    paid: "#6b7280",
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  const statusColorMap = {
+    open: "green",
+    calculating: "yellow",
+    pending_admin_review: "blue",
+    locked: "red",
+    paid: "gray",
   };
 
-  // Prevent body scroll when modal is open
-  useEffect(() => {
-    if (showCreateModal) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [showCreateModal]);
-
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
+    <div className="min-h-screen bg-[#0a0a0a] text-white p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Revenue Pools</h1>
-            <p className="text-zinc-400 mt-1">Manage workspace revenue share periods</p>
-          </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg font-semibold hover:bg-gray-200"
-          >
-            <Plus size={18} /> New Pool
-          </button>
-        </div>
+        <PageHeader
+          title="Revenue Pools"
+          subtitle="Manage workspace revenue share periods"
+          actions={
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus size={18} className="mr-2" /> New Pool
+            </Button>
+          }
+        />
 
-        {error && <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-6">{error}</div>}
+        {error && (
+          <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-6">
+            {error}
+          </div>
+        )}
 
         {loading ? (
-          <div className="text-center py-20">Loading...</div>
+          <Spinner />
         ) : pools.length === 0 ? (
-          <div className="text-center py-20 text-zinc-500">No revenue pools yet. Create your first pool.</div>
+          <EmptyState
+            icon={<DollarSign className="w-12 h-12 text-zinc-600" />}
+            title="No revenue pools"
+            description="Create your first pool to start tracking revenue share."
+            action={
+              <Button onClick={() => setShowCreateModal(true)}>
+                <Plus size={18} className="mr-2" /> Create Pool
+              </Button>
+            }
+          />
         ) : (
           <div className="grid gap-4">
             {pools.map((pool) => (
-              <div
+              <GlassCard
                 key={pool.id}
-                className="bg-[#121215] border border-zinc-800 rounded-2xl p-6 hover:border-zinc-600 transition-colors cursor-pointer"
+                className="hover:border-zinc-600 transition-colors cursor-pointer p-6"
                 onClick={() => navigate(`/erp/admin/revenue-pools/${pool.id}`)}
               >
                 <div className="flex flex-wrap justify-between items-start gap-4">
@@ -136,137 +156,168 @@ export default function AdminRevenuePools() {
                     <div className="flex items-center gap-3 mb-2">
                       <Calendar size={18} className="text-zinc-400" />
                       <span className="text-sm font-medium">
-                        {new Date(pool.period_start).toLocaleDateString()} – {new Date(pool.period_end).toLocaleDateString()}
+                        {new Date(pool.period_start).toLocaleDateString()} –{" "}
+                        {new Date(pool.period_end).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex items-center gap-4 mt-2">
                       <div className="flex items-center gap-1">
                         <DollarSign size={16} className="text-emerald-400" />
-                        <span className="text-lg font-semibold">${pool.team_pool_amount.toLocaleString()}</span>
+                        <span className="text-lg font-semibold">
+                          ${pool.team_pool_amount.toLocaleString()}
+                        </span>
                       </div>
-                      <div className="text-xs text-zinc-500">Team pool ({(pool.team_share_percentage)}%)</div>
+                      <div className="text-xs text-zinc-500">
+                        Team pool ({(pool.team_share_percentage)}%)
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span
-                      className="px-3 py-1 rounded-full text-xs font-semibold"
-                      style={{ background: `${statusColor[pool.status]}20`, color: statusColor[pool.status] }}
-                    >
+                    <Badge color={statusColorMap[pool.status] || "gray"}>
                       {pool.status}
-                    </span>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); navigate(`/erp/admin/revenue-pools/${pool.id}`); }}
-                      className="p-2 bg-zinc-800 rounded-lg hover:bg-zinc-700"
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/erp/admin/revenue-pools/${pool.id}`);
+                      }}
                     >
                       <Eye size={16} />
-                    </button>
+                    </Button>
                   </div>
                 </div>
-              </div>
+              </GlassCard>
             ))}
           </div>
         )}
       </div>
 
-      {/* Improved Modal – centered, with scroll lock, high z-index */}
-      {showCreateModal && (
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
-          onClick={() => setShowCreateModal(false)}
-        >
-          <div
-            className="bg-[#1a1a1a] border border-zinc-800 rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Create Revenue Pool</h2>
-              <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-white">
-                <X size={20} />
-              </button>
-            </div>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Period Start</label>
-                <input
-                  type="date"
-                  value={form.period_start}
-                  onChange={(e) => setForm({ ...form, period_start: e.target.value })}
-                  required
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Period End</label>
-                <input
-                  type="date"
-                  value={form.period_end}
-                  onChange={(e) => setForm({ ...form, period_end: e.target.value })}
-                  required
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Gross Revenue ($)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.gross_revenue}
-                  onChange={(e) => setForm({ ...form, gross_revenue: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Refunds ($)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.refunds}
-                  onChange={(e) => setForm({ ...form, refunds: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Chargebacks ($)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.chargebacks}
-                  onChange={(e) => setForm({ ...form, chargebacks: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Manual Exclusions ($)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.manual_exclusions}
-                  onChange={(e) => setForm({ ...form, manual_exclusions: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Team Share (%)</label>
-                <input
-                  type="number"
-                  step="1"
-                  value={form.team_share_percentage}
-                  onChange={(e) => setForm({ ...form, team_share_percentage: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white"
-                />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 py-2 bg-zinc-700 rounded-lg">
-                  Cancel
-                </button>
-                <button type="submit" disabled={submitting} className="flex-1 py-2 bg-blue-600 rounded-lg font-semibold disabled:opacity-50">
-                  {submitting ? "Creating..." : "Create"}
-                </button>
-              </div>
-            </form>
+      {/* Create Modal */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Create Revenue Pool"
+      >
+        <form onSubmit={handleCreate} className="space-y-4">
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">
+              Period Start
+            </label>
+            <input
+              type="date"
+              value={form.period_start}
+              onChange={(e) =>
+                setForm({ ...form, period_start: e.target.value })
+              }
+              required
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-violet-500/50"
+            />
           </div>
-        </div>
-      )}
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">
+              Period End
+            </label>
+            <input
+              type="date"
+              value={form.period_end}
+              onChange={(e) =>
+                setForm({ ...form, period_end: e.target.value })
+              }
+              required
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-violet-500/50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">
+              Gross Revenue ($)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              value={form.gross_revenue}
+              onChange={(e) =>
+                setForm({ ...form, gross_revenue: e.target.value })
+              }
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-violet-500/50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">
+              Refunds ($)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              value={form.refunds}
+              onChange={(e) =>
+                setForm({ ...form, refunds: e.target.value })
+              }
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-violet-500/50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">
+              Chargebacks ($)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              value={form.chargebacks}
+              onChange={(e) =>
+                setForm({ ...form, chargebacks: e.target.value })
+              }
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-violet-500/50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">
+              Manual Exclusions ($)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              value={form.manual_exclusions}
+              onChange={(e) =>
+                setForm({ ...form, manual_exclusions: e.target.value })
+              }
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-violet-500/50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">
+              Team Share (%)
+            </label>
+            <input
+              type="number"
+              step="1"
+              value={form.team_share_percentage}
+              onChange={(e) =>
+                setForm({ ...form, team_share_percentage: e.target.value })
+              }
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-violet-500/50"
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowCreateModal(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="flex-1"
+            >
+              {submitting ? "Creating..." : "Create"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

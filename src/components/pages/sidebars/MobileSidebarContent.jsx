@@ -13,6 +13,7 @@ export default function MobileSidebarContent({
   hasSubItems,
   shouldShowSubItems,
   callback,
+  role = "member",
 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -81,8 +82,8 @@ export default function MobileSidebarContent({
                   ${baseItemClasses}
                   ${
                     isActive
-                      ? "bg-blue-600/20 text-blue-400"
-                      : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
+                      ? "bg-white/[0.06] text-star border-l-2 border-l-[var(--cosmos-accent)]"
+                      : "text-slate-400 hover:bg-white/[0.06] hover:text-star"
                   }
                   ${isUpcoming ? upcomingClasses : ""}
                 `}
@@ -150,8 +151,8 @@ export default function MobileSidebarContent({
                             flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-colors
                             ${
                               isSubActive
-                                ? "bg-blue-600/30 text-white"
-                                : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"
+                                ? "bg-white/[0.06] text-star border-l-2 border-l-[var(--cosmos-accent)]"
+                                : "text-slate-500 hover:bg-white/[0.06] hover:text-star"
                             }
                             ${isSubUpcoming ? upcomingClasses : ""}
                           `}
@@ -186,7 +187,7 @@ export default function MobileSidebarContent({
               className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
                 location.pathname === "/admin"
                   ? "bg-yellow-600/20 text-yellow-400"
-                  : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
+                  : "text-slate-400 hover:bg-white/[0.06] hover:text-star"
               }`}
             >
               <Crown size={22} />
@@ -196,7 +197,7 @@ export default function MobileSidebarContent({
         )}
       </motion.div>
 
-      <BottomLinks onLinkClick={onLinkClick} callback={callback} isHovered={true} />
+      <BottomLinks onLinkClick={onLinkClick} callback={callback} isHovered={true} role={role} />
     </div>
   );
 }

@@ -104,7 +104,7 @@ export default function ImageUploadSection({ formData, uploadProfilePicture, get
           <div className="w-20 h-20 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
             {formData?.profile?.picture ? (
               <img
-                src={formData.profile.picture}
+                src={formData.profile?.picture}
                 className="w-full h-full object-cover"
                 alt="profile"
               />

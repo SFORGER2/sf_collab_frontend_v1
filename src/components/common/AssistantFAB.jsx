@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const FOCUS_RING =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950';
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-void';
 
 /**
  * Floating Action Button that opens the SF Assistant panel.
@@ -40,23 +40,20 @@ export default function AssistantFAB({
       className={cn(
         // Position — fixed, bottom-right, clear of ChatDock on mobile
         'fixed bottom-20 right-4 z-[9999]',
-        // Shape & spacing
-        'flex items-center gap-2 px-4 py-3 rounded-2xl',
+        // Shape & spacing — pill, matching every other cosmos action
+        'flex items-center gap-2 px-4 py-3 rounded-full',
         // Typography
-        'text-sm font-semibold text-white',
-        // Depth
-        'shadow-2xl shadow-blue-900/50',
-        // Border glow
-        'border border-blue-400/30',
-        // Smooth transitions
-        'transition-colors duration-200',
-        // Accessibility
+        'text-sm font-medium text-[#d9cfff]',
+        // Violet is the intelligence layer's colour across the whole product
+        'border border-violet/40 backdrop-blur-md',
+        'shadow-[0_8px_30px_-8px_rgba(139,108,255,0.7)]',
+        'transition-colors duration-200 hover:text-star hover:border-violet/70',
         FOCUS_RING,
         className
       )}
       style={{
         background:
-          'linear-gradient(135deg, #1e40af 0%, #1d4ed8 60%, #2563eb 100%)',
+          'linear-gradient(135deg, rgba(139,108,255,0.22) 0%, rgba(139,108,255,0.12) 60%, rgba(8,12,22,0.9) 100%)',
       }}
       aria-label={`Open SF Assistant${workspaceId ? ` for workspace ${workspaceId}` : ''}`}
     >

@@ -1,6 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { RouteBoundary } from "@/components/cosmos/RouteErrorBoundary";
+import { StickyTopAd } from "@/components/cosmos/StickyTopAd";
+import { placementFor, wantsTopAd } from "@/components/cosmos/adPlacements";
 import { useSelector } from "react-redux";
 
 import NavBar from "../components/sections/NavBar";
@@ -12,6 +15,7 @@ import FounderSidebar from "@/components/pages/sidebars/founderSidebar/FounderSi
 import InfluencerSidebar from "@/components/pages/sidebars/influencerSidebar/InfluencerSidebar";
 import BuilderSidebar from "@/components/pages/sidebars/builderSidebar/BuilderSidebar";
 import InvestorSidebar from "@/components/pages/sidebars/investorSidebar/InvestorSidebar";
+import MentorSidebar from "@/components/pages/sidebars/mentorSidebar/MentorSidebar";
 
 import useScrollHide from "../utils/hooks/useScrollHide";
 import { hasPermission } from "../utils/permissionCheck";
@@ -35,6 +39,7 @@ import { createFounderLinks } from '@/components/pages/sidebars/founderSidebar/F
 import { createBuilderLinks } from '@/components/pages/sidebars/builderSidebar/BuilderLinks';
 import { createInfluencerLinks } from '@/components/pages/sidebars/influencerSidebar/influencerLinks';
 import { createInvestorLinks } from '@/components/pages/sidebars/investorSidebar/InvestorLinks';
+import { createMentorLinks } from '@/components/pages/sidebars/mentorSidebar/MentorLinks';
 
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
@@ -179,6 +184,8 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
         return createInfluencerLinks(unread, userRoles, setActiveRole, activeRole);
       case 'investor':
         return createInvestorLinks(unread, userRoles, setActiveRole, activeRole);
+      case 'mentor':
+        return createMentorLinks(unread, userRoles, setActiveRole, activeRole);
       default:
         return createLinks(unread, userRoles, setActiveRole);
     }
@@ -205,6 +212,8 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
         return <BuilderSidebar {...props} />;
       case "investor":
         return <InvestorSidebar {...props} />;
+      case "mentor":
+        return <MentorSidebar {...props} />;
       default:
         return <UserSidebar {...props} />;
     }
@@ -225,13 +234,10 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
       {location.pathname === "/dashboard" && <Tutorial activeRole={activeRole} />}
       <SkipToContent />
       <div className="relative min-h-screen w-screen flex flex-col">
-        {/* Background */}
-        <div
-          className="absolute inset-0 z-0"
-          style={{
-            background: "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
-          }}
-        />
+        {/* Background — cosmos atmosphere: three nebula blobs over the void,
+            matching the landing page. Fixed so it doesn't scroll away. */}
+        <div className="fixed inset-0 z-0 cosmos-atmosphere" aria-hidden="true" />
+        <div className="fixed inset-0 z-0 cosmos-vignette pointer-events-none" aria-hidden="true" />
 
         {/* Email Verification Banner */}
         {user && !user.isEmailVerified && <EmailVerifyPopUp />}
@@ -244,7 +250,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           <header
             ref={navContainerRef}
             role="banner"
-            className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${isNavHidden ? "h-0" : "h-[60px]"}`}
+            className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${isNavHidden ? "h-0" : "h-16"}`}
           >
             <NavBar
               setIsOpen={setIsOpen}
@@ -280,7 +286,21 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
               className={`relative w-full scroll-smooth overflow-x-hidden`}
               onScroll={isRootPath ? undefined : onScroll}
             >
-              <Outlet />
+              {/* Shared top ad. Placed here rather than per-page so it is
+                  always in the same position, always above the fold, and the
+                  route policy lives in one file instead of twenty. */}
+              {/* Stays on screen while you scroll — see StickyTopAd for why
+                  this can't be `position: sticky` here. */}
+              {wantsTopAd(location.pathname) && (
+                <StickyTopAd placement={placementFor(location.pathname)} />
+              )}
+
+              {/* Inner crash net: a page that throws loses the page, not the
+                  navigation. The boundary in App.jsx is the outer backstop for
+                  anything that fails above the layout. */}
+              <RouteBoundary>
+                <Outlet />
+              </RouteBoundary>
             </div>
           </main>
         </MotionDiv>

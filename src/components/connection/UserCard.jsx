@@ -201,11 +201,13 @@ export default function UserCard({
 
                 {/* Connection Button - Handles all states automatically */}
                 <div className="flex-1" onClick={(e) => e.stopPropagation()}>
-                  <ConnectionButton
-                    userId={user.id}
-                    size="sm"
-                    className="w-full"
-                  />
+                  {!user.disableConnection && (
+  <ConnectionButton
+    userId={user.id}
+    size="sm"
+    className="w-full"
+  />
+)}
                 </div>
               </>
             ) : (

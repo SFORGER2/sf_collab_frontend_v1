@@ -12,7 +12,7 @@ export function MatchCardSkeleton() {
 
       <CardHeader className="relative border-b border-white/5 px-4 py-4 sm:px-6">
         <div className="flex items-start gap-3 sm:gap-4">
-          <Skeleton className="size-14 shrink-0 rounded-xl sm:size-16 bg-slate-800" />
+          <Skeleton className="size-11 shrink-0 rounded-xl sm:size-13 bg-slate-800" />
 
           <div className="min-w-0 flex-1 space-y-2">
             <div className="flex items-center gap-2">
@@ -65,9 +65,13 @@ export function MatchCardSkeleton() {
           </ul>
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-white/5 pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <Skeleton className="h-3.5 w-36 bg-slate-800" />
-          <Skeleton className="h-8 w-24 rounded bg-slate-800" />
+        {/* Mirror real card footer layout */}
+        <div className="flex flex-col gap-3 border-t border-white/5 pt-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <Skeleton className="h-8 w-full sm:flex-1 rounded-lg bg-slate-800" />
+            <Skeleton className="h-8 w-full sm:flex-1 rounded-lg bg-slate-800" />
+            <Skeleton className="h-8 w-full sm:flex-1 rounded-lg bg-slate-800" />
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -78,7 +82,7 @@ export function MatchSectionSkeleton({ count = 3 }) {
   return (
     <div className="space-y-4">
       <Skeleton className="h-7 w-56 rounded bg-slate-800" />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
         {Array.from({ length: count }).map((_, i) => (
           <MatchCardSkeleton key={i} />
         ))}

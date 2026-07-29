@@ -97,23 +97,23 @@ const AccessRequestModal = ({ isOpen, onClose, permissionKey }) => {
       )}
 
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[425px] bg-white text-black">
+        <DialogContent className="sm:max-w-[425px] bg-panel text-star">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Request Access</DialogTitle>
-            <DialogDescription className="text-gray-600">
+            <DialogDescription className="text-dim">
               You're requesting access to: <span className="font-semibold">{permissionKey}</span>
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-black">
+              <label className="text-sm font-medium text-star">
                 Why do you need this access?
               </label>
               <Textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Please explain your need for this permission..."
-                className="min-h-[120px] resize-none bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                className="min-h-[120px] resize-none bg-panel border border-white/15 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
               />
             </div>
           </div>
@@ -121,7 +121,7 @@ const AccessRequestModal = ({ isOpen, onClose, permissionKey }) => {
             <Button
               variant="outline"
               onClick={onClose}
-              className="border-black text-black hover:bg-gray-100"
+              className="border-black text-star hover:bg-white/[0.06]"
             >
               Cancel
             </Button>

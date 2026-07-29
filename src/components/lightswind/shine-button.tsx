@@ -29,10 +29,11 @@ export const ShineButton: React.FC<ShineButtonProps> = ({
   disabled,
   type,
   size = "md",
+  // Cosmos gold — the spark. This is the primary CTA on auth screens.
   bgColor = `linear-gradient(325deg,
-  hsl(0 0% 20%) 0%,
-  hsl(0 0% 45%) 55%,
-  hsl(0 0% 20%) 90%
+  #f09220 0%,
+  #ffcf7d 55%,
+  #f09220 90%
 )
 
 `,
@@ -51,14 +52,14 @@ export const ShineButton: React.FC<ShineButtonProps> = ({
       disabled={disabled}
       onClick={onClick}
       className={`relative  overflow-hidden  text-white font-medium  transition-all duration-700 ease-in-out
-        border-none cursor-pointer shadow-[0px_0px_20px_rgba(71,184,255,0.5),0px_5px_5px_0px_rgba(58,125,233,0.25),inset_4px_4px_8px_rgba(175,230,255,0.5),inset_-4px_-4px_8px_rgba(19,95,216,0.35)]
+        border-none cursor-pointer shadow-[0px_0px_20px_rgba(255,191,94,0.35),0px_5px_18px_-4px_rgba(255,181,71,0.45),inset_4px_4px_8px_rgba(255,240,214,0.35),inset_-4px_-4px_8px_rgba(160,95,10,0.30)]
         focus:outline-none active:scale-95
         hover:bg-[length:280%_auto]  ${className}`}
       style={{
         backgroundImage,
         backgroundSize: "280% auto",
         backgroundPosition: "initial",
-        color: "hsl(0 0% 100%)",
+        color: "#241300",
         fontSize,
         padding,
         zIndex,

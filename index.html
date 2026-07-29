@@ -1,19 +1,64 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<link rel="icon" type="image" href="https://d329ej3iwi83w9.cloudfront.net/favicon.ico" />
-		<link rel="manifest" href="/manifest.json" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>SFCollab - Website Generator</title>
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100;14..32,200;14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Trade+Winds&family=Audiowide&display=swap"
-			rel="stylesheet" />
-	</head>
-	<body>
-		<div id="root"></div>
-		<script type="module" src="/src/main.tsx"></script>
-	</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image" href="https://d329ej3iwi83w9.cloudfront.net/favicon.ico" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#050309" />
+
+    <!-- ── SEO ──────────────────────────────────────────────────────────────
+         The app is a SPA, so crawlers see this document for every route. These
+         tags describe the platform as a whole; per-page titles are set at
+         runtime. Keep the description under ~155 characters so it isn't
+         truncated in search results. -->
+    <meta name="description" content="SFCollab is the startup intelligence and creation layer. Turn your idea into a Vision, find collaborators, build with contextual AI, and grow a real company." />
+    <meta name="keywords" content="startup platform, find co-founder, startup collaboration, AI startup tools, build a startup, find developers for startup, startup ecosystem, vision to startup, startup funding, mentorship platform" />
+    <meta name="author" content="SFCollab — Success Framework Collaboration" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://sfcollab.com/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="SFCollab" />
+    <meta property="og:url" content="https://sfcollab.com/" />
+    <meta property="og:title" content="SFCollab — Build Your Startup With People, AI, And Momentum" />
+    <meta property="og:description" content="Every idea you build here makes the system smarter for the next founder. Turn a Vision into a company with collaborators, contextual AI, and real opportunity." />
+    <meta property="og:image" content="https://sfcollab.com/LOGO.png" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SFCollab — Build Your Startup With People, AI, And Momentum" />
+    <meta name="twitter:description" content="Turn your idea into a Vision. Find the people who move it forward. Build with AI that already understands your startup." />
+    <meta name="twitter:image" content="https://sfcollab.com/LOGO.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "SFCollab",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "url": "https://sfcollab.com/",
+        "description": "The startup intelligence and creation layer. Turn an idea into a Vision, find collaborators, build with contextual AI, and convert it into an operating startup inside one connected ecosystem.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- App type system.
+         Space Grotesk for display: technical and precise at UI sizes, where
+         the landing page's Unbounded reads as too wide and quirky.
+         Inter (self-hosted) carries body text. JetBrains Mono carries labels.
+         The landing page keeps Unbounded/Outfit via its own injected CSS. -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Unbounded:wght@400;500;600&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Legacy: still referenced inline by a handful of dashboard components -->
+    <link href="https://fonts.googleapis.com/css2?family=Trade+Winds&display=swap" rel="stylesheet">
+    <title>SFCollab</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script data-cfasync="false" type="module" src="/src/main.jsx"></script> <!-- Issues with Cloudflare's async loading of scripts -->
+  </body>
 </html>

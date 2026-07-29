@@ -5,31 +5,25 @@ import { useSelector } from "react-redux";
 import LoadingSpinner from "./LoadingSpinner";
 import AccessRequestModal from "./auth/admin/AccessRequestModal";
 import { hasPermission } from "../utils/permissionCheck";
+import { DEV_AUTH_BYPASS } from "../services/auth/devSession";
+import { CosmosButton } from "@/components/cosmos";
 
 // ── Permission Denied Page ────────────────────────────────────────────────
 const PermissionDeniedPage = ({ onRequestAccess }) => {
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-8 text-center">
-        <div className="space-y-4">
-          <h1 className="text-3xl font-bold text-black">Access Denied</h1>
-          <p className="text-gray-600">
-            You don't have permission to access this page.
-          </p>
-          <div className="space-y-4">
-            <button
-              onClick={onRequestAccess}
-              className="w-full py-3 px-4 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors shadow-[0_4px_14px_0_rgba(255,255,255,0.3)]"
-            >
-              Request Access
-            </button>
-            <button
-              onClick={() => window.history.back()}
-              className="w-full py-3 px-4 border border-black text-black rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Go Back
-            </button>
-          </div>
+    <div className="min-h-screen cosmos-atmosphere flex items-center justify-center p-4">
+      <div className="cosmos-panel max-w-md w-full p-8 text-center">
+        <h1 className="font-display text-2xl font-semibold text-star mb-2">Access Denied</h1>
+        <p className="text-dim mb-6">
+          You don't have permission to access this page.
+        </p>
+        <div className="flex flex-col gap-2.5">
+          <CosmosButton variant="primary" onClick={onRequestAccess}>
+            Request Access
+          </CosmosButton>
+          <CosmosButton variant="quiet" onClick={() => window.history.back()}>
+            Go Back
+          </CosmosButton>
         </div>
       </div>
     </div>
@@ -44,8 +38,10 @@ export const ProtectedRoute = ({ children, requiredPermission }) => {
 
   if (loading) return <LoadingSpinner />;
 
-  // Not authenticated → redirect to login
-  if (!access_token || !user) {
+  // Not authenticated → redirect to login.
+  // DEV_AUTH_BYPASS lets the UI be reviewed without a backend; it is statically
+  // false in production builds, so this guard is fully intact when it ships.
+  if (!DEV_AUTH_BYPASS && (!access_token || !user)) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
