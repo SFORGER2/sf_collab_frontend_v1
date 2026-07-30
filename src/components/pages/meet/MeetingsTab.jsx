@@ -1,7 +1,7 @@
 // src/components/pages/meet/MeetingsTab.jsx
 import React, { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Video,
   Plus,
@@ -146,6 +146,7 @@ function MeetingCard({ meeting, onClick }) {
 
 export default function MeetingsTab({ startupId }) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [meetings, setMeetings] = useState([]);
   const [recordings, setRecordings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -153,6 +154,16 @@ export default function MeetingsTab({ startupId }) {
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+
+  // ── Auto-open CreateMeetingModal when navigated with ?create=true ─────────
+  useEffect(() => {
+    if (searchParams.get('create') === 'true') {
+      setShowCreate(true);
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('create');
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   // ── Fetch meetings (for upcoming/past) ───────────────────────────────────
   const fetchMeetings = useCallback(async () => {
