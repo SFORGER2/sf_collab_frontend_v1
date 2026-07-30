@@ -41,3 +41,6 @@ ai-2.pdf
 # Temporary files & documentation
 TEMPORARY_CHANGES.md
 docs/
+
+# Archives
+*.zip

@@ -1,37 +1,14 @@
-/**
- * AdminAnalyticsPage.jsx — SFCollab ERP
- * Admin-only analytics: task completion rate, warning trends, contributor rankings
- *
- * API wiring (expected routes in analytics.py):
- *   GET /erp/analytics/admin/overview      → { task_completion_rate, task_completion_change, warning_count, warning_change }
- *   GET /erp/analytics/admin/warnings      → [{ week_label, count }]
- *   GET /erp/analytics/admin/contributors  → [{ user_id, name, score, tasks_done, streak, rank }]
- *
- * Route in App.jsx:
- *   import AdminAnalyticsPage from "./components/pages/erp/AdminAnalyticsPage.jsx";
- *   <Route path="erp/admin-analytics" element={<AdminAnalyticsPage />} />
- */
-
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import {
-  requestInterceptor,
-  responseInterceptor,
-  responseErrorInterceptor,
-} from "../../../utils/APIs/interceptors";
-import {
-  CheckSquare,
-  AlertTriangle,
-  Trophy,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Crown,
-  Medal,
-  Award,
-} from "lucide-react";
+import { CheckSquare, AlertTriangle, Trophy, TrendingUp, TrendingDown, Minus, Crown, Medal, Award, BarChart3 } from "lucide-react";
+
+import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
+import { ERPPageHeader } from "../../erp/shared/ERPPageHeader";
+import { ERPLoadingSkeleton } from "../../erp/shared/ERPLoadingSkeleton";
+import { ERPBannerManager } from "../../erp/shared/ERPBanner";
+import { ERPEmptyState } from "../../erp/shared/ERPEmptyState";
 
 // ── Shared UI components ──
 import {
@@ -48,6 +25,13 @@ const api = axios.create({ baseURL: "" });
 api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
+const pct = (v) => (v != null ? `${Math.round(v)}%` : "—");
+const PERIODS = [{ value: "weekly", label: "This Week" }, { value: "monthly", label: "This Month" }, { value: "all", label: "All Time" }];
+const RANK_ICONS = [Crown, Medal, Award];
+const RANK_COLORS = ["#f59e0b", "#9ca3af", "#b45309"];
+
+export default function AdminAnalyticsPage() {
+  const { user } = useSelector((s) => s.auth);
 // ── Helpers ────────────────────────────────────────────────────────────────
 const pct = (v) => (v != null ? `${Math.round(v)}%` : "—");
 const toArr = (v, ...keys) => {
@@ -80,16 +64,11 @@ export default function AdminAnalyticsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-
     try {
       const workspaceId = user?.active_workspace_id;
-
-      if (!workspaceId) {
-        throw new Error("No active workspace selected");
-      }
+      if (!workspaceId) throw new Error("No active workspace selected");
 
       const today = new Date();
-
       const formatDate = (date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -170,6 +149,30 @@ export default function AdminAnalyticsPage() {
     }
   }, [user?.active_workspace_id, period]);
 
+  useEffect(() => { load(); }, [load]);
+
+  if (loading) return <div className="min-h-screen bg-[#0a0a0b]"><ERPLoadingSkeleton /></div>;
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ERPPageHeader
+          icon={<BarChart3 size={20} />}
+          title="Admin Analytics"
+          description="Workspace performance, telemetry, and contributor insights."
+          breadcrumbs={[{ label: "ERP" }, { label: "Admin" }, { label: "Analytics" }]}
+          actions={
+            <div className="flex bg-[#111115] border border-white/5 rounded-xl p-1">
+              {PERIODS.map((p) => (
+                <button
+                  key={p.value}
+                  onClick={() => setPeriod(p.value)}
+                  className={`px-4 py-2 text-xs font-semibold uppercase tracking-widest rounded-lg transition-all ${
+                    period === p.value ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  {p.label}
+                </button>
   useEffect(() => {
     load();
   }, [load]);
@@ -205,67 +208,71 @@ export default function AdminAnalyticsPage() {
           }
         />
 
-        {/* KPI Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          <StatCard
+        {error && <ERPBannerManager error={error} onDismissError={() => setError(null)} />}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6 mb-8">
+          <KPICard
             icon={CheckSquare}
             label="Task Completion Rate"
             value={pct(overview?.task_completion_rate)}
             accent="#6366f1"
-            sub={`${overview?.details?.tasks_done ?? 0} completed of ${
-              overview?.details?.tasks_total ?? 0
-            } tasks`}
+            description={`${overview?.details?.tasks_done ?? 0} completed of ${overview?.details?.tasks_total ?? 0} tasks`}
           />
-          <StatCard
+          <KPICard
             icon={AlertTriangle}
             label="Warnings This Period"
             value={overview?.active_warnings ?? 0}
             accent="#ef4444"
-            sub="Warnings created during selected period"
+            description="Warnings created during selected period"
           />
         </div>
 
-        {/* Warning Trends */}
-        {warnings.length > 0 && (
-          <GlassCard className="mb-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent">
-                Warning Trends
-              </h2>
-              <Badge color="gray">Selected Period</Badge>
-            </div>
-            <WarningBarChart data={warnings} />
-          </GlassCard>
-        )}
-
-        {/* Contributor Rankings */}
-        <GlassCard>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent">
-              Contributor Rankings
-            </h2>
-            <Trophy className="w-5 h-5 text-yellow-500" />
-          </div>
-          {contributors.length === 0 ? (
-            <EmptyState
-              icon={<Trophy className="w-12 h-12 text-zinc-600" />}
-              title="No data yet"
-              description="No contributor data available for this period."
-            />
-          ) : (
-            <div className="space-y-3">
-              {contributors.map((c, i) => (
-                <ContributorRow key={c.user_id} contributor={c} index={i} />
-              ))}
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+          {warnings.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-8 bg-[#111115] border border-white/5 rounded-3xl p-8">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-base font-bold text-white flex items-center gap-2"><AlertTriangle size={18} className="text-amber-500" /> Warning Trends</h2>
+                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">Selected Period</span>
+              </div>
+              <WarningBarChart data={warnings} />
+            </motion.div>
           )}
-        </GlassCard>
+
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={`bg-[#111115] border border-white/5 rounded-3xl p-8 ${warnings.length > 0 ? 'lg:col-span-4' : 'lg:col-span-12'}`}>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-base font-bold text-white flex items-center gap-2"><Trophy size={18} className="text-yellow-500" /> Contributor Rankings</h2>
+            </div>
+            {contributors.length === 0 ? (
+              <ERPEmptyState icon={<Trophy size={24} />} title="No data yet" sub="No contributor data found for this period." compact />
+            ) : (
+              <div className="space-y-3">
+                {contributors.map((c, i) => <ContributorRow key={c.user_id} contributor={c} index={i} />)}
+              </div>
+            )}
+          </motion.div>
+        </div>
       </div>
     </div>
   );
 }
 
-// ── Sub‑components ──────────────────────────────────────────────────────────
+function KPICard({ icon: Icon, label, value, accent, description }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="bg-[#111115] border border-white/5 rounded-3xl p-8 relative overflow-hidden" style={{ borderTop: `2px solid ${accent}` }}>
+      <div className="absolute -right-4 -top-4 opacity-[0.03] pointer-events-none">
+        <Icon size={140} style={{ color: accent }} />
+      </div>
+      <div className="flex items-start justify-between mb-4 relative z-10">
+        <div className="p-3 rounded-2xl" style={{ background: `linear-gradient(135deg, ${accent}22, ${accent}11)` }}>
+          <Icon className="w-5 h-5" style={{ color: accent }} />
+        </div>
+      </div>
+      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2 relative z-10">{label}</p>
+      <p className="text-5xl font-black tracking-tighter text-white mb-2 relative z-10">{value}</p>
+      <p className="text-xs text-zinc-400 font-medium relative z-10">{description}</p>
+    </motion.div>
+  );
+}
 
 function WarningBarChart({ data }) {
   const maxVal = Math.max(...data.map((d) => d.count), 1);
@@ -275,12 +282,7 @@ function WarningBarChart({ data }) {
   return (
     <div className="overflow-x-auto">
       <div style={{ minWidth: 400 }}>
-        <svg
-          viewBox={`0 0 ${chartWidth} ${BAR_H + 32}`}
-          width="100%"
-          height="170"
-          preserveAspectRatio="xMidYMid meet"
-        >
+        <svg viewBox={`0 0 ${chartWidth} ${BAR_H + 32}`} width="100%" height="170" preserveAspectRatio="xMidYMid meet">
           {[0, 0.25, 0.5, 0.75, 1].map((f) => {
             const y = BAR_H * (1 - f);
             return (
@@ -295,13 +297,11 @@ function WarningBarChart({ data }) {
               />
             );
           })}
-
           {data.map((d, i) => {
             const barH = (d.count / maxVal) * (BAR_H - 8);
             const x = i * 60 + 12;
             const y = BAR_H - barH;
-            const isHigh = d.count === maxVal;
-
+            const isHigh = d.count === maxVal && maxVal > 0;
             return (
               <g key={i}>
                 <rect
@@ -342,48 +342,19 @@ function WarningBarChart({ data }) {
 
 function ContributorRow({ contributor: c, index }) {
   const RankIcon = index < 3 ? RANK_ICONS[index] : null;
-  const rankColor = index < 3 ? RANK_COLORS[index] : "#6b7280";
+  const rankColor = index < 3 ? RANK_COLORS[index] : "#71717a";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -12 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.04 * index }}
-      className="flex items-center gap-4 p-5 bg-zinc-900/60 border border-zinc-800 rounded-2xl hover:border-zinc-600 transition-colors"
-    >
-      <div
-        className="w-8 h-8 flex items-center justify-center flex-shrink-0 rounded-xl text-xs font-bold"
-        style={{ color: rankColor, background: `${rankColor}18` }}
-      >
+    <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * index }} className="flex items-center gap-4 p-4 bg-[#1a1a20] border border-white/5 rounded-2xl hover:border-white/10 transition-colors">
+      <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded-xl text-xs font-bold" style={{ color: rankColor, background: `${rankColor}20` }}>
         {RankIcon ? <RankIcon className="w-4 h-4" /> : `#${c.rank || index + 1}`}
       </div>
-      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-zinc-700 to-zinc-600 flex items-center justify-center text-sm font-semibold flex-shrink-0">
-        {c.name?.charAt(0) ?? "?"}
-      </div>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm text-white truncate">{c.name}</p>
-        <p className="text-xs text-zinc-500 mt-0.5">
-          {c.tasks_done} tasks · {c.streak}d streak
-        </p>
+        <p className="font-bold text-sm text-white truncate">{c.name}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-1">{c.tasks_done} tasks · {c.streak}d streak</p>
       </div>
-      <div className="flex items-center gap-3 flex-shrink-0">
-        <div className="w-24 h-1.5 bg-zinc-800 rounded-full overflow-hidden hidden sm:block">
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${c.score}%`,
-              background:
-                index === 0
-                  ? "linear-gradient(90deg,#f59e0b,#fbbf24)"
-                  : index === 1
-                  ? "linear-gradient(90deg,#6b7280,#9ca3af)"
-                  : "linear-gradient(90deg,#6366f1,#818cf8)",
-            }}
-          />
-        </div>
-        <span className="text-sm font-semibold text-white w-8 text-right">
-          {c.score}
-        </span>
+      <div className="flex items-center gap-3 shrink-0">
+        <span className="text-base font-black text-white">{c.score}</span>
       </div>
     </motion.div>
   );

@@ -1,25 +1,46 @@
-// src/components/pages/erp/analytics/views/DesktopAnalyticsDashboard.jsx
+// src/components/pages/erp/analytics/views/DesktopAnalyticsDashboard.jsx — REDESIGNED
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
-import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../../../utils/APIs/interceptors";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  BarChart2,
+  Calendar,
+  TrendingUp,
+  TrendingDown,
+  Users,
+  CheckSquare,
+  FileText,
+  Activity,
+  RefreshCw,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
+} from "lucide-react";
 
+import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../../../utils/APIs/interceptors";
+import { ERPPageHeader } from "../../../../erp/shared/ERPPageHeader";
+import { ERPEmptyState } from "../../../../erp/shared/ERPEmptyState";
+import { ERPSpinner, ERPCardSkeleton } from "../../../../erp/shared/ERPLoadingSkeleton";
+import { ERPBanner } from "../../../../erp/shared/ERPBanner";
+
+// ── API (unchanged) ────────────────────────────────────────────────────────────
 const api = axios.create({ baseURL: "/api/erp-analytics" });
 api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 const pct = (v) => (v != null ? `${Math.round(v)}%` : "—");
-const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : "—");
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString([], { month: "short", day: "numeric" }) : "—");
 
 const PERIODS = [
-  { value: "weekly",  label: "This Week",   days: 7 },
-  { value: "monthly", label: "This Month",  days: 30 },
-  { value: "quarter", label: "Last Quarter", days: 90 },
+  { value: "weekly",  label: "7 Days",    days: 7  },
+  { value: "monthly", label: "30 Days",   days: 30 },
+  { value: "quarter", label: "90 Days",   days: 90 },
 ];
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
 // ANALYTICS DASHBOARD
-// ═════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
 export default function AnalyticsDashboard() {
   const { user } = useSelector((s) => s.auth);
   const workspaceId = user?.active_workspace_id || user?.id;
@@ -37,17 +58,14 @@ export default function AnalyticsDashboard() {
       const endDate = new Date().toISOString().split("T")[0];
       let startDate;
       if (period === "weekly") {
-        const start = new Date();
-        start.setDate(start.getDate() - 7);
-        startDate = start.toISOString().split("T")[0];
+        const s = new Date(); s.setDate(s.getDate() - 7);
+        startDate = s.toISOString().split("T")[0];
       } else if (period === "monthly") {
-        const start = new Date();
-        start.setDate(1);
-        startDate = start.toISOString().split("T")[0];
+        const s = new Date(); s.setDate(1);
+        startDate = s.toISOString().split("T")[0];
       } else {
-        const start = new Date();
-        start.setMonth(start.getMonth() - 3);
-        startDate = start.toISOString().split("T")[0];
+        const s = new Date(); s.setMonth(s.getMonth() - 3);
+        startDate = s.toISOString().split("T")[0];
       }
       const response = await api.get("/workspace", {
         params: { workspace_id: workspaceId, start_date: startDate, end_date: endDate },
@@ -62,143 +80,270 @@ export default function AnalyticsDashboard() {
     }
   }, [workspaceId, period]);
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [loadAnalytics]);
-
-  if (loading) return <Spinner />;
-  if (error) return <Banner type="error">{error}</Banner>;
-  if (!metrics) return <div style={{ padding: 80, textAlign: "center" }}>No data yet</div>;
-
-  const activeRate = metrics.active_users?.rate || 0;
+  useEffect(() => { loadAnalytics(); }, [loadAnalytics]);
 
   return (
-    <div style={s.page}>
-      <div style={s.topBar}>
-        <div>
-          <h1 style={s.h1}>Analytics</h1>
-          <p style={s.sub}>Workspace performance overview</p>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {PERIODS.map((p) => (
-            <button key={p.value} onClick={() => setPeriod(p.value)} style={period === p.value ? s.periodActive : s.periodBtn}>
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#0a0a0b] text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-      <div style={s.kpiGrid}>
-        <KPICard label="Attendance Rate" value={pct(metrics.attendance_rate)} icon="📅" accent="#22c55e" />
-        <KPICard label="Task Completion" value={pct(metrics.task_completion_rate)} icon="✅" accent="#6366f1" />
-        <KPICard label="Update Consistency" value={pct(metrics.update_consistency)} icon="📝" accent="#f59e0b" />
-        <KPICard label="Active Users (7d)" value={`${metrics.active_users?.active || 0} / ${metrics.active_users?.total || 0}`} icon="👥" accent="#06b6d4" sub={`${Math.round(activeRate)}% active`} />
-      </div>
+        <ERPPageHeader
+          icon={<BarChart2 size={20} />}
+          title="Analytics"
+          description="Workspace performance, engagement, and productivity metrics"
+          breadcrumbs={[{ label: "ERP" }, { label: "Analytics" }]}
+          actions={
+            <div className="flex items-center gap-2">
+              {/* Period selector */}
+              <div className="flex items-center gap-1 p-1 rounded-xl" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+                {PERIODS.map((p) => (
+                  <button
+                    key={p.value}
+                    onClick={() => setPeriod(p.value)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      period === p.value
+                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                        : "text-zinc-400 hover:text-zinc-200"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={loadAnalytics}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-white/[0.06] text-zinc-400 hover:text-white text-sm transition-all"
+              >
+                <RefreshCw size={13} />
+              </button>
+            </div>
+          }
+        />
 
-      <div style={s.grid2}>
-        <MetricBreakdown metrics={metrics} />
-        {metrics.details && <DetailsPanel details={metrics.details} />}
+        {/* Error banner */}
+        <AnimatePresence>
+          {error && (
+            <ERPBanner message={error} type="error" onDismiss={() => setError(null)} />
+          )}
+        </AnimatePresence>
+
+        {/* KPI Cards */}
+        {loading ? (
+          <ERPCardSkeleton count={4} />
+        ) : !metrics ? (
+          <ERPEmptyState
+            icon={<BarChart2 size={28} />}
+            title="No analytics data"
+            sub="Analytics data will appear once your workspace has activity."
+            action={
+              <button onClick={loadAnalytics} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 text-white">
+                <RefreshCw size={14} /> Retry
+              </button>
+            }
+          />
+        ) : (
+          <>
+            {/* KPI Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <AnalyticsKPI
+                label="Attendance Rate"
+                value={pct(metrics.attendance_rate)}
+                numericValue={metrics.attendance_rate}
+                icon={<Calendar size={16} />}
+                accent="#10b981"
+                trend={metrics.attendance_rate >= 80 ? "up" : "down"}
+              />
+              <AnalyticsKPI
+                label="Task Completion"
+                value={pct(metrics.task_completion_rate)}
+                numericValue={metrics.task_completion_rate}
+                icon={<CheckSquare size={16} />}
+                accent="#6366f1"
+                trend={metrics.task_completion_rate >= 70 ? "up" : "down"}
+              />
+              <AnalyticsKPI
+                label="Update Consistency"
+                value={pct(metrics.update_consistency)}
+                numericValue={metrics.update_consistency}
+                icon={<FileText size={16} />}
+                accent="#f59e0b"
+                trend={metrics.update_consistency >= 75 ? "up" : "down"}
+              />
+              <AnalyticsKPI
+                label="Active Members"
+                value={`${metrics.active_users?.active || 0}/${metrics.active_users?.total || 0}`}
+                numericValue={metrics.active_users?.rate}
+                icon={<Users size={16} />}
+                accent="#06b6d4"
+                sub={`${Math.round(metrics.active_users?.rate || 0)}% engagement`}
+              />
+            </div>
+
+            {/* Metric breakdown + Details */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <MetricBreakdown metrics={metrics} />
+              {metrics.details && <DetailsPanel details={metrics.details} />}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-function KPICard({ label, value, icon, accent, sub }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// Sub-components
+// ─────────────────────────────────────────────────────────────────────────────
+
+function AnalyticsKPI({ label, value, numericValue, icon, accent, trend, sub }) {
+  const TrendIcon = trend === "up" ? ArrowUpRight : trend === "down" ? ArrowDownRight : Minus;
+  const trendColor = trend === "up" ? "#10b981" : trend === "down" ? "#ef4444" : "#6b7280";
+
   return (
-    <div style={{ ...s.card, borderTop: `3px solid ${accent}` }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-        <span style={{ fontSize: 20 }}>{icon}</span>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ translateY: -2 }}
+      transition={{ duration: 0.2 }}
+      className="relative overflow-hidden rounded-2xl p-5 group"
+      style={{
+        background: "#111115",
+        border: "1px solid rgba(255,255,255,0.06)",
+        borderTop: `2px solid ${accent}`,
+      }}
+    >
+      {/* Bg glow */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at top left, ${accent}08, transparent 70%)` }}
+      />
+
+      <div className="relative flex items-start justify-between mb-3">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">{label}</p>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${accent}18`, color: accent }}>
+          {icon}
+        </div>
       </div>
-      <p style={{ color: "#9ca3af", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>
-        {label}
-      </p>
-      <p style={{ fontSize: 32, fontWeight: 700, color: accent, margin: 0 }}>{value}</p>
-      {sub && <p style={s.meta}>{sub}</p>}
-    </div>
+
+      <p className="text-3xl font-bold tracking-tight mb-1" style={{ color: accent }}>{value}</p>
+
+      {sub ? (
+        <p className="text-xs text-zinc-500">{sub}</p>
+      ) : (
+        trend && (
+          <div className="flex items-center gap-1 mt-1.5">
+            <TrendIcon size={12} style={{ color: trendColor }} />
+            <span className="text-xs font-medium" style={{ color: trendColor }}>
+              {numericValue != null ? (numericValue >= 70 ? "On track" : "Needs attention") : ""}
+            </span>
+          </div>
+        )
+      )}
+    </motion.div>
   );
 }
 
 function MetricBreakdown({ metrics }) {
   const bars = [
-    { label: "Attendance Rate",    value: metrics.attendance_rate,      color: "#22c55e" },
-    { label: "Task Completion",    value: metrics.task_completion_rate, color: "#6366f1" },
-    { label: "Update Consistency", value: metrics.update_consistency,   color: "#f59e0b" },
+    { label: "Attendance Rate",    value: metrics.attendance_rate || 0,      color: "#10b981", bg: "rgba(16,185,129,0.08)" },
+    { label: "Task Completion",    value: metrics.task_completion_rate || 0, color: "#6366f1", bg: "rgba(99,102,241,0.08)" },
+    { label: "Update Consistency", value: metrics.update_consistency || 0,   color: "#f59e0b", bg: "rgba(245,158,11,0.08)" },
   ];
+
   return (
-    <div style={s.card}>
-      <h3 style={s.cardTitle}>Metric Overview</h3>
-      {bars.map((b) => (
-        <div key={b.label} style={{ marginBottom: 14 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-            <span style={{ fontSize: 12, color: "#9ca3af" }}>{b.label}</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: b.color }}>{Math.round(b.value)}%</span>
-          </div>
-          <div style={{ background: "#1f2937", borderRadius: 99, height: 6, overflow: "hidden" }}>
-            <div style={{ background: b.color, width: `${Math.min(b.value, 100)}%`, height: "100%", borderRadius: 99, transition: "width 0.6s ease" }} />
-          </div>
-        </div>
-      ))}
-      <div style={{ marginTop: 16, display: "flex", gap: 16, flexWrap: "wrap" }}>
-        <Chip label="Overdue Tasks" value={metrics.details?.tasks_total ?? "—"} accent="#ef4444" />
-        <Chip label="Active (Weekly)" value={metrics.active_users?.active ?? "—"} accent="#06b6d4" />
+    <div className="rounded-2xl p-6" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+      <div className="flex items-center gap-2 mb-5">
+        <Activity size={15} className="text-zinc-400" />
+        <h3 className="text-sm font-semibold text-zinc-200">Performance Overview</h3>
       </div>
+
+      <div className="space-y-5">
+        {bars.map((b, i) => (
+          <motion.div key={b.label} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs text-zinc-400">{b.label}</span>
+              <span className="text-sm font-bold" style={{ color: b.color }}>{Math.round(b.value)}%</span>
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(b.value, 100)}%` }}
+                transition={{ duration: 0.7, delay: i * 0.1, ease: "easeOut" }}
+                className="h-full rounded-full"
+                style={{ background: b.color, boxShadow: `0 0 8px ${b.color}60` }}
+              />
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Quick chips */}
+      <div className="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-white/[0.04]">
+        <QuickChip label="Total Tasks" value={metrics.details?.tasks_total ?? "—"} accent="#6366f1" />
+        <QuickChip label="Active (7d)" value={metrics.active_users?.active ?? "—"} accent="#06b6d4" />
+      </div>
+    </div>
+  );
+}
+
+function QuickChip({ label, value, accent }) {
+  return (
+    <div className="text-center p-3 rounded-xl" style={{ background: `${accent}0a`, border: `1px solid ${accent}18` }}>
+      <p className="text-xl font-bold" style={{ color: accent }}>{value}</p>
+      <p className="text-[10px] text-zinc-500 mt-0.5">{label}</p>
     </div>
   );
 }
 
 function DetailsPanel({ details }) {
   if (!details) return null;
+
+  const rows = [
+    { label: "Period", value: `${fmtDate(details.date_start)} → ${fmtDate(details.date_end)}` },
+    { label: "Attendance", value: `${details.attendance_presentish} / ${details.attendance_expected} days` },
+    { label: "Tasks Done", value: `${details.tasks_done} / ${details.tasks_total}` },
+    { label: "Updates", value: `${details.updates_submitted} / ${details.updates_expected}` },
+  ];
+
   return (
-    <div style={s.card}>
-      <h3 style={s.cardTitle}>Period Details</h3>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div><span style={{ color: "#6b7280" }}>Dates:</span> {fmtDate(details.date_start)} → {fmtDate(details.date_end)}</div>
-        <div><span style={{ color: "#6b7280" }}>Attendance:</span> {details.attendance_presentish} / {details.attendance_expected} days</div>
-        <div><span style={{ color: "#6b7280" }}>Tasks:</span> {details.tasks_done} / {details.tasks_total} completed</div>
-        <div><span style={{ color: "#6b7280" }}>Updates:</span> {details.updates_submitted} / {details.updates_expected} submitted</div>
+    <div className="rounded-2xl p-6" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+      <div className="flex items-center gap-2 mb-5">
+        <TrendingUp size={15} className="text-zinc-400" />
+        <h3 className="text-sm font-semibold text-zinc-200">Period Breakdown</h3>
+      </div>
+
+      <div className="space-y-3">
+        {rows.map((row, i) => (
+          <motion.div
+            key={row.label}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.07 }}
+            className="flex items-center justify-between py-2.5 border-b border-white/[0.04] last:border-0"
+          >
+            <span className="text-xs text-zinc-500">{row.label}</span>
+            <span className="text-sm font-medium text-zinc-200">{row.value}</span>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Health score */}
+      <div className="mt-5 pt-4 border-t border-white/[0.04]">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-zinc-500 font-medium">Overall Health</span>
+          <span className="text-xs font-bold text-indigo-400">
+            {details.tasks_total > 0
+              ? `${Math.round((details.tasks_done / details.tasks_total) * 100)}%`
+              : "N/A"}
+          </span>
+        </div>
+        <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: details.tasks_total > 0 ? `${Math.round((details.tasks_done / details.tasks_total) * 100)}%` : "0%" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="h-full rounded-full bg-indigo-500"
+          />
+        </div>
       </div>
     </div>
   );
 }
-
-function Chip({ label, value, accent }) {
-  return (
-    <div style={{ textAlign: "center" }}>
-      <p style={{ fontSize: 18, fontWeight: 700, color: accent, margin: 0 }}>{value}</p>
-      <p style={{ fontSize: 11, color: "#6b7280", margin: "2px 0 0" }}>{label}</p>
-    </div>
-  );
-}
-
-function Banner({ type, children }) {
-  const bg = { error: "#450a0a", success: "#052e16", info: "#0c1a2e" };
-  const border = { error: "#991b1b", success: "#166534", info: "#1d4ed8" };
-  return (
-    <div style={{ background: bg[type], border: `1px solid ${border[type]}`, borderRadius: 8, padding: "10px 16px", fontSize: 13, color: "#e5e7eb", marginBottom: 12 }}>
-      {children}
-    </div>
-  );
-}
-
-function Spinner() {
-  return (
-    <div style={{ textAlign: "center", padding: 60 }}>
-      <div style={{ width: 30, height: 30, borderRadius: "50%", border: "3px solid #1f2937", borderTop: "3px solid #6366f1", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
-}
-
-const s = {
-  page:        { padding: "28px 32px", maxWidth: 1100, margin: "0 auto", fontFamily: "'DM Sans', sans-serif" },
-  topBar:      { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 12 },
-  h1:          { fontSize: 24, fontWeight: 700, color: "#f9fafb", margin: 0 },
-  sub:         { color: "#6b7280", fontSize: 13, marginTop: 4 },
-  kpiGrid:     { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12, marginBottom: 16 },
-  grid2:       { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12, marginBottom: 16 },
-  card:        { background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 20, marginBottom: 16 },
-  cardTitle:   { fontSize: 13, fontWeight: 600, color: "#f3f4f6", marginBottom: 16, marginTop: 0 },
-  meta:        { fontSize: 12, color: "#6b7280", margin: "4px 0 0" },
-  periodBtn:   { background: "#1f2937", border: "1px solid #374151", borderRadius: 6, padding: "6px 14px", color: "#9ca3af", fontSize: 12, cursor: "pointer" },
-  periodActive: { background: "#1e1b4b", border: "1px solid #4338ca", borderRadius: 6, padding: "6px 14px", color: "#a5b4fc", fontSize: 12, fontWeight: 600, cursor: "pointer" },
-};

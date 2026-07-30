@@ -1,8 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import { motion } from "framer-motion";
+import { CheckCircle2, XCircle, FileCheck } from "lucide-react";
+
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
-import { CheckCircle, XCircle, Star } from "lucide-react";
+import { ERPPageHeader } from "../../erp/shared/ERPPageHeader";
+import { ERPEmptyState } from "../../erp/shared/ERPEmptyState";
+import { ERPSpinner } from "../../erp/shared/ERPLoadingSkeleton";
+import { ERPBannerManager } from "../../erp/shared/ERPBanner";
 
 const api = axios.create({ baseURL: "/api/erp-tasks" });
 api.interceptors.request.use(requestInterceptor);
@@ -17,6 +23,7 @@ export default function TaskApproval() {
   const workspaceId = user?.active_workspace_id || 1;
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState({});
 
   const loadTasks = useCallback(async () => {
@@ -26,97 +33,123 @@ export default function TaskApproval() {
       const data = res.data?.data || res.data;
       setTasks(data.tasks || []);
     } catch (err) {
-      console.error(err);
+      setError(err?.response?.data?.error || "Failed to load tasks");
     } finally {
       setLoading(false);
     }
   }, [workspaceId]);
 
-  useEffect(() => {
-    loadTasks();
-  }, [loadTasks]);
+  useEffect(() => { loadTasks(); }, [loadTasks]);
 
   const handleApprove = async (taskId, qualityRating) => {
     setActionLoading((prev) => ({ ...prev, [taskId]: "approve" }));
     try {
       await approvalApi.post(`/${workspaceId}/tasks/${taskId}/approve`, { quality_rating: qualityRating });
       loadTasks();
-      alert("Task approved successfully!");
     } catch (err) {
-      alert(err?.response?.data?.error || "Approval failed");
+      setError(err?.response?.data?.error || "Approval failed");
     } finally {
       setActionLoading((prev) => ({ ...prev, [taskId]: undefined }));
     }
   };
 
-  const handleReject = async (taskId, reason) => {
+  const handleReject = async (taskId) => {
     const rejectionReason = prompt("Enter rejection reason:");
     if (!rejectionReason) return;
     setActionLoading((prev) => ({ ...prev, [taskId]: "reject" }));
     try {
       await approvalApi.post(`/${workspaceId}/tasks/${taskId}/reject`, { rejection_reason: rejectionReason });
       loadTasks();
-      alert("Task rejected.");
     } catch (err) {
-      alert(err?.response?.data?.error || "Rejection failed");
+      setError(err?.response?.data?.error || "Rejection failed");
     } finally {
       setActionLoading((prev) => ({ ...prev, [taskId]: undefined }));
     }
   };
 
   const qualityOptions = [
-    { value: "accepted", label: "Accepted (1.0x)", color: "#22c55e" },
-    { value: "good", label: "Good (1.2x)", color: "#f59e0b" },
-    { value: "excellent", label: "Excellent (1.5x)", color: "#6366f1" },
+    { value: "accepted", label: "Accepted (1.0x)", color: "#10b981", bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.3)" },
+    { value: "good", label: "Good (1.2x)", color: "#f59e0b", bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.3)" },
+    { value: "excellent", label: "Excellent (1.5x)", color: "#6366f1", bg: "rgba(99,102,241,0.12)", border: "rgba(99,102,241,0.3)" },
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Task Approval</h1>
-        <p className="text-zinc-400 mb-8">Approve or reject completed tasks to award execution points</p>
+    <div className="min-h-screen bg-[#0a0a0b] text-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ERPPageHeader
+          icon={<FileCheck size={20} />}
+          title="Task Approval"
+          description="Review completed tasks and award execution points based on quality."
+          breadcrumbs={[{ label: "ERP" }, { label: "Admin" }, { label: "Approvals" }]}
+        />
+
+        {error && <ERPBannerManager error={error} onDismissError={() => setError(null)} />}
 
         {loading ? (
-          <div className="text-center py-20">Loading tasks...</div>
+          <ERPSpinner label="Loading pending approvals..." />
         ) : tasks.length === 0 ? (
-          <div className="text-center py-20 text-zinc-500">No completed tasks pending approval.</div>
+          <ERPEmptyState
+            icon={<CheckCircle2 size={28} />}
+            title="All caught up"
+            sub="There are no completed tasks waiting for your approval right now."
+          />
         ) : (
-          <div className="space-y-6">
-            {tasks.map((task) => (
-              <div key={task.id} className="bg-[#121215] border border-zinc-800 rounded-2xl p-6">
-                <div className="flex flex-wrap justify-between gap-4 mb-4">
+          <div className="space-y-4">
+            {tasks.map((task, index) => (
+              <motion.div
+                key={task.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="p-6 rounded-2xl"
+                style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
                   <div>
-                    <h3 className="text-xl font-semibold">{task.title}</h3>
-                    <p className="text-zinc-400 text-sm mt-1">Assigned to: {task.assignee?.name || `User #${task.assigned_to}`}</p>
-                    {task.deadline && <p className="text-zinc-500 text-xs mt-1">Deadline: {new Date(task.deadline).toLocaleDateString()}</p>}
+                    <h3 className="text-base font-bold text-white">{task.title}</h3>
+                    <div className="flex items-center gap-3 mt-1.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-500">
+                      <span>Assignee: {task.assignee?.name || `#${task.assigned_to}`}</span>
+                      {task.deadline && <span>• Deadline: {new Date(task.deadline).toLocaleDateString()}</span>}
+                    </div>
                   </div>
+                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-widest">
+                    Pending Review
+                  </span>
                 </div>
-                <p className="text-zinc-300 mb-4">{task.description}</p>
-
-                <div className="flex flex-wrap gap-3 mt-4">
-                  {qualityOptions.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => handleApprove(task.id, opt.value)}
-                      disabled={actionLoading[task.id] === "approve"}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors"
-                      style={{ background: `${opt.color}20`, color: opt.color, border: `1px solid ${opt.color}40` }}
-                    >
-                      <CheckCircle size={16} /> {opt.label}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => handleReject(task.id)}
-                    disabled={actionLoading[task.id] === "reject"}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/20 text-red-400 border border-red-500/40 font-semibold"
-                  >
-                    <XCircle size={16} /> Reject
-                  </button>
-                </div>
-                {actionLoading[task.id] && (
-                  <div className="mt-3 text-sm text-zinc-500">Processing...</div>
+                
+                {task.description && (
+                  <p className="text-sm text-zinc-300 mb-6 bg-zinc-900/50 p-4 rounded-xl border border-white/5">
+                    {task.description}
+                  </p>
                 )}
-              </div>
+
+                <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-white/5">
+                  {qualityOptions.map((opt) => (
+                    <motion.button
+                      key={opt.value}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleApprove(task.id, opt.value)}
+                      disabled={actionLoading[task.id]}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all"
+                      style={{ background: opt.bg, color: opt.color, border: `1px solid ${opt.border}`, opacity: actionLoading[task.id] ? 0.5 : 1 }}
+                    >
+                      <CheckCircle2 size={14} /> {opt.label}
+                    </motion.button>
+                  ))}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleReject(task.id)}
+                    disabled={actionLoading[task.id]}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20 ml-auto transition-all"
+                    style={{ opacity: actionLoading[task.id] ? 0.5 : 1 }}
+                  >
+                    <XCircle size={14} /> Reject
+                  </motion.button>
+                </div>
+                {actionLoading[task.id] && <p className="mt-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest animate-pulse">Processing action...</p>}
+              </motion.div>
             ))}
           </div>
         )}

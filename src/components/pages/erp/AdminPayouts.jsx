@@ -1,8 +1,28 @@
+// src/components/pages/erp/AdminPayouts.jsx — REDESIGNED
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Wallet,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  XCircle,
+  Filter,
+  RefreshCw,
+  X,
+  DollarSign,
+  Users,
+  TrendingUp,
+} from "lucide-react";
+
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
-import { CheckCircle, Clock, AlertCircle, XCircle, Eye, DollarSign, Filter } from "lucide-react";
+import { ERPPageHeader } from "../../erp/shared/ERPPageHeader";
+import { ERPStatusBadge } from "../../erp/shared/ERPStatusBadge";
+import { ERPEmptyState } from "../../erp/shared/ERPEmptyState";
+import { ERPTableSkeleton } from "../../erp/shared/ERPLoadingSkeleton";
+import { ERPBanner } from "../../erp/shared/ERPBanner";
 
 const api = axios.create({ baseURL: "/api/payout" });
 api.interceptors.request.use(requestInterceptor);
@@ -13,35 +33,33 @@ revenuePoolApi.interceptors.request.use(requestInterceptor);
 revenuePoolApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 const STATUS_META = {
-  paid:       { label: "Paid",       color: "#22c55e", bg: "rgba(34,197,94,0.12)",   icon: CheckCircle },
-  approved:   { label: "Approved",   color: "#6366f1", bg: "rgba(99,102,241,0.12)",  icon: CheckCircle },
-  pending:    { label: "Pending",    color: "#f59e0b", bg: "rgba(245,158,11,0.12)",  icon: Clock },
-  held:       { label: "On Hold",    color: "#9ca3af", bg: "rgba(156,163,175,0.12)", icon: AlertCircle },
-  cancelled:  { label: "Cancelled",  color: "#ef4444", bg: "rgba(239,68,68,0.12)",   icon: XCircle },
+  paid:       { label: "Paid",       color: "#10b981", bg: "rgba(16,185,129,0.1)",   icon: CheckCircle2 },
+  approved:   { label: "Approved",   color: "#6366f1", bg: "rgba(99,102,241,0.1)",   icon: CheckCircle2 },
+  pending:    { label: "Pending",    color: "#f59e0b", bg: "rgba(245,158,11,0.1)",   icon: Clock },
+  held:       { label: "On Hold",    color: "#9ca3af", bg: "rgba(156,163,175,0.1)",  icon: AlertCircle },
+  cancelled:  { label: "Cancelled",  color: "#ef4444", bg: "rgba(239,68,68,0.1)",    icon: XCircle },
 };
 
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString() : "—";
-const fmtAmount = (v) => `$${Number(v).toLocaleString()}`;
+const fmt$ = (v) => `$${Number(v || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function AdminPayouts() {
   const { user } = useSelector((s) => s.auth);
   const workspaceId = user?.active_workspace_id || 1;
+
   const [payouts, setPayouts] = useState([]);
   const [pools, setPools] = useState([]);
   const [selectedPoolId, setSelectedPoolId] = useState("");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [modal, setModal] = useState(null); // { action, payoutId, reason? }
+  const [modal, setModal] = useState(null);
 
   const loadPools = useCallback(async () => {
     try {
       const res = await revenuePoolApi.get(`/workspaces/${workspaceId}/revenue-pools`);
       const data = res.data?.data || res.data;
       setPools(data.pools || []);
-    } catch (err) {
-      console.error("Failed to load pools", err);
-    }
+    } catch (err) { console.error("Failed to load pools", err); }
   }, [workspaceId]);
 
   const loadPayouts = useCallback(async () => {
@@ -55,178 +73,232 @@ export default function AdminPayouts() {
       setPayouts(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err?.response?.data?.error || "Failed to load payouts");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, [workspaceId, selectedPoolId]);
 
-  useEffect(() => {
-    loadPools();
-  }, [loadPools]);
-
-  useEffect(() => {
-    loadPayouts();
-  }, [loadPayouts]);
+  useEffect(() => { loadPools(); }, [loadPools]);
+  useEffect(() => { loadPayouts(); }, [loadPayouts]);
 
   const handleAction = async (payoutId, action, reason = "") => {
     setActionLoading(true);
     try {
-      let url = `/workspaces/${workspaceId}/payouts/${payoutId}/${action}`;
-      let payload = {};
-      if (action === "hold") payload = { reason };
-      await api.post(url, payload);
+      const payload = action === "hold" ? { reason } : {};
+      await api.post(`/workspaces/${workspaceId}/payouts/${payoutId}/${action}`, payload);
       setModal(null);
       loadPayouts();
     } catch (err) {
-      alert(err?.response?.data?.error || `${action} failed`);
-    } finally {
-      setActionLoading(false);
-    }
+      setError(err?.response?.data?.error || `${action} failed`);
+    } finally { setActionLoading(false); }
   };
 
   const getPoolName = (poolId) => {
-    const pool = pools.find(p => p.id === poolId);
-    return pool ? `${new Date(pool.period_start).toLocaleDateString()} – ${new Date(pool.period_end).toLocaleDateString()}` : `Pool #${poolId}`;
+    const pool = pools.find((p) => p.id === poolId);
+    return pool
+      ? `${new Date(pool.period_start).toLocaleDateString([], { month: "short", day: "numeric" })} – ${new Date(pool.period_end).toLocaleDateString([], { month: "short", day: "numeric" })}`
+      : `Pool #${poolId}`;
   };
 
-  return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Payouts (Admin)</h1>
-            <p className="text-zinc-400 mt-1">Manage, approve, hold, or mark payouts as paid</p>
-          </div>
-        </div>
+  // Summary metrics
+  const totalPaid = payouts.filter(p => p.status === "paid").reduce((s, p) => s + (p.final_payout_amount || 0), 0);
+  const pendingCount = payouts.filter(p => p.status === "pending").length;
+  const approvedCount = payouts.filter(p => p.status === "approved").length;
 
-        {/* Filter by Revenue Pool */}
-        <div className="bg-[#121215] border border-zinc-800 rounded-2xl p-4 mb-6 flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Filter size={18} className="text-zinc-400" />
-            <span className="text-sm font-medium">Filter by pool:</span>
+  return (
+    <div className="min-h-screen bg-[#0a0a0b] text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <ERPPageHeader
+          icon={<Wallet size={20} />}
+          title="Payouts"
+          description="Manage, approve, hold, or mark payouts as paid across all revenue pools"
+          breadcrumbs={[{ label: "ERP" }, { label: "Admin" }, { label: "Payouts" }]}
+          actions={
+            <button
+              onClick={loadPayouts}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-white/[0.06] text-zinc-400 hover:text-white text-sm transition-all"
+            >
+              <RefreshCw size={13} />
+            </button>
+          }
+        />
+
+        <AnimatePresence>
+          {error && <ERPBanner message={error} type="error" onDismiss={() => setError(null)} />}
+        </AnimatePresence>
+
+        {/* Summary KPIs */}
+        {!loading && payouts.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            {[
+              { label: "Total Paid Out", value: fmt$(totalPaid), accent: "#10b981", icon: <TrendingUp size={14} /> },
+              { label: "Pending", value: pendingCount, accent: "#f59e0b", icon: <Clock size={14} /> },
+              { label: "Approved", value: approvedCount, accent: "#6366f1", icon: <CheckCircle2 size={14} /> },
+              { label: "Total Payouts", value: payouts.length, accent: "#06b6d4", icon: <Users size={14} /> },
+            ].map((kpi) => (
+              <motion.div
+                key={kpi.label}
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                whileHover={{ translateY: -2 }}
+                className="p-4 rounded-2xl"
+                style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)", borderTop: `2px solid ${kpi.accent}` }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">{kpi.label}</p>
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: `${kpi.accent}18`, color: kpi.accent }}>
+                    {kpi.icon}
+                  </div>
+                </div>
+                <p className="text-xl font-bold" style={{ color: kpi.accent }}>{kpi.value}</p>
+              </motion.div>
+            ))}
           </div>
+        )}
+
+        {/* Filter */}
+        <div
+          className="flex flex-wrap gap-3 items-center px-5 py-4 rounded-xl mb-6"
+          style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <Filter size={13} className="text-zinc-500 shrink-0" />
+          <label className="text-xs text-zinc-400 font-medium">Pool</label>
           <select
             value={selectedPoolId}
             onChange={(e) => setSelectedPoolId(e.target.value)}
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-sm"
+            className="bg-zinc-800 border border-white/[0.06] text-zinc-300 text-xs rounded-lg px-3 py-1.5 outline-none focus:border-indigo-500/50 cursor-pointer flex-1 max-w-xs"
           >
             <option value="">All Pools</option>
             {pools.map((pool) => (
               <option key={pool.id} value={pool.id}>
-                {new Date(pool.period_start).toLocaleDateString()} – {new Date(pool.period_end).toLocaleDateString()} (ID: {pool.id})
+                {getPoolName(pool.id)} (#{pool.id})
               </option>
             ))}
           </select>
-          <button
-            onClick={() => setSelectedPoolId("")}
-            className="px-3 py-1.5 bg-zinc-700 rounded-lg text-xs hover:bg-zinc-600"
-          >
-            Clear
-          </button>
+          {selectedPoolId && (
+            <button onClick={() => setSelectedPoolId("")} className="text-zinc-500 hover:text-zinc-300 text-xs flex items-center gap-1">
+              <X size={11} /> Clear
+            </button>
+          )}
+          <span className="ml-auto text-xs text-zinc-500">{payouts.length} payouts</span>
         </div>
 
-        {error && <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-6">{error}</div>}
-
-        {loading ? (
-          <div className="text-center py-20">Loading payouts...</div>
-        ) : payouts.length === 0 ? (
-          <div className="text-center py-20 text-zinc-500">No payouts found.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-zinc-900 border-b border-zinc-800">
-                <tr className="text-left text-zinc-400">
-                  <th className="p-3">ID</th>
-                  <th className="p-3">User ID</th>
-                  <th className="p-3">Revenue Pool</th>
-                  <th className="p-3">Points</th>
-                  <th className="p-3">Amount</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payouts.map((p) => {
-                  const meta = STATUS_META[p.status] || STATUS_META.pending;
-                  const Icon = meta.icon;
-                  return (
-                    <tr key={p.id} className="border-b border-zinc-800 hover:bg-zinc-900/50">
-                      <td className="p-3">#{p.id}</td>
-                      <td className="p-3">User #{p.user_id}</td>
-                      <td className="p-3">{getPoolName(p.revenue_pool_id)}</td>
-                      <td className="p-3">{p.execution_points} / {p.team_total_points}</td>
-                      <td className="p-3">{fmtAmount(p.final_payout_amount)}</td>
-                      <td className="p-3">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold" style={{ background: meta.bg, color: meta.color }}>
-                          <Icon size={12} /> {meta.label}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <div className="flex gap-2">
-                          {p.status === "pending" && (
-                            <button
-                              onClick={() => handleAction(p.id, "approve")}
-                              disabled={actionLoading}
-                              className="px-3 py-1 bg-green-600 rounded text-xs hover:bg-green-700"
-                            >
-                              Approve
-                            </button>
-                          )}
-                          {(p.status === "pending" || p.status === "pending_review") && (
-  <button onClick={() => handleAction(p.id, "approve")} className="px-3 py-1 bg-green-600 rounded text-xs hover:bg-green-700">
-    Approve
-  </button>
-)}
-                          {p.status === "approved" && (
-                            <button
-                              onClick={() => handleAction(p.id, "mark-paid")}
-                              disabled={actionLoading}
-                              className="px-3 py-1 bg-blue-600 rounded text-xs hover:bg-blue-700"
-                            >
-                              Mark Paid
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {/* Table */}
+        <div className="rounded-2xl overflow-hidden" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+          {loading ? (
+            <ERPTableSkeleton rows={6} cols={6} />
+          ) : payouts.length === 0 ? (
+            <ERPEmptyState icon={<Wallet size={28} />} title="No payouts found" sub="Payouts will appear here once revenue pools are processed." compact />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/[0.04]">
+                    {["ID", "Member", "Pool", "Points", "Payout Amount", "Status", "Actions"].map((h) => (
+                      <th key={h} className="text-left px-5 py-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {payouts.map((p, i) => {
+                    const meta = STATUS_META[p.status] || STATUS_META.pending;
+                    const StatusIcon = meta.icon;
+                    return (
+                      <motion.tr
+                        key={p.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: i * 0.025 }}
+                        className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors"
+                      >
+                        <td className="px-5 py-3.5 text-xs text-zinc-500 font-mono">#{p.id}</td>
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-md bg-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-300">U</div>
+                            <span className="text-sm text-zinc-300">#{p.user_id}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5 text-xs text-zinc-400 whitespace-nowrap">{getPoolName(p.revenue_pool_id)}</td>
+                        <td className="px-5 py-3.5 text-xs text-zinc-400 font-mono">{p.execution_points}/{p.team_total_points}</td>
+                        <td className="px-5 py-3.5 text-sm font-bold text-white">{fmt$(p.final_payout_amount)}</td>
+                        <td className="px-5 py-3.5">
+                          <span
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                            style={{ background: meta.bg, color: meta.color }}
+                          >
+                            <StatusIcon size={10} /> {meta.label}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <div className="flex gap-2 flex-wrap">
+                            {(p.status === "pending" || p.status === "pending_review") && (
+                              <button
+                                onClick={() => handleAction(p.id, "approve")}
+                                disabled={actionLoading}
+                                className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all"
+                                style={{ background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.2)" }}
+                              >
+                                Approve
+                              </button>
+                            )}
+                            {p.status === "approved" && (
+                              <button
+                                onClick={() => handleAction(p.id, "mark-paid")}
+                                disabled={actionLoading}
+                                className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all"
+                                style={{ background: "rgba(99,102,241,0.12)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.2)" }}
+                              >
+                                Mark Paid
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Hold Reason Modal */}
-      {modal && modal.action === "hold" && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#1a1a1a] border border-zinc-800 rounded-2xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">Hold Payout</h2>
-            <p className="text-sm text-zinc-400 mb-4">Please provide a reason for holding this payout.</p>
-            <textarea
-              placeholder="Reason for hold..."
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 text-sm"
-              rows="3"
-              onChange={(e) => setModal({ ...modal, reason: e.target.value })}
-            />
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setModal(null)}
-                className="flex-1 py-2 bg-zinc-700 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleAction(modal.payoutId, "hold", modal.reason)}
-                disabled={actionLoading}
-                className="flex-1 py-2 bg-amber-600 rounded-lg font-semibold disabled:opacity-50"
-              >
-                Confirm Hold
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Hold Modal */}
+      <AnimatePresence>
+        {modal?.action === "hold" && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-50 p-6"
+            onClick={() => setModal(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-2xl p-6 shadow-2xl"
+              style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.08)" }}
+            >
+              <h2 className="text-base font-bold mb-2 text-white">Hold Payout</h2>
+              <p className="text-sm text-zinc-400 mb-4">Please provide a reason for holding this payout.</p>
+              <textarea
+                placeholder="Reason for hold…"
+                rows={3}
+                className="w-full rounded-xl px-4 py-3 text-sm resize-none outline-none"
+                style={{ background: "#1a1a20", border: "1px solid rgba(255,255,255,0.07)", color: "#e5e7eb" }}
+                onChange={(e) => setModal({ ...modal, reason: e.target.value })}
+              />
+              <div className="flex gap-3 mt-5">
+                <button onClick={() => setModal(null)} className="flex-1 py-2.5 rounded-xl text-sm text-zinc-400 transition-colors" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>Cancel</button>
+                <button
+                  onClick={() => handleAction(modal.payoutId, "hold", modal.reason)}
+                  disabled={actionLoading}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+                  style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)", opacity: actionLoading ? 0.7 : 1 }}
+                >
+                  Confirm Hold
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

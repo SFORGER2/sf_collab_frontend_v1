@@ -14,6 +14,7 @@ import {
   responseErrorInterceptor,
 } from "../../../../../utils/APIs/interceptors";
 import BackgroundImage from "../../../../../assets/imgs/background-image.jpg";
+import { ERPPageHeader } from "../../../shared/ERPPageHeader";
 
 const mk = (base) => {
   const a = axios.create({ baseURL: base });
@@ -128,18 +129,16 @@ export default function ERPDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white py-8 px-4 md:px-8 overflow-auto font-sans">
-      <div className="mx-auto">
-        <div className="mb-10">
-          <h1 className="text-4xl font-semibold tracking-tight bg-gradient-to-br from-white to-gray-500 bg-clip-text text-transparent">
-            ERP Dashboard
-          </h1>
-          <p className="text-zinc-400 mt-1">
-            {role === "founder" ? "Strategic overview of your organization" : "Your daily builder workspace"}
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans">
+        <ERPPageHeader
+          icon={<Zap size={20} />}
+          title="ERP Dashboard"
+          description={role === "founder" ? "Strategic overview of your organization" : "Your daily builder workspace"}
+          breadcrumbs={[{ label: "ERP" }, { label: "Dashboard" }]}
+        />
 
-        <div className={`grid grid-cols-1 md:grid-cols-2 ${role === "builder" ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-6 mb-8`}>
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${role === "builder" ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-6 mt-6 mb-8`}>
 
           {/* Attendance */}
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}

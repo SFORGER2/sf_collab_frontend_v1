@@ -11,6 +11,7 @@ import {
   X,
   Archive,
   Trash2,
+  Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
@@ -21,6 +22,8 @@ import {
   responseErrorInterceptor,
 } from "../../../utils/APIs/interceptors";
 import { workspaceAPI } from "../../../services/workspaceAPI";
+import { ERPPageHeader } from "../../erp/shared/ERPPageHeader";
+import { ERPStatCard } from "../../erp/shared/ERPStatCard";
 
 // Use correct base URL for ERP documents
 const api = axios.create({ baseURL: "/api/erp-documents" });
@@ -452,7 +455,8 @@ const DocumentsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-8 font-sans">
+    <div className="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans">
       {notice && (
         <div className={`fixed bottom-6 right-6 z-[99999] px-6 py-4 rounded-3xl text-white font-semibold shadow-2xl ${notice.isError ? "bg-red-600" : "bg-violet-600"}`}>
           {notice.msg}
@@ -465,71 +469,18 @@ const DocumentsPage = () => {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-10">
-        <div>
-          <h1 className="text-4xl font-semibold tracking-tight bg-gradient-to-br from-white to-gray-500 bg-clip-text text-transparent">
-            Documents
-          </h1>
-          <p className="text-zinc-400 mt-1 text-lg">Secure file management</p>
-        </div>
-      </div>
+      <ERPPageHeader
+        icon={<FileText size={20} />}
+        title="Documents"
+        description="Secure file management and storage for your workspace."
+        breadcrumbs={[{ label: "ERP" }, { label: "Documents" }]}
+      />
 
-      {/* Stats Cards – updated to show real storage and folder count */}
-      <div className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-6 mb-10">
-        <motion.div whileHover={{ scale: 1.02 }} className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium"><Folder className="w-5 h-5" /> TOTAL FILES</div>
-              <div className="text-5xl font-semibold mt-3">{stats.totalFiles}</div>
-              <div className="text-emerald-400 text-sm mt-1">{stats.totalFiles} total</div>
-            </div>
-            <div className="w-16 h-16 bg-gradient-to-br from-violet-500/10 to-transparent rounded-2xl flex items-center justify-center"><FileText className="w-9 h-9 text-violet-400" /></div>
-          </div>
-        </motion.div>
-
-        <motion.div whileHover={{ scale: 1.02 }} className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium"><Folder className="w-5 h-5" /> FOLDERS</div>
-              <div className="text-5xl font-semibold mt-3">{stats.folders}</div>
-              <div className="text-amber-400 text-sm mt-1">{stats.folders} folders</div>
-            </div>
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-500/10 to-transparent rounded-2xl flex items-center justify-center"><Folder className="w-9 h-9 text-amber-400" /></div>
-          </div>
-        </motion.div>
-
-        {/* STORAGE CARD – now shows real size */}
-        <motion.div whileHover={{ scale: 1.02 }} className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium">STORAGE</div>
-              <div className="text-5xl font-semibold mt-3">
-                {stats.storageMB !== undefined ? `${stats.storageMB.toFixed(1)} MB` : "—"}
-              </div>
-              <div className="text-zinc-400 text-sm mt-1">
-                {stats.totalFiles} file{stats.totalFiles !== 1 ? 's' : ''}
-              </div>
-            </div>
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500/10 to-transparent rounded-2xl flex items-center justify-center">
-              <div className="w-12 h-12 rounded-full border-4 border-blue-500/30 flex items-center justify-center text-blue-400 text-lg font-semibold">
-                {stats.storageMB !== undefined ? Math.round(stats.storageMB) : "?"}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div whileHover={{ scale: 1.02 }} className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-3xl p-6 shadow-inner relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium"><div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse" /> COLLABORATING</div>
-              <div className="text-5xl font-semibold mt-3">{loading ? "—" : stats.totalFiles > 0 ? 1 : 0}</div>
-              <div className="text-zinc-400 text-sm mt-1">{stats.totalFiles > 0 ? "currently editing" : "no active editors"}</div>
-            </div>
-            <div className="flex -space-x-4">
-              {stats.totalFiles > 0 && <div className="w-9 h-9 bg-violet-500 rounded-2xl flex items-center justify-center text-xs font-bold ring-2 ring-zinc-900">{user?.firstName?.[0]}{user?.lastName?.[0]}</div>}
-            </div>
-          </div>
-        </motion.div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 mb-8">
+        <ERPStatCard title="Total Files" value={stats.totalFiles} icon={<FileText size={18} className="text-violet-500" />} accentColor="#8b5cf6" />
+        <ERPStatCard title="Folders" value={stats.folders} icon={<Folder size={18} className="text-amber-500" />} accentColor="#f59e0b" />
+        <ERPStatCard title="Storage" value={stats.storageMB !== undefined ? `${stats.storageMB.toFixed(1)} MB` : "—"} subValue={`${stats.totalFiles} files`} icon={<Archive size={18} className="text-blue-500" />} accentColor="#3b82f6" />
+        <ERPStatCard title="Collaborators" value={loading ? "—" : stats.totalFiles > 0 ? "1" : "0"} subValue={stats.totalFiles > 0 ? "Currently active" : "No active editors"} icon={<Users size={18} className="text-emerald-500" />} accentColor="#10b981" />
       </div>
 
       {/* Main Documents Area */}
@@ -734,6 +685,7 @@ const DocumentsPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 };
