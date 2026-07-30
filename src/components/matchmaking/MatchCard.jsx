@@ -71,6 +71,14 @@ const clampScore = (score) => {
   return Math.max(0, Math.min(100, score));
 };
 
+const getMatchLabel = (score) => {
+  if (score == null) return null;
+  if (score >= 90) return { label: 'Excellent Match', color: 'text-emerald-400' };
+  if (score >= 75) return { label: 'Strong Match', color: 'text-blue-400' };
+  if (score >= 50) return { label: 'Good Match', color: 'text-yellow-400' };
+  return { label: 'Potential Match', color: 'text-slate-400' };
+};
+
 const getInitials = (name = '') => {
   const parts = String(name)
     .trim()
@@ -82,17 +90,6 @@ const getInitials = (name = '') => {
   return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
 };
 
-const formatMetaValue = (value) => {
-  if (value == null || value === '') return null;
-  if (Array.isArray(value)) return value.join(' | ');
-  if (typeof value === 'object') {
-    return Object.entries(value)
-      .map(([key, val]) => `${key}: ${val}`)
-      .join(' | ');
-  }
-  return String(value);
-};
-
 function MatchCard({ match, className, compact = false }) {
   const [avatarFailed, setAvatarFailed] = useState(false);
   const navigate = useNavigate();
@@ -100,22 +97,30 @@ function MatchCard({ match, className, compact = false }) {
   const config = KIND_CONFIG[match.kind] || KIND_CONFIG.user;
   const Icon = config.icon;
   const score = clampScore(match.matchScore);
+  const matchLabel = getMatchLabel(score);
   const initials = useMemo(() => getInitials(match.name), [match.name]);
   const reasons = Array.isArray(match.reasons) ? match.reasons.filter(Boolean) : [];
 
-  const metaLine = useMemo(() => {
-    if (!match.meta) return null;
+  // Parses metadata into clean, distinct pill tags (e.g. React, Node.js, Seed Stage)
+  const cleanTags = useMemo(() => {
+    if (!match.meta || typeof match.meta !== 'object') return [];
 
-    const priorityKeys = ['skills', 'expertise', 'stage', 'company', 'thesis', 'checkSize', 'portfolio', 'focus'];
-    for (const key of priorityKeys) {
-      if (key in match.meta) {
-        const formatted = formatMetaValue(match.meta[key]);
-        if (formatted) return formatted;
+    const tags = [];
+    Object.entries(match.meta).forEach(([_, val]) => {
+      if (!val) return;
+      if (Array.isArray(val)) {
+        val.forEach((v) => tags.push(String(v)));
+      } else if (typeof val === 'string') {
+        val.split(/[,|]/).forEach((v) => {
+          const trimmed = v.trim();
+          if (trimmed) tags.push(trimmed);
+        });
+      } else {
+        tags.push(String(val));
       }
-    }
+    });
 
-    const fallback = formatMetaValue(match.meta);
-    return fallback || null;
+    return tags.slice(0, 4); // Limit to 4 max to maintain clean card height
   }, [match.meta]);
 
   const handleMessage = async () => {
@@ -133,84 +138,48 @@ function MatchCard({ match, className, compact = false }) {
     }
   };
 
-  const handlePrimaryAction = (e) => {
-    e?.preventDefault?.();
-    if (match.ctaOnClick) {
-      match.ctaOnClick(match);
-    }
-  };
-
-  const renderCta = () => { // eslint-disable-line no-unused-vars
-    const hasPrimary = Boolean(match.ctaLabel && (match.ctaHref || match.ctaOnClick));
-    const hasSecondary = Boolean(match.secondaryCtaLabel && match.secondaryCtaOnClick);
-
-    if (!hasPrimary && !hasSecondary) return null;
-
-    const primaryClasses = 'w-full sm:w-auto bg-white text-slate-955 hover:bg-white/90 font-medium rounded-xl';
-    const secondaryClasses = 'w-full sm:w-auto border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white font-medium rounded-xl';
-
-    return (
-      <div className="flex w-full sm:w-auto items-center gap-2">
-        {hasSecondary && (
-          <Button
-            size="sm"
-            variant="outline"
-            className={secondaryClasses}
-            onClick={(e) => {
-              e.preventDefault();
-              match.secondaryCtaOnClick(match);
-            }}
-          >
-            {match.secondaryCtaLabel}
-          </Button>
-        )}
-        {hasPrimary && (
-          match.ctaHref && !match.ctaOnClick ? (
-            <Button asChild size="sm" className={primaryClasses}>
-              <a href={match.ctaHref}>{match.ctaLabel}</a>
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              className={primaryClasses}
-              onClick={match.ctaOnClick ? handlePrimaryAction : undefined}
-            >
-              {match.ctaLabel}
-            </Button>
-          )
-        )}
-      </div>
-    );
-  };
-
-  const buttonClasses = 'w-full sm:w-auto bg-white text-slate-955 hover:bg-white/90';
+  const buttonClasses =
+    'w-full bg-white text-slate-955 hover:bg-white/90 active:scale-[0.97] transition-transform duration-[160ms] ease-out font-medium rounded-xl';
+  const actionWrapperClasses = 'w-full sm:flex-1 sm:min-w-[100px] xl:flex-none xl:w-auto';
 
   const renderActions = () => {
     if (match.kind === 'startup') {
       return (
         <>
-          <Button asChild size="sm" className={buttonClasses}>
-            <Link to={`/startup-details/${match.id}`}>View Startup</Link>
-          </Button>
-          <Button asChild size="sm" className={buttonClasses}>
-            <Link to={`/startup-details/${match.id}`}>Startup Invitation</Link>
-          </Button>
-          <Button size="sm" className={buttonClasses} onClick={handleMessage}>
-            Message
-          </Button>
+          <div className={actionWrapperClasses}>
+            <Button asChild size="sm" className={buttonClasses}>
+              <Link to={`/startup-details/${match.id}`}>View Startup</Link>
+            </Button>
+          </div>
+          <div className={actionWrapperClasses}>
+            <Button asChild size="sm" className={buttonClasses}>
+              <Link to={`/startup-details/${match.id}`}>Invite</Link>
+            </Button>
+          </div>
+          <div className={actionWrapperClasses}>
+            <Button size="sm" className={buttonClasses} onClick={handleMessage}>
+              Message
+            </Button>
+          </div>
         </>
       );
     }
 
     return (
       <>
-        <Button asChild size="sm" className={buttonClasses}>
-          <Link to={`/user-profile?userId=${match.id}`}>View Profile</Link>
-        </Button>
-        <ConnectionButton userId={match.id} size="sm" />
-        <Button size="sm" className={buttonClasses} onClick={handleMessage}>
-          Message
-        </Button>
+        <div className={actionWrapperClasses}>
+          <Button asChild size="sm" className={buttonClasses}>
+            <Link to={`/user-profile?userId=${match.id}`}>View Profile</Link>
+          </Button>
+        </div>
+        <div className={actionWrapperClasses}>
+          <ConnectionButton userId={match.id} size="sm" className="w-full" />
+        </div>
+        <div className={actionWrapperClasses}>
+          <Button size="sm" className={buttonClasses} onClick={handleMessage}>
+            Message
+          </Button>
+        </div>
       </>
     );
   };
@@ -218,115 +187,135 @@ function MatchCard({ match, className, compact = false }) {
   return (
     <Card
       className={cn(
-        'group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 shadow-sm backdrop-blur-xl',
-        'transition-all duration-300 hover:-translate-y-0.5 hover:border-white/20 hover:shadow-xl hover:shadow-black/20',
+        'group relative flex flex-col h-full overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 shadow-sm backdrop-blur-xl',
+        'transition-[transform,box-shadow,border-color] duration-200',
+        '[@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-0.5',
+        '[@media(hover:hover)_and_(pointer:fine)]:hover:border-white/20',
+        'hover:shadow-xl hover:shadow-black/20',
         className
       )}
     >
       <div className={cn('pointer-events-none absolute inset-0 bg-gradient-to-br', config.accent)} />
 
+      {/* Card Header */}
       <CardHeader className={cn('relative border-b border-white/5 px-4 py-4 sm:px-6', compact && 'gap-1')}>
-        <div className="flex items-start gap-3 sm:gap-4">
-          <Avatar className="size-14 shrink-0 rounded-xl ring-1 ring-white/10 sm:size-16">
-            {match.avatarUrl && !avatarFailed ? (
-              <AvatarImage
-                src={match.avatarUrl}
-                alt={match.name}
-                className="object-cover"
-                onError={() => setAvatarFailed(true)}
-              />
-            ) : null}
-            <AvatarFallback className="rounded-xl bg-slate-700 text-sm font-semibold text-white ring-1 ring-white/10">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+        <div className="flex items-start justify-between gap-2.5 sm:gap-3 min-w-0 w-full">
+          <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0 overflow-hidden">
+            <Avatar className="size-11 shrink-0 rounded-xl ring-1 ring-white/10 sm:size-13">
+              {match.avatarUrl && !avatarFailed ? (
+                <AvatarImage
+                  src={match.avatarUrl}
+                  alt={match.name}
+                  className="object-cover"
+                  onError={() => setAvatarFailed(true)}
+                />
+              ) : null}
+              <AvatarFallback className="rounded-xl bg-slate-700 text-xs font-semibold text-white ring-1 ring-white/10">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
 
-          <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 items-center gap-2">
-              <h3 className="min-w-0 break-words text-base font-semibold text-white sm:text-lg">
-                {match.name}
-              </h3>
-              <Badge
-                variant="outline"
-                className={cn('shrink-0 border text-[11px] uppercase tracking-wide', config.badge)}
-              >
-                {config.label}
-              </Badge>
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                <h3 className="truncate text-sm font-semibold text-white sm:text-base">
+                  {match.name}
+                </h3>
+                <Badge
+                  variant="outline"
+                  className={cn('shrink-0 border text-[9px] uppercase tracking-wider px-1.5 py-0', config.badge)}
+                >
+                  {config.label}
+                </Badge>
+              </div>
+
+              <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-300 min-w-0">
+                <Icon className="size-3 shrink-0 text-slate-400" />
+                <span className="truncate">{match.role || config.metaLabel}</span>
+              </div>
+
+              {cleanTags.length > 0 && (
+                <div className="mt-2 flex flex-wrap items-center gap-1 min-w-0 max-w-full overflow-hidden">
+                  {cleanTags.map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex max-w-[110px] items-center rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-slate-300 truncate"
+                      title={tag}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-
-            <div className="mt-1 flex items-center gap-2 text-sm text-slate-300">
-              <Icon className="size-4 shrink-0 text-slate-400" />
-              <span className="truncate">{match.role || config.metaLabel}</span>
-            </div>
-
-            {metaLine && (
-              <p className="mt-1 text-xs text-slate-400">
-                {config.metaLabel}: <span className="text-slate-300">{metaLine}</span>
-              </p>
-            )}
           </div>
 
-          <div className="flex shrink-0 flex-col items-end gap-1">
-            <div className="min-w-[80px] rounded-full border border-white/10 bg-white/5 px-3 py-1 text-right">
-              <div className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Match score</div>
-              <div className="text-lg font-semibold text-white">{score != null ? `${score}%` : '-'}</div>
-            </div>
+          {/* Top-Right Match Score Badge */}
+          <div className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 text-right flex flex-col items-end justify-center min-w-[76px] sm:min-w-[86px] ml-auto">
+            <div className="text-[9px] font-medium uppercase tracking-wider text-slate-400 whitespace-nowrap">Match score</div>
+            <div className="text-sm sm:text-base font-bold text-white leading-tight mt-0.5">{score != null ? `${score}%` : '-'}</div>
+            {matchLabel && (
+              <div className={`text-[9px] font-semibold mt-0.5 whitespace-nowrap ${matchLabel.color}`}>
+                {matchLabel.label}
+              </div>
+            )}
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="relative space-y-4 px-4 py-4 sm:px-6">
-        <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-          <CircleCheckBig className="mt-0.5 size-4 shrink-0 text-cyan-300" />
-          <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">AI explanation</p>
-            <p className="mt-1 text-sm leading-6 text-slate-200">
-              {match.aiExplanation || 'No AI explanation provided.'}
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{config.reasonLabel}</p>
-            <p className="text-[11px] text-slate-500">{config.metaHint}</p>
+      {/* Card Content - flex-1 flex flex-col justify-between to pin footers */}
+      <CardContent className="relative flex flex-1 flex-col justify-between space-y-4 px-4 py-4 sm:px-6">
+        <div className="space-y-4">
+          {/* AI Explanation Callout */}
+          <div className="flex items-start gap-2.5 rounded-xl border border-blue-500/15 bg-blue-500/5 p-3">
+            <CircleCheckBig className="mt-0.5 size-4 shrink-0 text-cyan-400" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">AI explanation</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-200">
+                {match.aiExplanation || 'No AI explanation provided.'}
+              </p>
+            </div>
           </div>
 
-          {reasons.length > 0 ? (
-            <ul className="space-y-2">
-              {reasons.map((reason, index) => (
-                <li key={`${reason}-${index}`} className="flex items-start gap-2 text-sm text-slate-300">
-                  <span className="mt-2 size-1.5 shrink-0 rounded-full bg-cyan-400" />
-                  <span className="leading-6">{reason}</span>
-                </li>
+          {/* Fit Reasons List */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{config.reasonLabel}</p>
+            </div>
+
+            {reasons.length > 0 ? (
+              <ul className="space-y-1.5">
+                {reasons.map((reason, index) => (
+                  <li key={`${reason}-${index}`} className="flex items-start gap-2 text-xs text-slate-300">
+                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-cyan-400" />
+                    <span className="leading-snug">{reason}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-slate-500">No reasons provided.</p>
+            )}
+          </div>
+
+          {/* Breakdown (Optional) */}
+          {match.breakdown && Object.keys(match.breakdown).length > 0 && (
+            <div className="mt-3 space-y-1">
+              <p className="text-xs uppercase tracking-wider text-slate-400">Match breakdown</p>
+              {Object.entries(match.breakdown).map(([key, value]) => (
+                <div key={key} className="flex items-center gap-2">
+                  <span className="w-20 text-xs text-slate-400 capitalize">{key.replace('_', ' ')}</span>
+                  <div className="flex-1 h-1.5 bg-slate-700 rounded-full">
+                    <div className="h-1.5 bg-cyan-400 rounded-full" style={{ width: `${value}%` }} />
+                  </div>
+                  <span className="text-xs text-slate-300">{value}%</span>
+                </div>
               ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-slate-500">No reasons provided.</p>
+            </div>
           )}
         </div>
 
-        {/* Breakdown (optional) */}
-{match.breakdown && Object.keys(match.breakdown).length > 0 && (
-  <div className="mt-3 space-y-1">
-    <p className="text-xs uppercase tracking-wider text-slate-400">Match breakdown</p>
-    {Object.entries(match.breakdown).map(([key, value]) => (
-      <div key={key} className="flex items-center gap-2">
-        <span className="w-20 text-xs text-slate-400 capitalize">{key.replace('_', ' ')}</span>
-        <div className="flex-1 h-1.5 bg-slate-700 rounded-full">
-          <div className="h-1.5 bg-cyan-400 rounded-full" style={{ width: `${value}%` }} />
-        </div>
-        <span className="text-xs text-slate-300">{value}%</span>
-      </div>
-    ))}
-  </div>
-)}
-
-        <div className="flex flex-col gap-3 border-t border-white/5 pt-4">
-          <div className="text-xs text-slate-500">
-            {compact ? 'Compact view enabled' : 'Full match card view'}
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        {/* Footer Action Buttons - Pinned to bottom of card */}
+        <div className="mt-auto border-t border-white/5 pt-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             {renderActions()}
           </div>
         </div>

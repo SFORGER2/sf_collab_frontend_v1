@@ -1,10 +1,17 @@
-// src/components/pages/erp/MemberAnalyticsPage.jsx
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle, Clock, Flame, BarChart } from "lucide-react";
+
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
 import { workspaceAPI } from "../../../services/workspaceAPI";
-import { CheckCircle, Clock, Flame } from "lucide-react";
+import { ERPPageHeader } from "../../erp/shared/ERPPageHeader";
+import { ERPStatCard } from "../../erp/shared/ERPStatCard";
+import { ERPLoadingSkeleton } from "../../erp/shared/ERPLoadingSkeleton";
+import { ERPBannerManager } from "../../erp/shared/ERPBanner";
+import { ERPStatusBadge } from "../../erp/shared/ERPStatusBadge";
+import { ERPEmptyState } from "../../erp/shared/ERPEmptyState";
 
 const analyticsApi = axios.create({ baseURL: "/api/erp-analytics" });
 analyticsApi.interceptors.request.use(requestInterceptor);
@@ -52,14 +59,12 @@ export default function MemberAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ── Load workspaces ──────────────────────────────────────────────────────
   useEffect(() => {
     const loadWorkspaces = async () => {
       try {
         const data = await workspaceAPI.getMyWorkspaces();
         setWorkspaces(data);
       } catch (e) {
-        console.error("Failed to load workspaces", e);
         setError("Could not load workspaces");
       } finally {
         setWorkspacesLoading(false);
@@ -68,7 +73,6 @@ export default function MemberAnalyticsPage() {
     loadWorkspaces();
   }, []);
 
-  // ── Compute workspaceId ──────────────────────────────────────────────────
   useEffect(() => {
     if (user?.active_workspace_id) {
       setWorkspaceId(user.active_workspace_id);
@@ -79,46 +83,28 @@ export default function MemberAnalyticsPage() {
     }
   }, [user, workspaces]);
 
-  // ── Load analytics data ──────────────────────────────────────────────────
   const loadData = useCallback(async () => {
-    if (!userId || !workspaceId) {
-      console.log("⏭️ Skipping load: missing userId or workspaceId", { userId, workspaceId });
-      return;
-    }
+    if (!userId || !workspaceId) return;
     setLoading(true);
     try {
       const endDate = new Date().toISOString().split("T")[0];
       const startDate = new Date();
       startDate.setDate(1);
-      console.log("📡 Fetching analytics for user", userId, "workspace", workspaceId);
       const analyticsRes = await analyticsApi.get(`/user/${userId}`, {
-        params: {
-          workspace_id: workspaceId,
-          start_date: startDate.toISOString().split("T")[0],
-          end_date: endDate,
-        },
+        params: { workspace_id: workspaceId, start_date: startDate.toISOString().split("T")[0], end_date: endDate },
       });
-      console.log("✅ Analytics response:", analyticsRes.data);
       const analyticsData = analyticsRes.data?.data || analyticsRes.data;
       setMetrics(analyticsData.metrics || analyticsData);
 
-      // Task history
-      const tasksRes = await tasksApi.get("/list", {
-        params: { workspace_id: workspaceId, assigned_to: userId },
-      });
+      const tasksRes = await tasksApi.get("/list", { params: { workspace_id: workspaceId, assigned_to: userId } });
       const tasksData = tasksRes.data?.data?.tasks || tasksRes.data?.tasks || [];
       setTasks(tasksData);
 
-      // Daily updates for streak
-      const updatesRes = await updatesApi.get("/my", {
-        params: { workspace_id: workspaceId, limit: 30 },
-      });
+      const updatesRes = await updatesApi.get("/my", { params: { workspace_id: workspaceId, limit: 30 } });
       const records = updatesRes.data?.data?.records || updatesRes.data?.records || [];
       const updateDates = records.map(r => r.date);
-      const currentStreak = calculateStreak(updateDates);
-      setStreak(currentStreak);
+      setStreak(calculateStreak(updateDates));
     } catch (err) {
-      console.error("❌ Analytics load error:", err);
       setError(err?.response?.data?.error || "Failed to load analytics");
     } finally {
       setLoading(false);
@@ -126,153 +112,113 @@ export default function MemberAnalyticsPage() {
   }, [userId, workspaceId]);
 
   useEffect(() => {
-    if (workspaceId) {
-      loadData();
-    } else if (!workspacesLoading) {
-      // No workspace available
-      setLoading(false);
-    }
+    if (workspaceId) loadData();
+    else if (!workspacesLoading) setLoading(false);
   }, [workspaceId, workspacesLoading, loadData]);
 
-  if (loading || workspacesLoading) {
-    return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">Loading...</div>;
-  }
+  if (loading || workspacesLoading) return <div className="min-h-screen bg-[#0a0a0b]"><ERPLoadingSkeleton /></div>;
 
-  if (!workspaceId) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-zinc-400">No workspace available.</p>
-          <p className="text-sm text-zinc-500 mt-2">Please create or join a workspace to see your analytics.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
-        <div className="text-red-500">{error}</div>
-      </div>
-    );
-  }
+  if (!workspaceId) return <div className="min-h-screen bg-[#0a0a0b] text-white flex items-center justify-center"><ERPEmptyState icon={<BarChart />} title="No workspace" sub="Please create or join a workspace to see your analytics." /></div>;
 
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.status === "done" || t.status === "approved").length;
   const overdueTasks = tasks.filter(t => t.deadline && new Date(t.deadline) < new Date() && t.status !== "done" && t.status !== "approved").length;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white py-8 px-4 md:px-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-semibold tracking-tight bg-gradient-to-br from-white to-gray-500 bg-clip-text text-transparent mb-8">
-          My Analytics
-        </h1>
+    <div className="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ERPPageHeader
+          icon={<BarChart size={20} />}
+          title="My Analytics"
+          description="Personal performance, task execution, and attendance statistics."
+          breadcrumbs={[{ label: "ERP" }, { label: "My Analytics" }]}
+        />
 
-        {/* KPI Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <MetricCard
-            label="Attendance Rate"
-            value={metrics ? pct(metrics.attendance_rate) : "—"}
-            accent="#22c55e"
-            icon={<CheckCircle size={20} />}
-          />
-          <MetricCard
-            label="Task Completion"
-            value={metrics ? pct(metrics.task_completion_rate) : "—"}
-            accent="#6366f1"
-            icon={<CheckCircle size={20} />}
-          />
-          <MetricCard
-            label="Update Consistency"
-            value={metrics ? pct(metrics.update_consistency) : "—"}
-            accent="#f59e0b"
-            icon={<Clock size={20} />}
-          />
-          <MetricCard
-            label="Current Streak"
-            value={`${streak} day${streak !== 1 ? 's' : ''}`}
-            accent="#f97316"
-            icon={<Flame size={20} />}
-            sub={streak === 0 ? "Submit an update to start your streak!" : "Keep it up!"}
-          />
+        {error && <ERPBannerManager error={error} onDismissError={() => setError(null)} />}
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6 mb-8">
+          <ERPStatCard title="Attendance Rate" value={metrics ? pct(metrics.attendance_rate) : "—"} icon={<CheckCircle size={18} className="text-emerald-500" />} accentColor="#10b981" />
+          <ERPStatCard title="Task Completion" value={metrics ? pct(metrics.task_completion_rate) : "—"} icon={<CheckCircle size={18} className="text-indigo-500" />} accentColor="#6366f1" />
+          <ERPStatCard title="Update Consistency" value={metrics ? pct(metrics.update_consistency) : "—"} icon={<Clock size={18} className="text-amber-500" />} accentColor="#f59e0b" />
+          <ERPStatCard title="Current Streak" value={`${streak} day${streak !== 1 ? 's' : ''}`} subValue={streak === 0 ? "Submit an update!" : "Keep it up!"} icon={<Flame size={18} className="text-orange-500" />} accentColor="#f97316" />
         </div>
 
-        {/* Period details */}
         {metrics?.details && (
-          <div className="bg-[#121215] border border-zinc-800/80 rounded-3xl p-8 mb-8">
-            <h2 className="text-xl font-semibold mb-4">Period Details</h2>
-            <div className="space-y-2 text-sm text-zinc-400">
-              <div>📅 {fmtDate(metrics.details.date_start)} → {fmtDate(metrics.details.date_end)}</div>
-              <div>✅ Attendance: {metrics.details.attendance_presentish} / {metrics.details.attendance_expected} days</div>
-              <div>📋 Tasks completed: {metrics.details.tasks_done} / {metrics.details.tasks_total}</div>
-              <div>📝 Updates submitted: {metrics.details.updates_submitted} / {metrics.details.updates_expected}</div>
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="bg-[#111115] border border-white/5 rounded-3xl p-8 mb-8 flex flex-wrap gap-10 items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-white mb-2">Period Details</h2>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                <CalendarIcon className="w-3 h-3" /> {fmtDate(metrics.details.date_start)} → {fmtDate(metrics.details.date_end)}
+              </div>
             </div>
-          </div>
+            <div className="flex flex-wrap gap-8">
+              <div className="text-center">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Attendance</p>
+                <p className="text-xl font-bold text-white">{metrics.details.attendance_presentish} <span className="text-sm text-zinc-500">/ {metrics.details.attendance_expected}</span></p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Tasks Done</p>
+                <p className="text-xl font-bold text-white">{metrics.details.tasks_done} <span className="text-sm text-zinc-500">/ {metrics.details.tasks_total}</span></p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Updates</p>
+                <p className="text-xl font-bold text-white">{metrics.details.updates_submitted} <span className="text-sm text-zinc-500">/ {metrics.details.updates_expected}</span></p>
+              </div>
+            </div>
+          </motion.div>
         )}
 
-        {/* Task History */}
-        <div className="bg-[#121215] border border-zinc-800/80 rounded-3xl p-8">
-          <h2 className="text-xl font-semibold mb-4">Task History</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-[#111115] border border-white/5 rounded-3xl p-8">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-base font-bold text-white flex items-center gap-2"><CheckCircle size={18} className="text-indigo-400" /> Task History</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
             <StatBadge label="Total Tasks" value={totalTasks} color="#6366f1" />
-            <StatBadge label="Completed" value={completedTasks} color="#22c55e" />
+            <StatBadge label="Completed" value={completedTasks} color="#10b981" />
             <StatBadge label="Overdue" value={overdueTasks} color="#ef4444" />
           </div>
           {tasks.length === 0 ? (
-            <p className="text-zinc-500 text-center py-8">No tasks assigned yet.</p>
+            <ERPEmptyState icon={<CheckCircle size={24} />} title="No tasks assigned" sub="You don't have any tasks in your history yet." compact />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="text-zinc-400 border-b border-zinc-800">
+                <thead className="text-left text-[10px] font-bold uppercase tracking-widest text-zinc-500 border-b border-white/10">
                   <tr>
-                    <th className="text-left py-2">Task</th>
-                    <th className="text-left py-2">Status</th>
-                    <th className="text-left py-2">Deadline</th>
-                    <th className="text-left py-2">Points</th>
+                    <th className="pb-3 px-4">Task</th>
+                    <th className="pb-3 px-4">Status</th>
+                    <th className="pb-3 px-4">Deadline</th>
+                    <th className="pb-3 px-4">Points</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-white/5">
                   {tasks.slice(0, 20).map(task => (
-                    <tr key={task.id} className="border-b border-zinc-800">
-                      <td className="py-2">{task.title}</td>
-                      <td className="py-2 capitalize">{task.status}</td>
-                      <td className="py-2">{task.deadline ? new Date(task.deadline).toLocaleDateString() : "—"}</td>
-                      <td className="py-2">{task.approved_points || 0}</td>
-                    </tr>
+                    <motion.tr whileHover={{ backgroundColor: "rgba(255,255,255,0.02)" }} key={task.id} className="transition-colors">
+                      <td className="py-4 px-4 font-semibold text-white">{task.title}</td>
+                      <td className="py-4 px-4"><ERPStatusBadge status={task.status} /></td>
+                      <td className="py-4 px-4 text-xs font-semibold text-zinc-400">{task.deadline ? new Date(task.deadline).toLocaleDateString() : "—"}</td>
+                      <td className="py-4 px-4 font-bold text-emerald-400">+{task.approved_points || 0}</td>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
+              {tasks.length > 20 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-6 text-center">Showing first 20 tasks</p>}
             </div>
           )}
-          {tasks.length > 20 && <p className="text-xs text-zinc-500 mt-4">Showing first 20 tasks.</p>}
-        </div>
+        </motion.div>
       </div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Sub‑components
-// ─────────────────────────────────────────────────────────────────────────────
-
-function MetricCard({ label, value, accent, icon, sub }) {
-  return (
-    <div className="bg-[#121215] border border-zinc-800/80 rounded-2xl p-6" style={{ borderTop: `2px solid ${accent}` }}>
-      <div className="flex items-center gap-2 mb-2">
-        <div style={{ color: accent }}>{icon}</div>
-        <p className="text-xs uppercase tracking-widest text-zinc-500">{label}</p>
-      </div>
-      <p className="text-3xl font-semibold" style={{ color: accent }}>{value}</p>
-      {sub && <p className="text-xs text-zinc-500 mt-2">{sub}</p>}
     </div>
   );
 }
 
 function StatBadge({ label, value, color }) {
   return (
-    <div className="bg-zinc-900/40 rounded-xl p-3 text-center">
-      <p className="text-xs text-zinc-500">{label}</p>
-      <p className="text-2xl font-bold" style={{ color }}>{value}</p>
+    <div className="bg-[#1a1a20] border border-white/5 rounded-2xl p-4 text-center">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">{label}</p>
+      <p className="text-3xl font-black tracking-tighter" style={{ color }}>{value}</p>
     </div>
   );
+}
+
+function CalendarIcon(props) {
+  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
 }

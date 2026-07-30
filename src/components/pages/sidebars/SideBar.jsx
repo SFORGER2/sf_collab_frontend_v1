@@ -5,9 +5,10 @@ import { getAllRoutes, getCurrentContext } from "./sidebar/links";
 import DesktopSidebarContent from "./DesktopSidebarContent";
 import MobileSidebarContent from "./MobileSidebarContent";
 import { filterOutLauncherApps } from '@/utils/appLauncherUtils';
+import { roleAccent, roleAccentVars } from "@/components/cosmos";
 
 
-export default function SideBar({ isOpen, setIsOpen, isAdmin, links = [] }) {
+export default function SideBar({ isOpen, setIsOpen, isAdmin, links = [], role }) {
   const location = useLocation();
 
   const [expandedItems, setExpandedItems] = useState({});
@@ -100,6 +101,7 @@ export default function SideBar({ isOpen, setIsOpen, isAdmin, links = [] }) {
         hasSubItems={hasSubItems}
         shouldShowSubItems={shouldShowSubItems}
         isAdmin={isAdmin}
+        role={role}
       />
 
       {/* Mobile Sidebar Drawer */}
@@ -120,19 +122,22 @@ export default function SideBar({ isOpen, setIsOpen, isAdmin, links = [] }) {
 
         {/* Drawer panel */}
         <div
-          className={`absolute left-0 top-0 h-[100dvh] w-[280px] max-w-[85vw] bg-[#1A1A1A] shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
+          className={`absolute left-0 top-0 h-[100dvh] w-[280px] max-w-[85vw] shadow-2xl flex flex-col backdrop-blur-xl border-r border-white/10 transition-transform duration-300 ease-in-out ${
             isOpen ? "translate-x-0" : "-translate-x-full"
           }`}
+          style={{ background: "rgba(9, 7, 20, 0.96)", ...roleAccentVars(role) }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
           {/* Drawer header */}
-          <div className="flex justify-between items-center px-4 py-3 border-b border-zinc-800 shrink-0">
-            <span className="text-white font-semibold text-sm">Menu</span>
+          <div className="flex justify-between items-center px-4 py-3 border-b border-white/10 shrink-0">
+            <span className="cosmos-eyebrow" style={{ '--cosmos-accent': roleAccent(role).color }}>
+              Menu
+            </span>
             <button
               onClick={() => setIsOpen(false)}
               aria-label="Close menu"
-              className="w-8 h-8 rounded-lg bg-zinc-800 text-white flex items-center justify-center hover:bg-zinc-700 active:bg-zinc-600 transition-colors"
+              className="w-8 h-8 rounded-lg bg-white/[0.06] border border-white/10 text-star flex items-center justify-center hover:bg-white/[0.12] transition-colors"
             >
               <X size={16} />
             </button>
@@ -150,6 +155,7 @@ export default function SideBar({ isOpen, setIsOpen, isAdmin, links = [] }) {
               hasSubItems={hasSubItems}
               shouldShowSubItems={shouldShowSubItems}
               callback={() => setIsOpen(false)}
+              role={role}
             />
           </div>
         </div>

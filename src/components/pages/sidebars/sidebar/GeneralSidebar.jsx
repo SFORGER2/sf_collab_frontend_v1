@@ -14,5 +14,6 @@ export default function GeneralSidebar({ isOpen, setIsOpen, unreadMessagesCount,
     unreadMessagesCount={unreadMessagesCount}
     links={links}
     isAdmin={isAdmin}
+      role="member"
   />;
 };

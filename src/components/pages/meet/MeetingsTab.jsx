@@ -1,8 +1,7 @@
 // src/components/pages/meet/MeetingsTab.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import {
   Video,
   Plus,
@@ -76,9 +75,7 @@ function MeetingCard({ meeting, onClick }) {
       {isLive && (
         <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-emerald-500 rounded-full px-2.5 py-1">
           <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
-          <span className="text-[10px] font-bold text-white tracking-wide">
-            LIVE
-          </span>
+          <span className="text-[10px] font-bold text-white tracking-wide">LIVE</span>
         </div>
       )}
 
@@ -150,17 +147,15 @@ function MeetingCard({ meeting, onClick }) {
 export default function MeetingsTab({ startupId }) {
   const navigate = useNavigate();
   const [meetings, setMeetings] = useState([]);
+  const [recordings, setRecordings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("upcoming");
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    fetchMeetings();
-  }, [startupId]);
-
-  async function fetchMeetings() {
+  // ── Fetch meetings (for upcoming/past) ───────────────────────────────────
+  const fetchMeetings = useCallback(async () => {
     setLoading(true);
     try {
       const params = startupId ? { startup_id: startupId } : {};
@@ -171,9 +166,33 @@ export default function MeetingsTab({ startupId }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [startupId]);
+
+  // ── Fetch recordings separately ──────────────────────────────────────────
+  const fetchRecordings = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await meetAPI.getRecordings();
+      setRecordings(res.data || []);
+    } catch (e) {
+      console.error("Failed to fetch recordings:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ── Load data based on active tab ────────────────────────────────────────
+  useEffect(() => {
+    if (tab === "recordings") {
+      fetchRecordings();
+    } else {
+      fetchMeetings();
+    }
+  }, [tab, fetchMeetings, fetchRecordings]);
 
   const now = new Date();
+
+  // Filter meetings for upcoming/past
   const upcoming = meetings.filter(
     (m) =>
       ["scheduled", "live"].includes(m.status) &&
@@ -183,9 +202,27 @@ export default function MeetingsTab({ startupId }) {
     ["indexed", "archived", "ended", "processing"].includes(m.status),
   );
 
-  const filtered = (tab === "upcoming" ? upcoming : past).filter((m) =>
-    m.title.toLowerCase().includes(search.toLowerCase()),
-  );
+  // Recordings are already filtered by the backend – just use the fetched list
+  const recordingsList = recordings;
+
+  // Filter by search
+  const getFiltered = (list) =>
+    list.filter((m) =>
+      m.title.toLowerCase().includes(search.toLowerCase()),
+    );
+
+  const currentList =
+    tab === "upcoming"
+      ? getFiltered(upcoming)
+      : tab === "past"
+      ? getFiltered(past)
+      : getFiltered(recordingsList);
+
+  const counts = {
+    upcoming: upcoming.length,
+    past: past.length,
+    recordings: recordingsList.length,
+  };
 
   return (
     <div className="h-full px-6 flex flex-col">
@@ -196,7 +233,7 @@ export default function MeetingsTab({ startupId }) {
             Meetings
           </h2>
           <p className="text-sm text-zinc-500 mt-0.5">
-            {upcoming.length} upcoming · {past.length} past
+            {upcoming.length} upcoming · {past.length} past · {recordingsList.length} recordings
           </p>
         </div>
         <motion.button
@@ -226,11 +263,12 @@ export default function MeetingsTab({ startupId }) {
         />
       </div>
 
-      {/* Tabs */}
+      {/* Tabs: Upcoming | Past | Recordings */}
       <div className="flex gap-1 mb-5 bg-zinc-900 rounded-xl p-1">
         {[
-          { id: "upcoming", label: "Upcoming", count: upcoming.length },
-          { id: "past", label: "Past", count: past.length },
+          { id: "upcoming", label: "Upcoming", icon: Calendar },
+          { id: "past", label: "Past", icon: Archive },
+          { id: "recordings", label: "Recordings", icon: Play },
         ].map((t) => (
           <button
             key={t.id}
@@ -242,12 +280,13 @@ export default function MeetingsTab({ startupId }) {
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
           >
+            <t.icon size={14} />
             {t.label}
             <span
               className={`text-xs px-1.5 py-0.5 rounded-md
               ${tab === t.id ? "bg-zinc-700 text-zinc-300" : "bg-zinc-800 text-zinc-600"}`}
             >
-              {t.count}
+              {counts[t.id] || 0}
             </span>
           </button>
         ))}
@@ -262,13 +301,17 @@ export default function MeetingsTab({ startupId }) {
               className="h-20 bg-zinc-900/60 rounded-2xl animate-pulse border border-zinc-800/60"
             />
           ))
-        ) : filtered.length === 0 ? (
+        ) : currentList.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-14 h-14 bg-zinc-900 rounded-2xl flex items-center justify-center mb-4">
               <Video size={24} className="text-zinc-600" />
             </div>
             <p className="text-zinc-500 text-sm">
-              {tab === "upcoming" ? "No upcoming meetings" : "No past meetings"}
+              {tab === "upcoming"
+                ? "No upcoming meetings"
+                : tab === "past"
+                ? "No past meetings"
+                : "No recordings available"}
             </p>
             {tab === "upcoming" && (
               <button
@@ -281,7 +324,7 @@ export default function MeetingsTab({ startupId }) {
           </div>
         ) : (
           <AnimatePresence>
-            {filtered.map((m) => (
+            {currentList.map((m) => (
               <MeetingCard
                 key={m.id}
                 meeting={m}
@@ -294,6 +337,7 @@ export default function MeetingsTab({ startupId }) {
 
       <AIActions onOpenSidebar={() => setOpen(true)} />
       <AISidebar open={open} onClose={() => setOpen(false)} />
+
       {/* Create Modal */}
       <AnimatePresence>
         {showCreate && (

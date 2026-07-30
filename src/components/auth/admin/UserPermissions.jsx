@@ -195,7 +195,7 @@ const UserPermissions = () => {
     return isActive ? (
       <Badge className="bg-green-100 text-green-800 border-0">Active</Badge>
     ) : (
-      <Badge variant="outline" className="border-gray-300">Inactive</Badge>
+      <Badge variant="outline" className="border-white/15">Inactive</Badge>
     );
   };
 
@@ -211,8 +211,8 @@ const UserPermissions = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-black">User Permissions</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-3xl font-bold text-star">User Permissions</h1>
+          <p className="text-dim mt-2">
             Manage permissions assigned to users
           </p>
         </div>
@@ -220,7 +220,7 @@ const UserPermissions = () => {
           <Button
             onClick={() => fetchUserPermissions(pagination.page)}
             variant="outline"
-            className="border-black text-black hover:bg-gray-100"
+            className="border-black text-star hover:bg-white/[0.06]"
           >
             Refresh
           </Button>
@@ -234,19 +234,19 @@ const UserPermissions = () => {
       </div>
 
       {/* Filter Section */}
-      <Card className="border border-gray-200">
+      <Card className="border border-white/10">
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-black">Filter by User</label>
+              <label className="text-sm font-semibold text-star">Filter by User</label>
               <Select
                 value={searchUser}
                 onValueChange={setSearchUser}
               >
-                <SelectTrigger className="bg-white border border-gray-300">
+                <SelectTrigger className="bg-panel border border-white/15">
                   <SelectValue placeholder="All users" />
                 </SelectTrigger>
-                <SelectContent position="bottom" className="bg-white">
+                <SelectContent position="bottom" className="bg-panel">
                   <SelectItem value="--">All users</SelectItem>
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id.toString()}>
@@ -257,15 +257,15 @@ const UserPermissions = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-black">Filter by Permission</label>
+              <label className="text-sm font-semibold text-star">Filter by Permission</label>
               <Select
                 value={searchPermission}
                 onValueChange={setSearchPermission}
               >
-                <SelectTrigger className="bg-white border border-gray-300">
+                <SelectTrigger className="bg-panel border border-white/15">
                   <SelectValue placeholder="All permissions" />
                 </SelectTrigger>
-                <SelectContent className="bg-white">
+                <SelectContent className="bg-panel">
                   <SelectItem value="--">All permissions</SelectItem>
                   {permissions.map((permission) => (
                     <SelectItem key={permission.id} value={permission.id.toString()}>
@@ -276,15 +276,15 @@ const UserPermissions = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-black">Status Filter</label>
+              <label className="text-sm font-semibold text-star">Status Filter</label>
               <Select
                 value={onlyActive.toString()}
                 onValueChange={(value) => setOnlyActive(value === "true")}
               >
-                <SelectTrigger className="bg-white border border-gray-300">
+                <SelectTrigger className="bg-panel border border-white/15">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-white">
+                <SelectContent className="bg-panel">
                   <SelectItem value="true">Active Only</SelectItem>
                   <SelectItem value="false">All Status</SelectItem>
                 </SelectContent>
@@ -301,7 +301,7 @@ const UserPermissions = () => {
             <Button
               onClick={handleClearFilters}
               variant="outline"
-              className="border-gray-300 text-gray-700 hover:bg-gray-100"
+              className="border-white/15 text-dim hover:bg-white/[0.06]"
             >
               Clear Filters
             </Button>
@@ -309,10 +309,10 @@ const UserPermissions = () => {
         </CardContent>
       </Card>
 
-      <Card className="border border-gray-200 shadow-[0_4px_14px_0_rgba(255,255,255,0.3)]">
+      <Card className="border border-white/10 shadow-[0_4px_14px_0_rgba(255,255,255,0.3)]">
         <CardHeader>
-          <CardTitle className="text-xl text-black">User Permissions</CardTitle>
-          <CardDescription className="text-gray-600">
+          <CardTitle className="text-xl text-star">User Permissions</CardTitle>
+          <CardDescription className="text-dim">
             Showing {userPermissions.length} of {pagination.total} permission{pagination.total !== 1 ? 's' : ''}
             {searchUser && ` for selected user`}
             {searchPermission && ` for selected permission`}
@@ -330,12 +330,12 @@ const UserPermissions = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="font-semibold text-black">User</TableHead>
-                      <TableHead className="font-semibold text-black">Permission</TableHead>
-                      <TableHead className="font-semibold text-black">Status</TableHead>
-                      <TableHead className="font-semibold text-black">Granted By</TableHead>
-                      <TableHead className="font-semibold text-black">Granted At</TableHead>
-                      <TableHead className="font-semibold text-black">Actions</TableHead>
+                      <TableHead className="font-semibold text-star">User</TableHead>
+                      <TableHead className="font-semibold text-star">Permission</TableHead>
+                      <TableHead className="font-semibold text-star">Status</TableHead>
+                      <TableHead className="font-semibold text-star">Granted By</TableHead>
+                      <TableHead className="font-semibold text-star">Granted At</TableHead>
+                      <TableHead className="font-semibold text-star">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -346,8 +346,8 @@ const UserPermissions = () => {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium text-black">{up.permission?.key}</div>
-                            <div className="text-sm text-gray-600">{up.permission?.description}</div>
+                            <div className="font-medium text-star">{up.permission?.key}</div>
+                            <div className="text-sm text-dim">{up.permission?.description}</div>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -381,7 +381,7 @@ const UserPermissions = () => {
               {/* Pagination */}
               {pagination.pages > 1 && (
                 <div className="flex items-center justify-between mt-6">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-dim">
                     Page {pagination.page} of {pagination.pages}
                   </div>
                   <div className="flex space-x-2">
@@ -389,7 +389,7 @@ const UserPermissions = () => {
                       variant="outline"
                       onClick={() => handlePageChange(pagination.page - 1)}
                       disabled={pagination.page <= 1}
-                      className="border-gray-300"
+                      className="border-white/15"
                     >
                       Previous
                     </Button>
@@ -414,7 +414,7 @@ const UserPermissions = () => {
                             className={
                               pagination.page === pageNum 
                                 ? "bg-black text-white" 
-                                : "border-gray-300"
+                                : "border-white/15"
                             }
                           >
                             {pageNum}
@@ -426,12 +426,12 @@ const UserPermissions = () => {
                       variant="outline"
                       onClick={() => handlePageChange(pagination.page + 1)}
                       disabled={pagination.page >= pagination.pages}
-                      className="border-gray-300"
+                      className="border-white/15"
                     >
                       Next
                     </Button>
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-dim">
                     {pagination.per_page} per page
                   </div>
                 </div>
@@ -443,24 +443,24 @@ const UserPermissions = () => {
 
       {/* Grant Permission Dialog */}
       <Dialog open={showGrantDialog} onOpenChange={setShowGrantDialog}>
-        <DialogContent className="bg-white text-black">
+        <DialogContent className="bg-panel text-star">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Grant Permission</DialogTitle>
-            <DialogDescription className="text-gray-600">
+            <DialogDescription className="text-dim">
               Grant a permission to a user
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-black">User</label>
+              <label className="text-sm font-semibold text-star">User</label>
               <Select
                 value={grantData.user_id}
                 onValueChange={(value) => setGrantData({...grantData, user_id: value})}
               >
-                <SelectTrigger className="bg-white border border-gray-300">
+                <SelectTrigger className="bg-panel border border-white/15">
                   <SelectValue placeholder="Select a user" />
                 </SelectTrigger>
-                <SelectContent className="bg-white">
+                <SelectContent className="bg-panel">
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id.toString()}>
                       {user.email} ({user.first_name} {user.last_name})
@@ -470,15 +470,15 @@ const UserPermissions = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-black">Permission</label>
+              <label className="text-sm font-semibold text-star">Permission</label>
               <Select
                 value={grantData.permission_id}
                 onValueChange={(value) => setGrantData({...grantData, permission_id: value})}
               >
-                <SelectTrigger className="bg-white border border-gray-300">
+                <SelectTrigger className="bg-panel border border-white/15">
                   <SelectValue placeholder="Select a permission" />
                 </SelectTrigger>
-                <SelectContent className="bg-white">
+                <SelectContent className="bg-panel">
                   {permissions.map((permission) => (
                     <SelectItem key={permission.id} value={permission.id.toString()}>
                       {permission.key} - {permission.description}
@@ -492,7 +492,7 @@ const UserPermissions = () => {
             <Button
               variant="outline"
               onClick={() => setShowGrantDialog(false)}
-              className="border-black text-black hover:bg-gray-100"
+              className="border-black text-star hover:bg-white/[0.06]"
             >
               Cancel
             </Button>
@@ -508,10 +508,10 @@ const UserPermissions = () => {
 
       {/* Revoke Permission Dialog */}
       <Dialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
-        <DialogContent className="bg-white text-black">
+        <DialogContent className="bg-panel text-star">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Revoke Permission</DialogTitle>
-            <DialogDescription className="text-gray-600">
+            <DialogDescription className="text-dim">
               Are you sure you want to revoke this permission?
             </DialogDescription>
           </DialogHeader>
@@ -528,7 +528,7 @@ const UserPermissions = () => {
             <Button
               variant="outline"
               onClick={() => setShowRevokeDialog(false)}
-              className="border-black text-black hover:bg-gray-100"
+              className="border-black text-star hover:bg-white/[0.06]"
             >
               Cancel
             </Button>

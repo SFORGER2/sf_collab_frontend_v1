@@ -33,6 +33,9 @@ package-lock.json
 .vercel
 
 # self
+# Self Docs
+web-2.*
+website-generator
 ai-2.md
 ai-2.pdf
 
@@ -40,3 +43,5 @@ ai-2.pdf
 TEMPORARY_CHANGES.md
 docs/
 
+# Archives
+*.zip

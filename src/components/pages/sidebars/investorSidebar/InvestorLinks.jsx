@@ -13,7 +13,11 @@ import {
   Presentation,
 } from "lucide-react";
 import { FcDocument, FcInvite } from "react-icons/fc";
-import { aiTools, toolsSection, dashboardLink, socialSection, ideation, wallet, sfDriveSection, sfMeetSection } from "../sidebarCommons";
+import {
+  aiTools, toolsSection, dashboardLink, socialSection, ideation,
+  sfDriveSection, sfMeetSection, learningSection, walletSection,
+  erpSection, filterERPModules, mentorshipSection,
+} from "../sidebarCommons";
 
 
 export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActiveRole = () => { }, activeRole = 'investor') {
@@ -45,7 +49,7 @@ export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActi
         },
       ],
     },
-    ideation(3),
+    ideation(3, "investor"),
     {
       id: 4,
       icon: <BarChart2 size={22} />,
@@ -63,9 +67,20 @@ export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActi
       subItems: [],
     },
     socialSection(7),
-    aiTools(8),
+    aiTools(8, "investor"),
     toolsSection(9),
-    wallet(10),
+    { id: "section-grow", sectionLabel: "Grow", isSection: true },
+    mentorshipSection(15, "investor"),
+    learningSection(13, "investor"),
+    { id: "section-earn", sectionLabel: "Earn", isSection: true },
+    walletSection(10),
+    { id: "section-workspace", sectionLabel: "Workspace", isSection: true },
+    // Investors get the read-only ERP slice (portfolio analytics, documents,
+    // revenue pools) — previously they had no ERP entry at all.
+    {
+      ...erpSection(14),
+      subItems: filterERPModules(erpSection(14).subItems, "investor", userRoles),
+    },
     sfMeetSection(11),
     sfDriveSection(12),
   ];

@@ -9,13 +9,13 @@ export const discoveryFeedAPI = {
   getFeed: async (params = {}) => {
     try {
       // 1. Try to fetch from the unified discovery-feed endpoint first
-      const response = await api.get('/discovery-feed', { params });
+      const response = await api.get('/discovery/feed', { params });
       const payload = response.data;
       if (payload.success && payload.sections && Array.isArray(payload.sections.visions) && payload.sections.visions.length > 0) {
         return payload;
       }
     } catch (error) {
-      console.warn('Direct /discovery-feed failed, trying fallback merge:', error);
+      console.warn('Direct /discovery/feed failed, trying fallback merge:', error);
     }
 
     // 2. Fallback: Query startups and ideas (visions) separately and merge

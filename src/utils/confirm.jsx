@@ -46,7 +46,7 @@ const DeleteConfirmationModal = ({
           <Button 
             variant="outline" 
             onClick={onClose} 
-            className="text-black border-gray-700 hover:bg-gray-800 hover:text-white transition-colors"
+            className="text-star border-white/15 hover:bg-white/10 hover:text-star transition-colors"
           >
             Cancel
           </Button>

@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  User, MapPin, Globe, ExternalLink, Github, Linkedin,
+  User, MapPin, Globe, ExternalLink, 
   Zap, TrendingUp, Award, Users, ArrowLeft, MessageCircle
 } from 'lucide-react';
+import { FaGithub, FaLinkedin } from 'react-icons/fa';
 import { usersAPI } from '@/utils/APIs/userAPI';
 import { useSelector } from 'react-redux';
 import { getProfilePicture } from '@/utils/getProfilePicture';
@@ -218,7 +219,7 @@ const UserPage = () => {
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-300 transition-colors"
                       >
-                        <Github className="w-4 h-4" />
+                        <FaGithub className="w-4 h-4" />
                         GitHub
                         <ExternalLink className="w-3 h-3" />
                       </a>
@@ -230,7 +231,7 @@ const UserPage = () => {
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-sm text-gray-400 hover:text-blue-400 transition-colors"
                       >
-                        <Linkedin className="w-4 h-4" />
+                        <FaLinkedin className="w-4 h-4" />
                         LinkedIn
                         <ExternalLink className="w-3 h-3" />
                       </a>

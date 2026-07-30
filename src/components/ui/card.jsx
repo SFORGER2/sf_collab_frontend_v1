@@ -11,7 +11,10 @@ function Card({
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+        // Cosmos surface: frosted panel fill, hairline border, 16px radius.
+        // Colours come from the --card/--border tokens in index.css.
+        "bg-card/90 text-card-foreground flex flex-col gap-6 rounded-2xl border py-6",
+        "backdrop-blur-md shadow-[0_20px_60px_-25px_rgba(0,0,0,0.8)]",
         className
       )}
       {...props} />
@@ -40,7 +43,7 @@ function CardTitle({
   return (
     <div
       data-slot="card-title"
-      className={cn("leading-none font-semibold", className)}
+      className={cn("font-display leading-none font-normal tracking-[-0.005em]", className)}
       {...props} />
   );
 }

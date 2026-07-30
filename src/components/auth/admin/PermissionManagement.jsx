@@ -188,7 +188,7 @@ const PermissionManagement = () => {
       'Media Tools': 'bg-orange-100 text-orange-800',
       'Document Tools': 'bg-cyan-100 text-cyan-800',
       'Business Tools': 'bg-lime-100 text-lime-800',
-      'Data Tools': 'bg-gray-100 text-gray-800',
+      'Data Tools': 'bg-white/[0.06] text-star',
       'Communication': 'bg-violet-100 text-violet-800',
       'Collaboration': 'bg-amber-100 text-amber-800',
       'Learning': 'bg-emerald-100 text-emerald-800',
@@ -205,7 +205,7 @@ const PermissionManagement = () => {
     };
     
     return (
-      <Badge className={`${colors[category] || 'bg-gray-100 text-gray-800'} border-0`}>
+      <Badge className={`${colors[category] || 'bg-white/[0.06] text-star'} border-0`}>
         {category || 'General'}
       </Badge>
     );
@@ -227,8 +227,8 @@ const PermissionManagement = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-black">Permission Management</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-3xl font-bold text-star">Permission Management</h1>
+          <p className="text-dim mt-2">
             Manage system permissions and access controls
           </p>
         </div>
@@ -240,10 +240,10 @@ const PermissionManagement = () => {
         </Button>
       </div>
 
-      <Card className="border border-gray-200 shadow-[0_4px_14px_0_rgba(255,255,255,0.3)]">
+      <Card className="border border-white/10 shadow-[0_4px_14px_0_rgba(255,255,255,0.3)]">
         <CardHeader>
-          <CardTitle className="text-xl text-black">Filters</CardTitle>
-          <CardDescription className="text-gray-600">
+          <CardTitle className="text-xl text-star">Filters</CardTitle>
+          <CardDescription className="text-dim">
             Filter permissions by category or search
           </CardDescription>
         </CardHeader>
@@ -254,14 +254,14 @@ const PermissionManagement = () => {
                 placeholder="Search permissions by key or description..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="bg-white border border-gray-300"
+                className="bg-panel border border-white/15"
               />
             </div>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-[180px] bg-white border border-gray-300">
+              <SelectTrigger className="w-[180px] bg-panel border border-white/15">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
-              <SelectContent className="bg-white">
+              <SelectContent className="bg-panel">
                 <SelectItem value="all">All Categories</SelectItem>
                 {categories.filter(c => c !== 'all').map(category => (
                   <SelectItem key={category} value={category}>
@@ -275,23 +275,23 @@ const PermissionManagement = () => {
       </Card>
 
       <Tabs defaultValue="list" className="w-full">
-        <TabsList className="bg-gray-100">
-          <TabsTrigger value="list" className="data-[state=active]:bg-white">
+        <TabsList className="bg-white/[0.06]">
+          <TabsTrigger value="list" className="data-[state=active]:bg-panel">
             List View
           </TabsTrigger>
-          <TabsTrigger value="byCategory" className="data-[state=active]:bg-white">
+          <TabsTrigger value="byCategory" className="data-[state=active]:bg-panel">
             By Category
           </TabsTrigger>
-          <TabsTrigger value="stats" className="data-[state=active]:bg-white">
+          <TabsTrigger value="stats" className="data-[state=active]:bg-panel">
             Statistics
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
-          <Card className="border border-gray-200 shadow-[0_4px_14px_0_rgba(255,255,255,0.3)]">
+          <Card className="border border-white/10 shadow-[0_4px_14px_0_rgba(255,255,255,0.3)]">
             <CardHeader>
-              <CardTitle className="text-xl text-black">All Permissions</CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardTitle className="text-xl text-star">All Permissions</CardTitle>
+              <CardDescription className="text-dim">
                 {filteredPermissions.length} permission{filteredPermissions.length !== 1 ? 's' : ''} found
               </CardDescription>
             </CardHeader>
@@ -300,12 +300,12 @@ const PermissionManagement = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="font-semibold text-black">ID</TableHead>
-                      <TableHead className="font-semibold text-black">Key</TableHead>
-                      <TableHead className="font-semibold text-black">Description</TableHead>
-                      <TableHead className="font-semibold text-black">Category</TableHead>
-                      <TableHead className="font-semibold text-black">Created</TableHead>
-                      <TableHead className="font-semibold text-black">Actions</TableHead>
+                      <TableHead className="font-semibold text-star">ID</TableHead>
+                      <TableHead className="font-semibold text-star">Key</TableHead>
+                      <TableHead className="font-semibold text-star">Description</TableHead>
+                      <TableHead className="font-semibold text-star">Category</TableHead>
+                      <TableHead className="font-semibold text-star">Created</TableHead>
+                      <TableHead className="font-semibold text-star">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -313,7 +313,7 @@ const PermissionManagement = () => {
                       <TableRow key={permission.id} className="border-b border-gray-100">
                         <TableCell className="font-medium">{permission.id}</TableCell>
                         <TableCell>
-                          <div className="font-medium text-black">{permission.key}</div>
+                          <div className="font-medium text-star">{permission.key}</div>
                         </TableCell>
                         <TableCell className="max-w-xs">
                           <p className="truncate" title={permission.description}>
@@ -364,7 +364,7 @@ const PermissionManagement = () => {
               </div>
               
               <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-dim">
                   Showing {filteredPermissions.length} of {pagination.total} permissions
                 </div>
                 <div className="flex gap-2">
@@ -372,7 +372,7 @@ const PermissionManagement = () => {
                     variant="outline"
                     disabled={pagination.page === 1}
                     onClick={() => fetchPermissions(pagination.page - 1)}
-                    className="border-black text-black hover:bg-gray-100"
+                    className="border-black text-star hover:bg-white/[0.06]"
                   >
                     Previous
                   </Button>
@@ -380,7 +380,7 @@ const PermissionManagement = () => {
                     variant="outline"
                     disabled={pagination.page === pagination.pages}
                     onClick={() => fetchPermissions(pagination.page + 1)}
-                    className="border-black text-black hover:bg-gray-100"
+                    className="border-black text-star hover:bg-white/[0.06]"
                   >
                     Next
                   </Button>
@@ -394,12 +394,12 @@ const PermissionManagement = () => {
           {categories.filter(c => c !== 'all').map(category => {
             const categoryPermissions = permissions.filter(p => p.category === category);
             return (
-              <Card key={category} className="border border-gray-200 shadow-[0_4px_14px_0_rgba(255,255,255,0.3)]">
+              <Card key={category} className="border border-white/10 shadow-[0_4px_14px_0_rgba(255,255,255,0.3)]">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       {getCategoryBadge(category)}
-                      <CardTitle className="text-lg text-black">
+                      <CardTitle className="text-lg text-star">
                         {category} ({categoryPermissions.length})
                       </CardTitle>
                     </div>
@@ -408,10 +408,10 @@ const PermissionManagement = () => {
                 <CardContent>
                   <div className="space-y-2">
                     {categoryPermissions.map(permission => (
-                      <div key={permission.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                      <div key={permission.id} className="flex items-center justify-between p-3 border border-white/10 rounded-lg">
                         <div>
-                          <div className="font-medium text-black">{permission.key}</div>
-                          <div className="text-sm text-gray-600">{permission.description}</div>
+                          <div className="font-medium text-star">{permission.key}</div>
+                          <div className="text-sm text-dim">{permission.description}</div>
                         </div>
                         <div className="flex space-x-2">
                           <Button
@@ -441,30 +441,30 @@ const PermissionManagement = () => {
         </TabsContent>
 
         <TabsContent value="stats">
-          <Card className="border border-gray-200 shadow-[0_4px_14px_0_rgba(255,255,255,0.3)]">
+          <Card className="border border-white/10 shadow-[0_4px_14px_0_rgba(255,255,255,0.3)]">
             <CardHeader>
-              <CardTitle className="text-xl text-black">Permission Statistics</CardTitle>
+              <CardTitle className="text-xl text-star">Permission Statistics</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-sm text-gray-600">Total Permissions</div>
-                  <div className="text-2xl font-bold text-black">{pagination.total}</div>
+                <div className="bg-white/[0.03] p-4 rounded-lg">
+                  <div className="text-sm text-dim">Total Permissions</div>
+                  <div className="text-2xl font-bold text-star">{pagination.total}</div>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-sm text-gray-600">Categories</div>
-                  <div className="text-2xl font-bold text-black">{categories.length - 1}</div>
+                <div className="bg-white/[0.03] p-4 rounded-lg">
+                  <div className="text-sm text-dim">Categories</div>
+                  <div className="text-2xl font-bold text-star">{categories.length - 1}</div>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-sm text-gray-600">Average per Category</div>
-                  <div className="text-2xl font-bold text-black">
+                <div className="bg-white/[0.03] p-4 rounded-lg">
+                  <div className="text-sm text-dim">Average per Category</div>
+                  <div className="text-2xl font-bold text-star">
                     {Math.round(pagination.total / (categories.length - 1))}
                   </div>
                 </div>
               </div>
               
               <div className="mt-6">
-                <h3 className="text-lg font-semibold text-black mb-4">Permissions by Category</h3>
+                <h3 className="text-lg font-semibold text-star mb-4">Permissions by Category</h3>
                 <div className="space-y-3">
                   {categories.filter(c => c !== 'all').map(category => {
                     const count = permissions.filter(p => p.category === category).length;
@@ -472,8 +472,8 @@ const PermissionManagement = () => {
                     return (
                       <div key={category} className="space-y-1">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-700">{category}</span>
-                          <span className="font-medium text-black">{count} ({percentage}%)</span>
+                          <span className="text-dim">{category}</span>
+                          <span className="font-medium text-star">{count} ({percentage}%)</span>
                         </div>
                         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                           <div 
@@ -493,43 +493,43 @@ const PermissionManagement = () => {
 
       {/* Create Permission Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="bg-white text-black">
+        <DialogContent className="bg-panel text-star">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Create New Permission</DialogTitle>
-            <DialogDescription className="text-gray-600">
+            <DialogDescription className="text-dim">
               Add a new permission to the system
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-black">Permission Key *</label>
+              <label className="text-sm font-semibold text-star">Permission Key *</label>
               <Input
                 value={formData.key}
                 onChange={(e) => setFormData({...formData, key: e.target.value})}
                 placeholder="e.g., admin.access"
-                className="bg-white border border-gray-300"
+                className="bg-panel border border-white/15"
               />
               <p className="text-xs text-gray-500">Unique identifier for the permission</p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-black">Description *</label>
+              <label className="text-sm font-semibold text-star">Description *</label>
               <Textarea
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
                 placeholder="Describe what this permission allows..."
-                className="min-h-[100px] bg-white border border-gray-300"
+                className="min-h-[100px] bg-panel border border-white/15"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-black">Category</label>
+              <label className="text-sm font-semibold text-star">Category</label>
               <Select
                 value={formData.category}
                 onValueChange={(value) => setFormData({...formData, category: value})}
               >
-                <SelectTrigger className="bg-white border border-gray-300">
+                <SelectTrigger className="bg-panel border border-white/15">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
-                <SelectContent className="bg-white">
+                <SelectContent className="bg-panel">
                   {categories.filter(c => c !== 'all').map(category => (
                     <SelectItem key={category} value={category}>
                       {category}
@@ -543,7 +543,7 @@ const PermissionManagement = () => {
             <Button
               variant="outline"
               onClick={() => setShowCreateDialog(false)}
-              className="border-black text-black hover:bg-gray-100"
+              className="border-black text-star hover:bg-white/[0.06]"
             >
               Cancel
             </Button>
@@ -559,41 +559,41 @@ const PermissionManagement = () => {
 
       {/* Edit Permission Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="bg-white text-black">
+        <DialogContent className="bg-panel text-star">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Edit Permission</DialogTitle>
-            <DialogDescription className="text-gray-600">
+            <DialogDescription className="text-dim">
               Update permission details
             </DialogDescription>
           </DialogHeader>
           {selectedPermission && (
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-black">Permission Key *</label>
+                <label className="text-sm font-semibold text-star">Permission Key *</label>
                 <Input
                   value={formData.key}
                   onChange={(e) => setFormData({...formData, key: e.target.value})}
-                  className="bg-white border border-gray-300"
+                  className="bg-panel border border-white/15"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-black">Description *</label>
+                <label className="text-sm font-semibold text-star">Description *</label>
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  className="min-h-[100px] bg-white border border-gray-300"
+                  className="min-h-[100px] bg-panel border border-white/15"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-black">Category</label>
+                <label className="text-sm font-semibold text-star">Category</label>
                 <Select
                   value={formData.category}
                   onValueChange={(value) => setFormData({...formData, category: value})}
                 >
-                  <SelectTrigger className="bg-white border border-gray-300">
+                  <SelectTrigger className="bg-panel border border-white/15">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white">
+                  <SelectContent className="bg-panel">
                     {categories.filter(c => c !== 'all').map(category => (
                       <SelectItem key={category} value={category}>
                         {category}
@@ -608,7 +608,7 @@ const PermissionManagement = () => {
             <Button
               variant="outline"
               onClick={() => setShowEditDialog(false)}
-              className="border-black text-black hover:bg-gray-100"
+              className="border-black text-star hover:bg-white/[0.06]"
             >
               Cancel
             </Button>
@@ -624,10 +624,10 @@ const PermissionManagement = () => {
 
       {/* Delete Permission Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-white text-black">
+        <DialogContent className="bg-panel text-star">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Delete Permission</DialogTitle>
-            <DialogDescription className="text-gray-600">
+            <DialogDescription className="text-dim">
               Are you sure you want to delete this permission? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
@@ -647,7 +647,7 @@ const PermissionManagement = () => {
             <Button
               variant="outline"
               onClick={() => setShowDeleteDialog(false)}
-              className="border-black text-black hover:bg-gray-100"
+              className="border-black text-star hover:bg-white/[0.06]"
             >
               Cancel
             </Button>

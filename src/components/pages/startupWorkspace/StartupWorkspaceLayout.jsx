@@ -16,6 +16,7 @@ import { workspaceAPI } from '@/services/workspaceAPI';
 import { setUser } from '@/services/auth/authSlice';
 import { fetchUserProfile } from '@/services/auth/authThunks';
 import { getStartupWorkspaceModules, STARTUP_WORKSPACE_GROUP_ORDER } from './startupWorkspaceLinks';
+import { VisionWorkspaceGuard } from '@/components/workspace/VisionWorkspaceGuard';
 
 export default function StartupWorkspaceLayout() {
   const { id } = useParams();
@@ -138,6 +139,7 @@ export default function StartupWorkspaceLayout() {
   }
 
   return (
+    <VisionWorkspaceGuard>
     <div className="h-screen flex flex-col bg-[#09090B] text-white overflow-hidden">
       {/* Header */}
       <header className="h-16 flex items-center justify-between px-4 border-b border-white/5 shrink-0">
@@ -244,5 +246,6 @@ export default function StartupWorkspaceLayout() {
         </main>
       </div>
     </div>
+    </VisionWorkspaceGuard>
   );
 }

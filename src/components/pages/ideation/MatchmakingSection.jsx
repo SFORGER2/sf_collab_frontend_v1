@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Users, ExternalLink, ChevronRight, ChevronDown, Check } from "lucide-react";
+import { Users, ExternalLink, ChevronRight, ChevronDown, Check, Coins, Sparkles } from "lucide-react";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import { AllowanceMeter, CosmosButton, Eyebrow, Panel } from "@/components/cosmos";
+import { useEntitlements } from "@/services/entitlements/useEntitlements";
+import { CREDIT_COSTS } from "@/services/entitlements/entitlements";
 
 export const MatchCard = ({ recommendation }) => {
   const builder = recommendation.user || recommendation.builder || recommendation || {};
@@ -140,49 +143,123 @@ export const MatchCard = ({ recommendation }) => {
   );
 };
 
-export const MatchmakingSection = ({ recommendations = [], loading = false }) => {
-  const [showAll, setShowAll] = useState(false);
-  const displayedRecs = showAll ? recommendations : recommendations.slice(0, 3);
+/** How many matches are included before credits are required. */
+const FREE_MATCHES = 10;
+
+/**
+ * Recommended builders, metered.
+ *
+ * The first `FREE_MATCHES` are included with any plan; past that each batch is
+ * unlocked with credits. This is the panel a founder actually recruits from, so
+ * it's also where the AI matchmaking spend happens.
+ *
+ * `viewerRole` gates the whole panel: only the Vision's owner (or a founder)
+ * should see a list of builders. A builder looking at someone else's Vision gets
+ * nothing here — showing them their own competition was the original bug.
+ *
+ * ⚠️ Frontend shaping only. The backend must enforce the same cap.
+ */
+export const MatchmakingSection = ({
+  recommendations = [],
+  loading = false,
+  canRecruit = true,
+}) => {
+  const [unlocked, setUnlocked] = useState(FREE_MATCHES);
+  const { check, spend, credits } = useEntitlements();
+  const status = check('matchSuggestionsPerDay', 'matchSuggestion');
+  const cost = CREDIT_COSTS.matchSuggestion;
+
+  if (!canRecruit) return null;
+
+  const visible = recommendations.slice(0, unlocked);
+  const remaining = Math.max(0, recommendations.length - unlocked);
+
+  const handleUnlock = () => {
+    if (spend('matchSuggestionsPerDay', 'matchSuggestion')) {
+      setUnlocked((n) => n + FREE_MATCHES);
+    }
+  };
 
   return (
-    <section className="bg-gradient-to-br from-gray-900/50 to-gray-800/30 border border-white/10 rounded-2xl p-8 backdrop-blur-sm relative overflow-hidden">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold flex items-center gap-2.5 text-white">
-          <div className="p-2 bg-blue-500/20 rounded-lg">
-            <Users className="h-5 w-5 text-blue-400" />
-          </div>
-          Recommended Builders
-        </h2>
-        {recommendations.length > 3 && (
-          <button
-            onClick={() => setShowAll(!showAll)}
-            className="text-sm font-medium text-blue-400 hover:text-blue-300 flex items-center gap-1.5 transition-colors bg-blue-500/10 hover:bg-blue-500/20 px-3.5 py-2 rounded-xl border border-blue-500/20"
-          >
-            {showAll ? (
-              <>Show Less <ChevronDown className="h-4 w-4" /></>
-            ) : (
-              <>View All ({recommendations.length}) <ChevronRight className="h-4 w-4" /></>
-            )}
-          </button>
-        )}
+    <Panel className="p-6 sm:p-8" accent="#4fd8ff">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <Eyebrow>AI Matchmaking</Eyebrow>
+          <h2 className="font-display text-[1.25rem] text-star mt-1.5 flex items-center gap-2">
+            <Users className="h-4 w-4 text-cyan" />
+            Recommended Builders
+          </h2>
+          <p className="text-[0.88rem] text-dim mt-1">
+            Ranked by how well their skills fit the roles this Vision needs.
+          </p>
+        </div>
+        <AllowanceMeter
+          limitKey="matchSuggestionsPerDay"
+          creditKey="matchSuggestion"
+          label="unlocks left today"
+        />
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+        <div className="flex flex-col items-center justify-center py-14 gap-3">
+          <div className="w-8 h-8 border-2 border-cyan border-t-transparent rounded-full animate-spin" />
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-dim">
+            Finding matches
+          </span>
         </div>
       ) : recommendations.length === 0 ? (
-        <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10">
-          <p className="text-gray-400 text-sm">No suitable collaborators found.</p>
-        </div>
+        <p className="text-[0.9rem] text-dim py-10 text-center">
+          No suitable collaborators yet — add the roles you need to your Vision so matchmaking
+          has something to work with.
+        </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {displayedRecs.map((rec, index) => (
-            <MatchCard key={rec.id || rec.user_id || index} recommendation={rec} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {visible.map((rec, index) => (
+              <MatchCard key={rec.id || rec.user_id || index} recommendation={rec} />
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 mt-6 pt-5 border-t border-white/10">
+            {remaining > 0 ? (
+              <>
+                <CosmosButton
+                  variant="primary"
+                  size="sm"
+                  disabled={!status.allowed}
+                  onClick={handleUnlock}
+                >
+                  <Coins size={14} />
+                  Unlock {Math.min(FREE_MATCHES, remaining)} More
+                  {status.reason === 'credits' && ` · ${cost} Credits`}
+                </CosmosButton>
+
+                <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-dim">
+                  Showing {visible.length} of {recommendations.length} · {credits} credits
+                </span>
+
+                {!status.allowed && (
+                  <CosmosButton variant="quiet" size="sm" asChild>
+                    <Link to="/credits"><Sparkles size={13} /> Get Credits</Link>
+                  </CosmosButton>
+                )}
+              </>
+            ) : (
+              <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-dim">
+                All {recommendations.length} matches shown
+              </span>
+            )}
+          </div>
+
+          {!status.allowed && remaining > 0 && (
+            <p className="text-[0.85rem] text-dim mt-3">
+              You've used today's included matches. Unlock more with credits, or upgrade for a
+              larger daily allowance.
+            </p>
+          )}
+        </>
       )}
-    </section>
+    </Panel>
   );
 };
 

@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Map of icon component names to actual components
 const iconMap = {
   LayoutDashboard,
   CalendarClock,
@@ -39,7 +38,7 @@ const FallbackIcon = LayoutDashboard;
 export function ERPSidebar({ modules, workspaceName, collapsed, setCollapsed }) {
   const location = useLocation();
 
-  // Group modules by functional area
+  // Group modules by functional area (unchanged logic)
   const grouped = modules.reduce((acc, mod) => {
     let group = 'General';
     if (mod.id?.includes('attendance') || mod.label === 'My Attendance' || mod.label === 'Workspace Attendance') group = 'People';
@@ -66,31 +65,36 @@ export function ERPSidebar({ modules, workspaceName, collapsed, setCollapsed }) 
   });
 
   return (
-    <div className={cn(
-      "h-full bg-black border-r border-white/5 transition-all duration-300 flex flex-col",
-      collapsed ? "w-16" : "w-64"
-    )}>
+    <div
+      className={cn(
+        "h-full bg-black/90 backdrop-blur-sm border-r border-white/5 transition-all duration-300 flex flex-col",
+        collapsed ? "w-16" : "w-64"
+      )}
+    >
       {/* Workspace header */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-white/5 shrink-0">
         {!collapsed && (
           <div className="flex items-center gap-3 min-w-0">
-             <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center text-white font-bold shrink-0 border border-white/10">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shrink-0 shadow-lg shadow-indigo-500/20">
               {workspaceName?.[0] || 'W'}
             </div>
-             <span className="text-white font-semibold text-sm truncate">{workspaceName || 'Workspace'}</span>
+            <span className="text-white font-semibold text-sm truncate">{workspaceName || 'Workspace'}</span>
           </div>
         )}
-        <button onClick={() => setCollapsed(!collapsed)} className="text-zinc-400 hover:text-white transition-colors">
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="text-zinc-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5"
+        >
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-4">
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-4 scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent">
         {sortedGroups.map((groupKey) => (
           <div key={groupKey}>
             {!collapsed && (
-              <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+              <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
                 {groupKey}
               </div>
             )}
@@ -111,8 +115,10 @@ export function ERPSidebar({ modules, workspaceName, collapsed, setCollapsed }) 
                     key={module.id}
                     to={module.href}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all hover:bg-white/5",
-                      active ? "bg-black text-white" : "text-zinc-400 hover:text-white"
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all",
+                      active
+                        ? "bg-indigo-500/10 text-indigo-400 shadow-[inset_0_0_0_1px_rgba(99,102,241,0.2)]"
+                        : "text-zinc-400 hover:text-white hover:bg-white/5"
                     )}
                   >
                     <span className="w-5 h-5 flex items-center justify-center shrink-0">

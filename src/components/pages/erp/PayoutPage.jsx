@@ -1,13 +1,16 @@
-// src/components/pages/erp/PayoutPage.jsx
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
-import {
-  requestInterceptor,
-  responseInterceptor,
-  responseErrorInterceptor,
-} from "../../../utils/APIs/interceptors";
-import { DollarSign, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Calendar } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { DollarSign, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Calendar, Wallet } from "lucide-react";
+
+import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
+import { ERPPageHeader } from "../../erp/shared/ERPPageHeader";
+import { ERPStatCard } from "../../erp/shared/ERPStatCard";
+import { ERPLoadingSkeleton } from "../../erp/shared/ERPLoadingSkeleton";
+import { ERPBannerManager } from "../../erp/shared/ERPBanner";
+import { ERPStatusBadge } from "../../erp/shared/ERPStatusBadge";
+import { ERPEmptyState } from "../../erp/shared/ERPEmptyState";
 
 const api = axios.create({ baseURL: "/api/payout" });
 api.interceptors.request.use(requestInterceptor);
@@ -47,102 +50,93 @@ export default function PayoutPage() {
     }
   }, [workspaceId]);
 
-  useEffect(() => {
-    loadPayouts();
-  }, [loadPayouts]);
+  useEffect(() => { loadPayouts(); }, [loadPayouts]);
 
-  if (loading) return <Spinner />;
-  if (error) return <Banner type="error">{error}</Banner>;
+  if (loading) return <div className="min-h-screen bg-[#0a0a0b]"><ERPLoadingSkeleton /></div>;
 
   const totalEarned = payouts.filter(p => p.status === "paid").reduce((sum, p) => sum + (p.final_payout_amount || 0), 0);
   const currentPayout = payouts.find(p => p.status === "approved" || p.status === "pending") || null;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white py-8 px-4 md:px-8 font-sans">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-semibold tracking-tight bg-gradient-to-br from-white to-gray-500 bg-clip-text text-transparent mb-10">Payouts</h1>
+    <div className="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ERPPageHeader
+          icon={<Wallet size={20} />}
+          title="My Payouts"
+          description="View your payout history and pending distributions."
+          breadcrumbs={[{ label: "ERP" }, { label: "My Payouts" }]}
+        />
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <SummaryChip icon={DollarSign} label="Total Earned" value={fmt(totalEarned)} accent="#22c55e" />
-          <SummaryChip icon={CheckCircle} label="Payouts Received" value={payouts.filter(p => p.status === "paid").length} accent="#6366f1" />
-          <SummaryChip icon={Calendar} label="Current Period" value={currentPayout ? `${fmtDate(currentPayout.created_at)}` : "—"} accent="#f59e0b" small />
+        {error && <ERPBannerManager error={error} onDismissError={() => setError(null)} />}
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6 mb-8">
+          <ERPStatCard title="Total Earned" value={fmt(totalEarned)} icon={<DollarSign size={18} className="text-emerald-500" />} accentColor="#10b981" />
+          <ERPStatCard title="Payouts Received" value={payouts.filter(p => p.status === "paid").length} icon={<CheckCircle size={18} className="text-indigo-500" />} accentColor="#6366f1" />
+          <ERPStatCard title="Current Period" value={currentPayout ? `${fmtDate(currentPayout.created_at)}` : "—"} icon={<Calendar size={18} className="text-amber-500" />} accentColor="#f59e0b" />
         </div>
 
         {currentPayout && (
-          <div className="bg-[#121215] border border-zinc-800/80 rounded-3xl p-8 mb-6">
-            <div className="flex justify-between flex-wrap gap-4 mb-6">
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="bg-[#111115] border border-white/5 rounded-3xl p-8 mb-8">
+            <div className="flex justify-between flex-wrap gap-4 mb-8">
               <div>
-                <p className="text-xs uppercase tracking-widest text-zinc-500 mb-1">Current Payout</p>
-                <p className="text-5xl font-semibold tracking-tighter bg-gradient-to-br from-white to-gray-500 bg-clip-text text-transparent">{fmt(currentPayout.final_payout_amount)}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Current Payout</p>
+                <p className="text-6xl font-black tracking-tighter bg-gradient-to-br from-white to-gray-500 bg-clip-text text-transparent">{fmt(currentPayout.final_payout_amount)}</p>
               </div>
-              <StatusBadge status={currentPayout.status} />
+              <div><ERPStatusBadge status={currentPayout.status} /></div>
             </div>
-            <div className="w-full h-1.5 bg-zinc-800 rounded-full mb-6 overflow-hidden">
-              <div className="h-full rounded-full" style={{ width: currentPayout.status === "paid" ? "100%" : "60%", background: STATUS_META[currentPayout.status]?.color || "#6366f1" }} />
+            
+            <div className="w-full h-2 bg-[#1a1a20] rounded-full mb-8 overflow-hidden shadow-inner">
+              <motion.div initial={{ width: 0 }} animate={{ width: currentPayout.status === "paid" ? "100%" : "60%" }} className="h-full rounded-full" style={{ background: STATUS_META[currentPayout.status]?.color || "#6366f1" }} />
             </div>
-            <button onClick={() => setExpanded(expanded === currentPayout.id ? null : currentPayout.id)} className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white">
-              {expanded === currentPayout.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />} Show breakdown
+
+            <button onClick={() => setExpanded(expanded === currentPayout.id ? null : currentPayout.id)} className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-300 transition-colors">
+              {expanded === currentPayout.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />} {expanded === currentPayout.id ? "Hide breakdown" : "Show breakdown"}
             </button>
-            {expanded === currentPayout.id && (
-              <div className="mt-4 pt-4 border-t border-zinc-800">
-                <div className="flex justify-between py-2"><span className="text-zinc-400">Execution points</span><span>{currentPayout.execution_points} / {currentPayout.team_total_points}</span></div>
-                <div className="flex justify-between py-2"><span className="text-zinc-400">Contribution</span><span>{Math.round(currentPayout.contribution_percentage * 100)}%</span></div>
-                <div className="flex justify-between py-2 font-semibold"><span>Total</span><span>{fmt(currentPayout.final_payout_amount)}</span></div>
-              </div>
-            )}
-          </div>
+            
+            <AnimatePresence>
+              {expanded === currentPayout.id && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="mt-6 pt-6 border-t border-white/5 space-y-4">
+                    <div className="flex justify-between text-sm font-semibold text-zinc-400"><span>Execution points</span><span className="text-white">{currentPayout.execution_points} / {currentPayout.team_total_points}</span></div>
+                    <div className="flex justify-between text-sm font-semibold text-zinc-400"><span>Contribution</span><span className="text-white">{Math.round(currentPayout.contribution_percentage * 100)}%</span></div>
+                    <div className="flex justify-between text-sm font-black text-white pt-2"><span>Total Amount</span><span className="text-emerald-400">{fmt(currentPayout.final_payout_amount)}</span></div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         )}
 
-        <div className="bg-[#121215] border border-zinc-800/80 rounded-3xl p-8">
-          <h2 className="text-xl font-semibold bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent mb-6">Payout History</h2>
+        <div className="bg-[#111115] border border-white/5 rounded-3xl overflow-hidden">
+          <div className="p-6 border-b border-white/5 flex items-center justify-between">
+            <h3 className="text-base font-bold text-white">Payout History</h3>
+          </div>
           {payouts.length === 0 ? (
-            <p className="text-zinc-500 text-sm text-center py-8">No payout history yet.</p>
+            <ERPEmptyState icon={<Wallet size={24} />} title="No payout history" sub="Payouts generated by admins will appear here." compact />
           ) : (
-            <div className="space-y-3">
-              {payouts.map((p, i) => {
-                const m = STATUS_META[p.status] || STATUS_META.pending;
-                const Icon = m.icon;
-                return (
-                  <div key={p.id} className="flex justify-between p-5 bg-zinc-900/60 border border-zinc-800 rounded-2xl">
-                    <div className="flex gap-4">
-                      <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: m.bg }}><Icon className="w-5 h-5" style={{ color: m.color }} /></div>
-                      <div><p className="font-medium">Payout {fmtDate(p.paid_at || p.approved_at || p.created_at)}</p><p className="text-xs text-zinc-500">{m.label}</p></div>
-                    </div>
-                    <div className="flex items-center gap-4"><span className="text-base font-semibold">{fmt(p.final_payout_amount)}</span><span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ color: m.color, background: m.bg }}>{m.label}</span></div>
-                  </div>
-                );
-              })}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-left text-[10px] font-bold uppercase tracking-widest text-zinc-500 bg-black/20">
+                  <tr>
+                    <th className="px-6 py-4">Date</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4 text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {payouts.map((p) => (
+                    <motion.tr whileHover={{ backgroundColor: "rgba(255,255,255,0.02)" }} key={p.id} className="transition-colors">
+                      <td className="px-6 py-5 font-semibold text-white">Payout {fmtDate(p.paid_at || p.approved_at || p.created_at)}</td>
+                      <td className="px-6 py-5"><ERPStatusBadge status={p.status} /></td>
+                      <td className="px-6 py-5 text-right font-bold text-emerald-400">{fmt(p.final_payout_amount)}</td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
       </div>
     </div>
   );
-}
-
-function SummaryChip({ icon: Icon, label, value, accent, small }) {
-  return (
-    <div className="bg-[#121215] border border-zinc-800/80 rounded-2xl p-5 flex gap-4">
-      <div className="p-2.5 rounded-xl" style={{ background: `${accent}18` }}><Icon className="w-5 h-5" style={{ color: accent }} /></div>
-      <div><p className="text-xs uppercase tracking-widest text-zinc-500">{label}</p><p className={`font-semibold mt-0.5 ${small ? "text-sm" : "text-lg"}`}>{value}</p></div>
-    </div>
-  );
-}
-
-function StatusBadge({ status }) {
-  const m = STATUS_META[status] || STATUS_META.pending;
-  const Icon = m.icon;
-  return (
-    <div className="flex items-center gap-2 px-4 py-2 rounded-2xl border" style={{ color: m.color, background: m.bg, borderColor: `${m.color}40` }}>
-      <Icon className="w-4 h-4" /><span className="text-sm font-semibold">{m.label}</span>
-    </div>
-  );
-}
-
-function Banner({ type, children }) {
-  return <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-sm text-white mb-4">{children}</div>;
-}
-
-function Spinner() {
-  return <div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-zinc-800 border-t-violet-500 rounded-full animate-spin" /></div>;
 }

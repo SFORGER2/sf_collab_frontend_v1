@@ -2027,7 +2027,7 @@ const handleSelectConversation = (conversation) => {
                 label="New Chat"
                 icon={<Plus size={18} className="hover:animate-pulse" />}
                 size="sm"
-                bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)"
+                bgColor="linear-gradient(325deg, #f09220 0%, #ffcf7d 55%, #f09220 90%)"
                 onClick={() => setShowCreateModal(true)}
               />
             </div>

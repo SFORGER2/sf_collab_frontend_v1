@@ -27,9 +27,11 @@ const InviteToStartup = () => {
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Refetch when the status filter changes too — it is sent to the API, so
+  // leaving it out of the deps meant the filter only ever applied client-side.
   useEffect(() => {
     fetchInvitations();
-  }, [user]);
+  }, [user, filterStatus]);
 
   const fetchInvitations = async () => {
     setLoading(true);
@@ -69,7 +71,9 @@ const InviteToStartup = () => {
 
   const handleReject = async (startupId, invitationId) => {
     try {
-      const res = await startupsAPI.rejectInvitation(startupId, invitationId);
+      // The API method is declineInvitation; rejectInvitation never existed,
+      // so every reject threw before reaching the network.
+      const res = await startupsAPI.declineInvitation(startupId, invitationId);
       if (res.success || res.data) {
         setInvitations((prev) =>
           prev.filter((inv) => inv.id !== invitationId)

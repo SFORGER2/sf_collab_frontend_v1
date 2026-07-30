@@ -3,18 +3,23 @@ import { motion } from 'framer-motion';
 import {
   User, Award, BarChart3,
   Rocket, TrendingUp, Zap, Globe, Briefcase, ExternalLink,
-  Badge
+  Badge, IdCard
 } from 'lucide-react';
 
 import ProfileHeader from './ProfileHeader';
+import ProfileDetail from './ProfileDetail';
 import ProfileStats from './ProfileStats';
 import ProfileTabs from './ProfileTabs';
 import AchievementSection from './AchievementSection';
 import ActivityFeed from './ActivityFeed';
 import ProfileSettings from '../profileSettings/ProfileSettings';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { builderProfileAPI } from '@/services/builderAPI';
+import { usersAPI } from '@/utils/APIs/userAPI';
+import { updateUser as updateUserSlice } from '@/services/auth/authSlice';
+import { fieldPayload, toSchemaProfile } from '@/services/profile/profileAdapter';
+import { toast } from 'react-toastify';
 import { dashboardAPI } from '@/utils/APIs/dashboardAPI';
 import { FaMoneyBill } from 'react-icons/fa6';
 import { formatCurrency } from '@/lib/utils';
@@ -29,6 +34,7 @@ import { getMediaUrl } from '@/utils/getMediaUrl';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('overview');
   const { user: authUser, access_token } = useSelector((state) => state.auth);
   const [isEditing, setIsEditing] = useState(false);
@@ -99,6 +105,8 @@ const Profile = () => {
 
   const tabs = useMemo(() => [
     { id: 'overview', label: 'Overview', icon: User },
+    // The full schema-driven profile — every field the assistant can fill.
+    { id: 'details', label: 'Full Profile', icon: IdCard },
     { id: 'achievements', label: 'Achievements', icon: Award },
     !isOtherUser && { id: 'activity', label: 'Activity', icon: BarChart3 },
     { id: 'startups', label: 'Startups', icon: Briefcase },
@@ -118,7 +126,32 @@ const Profile = () => {
   };
 
   const user = profileData || authUser;
-  console.log(user);
+
+  /**
+   * Persist one field from the inline pencil editor.
+   *
+   * Throws on failure so InlineField can re-open with the draft intact —
+   * silently swallowing here would lose whatever the person just typed.
+   */
+  const handleFieldSave = async (key, value) => {
+    const payload = fieldPayload(key, value, authUser);
+    if (!payload) return; // derived field — earned, not entered
+
+    const response = await usersAPI.updateProfile(
+      authUser.id, payload, access_token, 'application/json'
+    );
+    const result = response?.data || response;
+    if (result?.error) throw new Error(result.error);
+    if (result?.success === false) throw new Error(result.message || 'Update failed');
+
+    const updated = result?.user || result?.data?.user || null;
+    if (updated) {
+      dispatch(updateUserSlice(updated));
+      setProfileData((prev) => (prev ? { ...prev, ...updated } : prev));
+    }
+    toast.success('Saved');
+  };
+
   if (!user || loadingProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
@@ -305,6 +338,17 @@ const Profile = () => {
             <ProfileTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
             <div className="min-h-150">
+              {activeTab === "details" && (
+                <ProfileDetail
+                  /* The adapter flattens `user`, `user.profile` and
+                     `profile.socialLinks` onto the schema's field keys —
+                     the API splits a person across all three. */
+                  profile={toSchemaProfile(authUser, profileData)}
+                  isOwner={!isOtherUser}
+                  onFieldSave={!isOtherUser ? handleFieldSave : undefined}
+                />
+              )}
+
               {activeTab === "overview" && (
                 <div className="space-y-6">
                   <ActivityFeed
@@ -444,10 +488,9 @@ const Profile = () => {
                 </div>
 
               )}
-              {console.log("profileData.startupMemberships:", profileData?.startupMemberships)}
               {activeTab === "startups" && (
                 <div className="space-y-6">
-                  {profileData?.startupMemberships?.filter(m => !profileData.foundedStartups.some(s => s.id === m.startup.id)).length > 0 && (
+                  {(profileData?.startupMemberships || []).filter(m => !(profileData?.foundedStartups || []).some(s => s.id === m?.startup?.id)).length > 0 && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -469,10 +512,10 @@ const Profile = () => {
                             <div className="relative z-10">
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex items-center gap-3">
-                                  {startup.logo_url ? (
+                                  {membership.startup.logo_url ? (
                                     <img
-                                      src={getMediaUrl(startup.logo_url)}
-                                      alt={startup.name}
+                                      src={getMediaUrl(membership.startup.logo_url)}
+                                      alt={membership.startup.name}
                                       className="w-10 h-10 rounded-lg object-cover border border-orange-600/30"
                                     />
                                   ) : (
@@ -485,7 +528,7 @@ const Profile = () => {
                                     <p className="text-xs text-gray-400">{membership.startup.industry}</p>
                                   </div>
                                 </div>
-                                <Badge className="text-xs bg-blue-500/20 text-blue-300">{membership.startup.stage}</Badge>
+                                <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-300">{membership.startup.stage}</span>
                               </div>
 
                               <p className="text-sm text-gray-300 mb-4 line-clamp-2">{membership.startup.description}</p>

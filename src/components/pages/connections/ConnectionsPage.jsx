@@ -438,7 +438,7 @@ export default function ConnectionsPage() {
               <Button
                 onClick={fetchCounts}
                 variant="outline"
-                className="border-slate-600 text-black hover:bg-slate-800 hover:text-white transition-all"
+                className="border-white/15 text-star hover:bg-white/10 hover:text-star transition-all"
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh

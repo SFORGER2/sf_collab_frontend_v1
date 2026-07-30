@@ -2,8 +2,16 @@ import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Calculator, Lock, Wallet, Edit3, DollarSign } from "lucide-react";
+
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
-import { ArrowLeft, Calculator, Lock, Wallet, Edit3 } from "lucide-react";
+import { ERPPageHeader } from "../../erp/shared/ERPPageHeader";
+import { ERPStatCard } from "../../erp/shared/ERPStatCard";
+import { ERPLoadingSkeleton } from "../../erp/shared/ERPLoadingSkeleton";
+import { ERPBannerManager } from "../../erp/shared/ERPBanner";
+import { ERPStatusBadge } from "../../erp/shared/ERPStatusBadge";
+import { ERPEmptyState } from "../../erp/shared/ERPEmptyState";
 
 const api = axios.create({ baseURL: "/api/revenue-pool" });
 api.interceptors.request.use(requestInterceptor);
@@ -57,7 +65,6 @@ export default function AdminRevenuePoolDetail() {
       const data = res.data?.data || res.data;
       setPayouts(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.warn("Could not fetch payouts for this pool", err);
       setPayouts([]);
     } finally {
       setLoadingPayouts(false);
@@ -83,7 +90,6 @@ export default function AdminRevenuePoolDetail() {
           break;
         case "generate":
           await payoutApi.post(`/workspaces/${workspaceId}/payouts/generate`, { revenue_pool_id: poolId });
-          alert("Payouts generated successfully!");
           loadPayouts();
           loadPool();
           return;
@@ -100,131 +106,126 @@ export default function AdminRevenuePoolDetail() {
       await api[method](endpoint, payload);
       loadPool();
     } catch (err) {
-      alert(err?.response?.data?.error || `${action} failed`);
+      setError(err?.response?.data?.error || `${action} failed`);
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleUpdate = () => {
-    handleAction("update", editForm);
-  };
-
-  if (loading) return <div className="text-center py-20">Loading...</div>;
-  if (error) return <div className="text-red-500 text-center py-20">{error}</div>;
-  if (!pool) return null;
+  if (loading) return <div className="min-h-screen bg-[#0a0a0b]"><ERPLoadingSkeleton /></div>;
+  if (!pool) return <div className="min-h-screen bg-[#0a0a0b] text-white flex items-center justify-center"><ERPEmptyState icon={<DollarSign />} title="Pool Not Found" sub="Could not find the requested revenue pool." /></div>;
 
   const canCalculate = pool.status === "open";
   const canLock = pool.status === "pending_admin_review";
   const canGenerate = pool.status === "locked";
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
-      <div className="max-w-5xl mx-auto">
-        <button onClick={() => navigate("/erp/admin/revenue-pools")} className="flex items-center gap-2 text-zinc-400 hover:text-white mb-6">
-          <ArrowLeft size={18} /> Back to Pools
+    <div className="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <button onClick={() => navigate("/erp/admin/revenue-pools")} className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors mb-6">
+          <ArrowLeft size={14} /> Back to Pools
         </button>
 
-        <div className="bg-[#121215] border border-zinc-800 rounded-3xl p-8 mb-6">
-          <div className="flex justify-between flex-wrap gap-4 mb-6">
-            <div>
-              <h1 className="text-2xl font-bold">Revenue Pool #{pool.id}</h1>
-              <p className="text-zinc-400 mt-1">{new Date(pool.period_start).toLocaleDateString()} – {new Date(pool.period_end).toLocaleDateString()}</p>
-            </div>
+        <ERPPageHeader
+          icon={<DollarSign size={20} />}
+          title={`Revenue Pool #${pool.id}`}
+          description={`${new Date(pool.period_start).toLocaleDateString()} – ${new Date(pool.period_end).toLocaleDateString()}`}
+          breadcrumbs={[{ label: "ERP" }, { label: "Admin" }, { label: "Revenue Pools" }, { label: `Pool #${pool.id}` }]}
+          actions={
             <div className="flex flex-wrap gap-3">
               {canCalculate && (
-                <button onClick={() => handleAction("calculate")} disabled={actionLoading} className="flex items-center gap-2 bg-blue-600 px-4 py-2 rounded-lg">
-                  <Calculator size={16} /> Calculate
+                <button onClick={() => handleAction("calculate")} disabled={actionLoading} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors disabled:opacity-50">
+                  <Calculator size={14} /> Calculate
                 </button>
               )}
               {canLock && (
-                <button onClick={() => handleAction("lock")} disabled={actionLoading} className="flex items-center gap-2 bg-amber-600 px-4 py-2 rounded-lg">
-                  <Lock size={16} /> Lock
+                <button onClick={() => handleAction("lock")} disabled={actionLoading} className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors disabled:opacity-50">
+                  <Lock size={14} /> Lock
                 </button>
               )}
               {canGenerate && (
-                <button onClick={() => handleAction("generate")} disabled={actionLoading} className="flex items-center gap-2 bg-emerald-600 px-4 py-2 rounded-lg">
-                  <Wallet size={16} /> Generate Payouts
+                <button onClick={() => handleAction("generate")} disabled={actionLoading} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors disabled:opacity-50">
+                  <Wallet size={14} /> Generate Payouts
                 </button>
               )}
-              <button onClick={() => setShowEdit(!showEdit)} className="flex items-center gap-2 bg-zinc-700 px-4 py-2 rounded-lg">
-                <Edit3 size={16} /> Edit
+              <button onClick={() => setShowEdit(!showEdit)} className="flex items-center gap-2 bg-[#1a1a20] border border-white/10 hover:border-white/20 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors">
+                <Edit3 size={14} /> Edit
               </button>
             </div>
-          </div>
+          }
+        />
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-            <InfoCard label="Gross Revenue" value={`$${pool.gross_revenue.toLocaleString()}`} />
-            <InfoCard label="Refunds" value={`$${pool.refunds_amount.toLocaleString()}`} />
-            <InfoCard label="Chargebacks" value={`$${pool.chargebacks_amount.toLocaleString()}`} />
-            <InfoCard label="Manual Exclusions" value={`$${pool.manual_exclusions_amount.toLocaleString()}`} />
-            <InfoCard label="Eligible Revenue" value={`$${pool.eligible_revenue.toLocaleString()}`} />
-            <InfoCard label="Team Share" value={`${pool.team_share_percentage}%`} />
-            <InfoCard label="Team Pool Amount" value={`$${pool.team_pool_amount.toLocaleString()}`} />
-            <InfoCard label="Status" value={pool.status} color="bg-yellow-500/20 text-yellow-400" />
-          </div>
+        {error && <ERPBannerManager error={error} onDismissError={() => setError(null)} />}
 
-          {showEdit && (
-            <div className="mt-8 p-6 border-t border-zinc-800">
-              <h3 className="text-lg font-semibold mb-4">Edit Financials</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-zinc-400">Gross Revenue</label>
-                  <input type="number" step="0.01" value={editForm.gross_revenue} onChange={(e) => setEditForm({ ...editForm, gross_revenue: e.target.value })} className="w-full bg-zinc-800 rounded-lg px-4 py-2" />
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Refunds</label>
-                  <input type="number" step="0.01" value={editForm.refunds_amount} onChange={(e) => setEditForm({ ...editForm, refunds_amount: e.target.value })} className="w-full bg-zinc-800 rounded-lg px-4 py-2" />
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Chargebacks</label>
-                  <input type="number" step="0.01" value={editForm.chargebacks_amount} onChange={(e) => setEditForm({ ...editForm, chargebacks_amount: e.target.value })} className="w-full bg-zinc-800 rounded-lg px-4 py-2" />
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Manual Exclusions</label>
-                  <input type="number" step="0.01" value={editForm.manual_exclusions_amount} onChange={(e) => setEditForm({ ...editForm, manual_exclusions_amount: e.target.value })} className="w-full bg-zinc-800 rounded-lg px-4 py-2" />
-                </div>
-                <div>
-                  <label className="block text-sm text-zinc-400">Team Share (%)</label>
-                  <input type="number" step="1" value={editForm.team_share_percentage} onChange={(e) => setEditForm({ ...editForm, team_share_percentage: e.target.value })} className="w-full bg-zinc-800 rounded-lg px-4 py-2" />
-                </div>
-              </div>
-              <div className="flex gap-3 mt-4">
-                <button onClick={handleUpdate} disabled={actionLoading} className="bg-blue-600 px-6 py-2 rounded-lg">Save Changes</button>
-                <button onClick={() => setShowEdit(false)} className="bg-zinc-700 px-6 py-2 rounded-lg">Cancel</button>
-              </div>
-            </div>
-          )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 mb-8">
+          <ERPStatCard title="Gross Revenue" value={`$${pool.gross_revenue.toLocaleString()}`} accentColor="#3b82f6" />
+          <ERPStatCard title="Refunds & CBs" value={`$${(pool.refunds_amount + pool.chargebacks_amount).toLocaleString()}`} accentColor="#ef4444" />
+          <ERPStatCard title="Eligible Revenue" value={`$${pool.eligible_revenue.toLocaleString()}`} accentColor="#10b981" />
+          <ERPStatCard title="Team Pool Amount" value={`$${pool.team_pool_amount.toLocaleString()}`} subValue={`${pool.team_share_percentage}% Share`} accentColor="#6366f1" />
         </div>
 
-        {/* Payouts List for this Pool */}
-        <div className="bg-[#121215] border border-zinc-800 rounded-3xl p-8">
-          <h2 className="text-xl font-semibold mb-4">Generated Payouts</h2>
+        <AnimatePresence>
+          {showEdit && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+              <div className="bg-[#111115] border border-white/5 rounded-3xl p-8 mb-8">
+                <h3 className="text-base font-bold text-white mb-6">Edit Financials</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                  {[
+                    { label: "Gross Revenue", key: "gross_revenue" },
+                    { label: "Refunds", key: "refunds_amount" },
+                    { label: "Chargebacks", key: "chargebacks_amount" },
+                    { label: "Manual Exclusions", key: "manual_exclusions_amount" },
+                    { label: "Team Share (%)", key: "team_share_percentage" }
+                  ].map((field) => (
+                    <div key={field.key} className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{field.label}</label>
+                      <input
+                        type="number"
+                        step={field.key === "team_share_percentage" ? "1" : "0.01"}
+                        value={editForm[field.key]}
+                        onChange={(e) => setEditForm({ ...editForm, [field.key]: e.target.value })}
+                        className="w-full bg-[#1a1a20] border border-white/5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-indigo-500/50 transition-colors"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-3 mt-8">
+                  <button onClick={() => handleAction("update", editForm)} disabled={actionLoading} className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors">Save Changes</button>
+                  <button onClick={() => setShowEdit(false)} className="bg-transparent border border-white/10 hover:border-white/20 text-white px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors">Cancel</button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="bg-[#111115] border border-white/5 rounded-3xl overflow-hidden">
+          <div className="p-6 border-b border-white/5 flex items-center justify-between">
+            <h3 className="text-base font-bold text-white">Generated Payouts</h3>
+            <ERPStatusBadge status={pool.status} />
+          </div>
           {loadingPayouts ? (
-            <div className="text-center py-8">Loading payouts...</div>
+            <div className="p-10 flex justify-center"><div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /></div>
           ) : payouts.length === 0 ? (
-            <div className="text-center py-8 text-zinc-500">
-              No payouts generated yet. Click "Generate Payouts" after locking the pool.
-            </div>
+            <ERPEmptyState icon={<Wallet size={24} />} title="No payouts generated" sub="Click 'Generate Payouts' after locking the pool to distribute funds." />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="text-zinc-400 border-b border-zinc-800">
+                <thead className="text-left text-[10px] font-bold uppercase tracking-widest text-zinc-500 bg-black/20">
                   <tr>
-                    <th className="text-left py-2">User ID</th>
-                    <th className="text-left">Points</th>
-                    <th className="text-left">Amount</th>
-                    <th className="text-left">Status</th>
+                    <th className="px-6 py-4">User</th>
+                    <th className="px-6 py-4">Points</th>
+                    <th className="px-6 py-4">Amount</th>
+                    <th className="px-6 py-4">Status</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-white/5">
                   {payouts.map((p) => (
-                    <tr key={p.id} className="border-b border-zinc-800">
-                      <td className="py-2">User #{p.user_id}</td>
-                      <td>{p.execution_points} / {p.team_total_points}</td>
-                      <td>${p.final_payout_amount?.toLocaleString()}</td>
-                      <td className="capitalize">{p.status}</td>
-                    </tr>
+                    <motion.tr whileHover={{ backgroundColor: "rgba(255,255,255,0.02)" }} key={p.id} className="transition-colors">
+                      <td className="px-6 py-4 font-semibold text-white">User #{p.user_id}</td>
+                      <td className="px-6 py-4 text-zinc-400 font-medium">{p.execution_points} <span className="text-zinc-600">/ {p.team_total_points}</span></td>
+                      <td className="px-6 py-4 font-bold text-emerald-400">${p.final_payout_amount?.toLocaleString()}</td>
+                      <td className="px-6 py-4"><ERPStatusBadge status={p.status} /></td>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
@@ -232,15 +233,6 @@ export default function AdminRevenuePoolDetail() {
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function InfoCard({ label, value, color }) {
-  return (
-    <div className="bg-zinc-900/50 rounded-xl p-4">
-      <p className="text-xs text-zinc-500 uppercase">{label}</p>
-      <p className={`text-xl font-semibold mt-1 ${color || "text-white"}`}>{value}</p>
     </div>
   );
 }

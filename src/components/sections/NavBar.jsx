@@ -22,7 +22,10 @@ import { useNotifications } from "../../contexts/NotificationContext";
 import NotificationItem from "../notifications/NotificationItem";
 import { Grid, Search, Plus, Sparkles } from 'lucide-react';
 import AppLauncher from '@/components/app-launcher/AppLauncher';
+import QuickCreateMenu from './QuickCreateMenu';
+import ThemeToggle from './ThemeToggle';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { CosmosButton } from '@/components/cosmos';
 
 // Simple icon components
 const BellIcon = () => (
@@ -120,24 +123,27 @@ const NavBar = ({
         } lg:translate-y-0`}
       style={{ zIndex: 10000 }}
     >
-      <div
-        className="absolute inset-0 z-0"
-        style={{ background: "radial-gradient(125% 125% at 50% 90%, #000000 40%, #0d1a36 100%)" }}
-      />
+      <div className="absolute inset-0 z-0 cosmos-atmosphere-chrome" aria-hidden="true" />
     </nav>
   );
 
   return (
-    <nav className={`fixed top-0 z-100 left-0 flex px-3 sm:px-6 items-center w-full h-16 justify-between transition-transform duration-300 will-change-transform overflow-hidden ${isHidden ? "-translate-y-full" : "translate-y-0"}`}>
-      <div
-        className="absolute inset-0 z-0"
-        style={{ background: "radial-gradient(125% 125% at 50% 90%, #000000 40%, #0d1a36 100%)" }}
-      />
+    <nav className={`fixed top-0 z-100 left-0 flex px-3 sm:px-6 items-center w-full h-16 justify-between border-b border-white/10 transition-transform duration-300 will-change-transform overflow-hidden ${isHidden ? "-translate-y-full" : "translate-y-0"}`}>
+      {/* Cosmos chrome — translucent void with blur, as on the landing page nav */}
+      <div className="absolute inset-0 z-0 cosmos-atmosphere-chrome" aria-hidden="true" />
 
-      <div className="logo h-8 sm:h-full z-50 sm:scale-140 w-20 sm:w-auto">
-        <Link to={user?.id ? `/dashboard` : '/'} className="group h-full cursor-pointer flex items-center">
-          <img loading="lazy" data-aos="fade-right" data-aos-duration="600" src="/logo_white.svg" className="w-full h-full" alt="sf collab" />
-        </Link>
+      <div className="flex items-center gap-2.5 z-50">
+        {/* The spark — the brand's anchor mark across landing page and app */}
+        <span
+          aria-hidden="true"
+          className="hidden sm:block w-[9px] h-[9px] rounded-full bg-gold shrink-0"
+          style={{ boxShadow: '0 0 12px 2px rgba(255,191,94,0.8)' }}
+        />
+        <div className="logo h-8 sm:h-10 w-20 sm:w-auto">
+          <Link to={user?.id ? `/dashboard` : '/'} className="group h-full cursor-pointer flex items-center">
+            <img loading="lazy" data-aos="fade-right" data-aos-duration="600" src="/logo_white.svg" className="w-full h-full object-contain" alt="sf collab" />
+          </Link>
+        </div>
       </div>
 
       <div className="flex items-center h-full gap-1.5 sm:gap-3 z-50">
@@ -150,35 +156,35 @@ const NavBar = ({
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search..."
-                className="w-48 pl-8 pr-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-[#262626] text-sm text-white placeholder-slate-400 focus:outline-none focus:border-blue-500/50"
+                placeholder="Search…"
+                className="w-48 pl-8 pr-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-sm text-star placeholder-dim transition-colors focus:outline-none focus:border-violet focus:bg-white/[0.06]"
               />
             </div>
 
-            {/* Quick Create */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="p-2 rounded-lg hover:bg-white/10 transition-colors text-slate-300 hover:text-white">
-                  <Plus size={22} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-[#1a1a1a] border border-[#262626] rounded-lg">
-                <DropdownMenuItem onClick={() => navigate('/register-startup')} className="text-white hover:bg-white/10">
-                  New Startup
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/posts')} className="text-white hover:bg-white/10">
-                  New Post
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Quick Create — grouped popover, see QuickCreateMenu */}
+            <QuickCreateMenu />
+
+            {/* Dark / light */}
+            <ThemeToggle />
 
             {/* App Launcher */}
             <AppLauncher links={links} />
 
+            {/* Workspace Switcher — desktop only. Lets users switch workspaces and
+                shows "Create Vision" CTA for users without a registered Vision. */}
+            <div className="hidden md:block">
+              <WorkspaceSwitcher />
+            </div>
+
             {/* AI Assistant */}
+            {/* Violet is the intelligence layer's colour — anything AI wears it */}
             <button
               onClick={toggleAIAssistant}
-              className={`p-2 rounded-lg transition-colors ${isAIAssistantOpen ? 'bg-blue-600/30 text-blue-400' : 'hover:bg-white/10 text-slate-300 hover:text-white'
+              aria-label="Toggle AI assistant"
+              aria-pressed={isAIAssistantOpen}
+              className={`p-2 rounded-lg transition-colors ${isAIAssistantOpen
+                ? 'bg-violet/20 text-violet ring-1 ring-violet/40'
+                : 'hover:bg-violet/10 text-slate-300 hover:text-violet'
                 }`}
             >
               <Sparkles size={22} />
@@ -359,25 +365,25 @@ const NavBar = ({
               </Tippy>
             </div>
 
-            <div className="lg:hidden border border-blue-500/20 rounded-lg">
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                aria-label="Toggle mobile menu"
-                aria-expanded={isOpen}
-                className="bg-white/[0.04] border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl backdrop-blur-lg"
-              >
-                <TiThMenu size={15} />
-              </button>
-            </div>
+            {/* Was carrying copy-pasted panel padding (p-8 md:p-10) on a 15px
+                icon, which blew the button out past the nav height. */}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              aria-label="Toggle mobile menu"
+              aria-expanded={isOpen}
+              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg bg-white/[0.04] border border-white/10 text-slate-300 backdrop-blur-lg transition-colors hover:bg-white/[0.08] hover:text-star"
+            >
+              <TiThMenu size={16} />
+            </button>
           </>
         ) : (
-          <div className="hidden lg:flex gap-3">
-            <button onClick={() => navigate('/login')} className="px-4 py-2 text-sm font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 hover:border-blue-500/50 transition-all duration-200">
-              Login
-            </button>
-            <button onClick={() => navigate('/signup')} className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-cyan-600 border border-blue-400/30 rounded-lg hover:shadow-lg hover:shadow-blue-500/50 transition-all duration-200">
-              Sign Up
-            </button>
+          <div className="hidden lg:flex gap-3 items-center">
+            <CosmosButton variant="quiet" size="sm" onClick={() => navigate('/login')}>
+              Sign In
+            </CosmosButton>
+            <CosmosButton variant="primary" size="sm" onClick={() => navigate('/signup')}>
+              Create a Vision
+            </CosmosButton>
           </div>
         )}
       </div >

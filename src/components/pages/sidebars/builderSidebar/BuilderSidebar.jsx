@@ -18,6 +18,7 @@ export default function BuilderSidebar({
       unreadMessagesCount={unreadMessagesCount}
       links={links}
       isAdmin={isAdmin}
+      role="builder"
     />
   );
 }

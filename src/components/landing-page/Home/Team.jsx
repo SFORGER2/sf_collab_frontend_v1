@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Linkedin, Instagram, Twitter, Facebook } from "lucide-react";
+import { FaLinkedin, FaTwitter, FaFacebook } from "react-icons/fa";
 import { 
   getResponsiveScrollTrigger, 
   getResponsiveDuration,
@@ -147,13 +147,13 @@ const Team = () => {
               {person.socials &&
                 <div className="flex gap-4 mt-4">
                   <a className="text-gray-500 hover:text-white" href={person.socials.linkedin}>
-                    <Linkedin size={20} />
+                    <FaLinkedin size={20} />
                   </a>
                   <a className="text-gray-500 hover:text-white" href={person.socials.twitter}>
-                    <Twitter size={20} />
+                    <FaTwitter size={20} />
                   </a>
                   <a className="text-gray-500 hover:text-white" href={person.socials.facebook}>
-                    <Facebook size={20} />
+                    <FaFacebook size={20} />
                   </a>
                 </div>
               }

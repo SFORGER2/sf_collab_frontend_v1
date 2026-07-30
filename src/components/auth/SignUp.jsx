@@ -273,10 +273,7 @@ export default function SignUp() {
   
       {/* Dark Horizon Glow */}
       <div
-          className="absolute inset-0 z-0"
-          style={{
-            background: "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
-          }}
+          className="absolute inset-0 z-0 cosmos-atmosphere"
         />
 
       {/* Loader Overlay */}
@@ -555,7 +552,7 @@ export default function SignUp() {
               disabled={isLoading}
               label={isLoading ? "Creating Account..." : "Sign Up"}
               size="md" 
-              bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+              bgColor="linear-gradient(325deg, #f09220 0%, #ffcf7d 55%, #f09220 90%)" 
             />
 
             {/* Login Link */}

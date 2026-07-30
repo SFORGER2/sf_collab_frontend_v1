@@ -1,80 +1,54 @@
 // src/components/erp/CreateWorkspaceForm.jsx
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { workspaceAPI } from '@/services/workspaceAPI';
-import { setUser } from '@/services/auth/authSlice';
-import { fetchUserProfile } from '@/services/auth/authThunks';
+// Task 5: Direct workspace creation is no longer allowed.
+// Workspaces are only created after a Vision is registered.
+// This component now redirects users to the Vision creation flow.
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Rocket, Lock, Sparkles, ArrowRight } from 'lucide-react';
 
 export function CreateWorkspaceForm({ onSuccess }) {
-  const dispatch = useDispatch();
-  const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      setError('Workspace name is required');
-      return;
-    }
-    const workspaceSlug = slug.trim() || name.toLowerCase().replace(/\s+/g, '-');
-    setLoading(true);
-    setError('');
-    try {
-      await workspaceAPI.createWorkspace(name, workspaceSlug);
-      // Refresh user to get new workspace
-      const userData = await dispatch(fetchUserProfile()).unwrap();
-      dispatch(setUser(userData));
-      if (onSuccess) onSuccess();
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create workspace');
-    } finally {
-      setLoading(false);
-    }
+  const handleCreateVision = () => {
+    navigate('/vision/create');
+    if (onSuccess) onSuccess();
   };
 
   return (
-    <div className="bg-[#121215] border border-zinc-800 rounded-2xl p-8 w-full max-w-md mx-auto">
-      <h1 className="text-2xl font-bold mb-6 text-center text-white">Welcome to ERP</h1>
-      <p className="text-zinc-400 text-center mb-6">You don't have a workspace yet. Create one to get started.</p>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-300 mb-1">Workspace Name *</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
-            placeholder="My Workspace"
-            autoFocus
-            required
-          />
+    <div className="bg-[#0d0a1a] border border-gold/20 rounded-2xl p-8 w-full max-w-md mx-auto text-center relative overflow-hidden">
+      {/* Ambient glow */}
+      <div
+        className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full blur-3xl opacity-20"
+        style={{ background: '#ffbf5e' }}
+      />
+
+      {/* Icon */}
+      <div className="relative inline-flex items-center justify-center mb-5">
+        <div className="w-16 h-16 rounded-2xl bg-gold/10 border border-gold/30 flex items-center justify-center text-gold">
+          <Rocket className="w-8 h-8" />
         </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-300 mb-1">Slug (URL identifier)</label>
-          <input
-            type="text"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
-            placeholder="my-workspace"
-          />
-          <p className="text-xs text-gray-500 mt-1">Auto‑generated from name. Can be edited.</p>
+        <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-[#0d0a1a] border border-gold/40 flex items-center justify-center text-gold">
+          <Lock className="w-3.5 h-3.5" />
         </div>
-        {error && (
-          <div className="mb-4 p-2 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-            {error}
-          </div>
-        )}
-        <button
-          type="submit"
-          disabled={loading || !name.trim()}
-          className="w-full py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
-        >
-          {loading ? 'Creating...' : 'Create Workspace'}
-        </button>
-      </form>
+      </div>
+
+      <h2 className="text-xl font-bold text-white mb-2">
+        Vision Registration Required
+      </h2>
+      <p className="text-sm text-zinc-400 mb-6 max-w-xs mx-auto leading-relaxed">
+        Your Workspace is created automatically when you register a Vision.
+        <br />
+        <span className="text-gold/80">Create and register a Vision to unlock your Workspace.</span>
+      </p>
+
+      <button
+        onClick={handleCreateVision}
+        className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-gold/10 border border-gold/40 text-gold font-semibold text-sm hover:bg-gold/20 transition-all"
+      >
+        <Sparkles className="w-4 h-4" />
+        Create Vision
+        <ArrowRight className="w-4 h-4" />
+      </button>
     </div>
   );
 }
