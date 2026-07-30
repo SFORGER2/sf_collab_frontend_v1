@@ -10,6 +10,17 @@ import { ERPLoadingSkeleton } from "../../erp/shared/ERPLoadingSkeleton";
 import { ERPBannerManager } from "../../erp/shared/ERPBanner";
 import { ERPEmptyState } from "../../erp/shared/ERPEmptyState";
 
+// ── Shared UI components ──
+import {
+  PageHeader,
+  GlassCard,
+  StatCard,
+  Badge,
+  Spinner,
+  Button,
+  EmptyState,
+} from "@/components/erp/ui";
+
 const api = axios.create({ baseURL: "" });
 api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
@@ -21,6 +32,27 @@ const RANK_COLORS = ["#f59e0b", "#9ca3af", "#b45309"];
 
 export default function AdminAnalyticsPage() {
   const { user } = useSelector((s) => s.auth);
+// ── Helpers ────────────────────────────────────────────────────────────────
+const pct = (v) => (v != null ? `${Math.round(v)}%` : "—");
+const toArr = (v, ...keys) => {
+  if (Array.isArray(v)) return v;
+  for (const k of keys) if (Array.isArray(v?.[k])) return v[k];
+  return [];
+};
+
+const PERIODS = [
+  { value: "weekly", label: "This Week" },
+  { value: "monthly", label: "This Month" },
+  { value: "all", label: "All Time" },
+];
+
+const RANK_ICONS = [Crown, Medal, Award];
+const RANK_COLORS = ["#f59e0b", "#9ca3af", "#b45309"];
+
+// ═══════════════════════════════════════════════════════════════════════════
+export default function AdminAnalyticsPage() {
+  const { user } = useSelector((s) => s.auth);
+
   const [period, setPeriod] = useState("weekly");
   const [overview, setOverview] = useState(null);
   const [warnings, setWarnings] = useState([]);
@@ -28,6 +60,7 @@ export default function AdminAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // ── Data loading ──────────────────────────────────────────────────────────
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -52,12 +85,16 @@ export default function AdminAnalyticsPage() {
         const diff = day === 0 ? -6 : 1 - day;
         start.setDate(start.getDate() + diff);
         startDate = formatDate(start);
-      } else if (period === "monthly") {
+      }
+
+      if (period === "monthly") {
         const start = new Date(today.getFullYear(), today.getMonth(), 1);
         startDate = formatDate(start);
       }
 
       const params = { workspace_id: workspaceId };
+
+      // All Time: send a very early start date
       if (period === "all") {
         params.start_date = "2000-01-01";
         params.end_date = endDate;
@@ -68,24 +105,42 @@ export default function AdminAnalyticsPage() {
 
       const res = await api.get("/api/erp-analytics/workspace", { params });
       const payload = res.data?.data || res.data || {};
+
       const metrics = payload.metrics || {};
-      const warningTrendData = Array.isArray(payload.warning_trends) ? payload.warning_trends : [];
-      const contributorData = Array.isArray(payload.contributors) ? payload.contributors : [];
-      const activeWarnings = warningTrendData.reduce((total, item) => total + Number(item.count || 0), 0);
+      const warningTrendData = Array.isArray(payload.warning_trends)
+        ? payload.warning_trends
+        : [];
+      const contributorData = Array.isArray(payload.contributors)
+        ? payload.contributors
+        : [];
+
+      const activeWarnings = warningTrendData.reduce(
+        (total, item) => total + Number(item.count || 0),
+        0
+      );
 
       setOverview({
         task_completion_rate: metrics.task_completion_rate ?? 0,
         attendance_rate: metrics.attendance_rate ?? 0,
         update_consistency: metrics.update_consistency ?? 0,
-        active_users: metrics.active_users ?? { active: 0, total: 0, rate: 0 },
+        active_users: metrics.active_users ?? {
+          active: 0,
+          total: 0,
+          rate: 0,
+        },
         active_warnings: activeWarnings,
         details: metrics.details || {},
       });
+
       setWarnings(warningTrendData);
       setContributors(contributorData);
     } catch (e) {
       console.error("Admin analytics load failed:", e);
-      setError(e?.response?.data?.error || e?.message || "Could not load analytics.");
+      setError(
+        e?.response?.data?.error ||
+          e?.message ||
+          "Could not load analytics."
+      );
       setOverview(null);
       setWarnings([]);
       setContributors([]);
@@ -118,6 +173,36 @@ export default function AdminAnalyticsPage() {
                 >
                   {p.label}
                 </button>
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  if (loading) return <Spinner />;
+  if (error) return <div className="text-red-400 text-center py-20">{error}</div>;
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] text-white p-6">
+      <div className="max-w-5xl mx-auto">
+        <PageHeader
+          title="Admin Analytics"
+          subtitle="Workspace performance & contributor insights"
+          actions={
+            <div className="flex gap-2 bg-zinc-900 border border-zinc-800 rounded-2xl p-1">
+              {PERIODS.map((p) => (
+                <Button
+                  key={p.value}
+                  variant={period === p.value ? "primary" : "ghost"}
+                  size="sm"
+                  onClick={() => setPeriod(p.value)}
+                  className={`px-4 ${
+                    period === p.value
+                      ? "bg-[#1e1b4b] text-[#a5b4fc] border border-[#4338ca]"
+                      : ""
+                  }`}
+                >
+                  {p.label}
+                </Button>
               ))}
             </div>
           }
@@ -200,7 +285,17 @@ function WarningBarChart({ data }) {
         <svg viewBox={`0 0 ${chartWidth} ${BAR_H + 32}`} width="100%" height="170" preserveAspectRatio="xMidYMid meet">
           {[0, 0.25, 0.5, 0.75, 1].map((f) => {
             const y = BAR_H * (1 - f);
-            return <line key={f} x1={0} y1={y} x2={chartWidth} y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth={1} />;
+            return (
+              <line
+                key={f}
+                x1={0}
+                y1={y}
+                x2={chartWidth}
+                y2={y}
+                stroke="#1f2937"
+                strokeWidth={1}
+              />
+            );
           })}
           {data.map((d, i) => {
             const barH = (d.count / maxVal) * (BAR_H - 8);
@@ -209,9 +304,33 @@ function WarningBarChart({ data }) {
             const isHigh = d.count === maxVal && maxVal > 0;
             return (
               <g key={i}>
-                <rect x={x} y={y} width={36} height={barH} rx={4} fill={isHigh ? "#ef4444" : "rgba(255,255,255,0.1)"} />
-                <text x={x + 18} y={y - 6} textAnchor="middle" fontSize={10} fill={isHigh ? "#fca5a5" : "#a1a1aa"} fontWeight={isHigh ? "700" : "400"}>{d.count}</text>
-                <text x={x + 18} y={BAR_H + 18} textAnchor="middle" fontSize={9} fill="#71717a" fontWeight="bold">{d.week_label}</text>
+                <rect
+                  x={x}
+                  y={y}
+                  width={36}
+                  height={barH}
+                  rx={6}
+                  fill={isHigh ? "#ef4444" : "#27272a"}
+                />
+                <text
+                  x={x + 18}
+                  y={y - 6}
+                  textAnchor="middle"
+                  fontSize={10}
+                  fill={isHigh ? "#fca5a5" : "#6b7280"}
+                  fontWeight={isHigh ? "700" : "400"}
+                >
+                  {d.count}
+                </text>
+                <text
+                  x={x + 18}
+                  y={BAR_H + 18}
+                  textAnchor="middle"
+                  fontSize={9}
+                  fill="#6b7280"
+                >
+                  {d.week_label}
+                </text>
               </g>
             );
           })}

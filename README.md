@@ -1,6 +1,7 @@
 # SFCOLAB - Project Collaboration Guide
 
 ## 📌 Branching Strategy & Workflow
+
 To maintain organized development, follow these rules:
 
 1. **Do NOT push directly to `main` branch**
@@ -9,6 +10,7 @@ To maintain organized development, follow these rules:
 ---
 
 ## 🛠️ Setup & Development
+
 1. **Clone the repo:**
    ```bash
    git clone [repo-url]
@@ -28,7 +30,8 @@ To maintain organized development, follow these rules:
    git push origin [your-branch-name]
    ```
 
-⚠️ Important Notes: 
+⚠️ Important Notes:
+
 - Never force-push to shared branches
 - Always pull latest changes before pushing.
 
@@ -39,28 +42,32 @@ To maintain organized development, follow these rules:
 The following changes have been implemented as part of the ERP MVP Phase 1 (Frontend):
 
 ### ✨ Key Features Added
+
 - **Task Board UI (`/erp/tasks`):**
-  - Interactive Kanban Board (To Do, In Progress, Done).
-  - Toggleable List View for detailed task management.
-  - Features for creating tasks, assigning users, and updating status.
+    - Interactive Kanban Board (To Do, In Progress, Done).
+    - Toggleable List View for detailed task management.
+    - Features for creating tasks, assigning users, and updating status.
 - **Admin Settings UI (`/erp/admin-settings`):**
-  - **User Management:** View and manage workspace members and roles.
-  - **Holiday System:** Interface for setting workspace holidays.
-  - **Workspace Settings:** General configuration for workspace name and defaults.
+    - **User Management:** View and manage workspace members and roles.
+    - **Holiday System:** Interface for setting workspace holidays.
+    - **Workspace Settings:** General configuration for workspace name and defaults.
 - **Execution Dashboard UI (`/erp/execution`):**
-  - High-fidelity KPI grid with real-time status signals.
-  - Interactive "Submit Proof" workflow with multi-stage verification.
-  - Formula breakdowns and activity auditing details.
+    - High-fidelity KPI grid with real-time status signals.
+    - Interactive "Submit Proof" workflow with multi-stage verification.
+    - Formula breakdowns and activity auditing details.
 - **Navigation Integration:**
-  - Integrated a new **ERP Section** in the sidebar containing the Task Board and Admin Settings.
+    - Integrated a new **ERP Section** in the sidebar containing the Task Board and Admin Settings.
 
 ### 📁 Modified/Added Files
+
 #### [NEW] New Components
+
 - `src/components/pages/erp/TaskBoard.jsx`
 - `src/components/pages/erp/AdminSettings.jsx`
 - `src/components/pages/erp/data/` (Modular mock data storage)
 
 #### [MODIFY] Existing Files
+
 - `src/App.jsx`: Registered new ERP routes and imported components.
 - `src/components/pages/erp/ExecutionDashboard.jsx`: Refactored to SF-OS standard with high-fidelity proof workflow.
 - `src/components/pages/sidebars/sidebarCommons.jsx`: Added `erpSection` logic.

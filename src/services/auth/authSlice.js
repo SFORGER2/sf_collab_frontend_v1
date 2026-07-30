@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { DEV_AUTH_BYPASS, getDevUser, getDevToken, announceDevBypass } from './devSession';
 import {
   loginUser,
   loginGoogleUser,
@@ -40,11 +41,17 @@ const getStoredToken = () => {
   return token;
 };
 
+// Dev-only: fall back to a fake session so the UI can be reviewed without a
+// backend. Stripped from production builds — see devSession.js.
+announceDevBypass();
+const devUser = DEV_AUTH_BYPASS ? getDevUser() : null;
+const devToken = DEV_AUTH_BYPASS ? getDevToken() : null;
+
 const initialState = {
-  user: getStoredUser(),
-  access_token: getStoredToken(),
+  user: getStoredUser() || devUser,
+  access_token: getStoredToken() || devToken,
   refreshToken: localStorage.getItem('refreshToken') && !localStorage.getItem('access_token') ? null : localStorage.getItem('refreshToken'),
-  isAuthenticated: !!getStoredToken(),
+  isAuthenticated: !!(getStoredToken() || devToken),
   loading: false,
   error: null,
   hasCheckedProfile: false,

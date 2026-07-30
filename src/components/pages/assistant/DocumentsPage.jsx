@@ -316,18 +316,43 @@ function UploadTab() {
 // ─── Drive sync tab (Task 9) ───────────────────────────────────────────────────
 function DriveTab() {
   const shouldReduceMotion = useReducedMotion();
+  const [workspaces, setWorkspaces] = useState([]);
+  const [workspaceId, setWorkspaceId] = useState(null);
+  const [loadingWorkspaces, setLoadingWorkspaces] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [results, setResults] = useState(null);
   const [driveError, setDriveError] = useState(null);
 
+  // Load user's workspaces on mount
+  useEffect(() => {
+    const loadWorkspaces = async () => {
+      try {
+        const list = await workspaceAPI.getMyWorkspaces();
+        setWorkspaces(list || []);
+        if (list && list.length > 0) {
+          setWorkspaceId(list[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to load workspaces for Drive sync:', err);
+      } finally {
+        setLoadingWorkspaces(false);
+      }
+    };
+    loadWorkspaces();
+  }, []);
+
   const handleSync = async () => {
+    if (!workspaceId) {
+      toast.warning('Please select a workspace to index.');
+      return;
+    }
     setSyncing(true);
     setDriveError(null);
     setResults(null);
     try {
-      // workspace_id: undefined — uses authenticated user's default workspace
-      const data = await assistantService.syncDrive();
+      const data = await assistantService.syncDrive(workspaceId);
       setResults(data);
+      toast.success('Drive indexing completed.');
     } catch (e) {
       setDriveError(e.isBusy ? 'Assistant is busy. Try again shortly.' : (e.message || 'Sync failed.'));
     } finally {
@@ -364,14 +389,45 @@ function DriveTab() {
         </div>
         <p className="text-sm text-zinc-400 leading-relaxed mb-5">
           This scans all files in your SF Drive and indexes their content so the AI can answer questions grounded in your actual documents.
-          Re-indexing is safe — existing documents are updated, not duplicated.
+          Re‑indexing is safe — existing documents are updated, not duplicated.
         </p>
+
+        {/* Workspace selector */}
+        <div className="mb-4">
+          <label htmlFor="drive-workspace" className="block text-[11px] text-zinc-500 mb-1.5 font-roboto">
+            Workspace to index
+          </label>
+          <select
+            id="drive-workspace"
+            value={workspaceId || ''}
+            onChange={(e) => setWorkspaceId(Number(e.target.value))}
+            disabled={loadingWorkspaces || syncing}
+            className={cn(
+              'w-full px-3 py-2.5 rounded-xl text-sm font-roboto text-white',
+              'bg-zinc-900/60 border border-white/8 focus:border-blue-500/40 focus:outline-none transition-colors',
+              'disabled:opacity-50 disabled:cursor-not-allowed',
+              FOCUS_RING
+            )}
+          >
+            {loadingWorkspaces && <option value="">Loading workspaces…</option>}
+            {!loadingWorkspaces && workspaces.length === 0 && (
+              <option value="">No workspaces available</option>
+            )}
+            {workspaces.map((ws) => (
+              <option key={ws.id} value={ws.id}>
+                {ws.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <button
           onClick={handleSync}
-          disabled={syncing}
+          disabled={syncing || !workspaceId || loadingWorkspaces}
           className={cn(
             'w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold',
-            'bg-emerald-600 hover:bg-emerald-500 text-white transition-all duration-200 disabled:opacity-50',
+            'bg-emerald-600 hover:bg-emerald-500 text-white transition-all duration-200',
+            'disabled:opacity-40 disabled:pointer-events-none',
             FOCUS_RING
           )}
           aria-label="Start indexing SF Drive"

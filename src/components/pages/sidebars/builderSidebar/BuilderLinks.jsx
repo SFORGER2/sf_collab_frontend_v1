@@ -42,7 +42,10 @@ import {
   erpSection,
   filterERPModules,
   sfDriveSection,
-  sfMeetSection
+  sfMeetSection,
+  learningSection,
+  mentorshipSection,
+  walletSection
 } from "../sidebarCommons";
 import { FcInvite } from "react-icons/fc";
 
@@ -76,7 +79,7 @@ export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiv
         },
       ],
     },
-    ideation(3),
+    ideation(3, "builder"),
     {
       id: 5,
       icon: <Hammer size={22} />,
@@ -109,35 +112,17 @@ export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiv
         },
       ],
     },
-    // Mentorship
-    {
-      id: 6,
-      icon: <GraduationCap size={22} />,
-      href: "/mentors",
-      label: "Mentorship",
-      subItems: [
-        { id: "mentors", href: "/mentors", label: "Find a Mentor", icon: <Search size={18} /> },
-        { id: "mentor-dashboard", href: "/mentor-dashboard", label: "Mentor Dashboard", icon: <GraduationCap size={18} /> },
-        { id: "my-mentorship-requests", href: "/my-mentorship-requests", label: "My Requests", icon: <Star size={18} /> },
-      ],
-    },
     socialSection(7),
-    aiTools(8),
+    aiTools(8, "builder"),
     toolsSection(9),
-    // Wallet & Store — marketplace lives here
-    {
-      id: 10,
-      icon: <Wallet size={22} />,
-      href: "/wallet",
-      label: "Wallet & Store",
-      subItems: [
-        { id: "wallet", href: "/wallet", label: "My Wallet", icon: <Coins size={18} /> },
-        { id: "store", href: "/store", label: "SF Store", icon: <ShoppingBag size={18} /> },
-        { id: "leaderboard", href: "/leaderboard", label: "Leaderboard", icon: <Trophy size={18} /> },
-        { id: "marketplace", href: "/marketplace", label: "Marketplace", icon: <ShoppingCart size={18} /> },
-      ],
-    },
-    // ERP
+    { id: "section-grow", sectionLabel: "Grow", isSection: true },
+    // Builders receive mentorship; they don't run a mentor dashboard, so that
+    // entry has been dropped from this role's navigation.
+    mentorshipSection(6, "builder"),
+    learningSection(14, "builder"),
+    { id: "section-earn", sectionLabel: "Earn", isSection: true },
+    walletSection(10),
+    { id: "section-workspace", sectionLabel: "Workspace", isSection: true },
     erp,
     sfDriveSection(12),
     sfMeetSection(13),

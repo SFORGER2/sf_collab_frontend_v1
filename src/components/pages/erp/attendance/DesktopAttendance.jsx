@@ -17,6 +17,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSelector } from "react-redux";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -49,7 +50,7 @@ const api = axios.create({ baseURL: "/api" });
 api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────
 const fmt = (iso) => {
   if (!iso) return "—";
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -91,8 +92,10 @@ export function MyAttendancePage() {
   const loadToday = useCallback(async () => {
     if (!workspaceId) return;
     try {
-      const { data } = await api.get("/attendance/today-status", { params: { workspace_id: workspaceId } });
-      setToday(data);
+      const { data } = await api.get("/attendance/today-status", {
+        params: { workspace_id: workspaceId },
+      });
+      setToday(data.data || {});
     } catch (e) {
       flash(e?.response?.data?.error || "Could not load today's status", true);
     }
@@ -101,9 +104,13 @@ export function MyAttendancePage() {
   const loadHistory = useCallback(async () => {
     if (!workspaceId) return;
     try {
-      const { data } = await api.get("/attendance/history", { params: { workspace_id: workspaceId, limit: 30 } });
-      setHistory(data.records || []);
-    } catch {/* silent */}
+      const { data } = await api.get("/attendance/history", {
+        params: { workspace_id: workspaceId, limit: 30 },
+      });
+      setHistory(data.data?.records || []);
+    } catch (e) {
+      // silent
+    }
   }, [workspaceId]);
 
   useEffect(() => {
@@ -148,7 +155,7 @@ export function MyAttendancePage() {
     } finally { setActionLoading(false); }
   };
 
-  if (loading) return <ERPSpinner label="Loading attendance…" />;
+  if (loading) return <Spinner label="Loading attendance…" />;
 
   const att = today?.attendance || {};
   const isHoliday = today?.is_holiday;
@@ -472,7 +479,7 @@ export function WorkspaceAttendancePage() {
         api.get("/attendance/workspace-summary", { params: { workspace_id: workspaceId, date: dateFilter } }),
       ]);
       setRecords(recs.data.records || []);
-      setSummary(sum.data);
+      setSummary(sum.data.data);
     } catch (e) {
       flash(e?.response?.data?.error || "Failed to load workspace attendance", true);
     } finally { setLoading(false); }

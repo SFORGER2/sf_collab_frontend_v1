@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { Clock, AlertTriangle, CheckCircle, FileText, DollarSign, Star, LayoutDashboard } from "lucide-react";
@@ -9,8 +10,35 @@ import { requestInterceptor, responseInterceptor, responseErrorInterceptor } fro
 import { ERPPageHeader } from "../../erp/shared/ERPPageHeader";
 import { ERPStatCard } from "../../erp/shared/ERPStatCard";
 import { ERPLoadingSkeleton } from "../../erp/shared/ERPLoadingSkeleton";
+import {
+  requestInterceptor,
+  responseInterceptor,
+  responseErrorInterceptor,
+} from "../../../utils/APIs/interceptors";
+import {
+  Clock,
+  AlertTriangle,
+  CheckCircle,
+  FileText,
+  DollarSign,
+  Star,
+  TrendingUp,
+  Award,
+} from "lucide-react";
 import AssistantFAB from "@/components/common/AssistantFAB";
 
+// ── Shared UI components ─────────────────────────────────────────────────
+import {
+  PageHeader,
+  GlassCard,
+  StatCard,
+  Badge,
+  Button,
+  Spinner,
+  EmptyState,
+} from "@/components/erp/ui";
+
+// ── API instances ──────────────────────────────────────────────────────────
 const tasksApi = axios.create({ baseURL: "/api/erp-tasks" });
 tasksApi.interceptors.request.use(requestInterceptor);
 tasksApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
@@ -23,6 +51,7 @@ const alertsApi = axios.create({ baseURL: "/api/erp-alerts" });
 alertsApi.interceptors.request.use(requestInterceptor);
 alertsApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
+// ── Main Component ──────────────────────────────────────────────────────────
 export default function MemberDashboard() {
   const { user } = useSelector((s) => s.auth);
   const workspaceId = user?.active_workspace_id || 1;
@@ -36,21 +65,28 @@ export default function MemberDashboard() {
   const [totalPaid, setTotalPaid] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // ── Data loading (unchanged) ──────────────────────────────────────────────
   const loadData = useCallback(async () => {
     if (!workspaceId || !userId) return;
     setLoading(true);
     try {
-      const tasksRes = await tasksApi.get("/list", { params: { workspace_id: workspaceId, assigned_to: userId } });
+      const tasksRes = await tasksApi.get("/list", {
+        params: { workspace_id: workspaceId, assigned_to: userId },
+      });
       const tasksData = tasksRes.data?.data?.tasks || tasksRes.data?.tasks || [];
       setTasks(tasksData);
 
-      const updatesRes = await updatesApi.get("/my", { params: { workspace_id: workspaceId, limit: 1 } });
+      const updatesRes = await updatesApi.get("/my", {
+        params: { workspace_id: workspaceId, limit: 1 },
+      });
       const updates = updatesRes.data?.data?.records || updatesRes.data?.records || [];
       const todayStr = new Date().toISOString().split("T")[0];
-      const today = updates.find(u => u.date === todayStr);
+      const today = updates.find((u) => u.date === todayStr);
       setTodayUpdate(today || null);
 
-      const alertsRes = await alertsApi.get("/list", { params: { workspace_id: workspaceId, resolved: false } });
+      const alertsRes = await alertsApi.get("/list", {
+        params: { workspace_id: workspaceId, resolved: false },
+      });
       const alertsData = alertsRes.data?.data?.alerts || alertsRes.data?.alerts || [];
       setWarnings(alertsData);
 
@@ -63,11 +99,21 @@ export default function MemberDashboard() {
       try {
         const payoutRes = await payoutApi.get(`/workspaces/${workspaceId}/payouts/me`);
         const payouts = payoutRes.data?.data || [];
-        const current = payouts.find(p => p.status === "approved" || p.status === "pending" || p.status === "pending_review");
+        const current = payouts.find(
+          (p) =>
+            p.status === "approved" ||
+            p.status === "pending" ||
+            p.status === "pending_review"
+        );
         if (current) setEstimatedPayout(current.final_payout_amount);
-        const paidSum = payouts.reduce((sum, p) => sum + (p.status === "paid" ? (p.final_payout_amount || 0) : 0), 0);
+        const paidSum = payouts.reduce(
+          (sum, p) => sum + (p.status === "paid" ? p.final_payout_amount || 0 : 0),
+          0
+        );
         setTotalPaid(paidSum);
-      } catch (err) {}
+      } catch (err) {
+        // ignore
+      }
     } catch (err) {
       console.error("Failed to load dashboard data", err);
     } finally {
@@ -83,6 +129,7 @@ export default function MemberDashboard() {
 
   if (loading) return <div className="min-h-screen bg-[#0a0a0b]"><ERPLoadingSkeleton /></div>;
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <>
       <div className="min-h-screen bg-[#0a0a0b] text-white">
@@ -187,6 +234,39 @@ function TaskColumn({ title, tasks, color }) {
         <span className="text-xs font-bold bg-[#1a1a20] px-2 py-0.5 rounded-full border border-white/10">{tasks.length}</span>
       </div>
       <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+// ── Enhanced Stat Card with animation ──────────────────────────────────────
+function EnhancedStatCard({ icon: Icon, label, value, accent, delay = 0 }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.4, delay }}
+      whileHover={{ scale: 1.02, y: -2 }}
+      className="bg-[#121215] border border-zinc-800/80 rounded-2xl p-5 transition-all duration-200 shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-indigo-500/5"
+      style={{ borderTop: `3px solid ${accent}` }}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className="w-5 h-5" style={{ color: accent }} />
+        <span className="text-xs uppercase tracking-widest text-zinc-500">
+          {label}
+        </span>
+      </div>
+      <div className="text-2xl font-bold text-white">{value}</div>
+    </motion.div>
+  );
+}
+
+// ── Task Column ─────────────────────────────────────────────────────────────
+function TaskColumn({ title, tasks, color }) {
+  return (
+    <div className="bg-zinc-900/30 rounded-xl p-3 border border-white/5 hover:border-white/10 transition-colors">
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="font-medium" style={{ color }}>
+          {title}
+        </h3>
+        <Badge color="gray">{tasks.length}</Badge>
+      </div>
+      <div className="space-y-2 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
         {tasks.length === 0 ? (
           <p className="text-sm text-zinc-600 text-center py-6 font-semibold">No tasks</p>
         ) : (

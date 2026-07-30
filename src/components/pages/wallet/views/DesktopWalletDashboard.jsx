@@ -11,6 +11,7 @@ import useGetCredits from '../../../../utils/hooks/useGetCredits';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useEntitlements } from '@/services/entitlements/useEntitlements';
 
 const TRANSACTION_ICONS = {
   earn:     { icon: TrendingUp,    bg: 'bg-green-500/20',  color: 'text-green-400' },
@@ -42,7 +43,12 @@ const CRYSTAL_PACKS = [
 const WalletDashboard = () => {
   const { user } = useSelector(state => state.auth);
   const [searchParams, setSearchParams] = useSearchParams();
+  // NOTE: the backend's /credits endpoint currently returns the SF Coins
+  // balance — hence the name mismatch here. AI credits are a separate currency
+  // and come from the entitlements model until the backend exposes them.
+  // See HANDOFF.md §6 for the endpoint the backend still needs to provide.
   const sfCoins = useGetCredits();
+  const { credits } = useEntitlements();
 
   const [wallet, setWallet] = useState(null);
   const [walletBalance, setWalletBalance] = useState(0); // cents — real money Balance
@@ -183,7 +189,7 @@ const WalletDashboard = () => {
             </div>
             My Wallet
           </h1>
-          <p className="text-gray-400 mt-1">SF Coins · Crystals · Balance</p>
+          <p className="text-gray-400 mt-1">SF Coins · Credits · Crystals · Balance</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -202,8 +208,11 @@ const WalletDashboard = () => {
         </div>
       </motion.div>
 
-      {/* ── 3 currency cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      {/* ── 4 currency cards ──
+          Credits were missing entirely: the wallet showed SF Coins, Crystals
+          and real Balance, but credits — the currency every AI tool actually
+          spends — had no home here at all. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
 
         {/* SF Coins */}
         <CurrencyCard
@@ -216,7 +225,34 @@ const WalletDashboard = () => {
           iconShadow="shadow-amber-500/20"
           subtext="Earned through activities"
           delay={0}
+          action={{ label: 'Earn', to: '/wallet/earn' }}
         />
+
+        {/* Credits — what AI tools run on */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.03 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet/10 to-cyan/10 border border-violet/30 p-5 group hover:scale-[1.02] transition-transform"
+        >
+          <div className="absolute -top-16 -right-16 w-32 h-32 rounded-full bg-gradient-to-br from-violet to-cyan opacity-10 blur-3xl group-hover:opacity-20 transition-opacity" />
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet to-cyan shadow-lg shadow-violet/20">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <Link
+                to="/credits"
+                className="text-xs px-2.5 py-1 rounded-lg bg-violet/20 text-violet hover:bg-violet/30 transition-colors flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3" /> Buy
+              </Link>
+            </div>
+            <p className="text-gray-400 text-xs mb-1">Credits</p>
+            <h2 className="text-3xl font-bold text-white mb-1">{credits.toLocaleString()}</h2>
+            <p className="text-gray-500 text-xs">Powers every AI tool</p>
+          </div>
+        </motion.div>
 
         {/* Crystals — with Buy button */}
         <motion.div
@@ -347,15 +383,25 @@ const WalletDashboard = () => {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const CurrencyCard = ({ label, value, icon: Icon, gradient, border, iconGradient, iconShadow, subtext, delay }) => (
+const CurrencyCard = ({ label, value, icon: Icon, gradient, border, iconGradient, iconShadow, subtext, delay, action }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay }}
     className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} border ${border} p-5 group hover:scale-[1.02] transition-transform`}
   >
     <div className={`absolute -top-16 -right-16 w-32 h-32 rounded-full bg-gradient-to-br ${iconGradient} opacity-10 blur-3xl group-hover:opacity-20 transition-opacity`} />
     <div className="relative z-10">
-      <div className={`p-2.5 rounded-xl bg-gradient-to-br ${iconGradient} shadow-lg ${iconShadow} w-fit mb-3`}>
-        <Icon className="w-5 h-5 text-white" />
+      <div className="flex items-start justify-between mb-3">
+        <div className={`p-2.5 rounded-xl bg-gradient-to-br ${iconGradient} shadow-lg ${iconShadow} w-fit`}>
+          <Icon className="w-5 h-5 text-white" />
+        </div>
+        {action && (
+          <Link
+            to={action.to}
+            className="text-xs px-2.5 py-1 rounded-lg bg-white/10 text-star hover:bg-white/20 transition-colors"
+          >
+            {action.label}
+          </Link>
+        )}
       </div>
       <p className="text-gray-400 text-xs mb-1">{label}</p>
       <h2 className="text-3xl font-bold text-white mb-1">{value.toLocaleString()}</h2>

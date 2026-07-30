@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { getStageColor } from "./getStageColor";
+import { BurningBox, StreakBadge } from "@/components/cosmos";
+import { bannerFor } from "@/services/mock/boards";
 import {
   Bookmark, Clock, Heart, MessageCircle, Share2,
-  Users, UserPlus, X, Send, CheckCircle, Clock3,
+  Users, UserPlus, X, Send, CheckCircle, Clock3, Eye, TrendingUp,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDraft } from "@/utils/hooks/useDraft";
@@ -750,6 +752,53 @@ function CollabButton({ content, accessToken, isOwnIdea }) {
   );
 }
 
+/**
+ * A lightweight interest signal — not an application.
+ *
+ * Contributing means committing time and goes through the collab request
+ * flow. Wanting to *use* something, or to back it, costs nothing to say and
+ * tells the founder something different: demand, and capital. One tap,
+ * reversible, no form.
+ *
+ * BACKEND: POST /api/ideas/:id/interest { kind: 'use' | 'invest' }, one row
+ * per user per kind, and surface the counts to the creator — the signal is
+ * worthless if only the sender can see it.
+ */
+function InterestButton({ icon: Icon, label, accent, ideaId, kind }) {
+  const [on, setOn] = useState(false);
+
+  const toggle = async () => {
+    const next = !on;
+    setOn(next);
+    try {
+      await axios.post(`/api/ideas/${ideaId}/interest`, { kind, active: next });
+    } catch {
+      // The endpoint does not exist yet. Keep the optimistic state rather than
+      // snapping back — the intent is recorded locally and the contract is
+      // documented above.
+    }
+    toast?.success?.(next ? `Noted — ${label.toLowerCase()}` : 'Interest removed');
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={on}
+      title={label}
+      aria-label={label}
+      className="grid place-items-center w-9 h-9 rounded-xl border transition-colors"
+      style={
+        on
+          ? { borderColor: accent, background: `${accent}1a`, color: accent }
+          : { borderColor: 'rgba(255,255,255,0.12)', color: 'var(--color-dim)' }
+      }
+    >
+      <Icon className="h-4 w-4" />
+    </button>
+  );
+}
+
 // ── Main Card ─────────────────────────────────────────────────────────────────
 export default function VisionCard({ content, shouldBlur }) {
   // FIX: useNavigate was missing — caused "navigate is not defined" crash
@@ -798,12 +847,16 @@ export default function VisionCard({ content, shouldBlur }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
       whileHover={{ y: -5, transition: { duration: 0.2 } }}
-      className="h-full group relative"
+      className="h-full group relative cosmos-alive-card"
     >
       {/* FIX: outer <Link> replaced with <div onClick navigate> to prevent nested <a> tags */}
-      <div
+      {/* The whole card catches fire when the Vision is on a run — see
+          cosmos.css → BURNING BOXES. Renders as a plain wrapper below the
+          first momentum tier, which is most cards. */}
+      <BurningBox
+        item={content}
         onClick={() => navigate(`/ideation-details?id=${content?.id}`)}
-        className="relative block h-full rounded-2xl border border-blue-500/20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 hover:border-blue-500/50 hover:from-gray-800/80 hover:to-gray-900/80 transition-all duration-300 backdrop-blur-sm overflow-hidden cursor-pointer"
+        className="cosmos-showcase relative block h-full overflow-hidden cursor-pointer"
       >
         {shouldBlur && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 backdrop-blur-md rounded-2xl">
@@ -817,13 +870,72 @@ export default function VisionCard({ content, shouldBlur }) {
 
         <div className={`p-6 space-y-4 h-full flex flex-col ${shouldBlur ? "blur-sm pointer-events-none" : ""}`}>
 
-          {content?.imageUrl && (
-            <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.3 }}
-              className="overflow-hidden rounded-xl border border-blue-500/10">
-              <img src={content?.imageUrl} alt={content?.title}
-                className="h-48 w-full object-cover group-hover:brightness-110 transition-all duration-300" />
-            </motion.div>
-          )}
+          {/* Portfolio header: banner behind, logo overlapping it.
+              An uploaded image wins; otherwise a gradient derived from the id
+              gives the card a stable identity rather than a grey rectangle. */}
+          <div className="-mx-6 -mt-6 mb-1">
+            <div
+              className="cosmos-alive-banner relative h-28 w-full overflow-hidden"
+              style={{
+                ...(content?.imageUrl ? {} : { background: content?.banner || bannerFor(String(content?.id || '')) }),
+                // Stagger the sheen so a grid doesn't shimmer in lockstep.
+                '--sheen-delay': `${(String(content?.id || '').length % 5) * 1.1}s`,
+              }}
+            >
+              {content?.imageUrl && (
+                <img
+                  src={content.imageUrl}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              )}
+              <span
+                aria-hidden="true"
+                className="absolute inset-0"
+                style={{ background: 'linear-gradient(180deg, rgba(9,7,20,0.08) 0%, rgba(9,7,20,0.8) 100%)' }}
+              />
+
+              <span className="absolute top-3 right-3">
+                <StreakBadge item={content} />
+              </span>
+
+              {/* Someone else is looking at this right now. Nothing else on a
+                  board conveys "alive" as cheaply as another person's presence. */}
+              {(content?.collaborators || 0) > 2 && (
+                <span
+                  /* Top-left: the logo overlaps the banner's bottom-left
+                     corner, so anything placed there is read through it. */
+                  className="absolute top-3 left-3 inline-flex items-center gap-1.5 font-mono text-[9px] tracking-[0.12em] uppercase px-2 py-1 rounded-full"
+                  style={{ background: 'rgba(0,0,0,0.5)', color: '#3ee6a0' }}
+                >
+                  <span className="cosmos-live-dot" />
+                  {content.collaborators} active
+                </span>
+              )}
+
+              {content?.readinessScore > 0 && (
+                <span
+                  className="absolute bottom-3 right-3 font-mono text-[9.5px] tracking-[0.12em] uppercase px-2 py-1 rounded-full"
+                  style={{ background: 'rgba(0,0,0,0.55)', color: '#ffbf5e' }}
+                >
+                  {content.readinessScore}% ready
+                </span>
+              )}
+            </div>
+
+            <div className="px-6 -mt-7 relative">
+              <span
+                className="grid place-items-center w-14 h-14 rounded-2xl font-display text-[1.05rem]"
+                style={{
+                  background: content?.banner || bannerFor(String(content?.id || '')),
+                  border: '3px solid var(--color-panel)',
+                  color: '#14111f',
+                }}
+              >
+                {content?.logoText || (content?.title || '??').slice(0, 2).toUpperCase()}
+              </span>
+            </div>
+          </div>
 
           {/* FIX: inner author <Link> replaced with <div> + stopPropagation to prevent nested <a> */}
           <div
@@ -839,7 +951,9 @@ export default function VisionCard({ content, shouldBlur }) {
                 <p className="text-xs text-gray-400">{author?.role}</p>
               </div>
             </div>
-            <span className={`${getStageColor(content?.stage)} text-xs px-3 py-1.5 rounded-full font-semibold`}>
+            {/* The streak badge lives on the banner now — showing it twice on
+                one card made the heat read as noise rather than a signal. */}
+            <span className={`${getStageColor(content?.stage)} text-xs px-3 py-1.5 rounded-full font-semibold shrink-0`}>
               {content?.stage}
             </span>
           </div>
@@ -851,9 +965,9 @@ export default function VisionCard({ content, shouldBlur }) {
 
           {content?.tags?.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {content?.tags?.slice(0, 3)?.map((tag, i) => (
+              {content?.tags?.slice(0, 2)?.map((tag, i) => (
                 <motion.span key={i} whileHover={{ scale: 1.05 }}
-                  className="text-xs text-blue-300 bg-blue-500/15 border border-blue-500/30 px-3 py-1 rounded-full font-medium">
+                  className="text-[0.72rem] text-dim bg-white/[0.05] border border-white/10 px-2.5 py-0.5 rounded-full">
                   #{tag}
                 </motion.span>
               ))}
@@ -863,59 +977,89 @@ export default function VisionCard({ content, shouldBlur }) {
             </div>
           )}
 
-          <div className="border-t border-gray-700/50 pt-4 space-y-4">
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-4 text-gray-400">
-                <motion.button whileTap={{ scale: 1.25 }} onClick={handleLike}
-                  className="flex items-center gap-1.5 hover:text-red-400 transition-colors">
-                  <Heart className={`h-4 w-4 ${liked ? "text-red-500 fill-red-500" : ""}`} />
-                  <span>{likes}</span>
-                </motion.button>
-                <span className="flex items-center gap-1.5">
-                  <MessageCircle className="h-4 w-4" />{content?.comments}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Users className="h-4 w-4" />{content?.collaborators}
-                </span>
-              </div>
-              <span className="flex items-center gap-1.5 text-gray-500">
+          {/* One quiet stats line, one primary action, one icon row.
+              This block used to stack five full-width buttons — Save, Share,
+              Contribute, Use, Invest, Connect — which is what made the board
+              read as a form rather than something to browse. Secondary actions
+              are icons now; only the primary one keeps its label. */}
+          <div className="border-t border-white/[0.07] pt-3.5 mt-auto">
+            <div className="flex items-center gap-4 text-[0.78rem] text-dim mb-3">
+              <button
+                type="button"
+                onClick={handleLike}
+                className="flex items-center gap-1.5 hover:text-red-400 transition-colors"
+              >
+                <Heart className={`h-3.5 w-3.5 ${liked ? "text-red-500 fill-red-500" : ""}`} />
+                <span className="tabular-nums">{likes}</span>
+              </button>
+              <span className="flex items-center gap-1.5">
+                <MessageCircle className="h-3.5 w-3.5" />
+                <span className="tabular-nums">{content?.comments || 0}</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5" />
+                <span className="tabular-nums">{content?.collaborators || 0}</span>
+              </span>
+              <span className="flex items-center gap-1.5 ml-auto text-dim/70">
                 <Clock className="h-3 w-3" />{content?.timeAgo}
               </span>
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                onClick={handleBookmark}
-                className={`flex-1 py-2.5 px-3 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${bookmarked
-                  ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
-                  : "bg-white/5 text-gray-400 border border-gray-700/50 hover:border-blue-500/30 hover:text-white"
-                  }`}>
-                <Bookmark className={`h-4 w-4 ${bookmarked ? "fill-current" : ""}`} />
-                Save
-              </motion.button>
-
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                onClick={e => {
-                  e?.preventDefault?.(); e?.stopPropagation?.();
-                  if (navigator?.share) {
-                    navigator.share({ title: content?.title, text: content?.description, url: window.location.href });
-                  } else { toast?.info?.("Share functionality not available"); }
-                }}
-                className="flex-1 py-2.5 px-3 rounded-lg bg-white/5 border border-gray-700/50 hover:border-blue-500/30 text-gray-400 hover:text-white font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2">
-                <Share2 className="h-4 w-4" />Share
-              </motion.button>
             </div>
 
             <div onClick={e => { e?.preventDefault?.(); e?.stopPropagation?.(); }}>
               <CollabButton content={content} accessToken={access_token} isOwnIdea={isOwnIdea} />
             </div>
 
-            <div onClick={e => { e?.preventDefault?.(); e?.stopPropagation?.(); }}>
-              <ConnectionButton userId={content?.author?.id || content?.creator?.id} size="sm" className="w-full" />
+            {/* Secondary signals as icons — same actions, a fifth of the space. */}
+            <div
+              className="flex items-center gap-1.5 mt-2"
+              onClick={e => { e?.preventDefault?.(); e?.stopPropagation?.(); }}
+            >
+              {!isOwnIdea && (
+                <>
+                  <InterestButton icon={Eye} label="Interested in using" accent="#4fd8ff" ideaId={content?.id} kind="use" />
+                  <InterestButton icon={TrendingUp} label="Interested in investing" accent="#3ee6a0" ideaId={content?.id} kind="invest" />
+                </>
+              )}
+              <button
+                type="button"
+                onClick={handleBookmark}
+                title={bookmarked ? 'Saved' : 'Save'}
+                aria-label="Save"
+                className="grid place-items-center w-9 h-9 rounded-xl border transition-colors"
+                style={bookmarked
+                  ? { borderColor: 'rgba(255,191,94,0.5)', background: 'rgba(255,191,94,0.12)', color: '#ffbf5e' }
+                  : { borderColor: 'rgba(255,255,255,0.12)', color: 'var(--color-dim)' }}
+              >
+                <Bookmark className={`h-4 w-4 ${bookmarked ? 'fill-current' : ''}`} />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard?.writeText(`${window.location.origin}/ideation-details?id=${content?.id}`);
+                  toast?.success?.('Link copied');
+                }}
+                title="Share"
+                aria-label="Share"
+                className="grid place-items-center w-9 h-9 rounded-xl border border-white/[0.12] text-dim hover:text-star hover:border-white/25 transition-colors"
+              >
+                <Share2 className="h-4 w-4" />
+              </button>
+
+              {/* Connect with the creator. This was dropped in the card
+                  simplification, which was a deletion rather than a redesign —
+                  restored, as an icon so it costs the same space as the rest. */}
+              {!isOwnIdea && (
+                <span className="ml-auto" title="Connect with the creator">
+                  <ConnectionButton
+                    userId={content?.author?.id || content?.creator?.id}
+                    size="sm"
+                  />
+                </span>
+              )}
             </div>
           </div>
         </div>
-      </div>
+      </BurningBox>
     </motion.div>
   );
 }

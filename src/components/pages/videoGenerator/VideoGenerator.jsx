@@ -103,7 +103,7 @@ const VideoGenerator = () => {
     }
 
     if (credits < totalCost) {
-      setError(`Insufficient SF coins. You need ${totalCost} coins but only have ${credits}`);
+      setError(`Insufficient SF Coins. You need ${totalCost} coins but only have ${credits}`);
       return;
     }
 
@@ -187,7 +187,7 @@ const VideoGenerator = () => {
               label="Cost"
               value={`${totalCost}`}
               accent="emerald"
-              suffix="sf coins"
+              suffix="SF Coins"
             />
             <SummaryCard
               label="Remaining SF Coins"

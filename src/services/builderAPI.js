@@ -29,14 +29,14 @@ api.interceptors.response.use(
  */
 export const builderProfileAPI = {
   getProfile: async (accessToken) => {
-    const response = await api.get('/profile', {
+    const response = await api.get('/users/profile', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     return response.data;
   },
 
   updateProfile: async (profileData, accessToken) => {
-    const response = await api.put('/profile', profileData, {
+    const response = await api.put('/users/profile', profileData, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     return response.data;

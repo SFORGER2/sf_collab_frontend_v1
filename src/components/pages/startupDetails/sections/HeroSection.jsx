@@ -156,12 +156,12 @@ export default function HeroSection({
                 setAlertDescription("Startup link has been copied to clipboard.");
                 setAlertVariant("success");
               }}
-              variant="outline" className="border-gray-600 text-black hover:bg-black/30 cursor-pointer hover:text-white">
+              variant="outline" className="border-white/15 text-star hover:bg-white/10 cursor-pointer hover:text-star">
               <Share2 className="w-4 h-4 mr-2" />
               Share
             </Button>
             {startup?.funding_amount > 0 && (
-              <Button variant="outline" className="border-gray-600 text-black hover:bg-black/30 hover:text-white">
+              <Button variant="outline" className="border-white/15 text-star hover:bg-white/10 hover:text-star">
                 <DollarSign className="w-4 h-4 mr-2" />
                 {formatCurrency(startup.funding_amount)} raised
               </Button>

@@ -136,11 +136,8 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
         style={{ zIndex: 999999 }}
       >
         <div
-          className="absolute inset-0"
-          style={{
-            background: "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
-            zIndex: -1
-          }}
+          className="absolute inset-0 backdrop-blur-xl"
+          style={{ background: "rgba(9, 7, 20, 0.82)", zIndex: -1 }}
         />
         <SidebarContent />
       </div>

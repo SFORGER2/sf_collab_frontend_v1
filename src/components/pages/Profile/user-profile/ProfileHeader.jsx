@@ -1,5 +1,5 @@
 // sections/ProfileHeader.jsx
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Camera, Edit, Settings, MapPin, Calendar, Mail, Sparkles, Trophy, Zap, Heart, Flame, TrendingUp, LinkIcon } from 'lucide-react';
 import './background.css';
@@ -51,6 +51,15 @@ const ProfileHeader = ({
 }) => {
   const { user: currentUser } = useSelector((state) => state.auth);
   const hasActivePlan = user?.builder_plan_id || user?.founder_plan_id;
+
+  // The API sends createdAt on some shapes and created_at on others, and
+  // sometimes neither. Only show the chip when we actually have a date.
+  const joinedOn = useMemo(() => {
+    const raw = user?.createdAt || user?.created_at;
+    if (!raw) return null;
+    const d = new Date(raw);
+    return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString();
+  }, [user?.createdAt, user?.created_at]);
 
   // ✅ LevelBadge component – correctly defined inside
   const LevelBadge = ({ level }) => {
@@ -215,7 +224,7 @@ const ProfileHeader = ({
               >
                 <MapPin className="w-4 h-4 text-blue-400" />
                 {user?.profile?.city ?
-                  <span className="text-gray-300">{user?.profile.city}, {user?.profile.country}</span>
+                  <span className="text-gray-300">{user?.profile?.city}, {user?.profile?.country}</span>
                   :
                   <span className="text-gray-500">Location not set</span>
                 }
@@ -232,23 +241,26 @@ const ProfileHeader = ({
                 </motion.div>
               }
 
-              {/* Join Date */}
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
-              >
-                <Calendar className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">Joined {new Date(user?.createdAt).toLocaleDateString()}</span>
-              </motion.div>
+              {/* Join Date — hidden rather than rendering "Joined Invalid Date",
+                  which is what an absent or malformed createdAt produced. */}
+              {joinedOn && (
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
+                >
+                  <Calendar className="w-4 h-4 text-green-400" />
+                  <span className="text-gray-300">Joined {joinedOn}</span>
+                </motion.div>
+              )}
 
               {/* Company */}
-              {user?.profile.company && (
+              {user?.profile?.company && (
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
                 >
                   <Sparkles className="w-4 h-4 text-yellow-400" />
-                  <span className="text-gray-300">{user?.profile.company}</span>
+                  <span className="text-gray-300">{user?.profile?.company}</span>
                 </motion.div>
               )}
 
@@ -318,7 +330,9 @@ const ProfileHeader = ({
               )}
 
               {
-                currentUser.active_startups_count > 0 && currentUser.id !== user?.id && (
+                /* `currentUser` is null until the auth profile resolves, and
+                   the whole page threw here on first paint. */
+                currentUser?.active_startups_count > 0 && currentUser?.id !== user?.id && (
                   <>
                     <InviteToStartup user={user} />
                     <AddFriend user={user} />
@@ -355,7 +369,10 @@ const ProfileHeader = ({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onSettingsClick}
-                className="flex items-center gap-2 my-4 mx-auto px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 backdrop-blur-sm rounded-lg transition-all"
+                /* Was a blue→purple gradient that read as a stray shadcn button
+                   against the cosmos palette. Now the gold accent used for
+                   primary actions everywhere else. */
+                className="flex items-center gap-2 my-4 mx-auto px-4 py-2 rounded-xl border border-gold/40 bg-gold/10 text-gold hover:bg-gold/20 hover:border-gold/60 backdrop-blur-sm transition-all"
               >
                 <Settings className="w-4 h-4" />
                 Edit Profile
