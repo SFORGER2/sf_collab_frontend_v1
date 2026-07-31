@@ -164,7 +164,7 @@ const ApplicationModal = ({
         className="
           !w-[96vw]
           !max-w-[1100px]
-          z-999
+          z-[9999]
           h-[96vh] lg:h-auto
           bg-[#0E0F13]
           border border-white/10

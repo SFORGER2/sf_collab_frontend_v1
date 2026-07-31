@@ -9,7 +9,7 @@ import { Building2, MapPin, Eye, Briefcase, ChevronDown, Bookmark, Users } from 
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import ApplicationModal from "./ApplicationModal";
+import ApplyToStartupModal from "./ApplyToStartupModal";
 import { MomentumFlame } from "@/components/cosmos";
 const stageColors = [
   'bg-red-500/20 text-red-300',
@@ -368,18 +368,17 @@ export default function StartupCard({
       </div>
       {
         selectedStartup && (
-          <ApplicationModal
-            entity={{
+          <ApplyToStartupModal
+            startup={{
               ...selectedStartup,
               id: selectedStartup?.original_id || selectedStartup?.id
             }}
-            entityType="startup"
             isOpen={!!selectedStartup}
+            roleSelected={selectedRole}
             onClose={() => {
               setSelectedRole(null);
               setSelectedStartup(null);
             }}
-            roleSelected={selectedRole}
           />
         )
       }
