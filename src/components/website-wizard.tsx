@@ -20,7 +20,7 @@ import {
   type WizardErrors,
   type Project,
 } from "../types"
-import { cn } from "../lib/utils"
+import { cn } from "@/lib/utils"
 
 const WIZARD_STORAGE_KEY = "sfcollab_wizard_progress"
 

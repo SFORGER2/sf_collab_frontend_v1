@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { requestInterceptor, responseInterceptor } from './interceptors';
+import { requestInterceptor, responseInterceptor } from '@/utils/APIs/interceptors';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 

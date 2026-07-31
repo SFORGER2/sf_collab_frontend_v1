@@ -3,7 +3,7 @@ import * as React from 'react';
 import { motion } from 'motion/react';
 import { Children } from 'react';
 
-import { cn } from '../../../../lib/utils';
+import { cn } from '@/lib/utils';
 import {
   TooltipContent,
   TooltipProvider,

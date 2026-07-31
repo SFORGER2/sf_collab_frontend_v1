@@ -20,7 +20,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Terminal, Loader2 } from "lucide-react";
 import TaskCard from "./TaskCard";
-import { cn } from "../../../../lib/utils";
+import { cn } from "@/lib/utils";
 import axios from "axios";
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "@/utils/APIs/interceptors";
 import { useSelector } from "react-redux";

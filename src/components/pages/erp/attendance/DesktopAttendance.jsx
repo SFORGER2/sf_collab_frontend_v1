@@ -19,7 +19,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock,
   LogIn,

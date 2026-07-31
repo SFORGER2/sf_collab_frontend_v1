@@ -12,7 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { TEMPLATES, type WizardData, type WizardErrors } from "../../types"
-import { cn } from "../../lib/utils"
+import { cn } from "@/lib/utils"
 
 const templateIcons: Record<string, LucideIcon> = {
   Building2,

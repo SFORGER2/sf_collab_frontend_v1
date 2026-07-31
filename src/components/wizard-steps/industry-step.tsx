@@ -19,7 +19,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { INDUSTRIES, type WizardData, type WizardErrors } from "../../types"
-import { cn } from "../../lib/utils"
+import { cn } from "@/lib/utils"
 
 const industryIcons: Record<string, LucideIcon> = {
   Monitor,

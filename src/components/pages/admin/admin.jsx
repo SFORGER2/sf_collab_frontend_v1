@@ -29,6 +29,7 @@ import AdminSendAnnouncementSection from './SendAnnouncementsSection';
 import AdminApplicationsSection from './ApplicationsAdminSection';
 import AdminFeedbackSection from './FeedbackAdminSection';
 import AdminRefreshNewsSection from './AdminRefreshNewsSection';
+import AdminModelEvaluationSection from './AdminModelEvaluationSection';
 import { errorAPI } from '@/utils/APIs/errorAPI';
 import { Trash2, Search, Users as UsersIcon, Rocket, AlertCircle, TrendingUp, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -425,6 +426,7 @@ const AdminDashboard = () => {
           <AdminIdeasReviewSection />
           <AdminSendAnnouncementSection />
           <AdminRefreshNewsSection />
+          <AdminModelEvaluationSection />
 
           {/* Newsletter Subscribers & Management Dashboard */}
           <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50 mb-8">

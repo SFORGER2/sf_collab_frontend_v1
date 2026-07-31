@@ -68,6 +68,7 @@ import Unsubscribe from "./components/pages/Unsubscribe.jsx";
 import { ToastContainer } from "react-toastify";
 import WaitlistTerms from "./components/pages/termsAndConditions/waitlistTerms.jsx";
 import AdminPage from "./components/pages/admin/admin.jsx";
+import ModelEvaluationDashboard from "./components/pages/admin/evaluation/ModelEvaluationDashboard.jsx";
 import DiscoverUsers from "./components/discover-users/DiscoverUsers.jsx";
 import AIMatchmakingPage from "./components/pages/matchmaking/AIMatchmakingPage.jsx";
 import AINewsPage from "./components/pages/aiNews/AINewsPage.jsx";
@@ -375,6 +376,7 @@ export default function App() {
                       {/* Users & Profiles */}
                       <Route path="influencer" element={<Influencer />} />
                       <Route path="admin" element={<AdminPage />} />
+                      <Route path="admin/model-evaluation" element={<ModelEvaluationDashboard />} />
                       <Route path="refer" element={<ReferPage />} />
                       <Route path="join-sf" element={<JoinSF />} />
                       <Route path="apply-influencer" element={<InfluencerApplication />} />

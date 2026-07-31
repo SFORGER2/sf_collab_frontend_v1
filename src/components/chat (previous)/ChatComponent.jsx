@@ -49,9 +49,9 @@ import { fetchUserProfile } from '../../services/auth/authThunks';
 import { ConversationsCardSkeleton, MessagesSkeleton } from './Skeletons';
 import { API_BASE_URL, SOCKET_API_URL } from '@/utils/config';
 import { chatAPI } from '@/utils/APIs/chatApi';
-import { usersAPI } from '@/utils/api/userAPI';
+import { usersAPI } from '@/utils/APIs/userAPI';
 import MessageBubble from './MessageBubble';
-import { notificationAPI } from '@/utils/api/notificationAPI';
+import { notificationAPI } from '@/utils/APIs/notificationAPI';
 
 import { toAbsoluteFileUrl } from "@/utils/toAbsoluteFileUrl";
 

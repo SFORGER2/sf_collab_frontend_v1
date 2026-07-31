@@ -11,14 +11,14 @@ import {
 import Navbar from "../Navbar";
 import Footer from "../Footer";
 // Images
-import OskarImg from "../../../assets/imgs/Oskar K (Founder & CEO).jpg";
-import FatimaImg from "../../../assets/imgs/Fatima Abba (Backend Developer).png";
-import ChinmayImg from "../../../assets/imgs/Chinmay Bharadwaj (Developer).jpg";
-import KrystianImg from "../../../assets/imgs/Krystian Śledziewski (cybersecurity)_.jpg";
-import RazeenImg from "../../../assets/imgs/Razeen Iqbal ( product Manager).jpg";
-import ShreyImg from "../../../assets/imgs/Shrey Dikshant (AI_ML Engineer).jpg";
-import VarunImg from "../../../assets/imgs/Varun.png (Frontend Developer & AI researcher).jpg"; // ✅ renamed file
-import IvanImg from "../../../assets/imgs/Ivan Gomez (Cloud & Software Developer).jpg";
+import OskarImg from "@/assets/imgs/Oskar K (Founder & CEO).jpg";
+import FatimaImg from "@/assets/imgs/Fatima Abba (Backend Developer).png";
+import ChinmayImg from "@/assets/imgs/Chinmay Bharadwaj (Developer).jpg";
+import KrystianImg from "@/assets/imgs/Krystian Śledziewski (cybersecurity)_.jpg";
+import RazeenImg from "@/assets/imgs/RazzinJpeg.jpeg";
+import ShreyImg from "@/assets/imgs/Shrey Dikshant (AI_ML Engineer).jpg";
+import VarunImg from "@/assets/imgs/Varun.png (Frontend Developer & AI researcher).jpg"; // ✅ renamed file
+import IvanImg from "@/assets/imgs/Ivan Gomez (Cloud & Software Developer).jpg";
 gsap.registerPlugin(ScrollTrigger);
 
 // Team Data

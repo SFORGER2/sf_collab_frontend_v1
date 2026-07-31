@@ -16,7 +16,7 @@
 
 'use client';;
 import { Button } from '../../button';
-import { cn } from "../../../lib/utils";
+import { cn } from "@/lib/utils";
 import { CheckIcon, CopyIcon } from 'lucide-react';
 import { createContext, useContext, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';

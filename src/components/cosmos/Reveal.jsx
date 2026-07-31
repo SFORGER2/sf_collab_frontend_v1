@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
 
 /**
  * Blur-up scroll reveal, matching the landing page's `.line` treatment.

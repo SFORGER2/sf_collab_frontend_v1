@@ -15,7 +15,7 @@
  */
 
 'use client';;
-import { cn } from "../../../lib/utils";
+import { cn } from "@/lib/utils";
 
 import { isValidElement, memo } from 'react';
 import ReactMarkdown from 'react-markdown';

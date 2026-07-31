@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Building2, Mail, Globe, FileText, AlertCircle, CheckCircle } from "lucide-react"
 import type { WizardData, WizardErrors } from "../../types"
-import { cn } from "../../lib/utils"
+import { cn } from "@/lib/utils"
 
 interface BusinessInfoStepProps {
   data: WizardData

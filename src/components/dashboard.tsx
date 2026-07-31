@@ -8,8 +8,8 @@ import { EmptyState } from "./empty-state";
 import { Button } from "./ui/button";
 import { CreateWebsiteModal } from "./create-website-modal";
 import { DeleteWebsiteDialog } from "./delete-website-dialog";
-import { cn } from "../lib/utils";
-import { getFilterLabel, matchesStatusFilter, type StatusFilter } from "../lib/utils";
+import { cn } from "@/lib/utils";
+import { getFilterLabel, matchesStatusFilter, type StatusFilter } from "@/lib/utils";
 import type { Project } from "../types";
 
 const STATUS_FILTERS: StatusFilter[] = ["all", "draft", "in-progress", "completed", "failed", "archived"]

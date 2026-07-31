@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
 
 export default function SentimentIndicator({ sentiment, aiEnriched, ai_enriched, className }) {
   // If either prop is explicitly false, do not render

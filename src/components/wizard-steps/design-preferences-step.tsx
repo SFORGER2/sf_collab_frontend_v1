@@ -13,7 +13,7 @@ import {
   Radius,
 } from "lucide-react"
 import { DESIGN_THEMES, type WizardData } from "../../types"
-import { cn } from "../../lib/utils"
+import { cn } from "@/lib/utils"
 import { ThemePreview } from "../theme-preview"
 
 const LAYOUTS = [

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, RotateCcw, Save, X } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
 import { CosmosButton } from './CosmosButton';
 
 const PREFIX = 'sfc.draft.';

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '@/utils/config';
 import { Heart } from 'lucide-react'; // or any icon
 import { toast } from 'react-toastify';
-import { useAuth } from '@/hooks/useAuth'; // your auth hook
+import { useAuth } from '@/contexts/AuthContext'; // your auth hook
 
 const getToken = () =>
   localStorage.getItem('accessToken') ||

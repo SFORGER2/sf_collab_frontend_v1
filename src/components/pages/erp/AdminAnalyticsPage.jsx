@@ -26,14 +26,6 @@ api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 const pct = (v) => (v != null ? `${Math.round(v)}%` : "—");
-const PERIODS = [{ value: "weekly", label: "This Week" }, { value: "monthly", label: "This Month" }, { value: "all", label: "All Time" }];
-const RANK_ICONS = [Crown, Medal, Award];
-const RANK_COLORS = ["#f59e0b", "#9ca3af", "#b45309"];
-
-export default function AdminAnalyticsPage() {
-  const { user } = useSelector((s) => s.auth);
-// ── Helpers ────────────────────────────────────────────────────────────────
-const pct = (v) => (v != null ? `${Math.round(v)}%` : "—");
 const toArr = (v, ...keys) => {
   if (Array.isArray(v)) return v;
   for (const k of keys) if (Array.isArray(v?.[k])) return v[k];
@@ -173,36 +165,6 @@ export default function AdminAnalyticsPage() {
                 >
                   {p.label}
                 </button>
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  // ── Render ────────────────────────────────────────────────────────────────
-  if (loading) return <Spinner />;
-  if (error) return <div className="text-red-400 text-center py-20">{error}</div>;
-
-  return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-6">
-      <div className="max-w-5xl mx-auto">
-        <PageHeader
-          title="Admin Analytics"
-          subtitle="Workspace performance & contributor insights"
-          actions={
-            <div className="flex gap-2 bg-zinc-900 border border-zinc-800 rounded-2xl p-1">
-              {PERIODS.map((p) => (
-                <Button
-                  key={p.value}
-                  variant={period === p.value ? "primary" : "ghost"}
-                  size="sm"
-                  onClick={() => setPeriod(p.value)}
-                  className={`px-4 ${
-                    period === p.value
-                      ? "bg-[#1e1b4b] text-[#a5b4fc] border border-[#4338ca]"
-                      : ""
-                  }`}
-                >
-                  {p.label}
-                </Button>
               ))}
             </div>
           }

@@ -11,7 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import type { WorkspaceStep } from "../../types"
-import { cn } from "../../lib/utils"
+import { cn } from "@/lib/utils"
 
 const STEP_ICONS: Record<string, LucideIcon> = {
   Search,

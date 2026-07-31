@@ -1,7 +1,7 @@
 'use client';;
 import { DndContext, rectIntersection, useDraggable, useDroppable } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { cn } from '../../../../lib/utils';
+import { cn } from '@/lib/utils';
 
 
 export const ListItems = ({

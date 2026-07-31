@@ -12,7 +12,7 @@ import {
   AlertTriangle,
   type LucideIcon,
 } from "lucide-react"
-import { cn } from "../lib/utils"
+import { cn } from "@/lib/utils"
 import type { ProjectStatus } from "../types"
 
 const statusConfig: Record<

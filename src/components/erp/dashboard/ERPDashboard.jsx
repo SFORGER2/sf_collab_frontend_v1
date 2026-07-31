@@ -6,7 +6,7 @@ import { StatsWidget } from './StatsWidget';
 import { ActivityFeed } from './ActivityFeed';
 import { QuickActions } from './QuickActions';
 import { WorkspaceHealth } from './WorkspaceHealth';
-import { RecentAlerts } from './RecentAlerts';
+import { RecentAlerts } from './RecentAlert';
 
 export function ERPDashboard() {
   const { user } = useSelector(state => state.auth);

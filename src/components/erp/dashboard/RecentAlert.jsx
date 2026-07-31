@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 // src/components/erp/dashboard/RecentAlerts.jsx
 import { AlertCircle, Bell } from 'lucide-react';
 

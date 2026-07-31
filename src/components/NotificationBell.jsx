@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, X, ExternalLink, CheckCheck, Loader2, Settings } from 'lucide-react';
 // ✅ FIX: import from the shared context so Bell and Notifications page share state
-import { useNotifications } from '../../contexts/NotificationContext';
+import { useNotifications } from '@/contexts/NotificationContext';
 // ✅ FIX: corrected import path — ChatNotificationProvider lives in pages/chat, not context/
 import { useChatNotifications } from '@/components/pages/chat/Chatnotificationprovider';
 

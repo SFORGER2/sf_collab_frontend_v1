@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { motion } from "framer-motion"
 import { Loader2, Check, Sparkles } from "lucide-react"
-import { cn } from "../../lib/utils"
+import { cn } from "@/lib/utils"
 
 const GENERATION_STEPS = [
   { label: "Generating Layout", icon: "📐", duration: 1200 },

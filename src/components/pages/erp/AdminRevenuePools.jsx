@@ -135,34 +135,6 @@ export default function AdminRevenuePools() {
         <AnimatePresence>
           {error && <ERPBanner message={error} type="error" onDismiss={() => setError(null)} />}
         </AnimatePresence>
-  // ── Helpers ──────────────────────────────────────────────────────────────
-  const statusColorMap = {
-    open: "green",
-    calculating: "yellow",
-    pending_admin_review: "blue",
-    locked: "red",
-    paid: "gray",
-  };
-
-  // ── Render ────────────────────────────────────────────────────────────────
-  return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-6">
-      <div className="max-w-6xl mx-auto">
-        <PageHeader
-          title="Revenue Pools"
-          subtitle="Manage workspace revenue share periods"
-          actions={
-            <Button onClick={() => setShowCreateModal(true)}>
-              <Plus size={18} className="mr-2" /> New Pool
-            </Button>
-          }
-        />
-
-        {error && (
-          <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-6">
-            {error}
-          </div>
-        )}
 
         {/* Summary KPIs */}
         {!loading && pools.length > 0 && (

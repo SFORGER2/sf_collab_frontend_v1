@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Palette, Type, Link, Tag, CheckCircle, AlertCircle } from "lucide-react"
 import { ColorPicker } from "./ui/color-picker"
-import { cn } from "../lib/utils"
+import { cn } from "@/lib/utils"
 import type { BrandingData } from "../types"
 
 const FONTS = ["Inter", "Audiowide", "System UI", "Mono"]

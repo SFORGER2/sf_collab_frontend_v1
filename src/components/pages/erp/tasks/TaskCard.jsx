@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { Clock, Paperclip, CheckCircle2, ArrowRight } from "lucide-react";
-import { cn } from "../../../../lib/utils";
+import { cn } from "@/lib/utils";
 
 const COMPLEXITY_CONFIG = {
   Small: { color: "bg-slate-700 text-slate-200", label: "S" },

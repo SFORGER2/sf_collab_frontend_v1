@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
 import { Display, Eyebrow } from './primitives';
 import { AdSlot } from './AdSlot';
 import { useEntitlements } from '@/services/entitlements/useEntitlements';

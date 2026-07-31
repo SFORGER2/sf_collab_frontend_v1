@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import { motion } from "framer-motion"
 import { ExternalLink, MoreHorizontal, Globe, Trash2, Calendar, Eye, Copy, Edit, Archive, UploadCloud, CloudOff, FileEdit } from "lucide-react"
 import { StatusBadge } from "./status-badge"
-import { formatRelativeTime, formatDate, cn } from "../lib/utils"
+import { formatRelativeTime, formatDate, cn } from "@/lib/utils"
 import { useToast } from "../hooks/use-toast"
 import type { Project } from "../types"
 

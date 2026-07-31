@@ -15,7 +15,7 @@ import {
 import { Stepper } from "./ui/stepper"
 import { Button } from "./ui/button"
 import { useProject } from "../hooks/use-project"
-import { cn } from "../lib/utils"
+import { cn } from "@/lib/utils"
 import { scaleFadeIn, getScaleFadeTransition } from "../lib/animations"
 import type { WorkspaceStepId, FullProject } from "../types"
 

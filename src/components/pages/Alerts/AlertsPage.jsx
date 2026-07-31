@@ -12,7 +12,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
-import { requestInterceptor, responseInterceptor } from "../interceptors";
+import { requestInterceptor, responseInterceptor } from "@/utils/APIs/interceptors";
 
 const api = axios.create({ baseURL: "/api" });
 api.interceptors.request.use(requestInterceptor);

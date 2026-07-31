@@ -14,7 +14,7 @@ import {
   responseErrorInterceptor,
 } from "../../../../../utils/APIs/interceptors";
 import BackgroundImage from "../../../../../assets/imgs/background-image.jpg";
-import { ERPPageHeader } from "../../../shared/ERPPageHeader";
+import { ERPPageHeader } from "@/components/erp/shared/ERPPageHeader";
 
 const mk = (base) => {
   const a = axios.create({ baseURL: base });

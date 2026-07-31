@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import { CheckCircle, AlertCircle } from "lucide-react"
-import { cn } from "../../lib/utils"
+import { cn } from "@/lib/utils"
 
 const PRESET_COLORS = [
   { label: "Purple", value: "#503c8c" },

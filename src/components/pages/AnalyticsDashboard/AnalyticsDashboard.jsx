@@ -14,7 +14,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
-import { requestInterceptor, responseInterceptor } from "../interceptors";
+import { requestInterceptor, responseInterceptor } from "@/utils/APIs/interceptors";
 
 const api = axios.create({ baseURL: "" }); // analytics_bp is at /analytics (no /api prefix per analytics.py)
 api.interceptors.request.use(requestInterceptor);

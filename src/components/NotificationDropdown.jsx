@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useNotifications } from '../contexts/NotificationContext';
-import NotificationItem from './NotificationItem';
+import NotificationItem from '@/components/notifications/NotificationItem';
 import { CheckCheck, Trash2, Filter, RefreshCw } from 'lucide-react';
 import './NotificationDropdown.css';
 

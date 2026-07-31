@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 
-import { cn } from "../../lib/utils";
+import { cn } from "@/lib/utils";
 
 export const ProfilePeek = ({
     trigger,

@@ -91,7 +91,7 @@ export function NotificationProvider({ children }) {
     const tryAttach = () => {
       // Works with the standard getSocketInstance pattern used across this project
       try {
-        const { getSocketInstance } = require("@/components/pages/chat/getSocketInstance");
+        const { getSocketInstance } = require("@/utils/getSocketInstance");
         const sock = getSocketInstance();
         if (sock) { socketRef.current = sock; return true; }
       } catch {}

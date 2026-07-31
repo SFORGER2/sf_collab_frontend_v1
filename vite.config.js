@@ -48,15 +48,15 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
       '/socket.io': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         ws: true,
       },
@@ -64,7 +64,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "src"),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
 })

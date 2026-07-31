@@ -6,7 +6,7 @@ import Home from "../components/pages/Home.jsx";
 import Layout from "../Layout/Layout.jsx";
 import Project from "../components/pages/Project.jsx";
 // import Profile from "../components/pages/Profile.jsx";
-import Dashboard from "../components/pages/dashboard/dashboard.jsx";
+import Dashboard from "@/components/pages/dashboards/dashboard/dashboard.jsx";
 import Ideation from "../components/pages/ideation/Ideation.jsx";
 import Knowledge from "../components/pages/knowledge/Knowledge.jsx";
 import Setting from "../components/pages/Setting.jsx";
@@ -34,7 +34,7 @@ import NotFound from "../components/NotFound.jsx";
 import GettingStarted from "../components/pages/QucikGuides/gettingStarted.jsx";
 import TeamCollaboration from "../components/pages/QucikGuides/teamCollaboration.jsx";
 import { ProtectedRoute, AuthRoute } from "../components/ProtectedRoute.jsx";
-import SavedList from "../components/pages/SavedIdeaList.jsx";
+import SavedIdeas from "@/components/pages/ideation/SavedIdeas.jsx";
 import ChatPage from "../components/pages/chat/ChatPage.jsx";
 import BusinessIdeaGenerator from "../components/pages/Business_plan_generator/premium-business-generator.jsx";
 import WebsiteGenerator from "../components/pages/WebsiteGenerator.jsx";
@@ -42,7 +42,7 @@ import ScraperForm from "../components/pages/Data_scraper/ScraperForm.jsx";
 import PDFSigningApp from "@/components/pages/PDF_Signing/PDFSigningApp.jsx";
 
 // import TimezoneConverter from "../components/pages/TimezoneConverter/TimezoneConverter.jsx";
-import ChatComponent from "../components/pages/chat/ChatComponent.jsx";
+import ChatComponent from "@/components/chat (previous)/ChatComponent.jsx";
 
 import DiscoverStartups from "../components/pages/discoverStartups/DiscoverStartups.jsx";
 import StartupDetailPage from "../components/pages/startupDetails/StartupDetailPage.jsx";
@@ -237,7 +237,7 @@ export const router = createBrowserRouter([
 
       {
         path: "/saved",
-        element: <SavedList />,
+        element: <SavedIdeas />,
       },
 
       {

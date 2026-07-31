@@ -3,28 +3,12 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import { motion } from "framer-motion";
-import { Clock, AlertTriangle, CheckCircle, FileText, DollarSign, Star, LayoutDashboard } from "lucide-react";
+import { Clock, AlertTriangle, CheckCircle, FileText, DollarSign, Star, LayoutDashboard, TrendingUp, Award } from "lucide-react";
 
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
 import { ERPPageHeader } from "../../erp/shared/ERPPageHeader";
 import { ERPStatCard } from "../../erp/shared/ERPStatCard";
 import { ERPLoadingSkeleton } from "../../erp/shared/ERPLoadingSkeleton";
-import {
-  requestInterceptor,
-  responseInterceptor,
-  responseErrorInterceptor,
-} from "../../../utils/APIs/interceptors";
-import {
-  Clock,
-  AlertTriangle,
-  CheckCircle,
-  FileText,
-  DollarSign,
-  Star,
-  TrendingUp,
-  Award,
-} from "lucide-react";
 import AssistantFAB from "@/components/common/AssistantFAB";
 
 // ── Shared UI components ─────────────────────────────────────────────────
@@ -226,14 +210,6 @@ export default function MemberDashboard() {
   );
 }
 
-function TaskColumn({ title, tasks, color }) {
-  return (
-    <div className="bg-zinc-900/30 border border-white/5 rounded-xl p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color }}>{title}</h3>
-        <span className="text-xs font-bold bg-[#1a1a20] px-2 py-0.5 rounded-full border border-white/10">{tasks.length}</span>
-      </div>
-      <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
 // ── Enhanced Stat Card with animation ──────────────────────────────────────
 function EnhancedStatCard({ icon: Icon, label, value, accent, delay = 0 }) {
   return (

@@ -1,5 +1,5 @@
 import { X, CheckCircle, AlertCircle, Info } from "lucide-react"
-import { cn } from "../../lib/utils"
+import { cn } from "@/lib/utils"
 import type { Toast, ToastVariant } from "../../hooks/use-toast"
 
 const iconMap: Record<ToastVariant, typeof CheckCircle> = {

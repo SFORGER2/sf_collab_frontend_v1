@@ -11,7 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import gsap from "gsap";
-import { cn } from "../../../lib/utils";
+import { cn } from "@/lib/utils";
 import { Button } from "../../../ui/button";
 import ProofUploader from "../proof/ProofUploader";
 import ProofReviewer from "../proof/ProofReviewer";

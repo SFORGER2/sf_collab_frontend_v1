@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Coins, Lock, Sparkles } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
 import { CosmosButton } from './CosmosButton';
 import { Eyebrow } from './primitives';
 import { useEntitlements } from '@/services/entitlements/useEntitlements';

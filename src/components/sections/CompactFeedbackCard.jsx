@@ -20,7 +20,7 @@ import {
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Send, AlertCircle } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn } from '@/lib/utils';
 import { FcAbout } from "react-icons/fc";
 import { useSelector } from 'react-redux';
 import { waitlistAPI } from '../../utils/APIs/waitlistAPI';

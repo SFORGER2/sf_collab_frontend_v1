@@ -1,10 +1,10 @@
 import React from "react";
-import { useIsMobile } from "../../../../utils/hooks/use-mobile";
+import { useIsMobile } from "@/utils/hooks/use-mobile";
 import {
   MyAttendancePage as DesktopMyAttendance,
   WorkspaceAttendancePage as DesktopWorkspaceAttendance,
-} from "./DesktopAttendance";
-import MobileAttendance from "./MobileAttendance";
+} from "@/components/pages/erp/attendance/DesktopAttendance";
+import MobileAttendance from "@/components/pages/erp/attendance/MobileAttendance";
 
 /**
  * Personal attendance – switches between mobile and desktop.

@@ -58,3 +58,15 @@ export function matchesStatusFilter(status: string, filter: StatusFilter): boole
   if (filter === "archived") return status === "archived"
   return true
 }
+
+export function formatCurrency(amount: number | string | null | undefined): string {
+  if (amount == null) return "$0";
+  const num = typeof amount === "string" ? parseFloat(amount) : amount;
+  if (isNaN(num)) return "$0";
+  if (num >= 1000000) {
+    return `$${(num / 1000000).toFixed(1)}M`;
+  } else if (num >= 1000) {
+    return `$${(num / 1000).toFixed(1)}K`;
+  }
+  return `$${num}`;
+}
