@@ -422,134 +422,135 @@
   color: #22c55e;
 }
 
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .notification-item {
-    border-color: #374151;
-  }
+/* Dark mode — follows the app's data-theme switch (see services/theme/theme.js),
+   NOT the OS prefers-color-scheme media query. The theme service sets
+   data-theme="dark" on <html> when the user picks dark mode; these rules only
+   apply then. Light is the un-prefixed base above. */
+:root[data-theme='dark'] .notification-item {
+  border-color: #374151;
+}
 
-  .notification-item:hover {
-    background: #374151;
-  }
+:root[data-theme='dark'] .notification-item:hover {
+  background: #374151;
+}
 
-  .notification-item.unread {
-    background: #1e3a5f;
-  }
+:root[data-theme='dark'] .notification-item.unread {
+  background: #1e3a5f;
+}
 
-  .notification-item.unread:hover {
-    background: #2d4a6e;
-  }
+:root[data-theme='dark'] .notification-item.unread:hover {
+  background: #2d4a6e;
+}
 
-  .notification-item.priority-critical {
-    background: #450a0a;
-    border-left-color: #f87171;
-  }
+:root[data-theme='dark'] .notification-item.priority-critical {
+  background: #450a0a;
+  border-left-color: #f87171;
+}
 
-  .notification-item-title {
-    color: #f9fafb;
-  }
+:root[data-theme='dark'] .notification-item-title {
+  color: #f9fafb;
+}
 
-  .notification-item-time {
-    color: #9ca3af;
-  }
+:root[data-theme='dark'] .notification-item-time {
+  color: #9ca3af;
+}
 
-  .notification-item-message {
-    color: #d1d5db;
-  }
+:root[data-theme='dark'] .notification-item-message {
+  color: #d1d5db;
+}
 
-  .notification-actor {
-    color: #9ca3af;
-  }
+:root[data-theme='dark'] .notification-actor {
+  color: #9ca3af;
+}
 
-  .notification-action-button {
-    color: #9ca3af;
-  }
+:root[data-theme='dark'] .notification-action-button {
+  color: #9ca3af;
+}
 
-  .notification-action-button:hover {
-    background: #4b5563;
-    color: #f9fafb;
-  }
+:root[data-theme='dark'] .notification-action-button:hover {
+  background: #4b5563;
+  color: #f9fafb;
+}
 
-  .notification-action-button.delete:hover {
-    background: #7f1d1d;
-    color: #fca5a5;
-  }
+:root[data-theme='dark'] .notification-action-button.delete:hover {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
 
-  .notification-category-filters {
-    background: #1f2937;
-    border-color: #374151;
-  }
+:root[data-theme='dark'] .notification-category-filters {
+  background: #1f2937;
+  border-color: #374151;
+}
 
-  .category-filter-button {
-    background: #374151;
-    border-color: #4b5563;
-    color: #d1d5db;
-  }
+:root[data-theme='dark'] .category-filter-button {
+  background: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
+}
 
-  .category-filter-button:hover {
-    border-color: #60a5fa;
-    color: #60a5fa;
-  }
+:root[data-theme='dark'] .category-filter-button:hover {
+  border-color: #60a5fa;
+  color: #60a5fa;
+}
 
-  .category-filter-button.active {
-    background: #3b82f6;
-    border-color: #3b82f6;
-    color: white;
-  }
+:root[data-theme='dark'] .category-filter-button.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
 
-  /* Dark mode category badges */
-  .notification-category.account {
-    background: #1e3a5f;
-    color: #93c5fd;
-  }
-  .notification-category.social {
-    background: #500724;
-    color: #f9a8d4;
-  }
-  .notification-category.idea {
-    background: #4c1d95;
-    color: #c4b5fd;
-  }
-  .notification-category.startup {
-    background: #064e3b;
-    color: #6ee7b7;
-  }
-  .notification-category.task {
-    background: #78350f;
-    color: #fcd34d;
-  }
-  .notification-category.message {
-    background: #312e81;
-    color: #a5b4fc;
-  }
-  .notification-category.event {
-    background: #7c2d12;
-    color: #fdba74;
-  }
-  .notification-category.reward {
-    background: #713f12;
-    color: #fde047;
-  }
-  .notification-category.funding {
-    background: #14532d;
-    color: #86efac;
-  }
+/* Dark mode category badges */
+:root[data-theme='dark'] .notification-category.account {
+  background: #1e3a5f;
+  color: #93c5fd;
+}
+:root[data-theme='dark'] .notification-category.social {
+  background: #500724;
+  color: #f9a8d4;
+}
+:root[data-theme='dark'] .notification-category.idea {
+  background: #4c1d95;
+  color: #c4b5fd;
+}
+:root[data-theme='dark'] .notification-category.startup {
+  background: #064e3b;
+  color: #6ee7b7;
+}
+:root[data-theme='dark'] .notification-category.task {
+  background: #78350f;
+  color: #fcd34d;
+}
+:root[data-theme='dark'] .notification-category.message {
+  background: #312e81;
+  color: #a5b4fc;
+}
+:root[data-theme='dark'] .notification-category.event {
+  background: #7c2d12;
+  color: #fdba74;
+}
+:root[data-theme='dark'] .notification-category.reward {
+  background: #713f12;
+  color: #fde047;
+}
+:root[data-theme='dark'] .notification-category.funding {
+  background: #14532d;
+  color: #86efac;
+}
 
-  /* Dark mode priority badges */
-  .notification-priority.critical {
-    background: #7f1d1d;
-    color: #fca5a5;
-  }
-  .notification-priority.high {
-    background: #7c2d12;
-    color: #fdba74;
-  }
-  .notification-priority.medium {
-    background: #78350f;
-    color: #fcd34d;
-  }
-  .notification-priority.low {
-    background: #374151;
-    color: #9ca3af;
-  }
+/* Dark mode priority badges */
+:root[data-theme='dark'] .notification-priority.critical {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+:root[data-theme='dark'] .notification-priority.high {
+  background: #7c2d12;
+  color: #fdba74;
+}
+:root[data-theme='dark'] .notification-priority.medium {
+  background: #78350f;
+  color: #fcd34d;
+}
+:root[data-theme='dark'] .notification-priority.low {
+  background: #374151;
+  color: #9ca3af;
 }

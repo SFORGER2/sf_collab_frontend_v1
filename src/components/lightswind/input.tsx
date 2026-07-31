@@ -1,6 +1,7 @@
 import * as React from "react";
-import { cn } from "../lib/utils";
-import { motion, HTMLMotionProps } from "framer-motion"; // Import motion and HTMLMotionProps
+import { cn } from "../../lib/utils";
+import { motion } from "framer-motion";
+import type { HTMLMotionProps } from "framer-motion"; // type-only: HTMLMotionProps is not a runtime export in framer-motion v10
 
 // Extend HTMLMotionProps instead of React.InputHTMLAttributes directly
 // HTMLMotionProps already includes React.InputHTMLAttributes

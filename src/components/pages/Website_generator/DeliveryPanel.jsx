@@ -42,7 +42,7 @@ const DeliveryPanel = ({ projectId, token, slug, hasArchive = true }) => {
   return (
     <div style={{ 
       padding: '28px', 
-      backgroundColor: '#111827', // Tailwind gray-900 for modern dark mode
+      backgroundColor: 'var(--surface-card-2)', // Tailwind gray-900 for modern dark mode
       borderRadius: '12px', 
       boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.25)',
       border: '1px solid #1f2937' // gray-800 border edge
@@ -69,8 +69,8 @@ const DeliveryPanel = ({ projectId, token, slug, hasArchive = true }) => {
         
         {/* Module Area A: Active Download Card */}
         <div style={{ 
-          backgroundColor: '#1f2937', // gray-800 interior card
-          border: '1px solid #374151', // gray-700 divider
+          backgroundColor: 'var(--surface-card)', // gray-800 interior card
+          border: '1px solid var(--border-strong)', // gray-700 divider
           padding: '24px', 
           borderRadius: '10px', 
           textAlign: 'center',
@@ -142,8 +142,8 @@ const DeliveryPanel = ({ projectId, token, slug, hasArchive = true }) => {
 
         {/* Module Area B: Disabled Git Push Card */}
         <div style={{ 
-          backgroundColor: '#1f2937', 
-          border: '1px solid #374151', 
+          backgroundColor: 'var(--surface-card)', 
+          border: '1px solid var(--border-strong)', 
           padding: '24px', 
           borderRadius: '10px', 
           textAlign: 'center', 
@@ -168,7 +168,7 @@ const DeliveryPanel = ({ projectId, token, slug, hasArchive = true }) => {
           <p style={{ fontSize: '0.875rem', color: '#9ca3af', marginBottom: '24px', minHeight: '40px' }}>
             Direct pipeline mirror distribution sync integration linking active projects to GitHub repositories automatically.
           </p>
-          <button style={{ backgroundColor: '#374151', color: '#9ca3af', padding: '12px 20px', border: 'none', borderRadius: '8px', width: '100%', cursor: 'not-allowed', fontWeight: '600' }} disabled>
+          <button style={{ backgroundColor: 'var(--surface-disabled)', color: '#9ca3af', padding: '12px 20px', border: 'none', borderRadius: '8px', width: '100%', cursor: 'not-allowed', fontWeight: '600' }} disabled>
             Repository Deploy Pipeline
           </button>
         </div>

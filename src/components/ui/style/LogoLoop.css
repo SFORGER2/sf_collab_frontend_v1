@@ -16,10 +16,10 @@
     padding-bottom: calc(var(--logoloop-logoHeight) * 0.1);
   }
   
-  @media (prefers-color-scheme: dark) {
-    .logoloop {
-      --logoloop-fadeColorAuto: #0b0b0b;
-    }
+  /* Dark mode — follows the app's data-theme switch (see services/theme/theme.js),
+     NOT the OS prefers-color-scheme media query. */
+  :root[data-theme='dark'] .logoloop {
+    --logoloop-fadeColorAuto: #0b0b0b;
   }
   
   .logoloop__track {

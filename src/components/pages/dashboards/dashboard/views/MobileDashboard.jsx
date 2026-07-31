@@ -17,7 +17,7 @@ const MobileDashboard = ({
   setQuery,
   userData,
   loading,
-  sections // Pass rendered sections
+  sections = [] // Pass rendered sections
 }) => {
   return (
     <div id="dashboard-mobile" className="relative min-h-screen text-white w-full overflow-x-hidden pb-20">

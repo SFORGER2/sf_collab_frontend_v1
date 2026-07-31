@@ -195,7 +195,7 @@ export default function ERPUpdates() {
           <motion.div
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
             className="flex items-center gap-4 p-5 rounded-2xl"
-            style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+            style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
           >
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.25)" }}>
               <Flame size={18} className="text-amber-400" />
@@ -210,7 +210,7 @@ export default function ERPUpdates() {
           <motion.div
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
             className="flex items-center gap-4 p-5 rounded-2xl"
-            style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+            style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
           >
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -234,7 +234,7 @@ export default function ERPUpdates() {
           <motion.div
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.11 }}
             className="flex items-center gap-4 p-5 rounded-2xl"
-            style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+            style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
           >
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.25)" }}>
               <TrendingUp size={18} className="text-indigo-400" />
@@ -360,11 +360,11 @@ export default function ERPUpdates() {
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ duration: 0.22, ease: "easeOut" }}
               className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-2xl shadow-2xl"
-              style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.08)" }}
+              style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal header */}
-              <div className="flex items-center justify-between px-6 py-5 sticky top-0 z-10 rounded-t-2xl" style={{ background: "#111115", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="flex items-center justify-between px-6 py-5 sticky top-0 z-10 rounded-t-2xl" style={{ background: "var(--surface-panel)", borderBottom: "1px solid var(--surface-border)" }}>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
                     <Sparkles size={15} className="text-indigo-400" />
@@ -401,7 +401,7 @@ export default function ERPUpdates() {
                       value={formData.today_work}
                       onChange={(e) => setFormData({ ...formData, today_work: e.target.value })}
                       className="w-full h-28 rounded-xl px-4 py-3 text-sm resize-none outline-none transition-all"
-                      style={{ background: "#1a1a20", border: "1px solid rgba(255,255,255,0.07)", color: "#e5e7eb" }}
+                      style={{ background: "var(--surface-raised)", border: "1px solid var(--surface-border)", color: "var(--color-star)" }}
                       placeholder="Describe your key accomplishments today…"
                       required
                     />
@@ -412,7 +412,7 @@ export default function ERPUpdates() {
                       value={formData.next_plan}
                       onChange={(e) => setFormData({ ...formData, next_plan: e.target.value })}
                       className="w-full h-24 rounded-xl px-4 py-3 text-sm resize-none outline-none transition-all"
-                      style={{ background: "#1a1a20", border: "1px solid rgba(255,255,255,0.07)", color: "#e5e7eb" }}
+                      style={{ background: "var(--surface-raised)", border: "1px solid var(--surface-border)", color: "var(--color-star)" }}
                       placeholder="Your plan for tomorrow…"
                     />
                   </ModalField>
@@ -422,7 +422,7 @@ export default function ERPUpdates() {
                       value={formData.blockers}
                       onChange={(e) => setFormData({ ...formData, blockers: e.target.value })}
                       className="w-full h-20 rounded-xl px-4 py-3 text-sm resize-none outline-none transition-all"
-                      style={{ background: "#1a1a20", border: "1px solid rgba(255,255,255,0.07)", color: "#e5e7eb" }}
+                      style={{ background: "var(--surface-raised)", border: "1px solid var(--surface-border)", color: "var(--color-star)" }}
                       placeholder="Any blockers or dependencies?"
                     />
                   </ModalField>
@@ -430,7 +430,7 @@ export default function ERPUpdates() {
                   {/* Star rating */}
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3">Progress Rating</p>
-                    <div className="flex items-center gap-2 p-4 rounded-xl" style={{ background: "#1a1a20", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div className="flex items-center gap-2 p-4 rounded-xl" style={{ background: "var(--surface-raised)", border: "1px solid var(--surface-border)" }}>
                       {[...Array(5)].map((_, i) => (
                         <motion.button
                           key={i}
@@ -492,7 +492,7 @@ function UpdateCard({ update, index }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.06, ease: "easeOut" }}
       className="rounded-2xl overflow-hidden transition-all"
-      style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+      style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
     >
       {/* Card header */}
       <div

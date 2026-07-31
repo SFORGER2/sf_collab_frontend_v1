@@ -135,34 +135,6 @@ export default function AdminRevenuePools() {
         <AnimatePresence>
           {error && <ERPBanner message={error} type="error" onDismiss={() => setError(null)} />}
         </AnimatePresence>
-  // ── Helpers ──────────────────────────────────────────────────────────────
-  const statusColorMap = {
-    open: "green",
-    calculating: "yellow",
-    pending_admin_review: "blue",
-    locked: "red",
-    paid: "gray",
-  };
-
-  // ── Render ────────────────────────────────────────────────────────────────
-  return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-6">
-      <div className="max-w-6xl mx-auto">
-        <PageHeader
-          title="Revenue Pools"
-          subtitle="Manage workspace revenue share periods"
-          actions={
-            <Button onClick={() => setShowCreateModal(true)}>
-              <Plus size={18} className="mr-2" /> New Pool
-            </Button>
-          }
-        />
-
-        {error && (
-          <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-6">
-            {error}
-          </div>
-        )}
 
         {/* Summary KPIs */}
         {!loading && pools.length > 0 && (
@@ -178,7 +150,7 @@ export default function AdminRevenuePools() {
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 whileHover={{ translateY: -2 }}
                 className="relative overflow-hidden p-5 rounded-2xl group"
-                style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)", borderTop: `2px solid ${kpi.accent}` }}
+                style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)", borderTop: `2px solid ${kpi.accent}` }}
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                   style={{ background: `radial-gradient(ellipse at top left, ${kpi.accent}08, transparent 70%)` }} />
@@ -219,7 +191,7 @@ export default function AdminRevenuePools() {
                 whileHover={{ translateY: -1 }}
                 onClick={() => navigate(`/erp/admin/revenue-pools/${pool.id}`)}
                 className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5 rounded-2xl cursor-pointer transition-all group"
-                style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+                style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
               >
                 {/* Left */}
                 <div className="flex items-center gap-4">
@@ -249,7 +221,7 @@ export default function AdminRevenuePools() {
                     whileHover={{ scale: 1.1 }}
                     onClick={(e) => { e.stopPropagation(); navigate(`/erp/admin/revenue-pools/${pool.id}`); }}
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--surface-border)" }}
                   >
                     <ArrowUpRight size={14} />
                   </motion.div>
@@ -275,9 +247,9 @@ export default function AdminRevenuePools() {
               transition={{ duration: 0.22, ease: "easeOut" }}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl"
-              style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.08)" }}
+              style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
             >
-              <div className="flex items-center justify-between px-6 py-5 sticky top-0 z-10 rounded-t-2xl" style={{ background: "#111115", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="flex items-center justify-between px-6 py-5 sticky top-0 z-10 rounded-t-2xl" style={{ background: "var(--surface-panel)", borderBottom: "1px solid var(--surface-border)" }}>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
                     <DollarSign size={15} className="text-indigo-400" />
@@ -308,7 +280,7 @@ export default function AdminRevenuePools() {
                       onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
                       required={f.key === "period_start" || f.key === "period_end"}
                       className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all"
-                      style={{ background: "#1a1a20", border: "1px solid rgba(255,255,255,0.07)", color: "#e5e7eb" }}
+                      style={{ background: "var(--surface-raised)", border: "1px solid var(--surface-border)", color: "var(--color-star)" }}
                     />
                   </div>
                 ))}
@@ -318,7 +290,7 @@ export default function AdminRevenuePools() {
                     type="button"
                     onClick={() => setShowModal(false)}
                     className="flex-1 py-2.5 rounded-xl text-sm font-medium text-zinc-400 transition-colors"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--surface-border)" }}
                   >
                     Cancel
                   </button>

@@ -7,7 +7,7 @@ export default function TeamPage() {
   return (
     <>
       <Navbar />
-      <motion.div className="bg-[#0b0b0b] text-white px-6 lg:px-20">
+      <motion.div className="landing-page bg-[#0b0b0b] text-white px-6 lg:px-20">
         <TeamComponent />
     </motion.div>
     

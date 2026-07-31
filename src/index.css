@@ -1339,6 +1339,14 @@ a.text-black:not([class*='bg-white']):not([class*='bg-gold']):not([class*='bg-am
   border-color: rgba(26, 21, 32, 0.16);
 }
 
+/* The filled cosmos variants (ai / ghost / promo) keep their dark fills in
+   light mode, so their labels must stay light — the blanket rule above would
+   turn them to dark ink on a dark fill. Only the transparent variants
+   (quiet, primary's gold fill) follow the text-colour token. */
+:root[data-theme='light'] .cosmos-btn.cosmos-btn-ai    { color: #d9cfff; }
+:root[data-theme='light'] .cosmos-btn.cosmos-btn-ghost,
+:root[data-theme='light'] .cosmos-btn.cosmos-btn-promo { color: #f2effa; }
+
 /* Anything still relying on a white text colour inside a light panel. */
 :root[data-theme='light'] .cosmos-panel .text-white,
 :root[data-theme='light'] .cosmos-card .text-white,
@@ -1352,3 +1360,993 @@ a.text-black:not([class*='bg-white']):not([class*='bg-gold']):not([class*='bg-am
 :root[data-theme='light'] .text-zinc-500 {
   color: #6b6278;
 }
+
+/* ---- Zinc/neutral text tiers 100–400: the ramp inversion above only
+        remapped gray/slate (and zinc/neutral 700–950). The zinc/neutral
+        100–400 text tiers kept their light-lavender dark-mode values
+        (#f2effa, #ded9ec, #cfcae4) and vanish on a white page — ~395 uses
+        across the app. Mirror the gray/slate dark tones so they read as
+        secondary/body text. (Audited: none sit inside kept-dark surfaces,
+        so a global darken is safe.) --------------------------------------- */
+:root[data-theme='light'] .text-zinc-100,
+:root[data-theme='light'] .text-neutral-100 { color: #1d1930; }
+:root[data-theme='light'] .text-zinc-200,
+:root[data-theme='light'] .text-neutral-200 { color: #2a2440; }
+:root[data-theme='light'] .text-zinc-300,
+:root[data-theme='light'] .text-neutral-300 { color: #4a4363; }
+:root[data-theme='light'] .text-neutral-400 { color: #6d6588; }
+
+/* ==========================================================================
+   LIGHT MODE — fourth pass
+
+   Covers what the token layer cannot reach: hard-coded dark hex surfaces,
+   neutral text tiers that the ramp inversion left light, white-alpha chips,
+   and the global white `label` rule. Everything is scoped to
+   `:root[data-theme='light']` so dark mode is untouched.
+   ========================================================================== */
+
+/* ---- Neutral text 600→950: the ramp inversion left these LIGHT. They are
+        used as secondary/body text across the app, so force readable dark
+        tones (500 and below are already fixed above). ------------------- */
+:root[data-theme='light'] .text-gray-600,
+:root[data-theme='light'] .text-slate-600,
+:root[data-theme='light'] .text-zinc-600,
+:root[data-theme='light'] .text-neutral-600,
+:root[data-theme='light'] .text-stone-600 { color: #57506a; }
+
+:root[data-theme='light'] .text-gray-700,
+:root[data-theme='light'] .text-slate-700,
+:root[data-theme='light'] .text-zinc-700,
+:root[data-theme='light'] .text-neutral-700,
+:root[data-theme='light'] .text-stone-700 { color: #453e58; }
+
+:root[data-theme='light'] .text-gray-800,
+:root[data-theme='light'] .text-slate-800,
+:root[data-theme='light'] .text-zinc-800,
+:root[data-theme='light'] .text-neutral-800,
+:root[data-theme='light'] .text-stone-800 { color: #322b47; }
+
+:root[data-theme='light'] .text-gray-900,
+:root[data-theme='light'] .text-slate-900,
+:root[data-theme='light'] .text-zinc-900,
+:root[data-theme='light'] .text-neutral-900,
+:root[data-theme='light'] .text-stone-900 { color: #241e38; }
+
+:root[data-theme='light'] .text-gray-950,
+:root[data-theme='light'] .text-slate-950,
+:root[data-theme='light'] .text-zinc-950,
+:root[data-theme='light'] .text-neutral-950,
+:root[data-theme='light'] .text-stone-950 { color: #1a1520; }
+
+/* ---- Subtle light surfaces that used the 50–300 ramp as backgrounds. In
+        light mode those tiers read as text darks; used as fills they would
+        render as black boxes, so restore them as light surfaces. ---------- */
+:root[data-theme='light'] .bg-gray-50,  :root[data-theme='light'] .bg-slate-50,
+:root[data-theme='light'] .bg-zinc-50,  :root[data-theme='light'] .bg-neutral-50,
+:root[data-theme='light'] .bg-stone-50 { background-color: #f7f5fc; }
+
+:root[data-theme='light'] .bg-gray-100, :root[data-theme='light'] .bg-slate-100,
+:root[data-theme='light'] .bg-zinc-100, :root[data-theme='light'] .bg-neutral-100,
+:root[data-theme='light'] .bg-stone-100 { background-color: #f1ecf7; }
+
+:root[data-theme='light'] .bg-gray-200, :root[data-theme='light'] .bg-slate-200,
+:root[data-theme='light'] .bg-zinc-200, :root[data-theme='light'] .bg-neutral-200,
+:root[data-theme='light'] .bg-stone-200 { background-color: #e8e2f2; }
+
+:root[data-theme='light'] .bg-gray-300, :root[data-theme='light'] .bg-slate-300,
+:root[data-theme='light'] .bg-zinc-300, :root[data-theme='light'] .bg-neutral-300,
+:root[data-theme='light'] .bg-stone-300 { background-color: #ded7ea; }
+
+/* ---- Hard-coded dark-hex PAGE surfaces (min-h-screen etc.) → light void */
+:root[data-theme='light'] [class*="bg-[#0a0b10]"],
+:root[data-theme='light'] [class*="bg-[#08090d]"],
+:root[data-theme='light'] [class*="bg-[#060606]"],
+:root[data-theme='light'] [class*="bg-[#0d0d0d]"],
+:root[data-theme='light'] [class*="bg-[#0a0a0f]"],
+:root[data-theme='light'] [class*="bg-[#050505]"] {
+  background-color: #faf8f5;
+  color: var(--color-star);
+}
+
+/* ---- Hard-coded dark-hex CARD surfaces → white -------------------------- */
+:root[data-theme='light'] [class*="bg-[#0d0f17]"],
+:root[data-theme='light'] [class*="bg-[#11131a]"],
+:root[data-theme='light'] [class*="bg-[#0b0e14]"],
+:root[data-theme='light'] [class*="bg-[#10141d]"],
+:root[data-theme='light'] [class*="bg-[#151822]"],
+:root[data-theme='light'] [class*="bg-[#1e2130]"],
+:root[data-theme='light'] [class*="bg-[#0f1117]"],
+:root[data-theme='light'] [class*="bg-[#1a1d27]"],
+:root[data-theme='light'] [class*="bg-[#12121a]"],
+:root[data-theme='light'] [class*="bg-[#0f0f15]"],
+:root[data-theme='light'] [class*="bg-[#111115]"],
+:root[data-theme='light'] [class*="bg-[#1a1a20]"],
+:root[data-theme='light'] [class*="bg-[#0a0a0b]"],
+:root[data-theme='light'] [class*="bg-[#0a0a0a]"] {
+  background-color: #ffffff;
+  color: var(--color-star);
+}
+
+/* Solid dark buttons that ship a literal `#0a0a0a` fill keep white text — the
+   card rule above would otherwise put light text on a light surface. */
+:root[data-theme='light'] button.bg-\[\#0a0a0a\],
+:root[data-theme='light'] button[class*="bg-[#0a0a0a]"] { background-color: #1d1930; color: #f2effa; }
+
+/* NOTE: `#0a0a0a` is mapped to BOTH a dark keep (buttons above) and a light
+   surface (cards below). Keep this order — the keep wins for buttons only. */
+
+/* ---- Hard-coded dark-hex BORDERS → light hairline ----------------------- */
+:root[data-theme='light'] [class*="border-[#2a2d3e]"],
+:root[data-theme='light'] [class*="border-[#3d4160]"] { border-color: rgba(26, 21, 32, 0.12); }
+
+/* ---- Inline-style hex fills (drive tabs, assistant glass) → light ------- */
+:root[data-theme='light'] [style*="#1e2130"] { background-color: #ffffff !important; }
+:root[data-theme='light'] [style*="#1a1d27"] { background-color: #ffffff !important; }
+:root[data-theme='light'] [style*="#0f1117"] { background-color: #ffffff !important; }
+:root[data-theme='light'] [style*="#1a1100"] { background: linear-gradient(135deg, #faf8f5 0%, #ffffff 100%) !important; }
+:root[data-theme='light'] [style*="#0d0d14"] { background: linear-gradient(160deg, #faf8f5 0%, #ffffff 100%) !important; }
+
+/* ---- `label` is white globally; on paper it must be ink. ---------------- */
+:root[data-theme='light'] label { color: var(--color-star); }
+
+/* ---- White-alpha text on plain surfaces → dark alphas -------------------
+   A catch-all runs first so ANY unlisted step (e.g. /85, /95, /55) still gets
+   a readable dark tone; the explicit rules below override it at the same
+   specificity by coming later. Bracket watermarks like `text-white/[0.02]`
+   stay faint — they are decorative, not copy. ------------------------------- */
+:root[data-theme='light'] [class*="text-white/"]:not([class*='bg-']) {
+  color: var(--color-star);
+}
+:root[data-theme='light'] [class*="text-white/5"]:not([class*='bg-'])  { color: rgba(26, 21, 32, 0.05); }
+:root[data-theme='light'] [class*="text-white/10"]:not([class*='bg-']) { color: rgba(26, 21, 32, 0.10); }
+:root[data-theme='light'] [class*="text-white/20"]:not([class*='bg-']) { color: rgba(26, 21, 32, 0.20); }
+:root[data-theme='light'] [class*="text-white/30"]:not([class*='bg-']) { color: rgba(26, 21, 32, 0.30); }
+:root[data-theme='light'] [class*="text-white/40"]:not([class*='bg-']) { color: rgba(26, 21, 32, 0.40); }
+:root[data-theme='light'] [class*="text-white/50"]:not([class*='bg-']) { color: rgba(26, 21, 32, 0.50); }
+:root[data-theme='light'] [class*="text-white/60"]:not([class*='bg-']) { color: rgba(26, 21, 32, 0.60); }
+:root[data-theme='light'] [class*="text-white/70"]:not([class*='bg-']) { color: rgba(26, 21, 32, 0.70); }
+:root[data-theme='light'] [class*="text-white/80"]:not([class*='bg-']) { color: rgba(26, 21, 32, 0.80); }
+:root[data-theme='light'] [class*="text-white/85"]:not([class*='bg-']) { color: rgba(26, 21, 32, 0.85); }
+:root[data-theme='light'] [class*="text-white/90"]:not([class*='bg-']) { color: rgba(26, 21, 32, 0.90); }
+:root[data-theme='light'] [class*="text-white/95"]:not([class*='bg-']) { color: rgba(26, 21, 32, 0.95); }
+:root[data-theme='light'] [class*="text-white/["]:not([class*='bg-']) { color: rgba(26, 21, 32, 0.06); }
+
+/* ---- bg-white/x fills on a light page: a white chip is a hairline, so the
+        pass-one catch-all (`[class*='bg-white/']` → 0.04) is refined into
+        proportional dark alphas so chips and subtle panels stay visible. ------ */
+:root[data-theme='light'] [class*="bg-white/95"] { background-color: rgba(26, 21, 32, 0.92); }
+:root[data-theme='light'] [class*="bg-white/90"] { background-color: rgba(26, 21, 32, 0.88); }
+:root[data-theme='light'] [class*="bg-white/30"] { background-color: rgba(26, 21, 32, 0.24); }
+:root[data-theme='light'] [class*="bg-white/20"] { background-color: rgba(26, 21, 32, 0.16); }
+:root[data-theme='light'] [class*="bg-white/15"] { background-color: rgba(26, 21, 32, 0.12); }
+:root[data-theme='light'] [class*="bg-white/10"] { background-color: rgba(26, 21, 32, 0.08); }
+:root[data-theme='light'] [class*="bg-white/8"]  { background-color: rgba(26, 21, 32, 0.07); }
+:root[data-theme='light'] [class*="bg-white/5"]  { background-color: rgba(26, 21, 32, 0.05); }
+:root[data-theme='light'] [class*="bg-white/4"]  { background-color: rgba(26, 21, 32, 0.03); }
+
+/* Chips built as `bg-white/5 … text-white` (very common) were excluded from
+   the .text-white inversion because of their bg- class, leaving white copy on a
+   near-invisible fill. `[class~="text-white"]` matches the EXACT token, so
+   `hover:text-white` / `text-white/50` variants are left alone, and buttons/
+   links (white-on-colour) are untouched. */
+:root[data-theme='light'] [class*="bg-white/"][class~="text-white"]:not(button):not(a) {
+  color: var(--color-star);
+}
+
+/* White-alpha labels sitting on a coloured fill, gradient, or a surface that
+   intentionally stays dark (buttons, links, scrims, dark-kept headers) must
+   stay white — the darkening above only targets plain light surfaces.
+   `!important` is required: `button …`/`a …` are lower-specificity than the
+   (0,2,0) alpha rules above, so without it they would lose. */
+:root[data-theme='light'] button [class*="text-white/"],
+:root[data-theme='light'] a [class*="text-white/"],
+:root[data-theme='light'] [class*="bg-gradient"] [class*="text-white/"],
+:root[data-theme='light'] [class*="bg-linear"] [class*="text-white/"],
+:root[data-theme='light'] [class*="from-black/"] [class*="text-white/"],
+:root[data-theme='light'] [class*="bg-[#1A1A1A]"] [class*="text-white/"],
+:root[data-theme='light'] [class*="bg-[#1a1a1a]"] [class*="text-white/"],
+:root[data-theme='light'] [class*="bg-[#09090B]"] [class*="text-white/"],
+:root[data-theme='light'] [class*="bg-[#1d1930]"] [class*="text-white/"],
+:root[data-theme='light'] [class*="bg-black"] [class*="text-white/"] { color: #fff !important; }
+
+/* ---- Chips: `bg-white/5 text-white` fills turn dark in light mode, so the
+        white label must follow. Also surfaces that became light (slate-900…)
+        with white text on the same element. --------------------------------- */
+:root[data-theme='light'] [class*="bg-white/"][class*="text-white"] { color: var(--color-star); }
+:root[data-theme='light'] [class*="bg-slate-9"][class*="text-white"],
+:root[data-theme='light'] [class*="bg-slate-8"][class*="text-white"],
+:root[data-theme='light'] [class*="bg-gray-9"][class*="text-white"],
+:root[data-theme='light'] [class*="bg-gray-8"][class*="text-white"],
+:root[data-theme='light'] [class*="bg-zinc-9"][class*="text-white"],
+:root[data-theme='light'] [class*="bg-zinc-8"][class*="text-white"],
+:root[data-theme='light'] [class*="bg-neutral-9"][class*="text-white"],
+:root[data-theme='light'] [class*="bg-neutral-8"][class*="text-white"] { color: var(--color-star); }
+
+/* ---- shadcn tokens that stayed dark: white-alpha fills with white labels */
+:root[data-theme='light'] {
+  --secondary: #f1ecf7;
+  --secondary-foreground: #1a1520;
+  --accent: #ece6f6;
+  --accent-foreground: #1a1520;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1a1520;
+  --sidebar-accent: #f1ecf7;
+  --sidebar-accent-foreground: #1a1520;
+  --sidebar-border: rgba(26, 21, 32, 0.08);
+  --sidebar-ring: #5b34cf;
+}
+
+/* ---- Accent text (cyan/violet/gold/magenta/mint families) used as labels
+        and links: the pale 400 end disappears on white, darken it. Solid
+        fills (bg-blue-6…) get white text re-asserted after. ---------------- */
+:root[data-theme='light'] [class*="text-blue-4"]  { color: #06718f; }
+:root[data-theme='light'] [class*="text-sky-4"]   { color: #06718f; }
+:root[data-theme='light'] [class*="text-cyan-4"]  { color: #06718f; }
+:root[data-theme='light'] [class*="text-teal-4"]  { color: #0b7550; }
+:root[data-theme='light'] [class*="text-indigo-3"]{ color: #5b34cf; }
+:root[data-theme='light'] [class*="text-indigo-4"]{ color: #5b34cf; }
+:root[data-theme='light'] [class*="text-violet-4"]{ color: #5b34cf; }
+:root[data-theme='light'] [class*="text-purple-4"]{ color: #5b34cf; }
+:root[data-theme='light'] [class*="text-emerald-4"]{ color: #0b7550; }
+:root[data-theme='light'] [class*="text-green-4"]  { color: #0b7550; }
+:root[data-theme='light'] [class*="text-amber-4"]  { color: #a8690f; }
+:root[data-theme='light'] [class*="text-yellow-4"] { color: #a8690f; }
+:root[data-theme='light'] [class*="text-orange-4"] { color: #a8690f; }
+:root[data-theme='light'] [class*="text-pink-4"]   { color: #b31489; }
+:root[data-theme='light'] [class*="text-fuchsia-4"]{ color: #b31489; }
+:root[data-theme='light'] [class*="text-magenta-4"]{ color: #b31489; }
+
+/* White labels on solid accent fills stay white. */
+:root[data-theme='light'] [class*="bg-blue-6"][class*="text-blue-4"],
+:root[data-theme='light'] [class*="bg-blue-6"][class*="text-cyan-4"],
+:root[data-theme='light'] [class*="bg-cyan-6"][class*="text-cyan-4"],
+:root[data-theme='light'] [class*="bg-purple-6"][class*="text-purple-4"],
+:root[data-theme='light'] [class*="bg-violet-6"][class*="text-violet-4"] { color: #ffffff; }
+
+/* ---- Role/tech tags (CSS classes with literal light colours) ------------ */
+:root[data-theme='light'] .role-tag {
+  color: #06718f;
+  background-color: rgba(6, 113, 143, 0.07);
+  border-color: rgba(6, 113, 143, 0.35);
+}
+:root[data-theme='light'] .role-tag:hover {
+  color: #05576f;
+  background-color: rgba(6, 113, 143, 0.12);
+}
+:root[data-theme='light'] .tech-tag {
+  color: #5b34cf;
+  background-color: rgba(91, 52, 207, 0.07);
+  border-color: rgba(91, 52, 207, 0.3);
+}
+:root[data-theme='light'] .tech-tag:hover {
+  color: #46309e;
+  background-color: rgba(91, 52, 207, 0.12);
+}
+
+/* ---- Navbar glass dropdowns (inline rgba fill) → paper glass ------------ */
+:root[data-theme='light'] [style*="rgba(58, 58, 58, 0.6)"] {
+  background: rgba(250, 248, 245, 0.92) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* ---- Native form controls ---------------------------------------------- */
+:root[data-theme='light'] input[type="date"]::-webkit-calendar-picker-indicator,
+:root[data-theme='light'] input[type="time"]::-webkit-calendar-picker-indicator,
+:root[data-theme='light'] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: none;
+}
+:root[data-theme='light'] select option {
+  background-color: #ffffff !important;
+  color: #1a1520 !important;
+}
+
+/* ---- Gentle cross-fade when toggling themes ----------------------------- */
+:root[data-theme='light'] body { transition: background-color 0.25s ease, color 0.25s ease; }
+
+/* ==========================================================================
+   LIGHT MODE — fifth pass: toasts, navbar chrome, selects & dropdowns
+
+   The token layer cannot reach four things:
+
+   1. `--color-nav` / `--color-nav-border` are flipped by
+      `@media (prefers-color-scheme: dark)` near the top of this file, so on a
+      dark-OS machine the navbar (`bg-nav`) and the shadcn toast built on
+      `bg-nav/80` stayed dark even with `data-theme="light"` on <html>.
+      Pin them to paper here.
+
+   2. The custom toast system (components/notifications/ToastNotification.css)
+      is hard-coded dark — `rgba(10,10,12)` panel, `#f4f4f5` title, `#a1a1aa`
+      body — with no light variant. Only the old `.Toastify__toast` was
+      themed, so the in-app toasts stayed dark-on-dark in light mode.
+
+   3. Radix Select ships `text-white` on its content, which survives only
+      because the popper-wrapper rule happens to out-specify it. Make the
+      light surfaces explicit so dropdowns read as light regardless.
+
+   4. DropdownMenu/Select items inherit the content colour; nothing else needs
+      a wildcard — muted labels and destructive variants keep their own
+      classes.
+   ========================================================================== */
+
+/* ---- Navbar / chrome token ----------------------------------------------- */
+:root[data-theme='light'] {
+  --color-nav: #ffffff;
+  --color-nav-border: rgba(26, 21, 32, 0.08);
+}
+
+/* ---- Custom toast system (ToastNotification.css) ------------------------ */
+:root[data-theme='light'] .toast {
+  background: rgba(255, 255, 255, 0.97);
+  border-color: rgba(26, 21, 32, 0.12);
+  box-shadow:
+    0 12px 40px rgba(26, 21, 32, 0.18),
+    0 0 0 1px rgba(26, 21, 32, 0.04) inset;
+  color: var(--color-star);
+}
+
+:root[data-theme='light'] .toast:hover {
+  border-color: rgba(26, 21, 32, 0.2);
+  box-shadow:
+    0 16px 48px rgba(26, 21, 32, 0.22),
+    0 0 0 1px rgba(26, 21, 32, 0.06) inset;
+}
+
+:root[data-theme='light'] .toast-success:hover,
+:root[data-theme='light'] .toast-info:hover,
+:root[data-theme='light'] .toast-warning:hover,
+:root[data-theme='light'] .toast-error:hover {
+  box-shadow:
+    0 16px 48px rgba(26, 21, 32, 0.2),
+    0 0 16px rgba(26, 21, 32, 0.05),
+    0 0 0 1px rgba(26, 21, 32, 0.05) inset;
+}
+
+:root[data-theme='light'] .toast-title   { color: #1a1520; }
+:root[data-theme='light'] .toast-message { color: #635a70; }
+:root[data-theme='light'] .toast-close   { color: #635a70; }
+:root[data-theme='light'] .toast-close:hover {
+  background: rgba(26, 21, 32, 0.06);
+  color: #1a1520;
+}
+
+/* ---- Radix Select / Dropdown surfaces ------------------------------------ */
+/* The `:not([class*='bg-black'])` / `:not([class*='bg-\[#'])` guards keep
+   light text on fills that intentionally stay dark in light mode (kept-dark
+   `bg-black` buttons, literal dark-hex chips) — forcing `--color-star` there
+   would produce dark-on-dark. Everything else maps to a light surface, where
+   ink text is correct. */
+:root[data-theme='light'] [data-slot='select-content']:not([class*='bg-black']):not([class*='bg-\[#']),
+:root[data-theme='light'] [data-slot='dropdown-menu-content']:not([class*='bg-black']):not([class*='bg-\[#']) {
+  background-color: #ffffff;
+  color: var(--color-star);
+  border-color: rgba(26, 21, 32, 0.12);
+}
+
+:root[data-theme='light'] [data-slot='select-trigger']:not([class*='bg-black']):not([class*='bg-\[#']),
+:root[data-theme='light'] [data-slot='dropdown-menu-trigger']:not([class*='bg-black']):not([class*='bg-\[#']) {
+  color: var(--color-star);
+  border-color: rgba(26, 21, 32, 0.16);
+}
+
+/* ==========================================================================
+   NOTE: the notification pages used to need light overrides here because
+   NotificationItem.css / NotificationPage.css switched to dark via
+   `@media (prefers-color-scheme: dark)`, which ignores the app's `data-theme`
+   switch. Those files now scope their dark styles under
+   `:root[data-theme='dark']` themselves, so this override block was removed.
+   ========================================================================== */
+
+/* ==========================================================================
+   LIGHT MODE — seventh pass: literal dark-hex surfaces app-wide
+
+   A page-by-page audit (the /mentors page surfaced the first instance) found
+   ~40 literal dark-hex surfaces the token layer still can't reach because
+   they are arbitrary-value utilities, not palette names. Each group below
+   maps them to the same light surfaces the named ramp already resolves to:
+
+     - near-black page fills      → light paper (#faf8f5)
+     - dark card/panel/modal fills → white (#ffffff)
+     - dark hex borders            → light hairline
+     - dark hex gradient stops     → light paper stops
+     - light-grey literal text     → the dim ink tone
+
+   Attribute-contains matching (the same technique as earlier passes) also
+   catches `/50`-style opacity variants of these fills, so translucent rows
+   pick up the light colour too.
+   ========================================================================== */
+
+/* ---- Near-black PAGE fills → light paper -------------------------------- */
+:root[data-theme='light'] [class*="bg-[#0a0c10]"],
+:root[data-theme='light'] [class*="bg-[#07080c]"],
+:root[data-theme='light'] [class*="bg-[#0a0a0c]"],
+:root[data-theme='light'] [class*="bg-[#05070F]"],
+:root[data-theme='light'] [class*="bg-[#05070f]"],
+:root[data-theme='light'] [class*="bg-[#0A0F1C]"],
+:root[data-theme='light'] [class*="bg-[#0a0f1c]"],
+:root[data-theme='light'] [class*="bg-[#0E101A]"],
+:root[data-theme='light'] [class*="bg-[#0e101a]"],
+:root[data-theme='light'] [class*="bg-[#0B0D17]"],
+:root[data-theme='light'] [class*="bg-[#0b0d17]"],
+:root[data-theme='light'] [class*="bg-[#0B101E]"],
+:root[data-theme='light'] [class*="bg-[#0b101e]"] {
+  background-color: #faf8f5;
+  color: var(--color-star);
+}
+
+/* ---- Dark CARD / panel / modal fills → white ---------------------------- */
+:root[data-theme='light'] [class*="bg-[#111318]"],
+:root[data-theme='light'] [class*="bg-[#0f1116]"],
+:root[data-theme='light'] [class*="bg-[#121215]"],
+:root[data-theme='light'] [class*="bg-[#0F1423]"],
+:root[data-theme='light'] [class*="bg-[#0f1423]"],
+:root[data-theme='light'] [class*="bg-[#151B2B]"],
+:root[data-theme='light'] [class*="bg-[#151b2b]"],
+:root[data-theme='light'] [class*="bg-[#111827]"],
+:root[data-theme='light'] [class*="bg-[#18181b]"],
+:root[data-theme='light'] [class*="bg-[#181818]"],
+:root[data-theme='light'] [class*="bg-[#141726]"],
+:root[data-theme='light'] [class*="bg-[#0f0f0f]"],
+:root[data-theme='light'] [class*="bg-[#0F0F0F]"],
+:root[data-theme='light'] [class*="bg-[#111111]"],
+:root[data-theme='light'] [class*="bg-[#111]"],
+:root[data-theme='light'] [class*="bg-[#222]"],
+:root[data-theme='light'] [class*="bg-[#262626]"],
+:root[data-theme='light'] [class*="bg-[#232323]"],
+:root[data-theme='light'] [class*="bg-[#2A2A2A]"],
+:root[data-theme='light'] [class*="bg-[#2a2a2a]"],
+:root[data-theme='light'] [class*="bg-[#1C2035]"],
+:root[data-theme='light'] [class*="bg-[#1c2035]"],
+:root[data-theme='light'] [class*="bg-[#0d0f14]"],
+:root[data-theme='light'] [class*="bg-[#2a2d3e]"],
+:root[data-theme='light'] [class*="bg-[#2A2725]"],
+:root[data-theme='light'] [class*="bg-[#2a2725]"],
+:root[data-theme='light'] [class*="bg-[#0b0d13]"],
+:root[data-theme='light'] [class*="bg-[#2B3135]"],
+:root[data-theme='light'] [class*="bg-[#2b3135]"],
+:root[data-theme='light'] [class*="bg-[#1a263b]"],
+:root[data-theme='light'] [class*="bg-[#161618]"],
+:root[data-theme='light'] [class*="bg-[#121214]"],
+:root[data-theme='light'] [class*="bg-[#0f1623]"],
+:root[data-theme='light'] [class*="bg-[#0d0a1a]"],
+:root[data-theme='light'] [class*="bg-[#1a1a1a]"],
+:root[data-theme='light'] [class*="bg-[#1A1A1A]"] {
+  background-color: #ffffff;
+  color: var(--color-star);
+}
+
+/* Descendants of the now-light #1a1a1a/#1A1A1A panels: item labels are often
+   `text-gray-300` (already dark via the ramp inversion) but a few header
+   dropdown items use `hover:text-white`, which would go white-on-white on the
+   light panel. Scoped to the exact hover state only, so coloured CTA buttons
+   inside these panels (bg-blue-600 text-white, etc.) keep their white text. */
+:root[data-theme='light'] [class*="bg-[#1A1A1A]"] button[class*="hover:text-white"]:hover,
+:root[data-theme='light'] [class*="bg-[#1A1A1A]"] a[class*="hover:text-white"]:hover,
+:root[data-theme='light'] [class*="bg-[#1a1a1a]"] button[class*="hover:text-white"]:hover,
+:root[data-theme='light'] [class*="bg-[#1a1a1a]"] a[class*="hover:text-white"]:hover { color: var(--color-star); }
+
+/* ---- Dark hex BORDERS → light hairline ---------------------------------- */
+:root[data-theme='light'] [class*="border-[#262626]"],
+:root[data-theme='light'] [class*="border-[#0f0f0f]"],
+:root[data-theme='light'] [class*="border-[#090b0f]"],
+:root[data-theme='light'] [class*="border-[#222]"],
+:root[data-theme='light'] [class*="border-[#0a0a0a]"],
+:root[data-theme='light'] [class*="border-[#0A0A0A]"] {
+  border-color: rgba(26, 21, 32, 0.12);
+}
+
+/* ---- Dark hex GRADIENT stops → light paper ------------------------------ */
+:root[data-theme='light'] [class*="from-[#0e1118]"],
+:root[data-theme='light'] [class*="from-[#0E1118]"] { --tw-gradient-from: #f7f5fc; }
+:root[data-theme='light'] [class*="to-[#07090d]"],
+:root[data-theme='light'] [class*="to-[#07090D]"] { --tw-gradient-to: #faf8f5; }
+
+/* ---- Light-grey literal TEXT → dim ink (invisible on white) ------------- */
+:root[data-theme='light'] .text-\[\#64748b\] { color: #57506a; }
+:root[data-theme='light'] .text-\[\#C4C4C4\],
+:root[data-theme='light'] .text-\[\#c4c4c4\],
+:root[data-theme='light'] .text-\[\#94a3b8\] { color: #6b6278; }
+:root[data-theme='light'] .text-\[\#c1ff72\],
+:root[data-theme='light'] .text-\[\#C1FF72\] { color: #3f6212; }
+
+/* ---- Native selects painted with `colorScheme: 'dark'` inline ------------ */
+:root[data-theme='light'] select { color-scheme: light !important; }
+
+/* ==========================================================================
+   LIGHT MODE — eighth pass: saturated fills keep white labels, notification
+   dropdown lightens
+
+   1. Purple/blue (and other saturated) buttons still showed DARK labels in
+      light mode. Two mechanisms:
+        a. shadcn `Button` ships `text-primary-foreground` (dark ink in both
+           themes) next to the passed-in `text-white`; utility sort order can
+           let the dark one win, so the label reads dark-on-purple.
+        b. Nested <span>/<div> labels carrying `text-white` have no `bg-`
+           class of their own, so the `.text-white:not(...)` inversion rule
+           darkened them.
+      Re-assert white on saturated fills (600/700 tiers + the literal hexes
+      used as fills) and on their white-labelled descendants, scoped away
+      from `/NN` tinted variants (those carry coloured text and must stay
+      as-is).
+
+   2. Headings inside saturated gradient banners (e.g. JoinSection's
+      `from-indigo-600 to-purple-700`) were forced dark by the global h1–h4
+      rule — force white again there.
+
+   3. The notification dropdown's unread cards painted a dark-navy gradient
+      stop (`from-blue-950/60`) — the "purple/blue container" seen in light
+      mode. Map the stop and its shadow to the light palette so the menu
+      reads as white.
+   ========================================================================== */
+
+/* ---- Solid saturated fills → white labels, nested descendants ---------- */
+:root[data-theme='light'] :is(
+  [class*='bg-blue-6'],[class*='bg-blue-7'],
+  [class*='bg-cyan-6'],[class*='bg-sky-6'],
+  [class*='bg-indigo-5'],[class*='bg-indigo-6'],[class*='bg-indigo-7'],
+  [class*='bg-violet-5'],[class*='bg-violet-6'],[class*='bg-violet-7'],
+  [class*='bg-purple-5'],[class*='bg-purple-6'],[class*='bg-purple-7'],
+  [class*='bg-emerald-6'],[class*='bg-green-6'],
+  [class*='bg-pink-6'],[class*='bg-fuchsia-6'],[class*='bg-rose-6'],
+  [class*='bg-red-6'],
+  [class*='bg-[#6366f1]'],[class*='bg-[#7550f0]'],
+  [class*='bg-[#4f46e5]'],[class*='bg-[#6541d6]'],[class*='bg-[#7c3aed]']
+):not([class*='/']) [class*='text-white'] { color: #ffffff !important; }
+
+/* ---- Solid saturated fills → white labels, same element ---------------- */
+:root[data-theme='light'] :is(
+  [class*='bg-blue-6'],[class*='bg-blue-7'],
+  [class*='bg-cyan-6'],[class*='bg-sky-6'],
+  [class*='bg-indigo-5'],[class*='bg-indigo-6'],[class*='bg-indigo-7'],
+  [class*='bg-violet-5'],[class*='bg-violet-6'],[class*='bg-violet-7'],
+  [class*='bg-purple-5'],[class*='bg-purple-6'],[class*='bg-purple-7'],
+  [class*='bg-emerald-6'],[class*='bg-green-6'],
+  [class*='bg-pink-6'],[class*='bg-fuchsia-6'],[class*='bg-rose-6'],
+  [class*='bg-red-6'],
+  [class*='bg-[#6366f1]'],[class*='bg-[#7550f0]'],
+  [class*='bg-[#4f46e5]'],[class*='bg-[#6541d6]'],[class*='bg-[#7c3aed]']
+):not([class*='/'])[class*='text-white'] { color: #ffffff !important; }
+
+/* ---- Saturated gradient fills → white labels (same element + nested) --- */
+:root[data-theme='light'] :is(
+  [class*='from-blue-5'],[class*='from-blue-6'],[class*='from-blue-7'],
+  [class*='from-cyan-5'],[class*='from-cyan-6'],[class*='from-cyan-7'],
+  [class*='from-sky-5'],[class*='from-sky-6'],
+  [class*='from-indigo-5'],[class*='from-indigo-6'],[class*='from-indigo-7'],
+  [class*='from-violet-5'],[class*='from-violet-6'],[class*='from-violet-7'],
+  [class*='from-purple-5'],[class*='from-purple-6'],[class*='from-purple-7'],
+  [class*='from-emerald-5'],[class*='from-emerald-6'],[class*='from-green-6'],
+  [class*='from-pink-5'],[class*='from-pink-6'],[class*='from-fuchsia-6'],
+  [class*='from-rose-6'],[class*='from-red-6']
+) [class*='text-white'] { color: #ffffff !important; }
+
+:root[data-theme='light'] :is(
+  [class*='from-blue-5'],[class*='from-blue-6'],[class*='from-blue-7'],
+  [class*='from-cyan-5'],[class*='from-cyan-6'],[class*='from-cyan-7'],
+  [class*='from-sky-5'],[class*='from-sky-6'],
+  [class*='from-indigo-5'],[class*='from-indigo-6'],[class*='from-indigo-7'],
+  [class*='from-violet-5'],[class*='from-violet-6'],[class*='from-violet-7'],
+  [class*='from-purple-5'],[class*='from-purple-6'],[class*='from-purple-7'],
+  [class*='from-emerald-5'],[class*='from-emerald-6'],[class*='from-green-6'],
+  [class*='from-pink-5'],[class*='from-pink-6'],[class*='from-fuchsia-6'],
+  [class*='from-rose-6'],[class*='from-red-6']
+)[class*='text-white'] { color: #ffffff !important; }
+
+/* ---- Headings inside saturated gradient banners stay white ------------- */
+:root[data-theme='light'] :is(
+  [class*='from-blue-5'],[class*='from-blue-6'],[class*='from-blue-7'],
+  [class*='from-cyan-5'],[class*='from-cyan-6'],
+  [class*='from-indigo-5'],[class*='from-indigo-6'],[class*='from-indigo-7'],
+  [class*='from-violet-5'],[class*='from-violet-6'],[class*='from-violet-7'],
+  [class*='from-purple-5'],[class*='from-purple-6'],[class*='from-purple-7'],
+  [class*='from-emerald-5'],[class*='from-emerald-6'],[class*='from-green-6'],
+  [class*='from-pink-5'],[class*='from-pink-6'],[class*='from-fuchsia-6'],
+  [class*='from-rose-6'],[class*='from-red-6']
+):not([class*='/']) :is(h1, h2, h3, h4) { color: #ffffff !important; }
+
+/* ---- Notification dropdown: lighten the dark-navy unread card ---------- */
+:root[data-theme='light'] [class*='from-blue-950/60'] { --tw-gradient-from: #ece6f6; }
+:root[data-theme='light'] [class*='shadow-blue-950']  { --tw-shadow-color: rgba(26, 21, 32, 0.14); }
+
+/* ==========================================================================
+   LIGHT MODE — full-page containers & sidebar chrome (9th pass)
+
+   ~33 app pages (Discover, Saved, Invitations, Visions/Ideation, Community/
+   Connections, Mentorship, founder, aiNews, Help, Profile, Project, …) wrap
+   their whole content in `<div class="min-h-screen bg-black">`. The keep-dark
+   `.bg-black` rule above was written for dark *buttons*; on a full-page
+   container it leaves the entire page dark in light mode while the `text-white`
+   inversion has already inked the headings — dark-on-dark. These rules flip
+   page containers (exact `min-h-screen` + `bg-black` tokens, so `bg-black/60`
+   scrims and dark buttons are untouched) to a light surface, plus the fixed
+   sidebar rails whose background is an inline `rgba(9, 7, 20, …)` fill that
+   class overrides can never reach.
+   ========================================================================== */
+
+/* ---- Full-page `bg-black` containers → light page surface --------------- */
+:root[data-theme='light'] [class~='min-h-screen'][class~='bg-black'] {
+  background-color: #ffffff;
+  color: var(--color-star);
+}
+
+/* Ghost nav/CTA text written `hover:text-white` on those pages was tuned for
+   a dark rail; on a light page it must be ink, not white-on-white. */
+:root[data-theme='light'] [class~='min-h-screen'][class~='bg-black'] [class*='hover:text-white'] {
+  color: var(--color-star);
+}
+
+/* ---- Fixed sidebar rails (inline rgba(9, 7, 20, …) fills) --------------- */
+:root[data-theme='light'] [style*='rgba(9, 7, 20'] ,
+:root[data-theme='light'] [style*='rgba(9,7,20'] {
+  background: #ffffff !important;
+}
+
+/* Sidebar active/hover chips painted with literal `#2A2A2A` (exact token, so
+   `hover:bg-[#2A2A2A]` items are only lit on :hover). */
+:root[data-theme='light'] [class~='bg-[#2A2A2A]'],
+:root[data-theme='light'] [class~='hover:bg-[#2A2A2A]']:hover {
+  background-color: #ece6f8;
+  color: var(--color-star);
+}
+:root[data-theme='light'] [class~='bg-[#2A2A2A]'] [class*='text-white'],
+:root[data-theme='light'] [class~='bg-[#2A2A2A]'][class*='text-white'],
+:root[data-theme='light'] [class~='hover:bg-[#2A2A2A]']:hover [class*='text-white'],
+:root[data-theme='light'] [class~='hover:bg-[#2A2A2A]']:hover[class*='text-white'] {
+  color: var(--color-star);
+}
+
+/* ---- ApplyToStartupModal panel (literal `#0E0F13`) ---------------------- */
+:root[data-theme='light'] [class~='bg-[#0E0F13]'],
+:root[data-theme='light'] [class~='bg-[#0e0f13]'] {
+  background-color: #ffffff;
+  color: var(--color-star);
+}
+
+/* ==========================================================================
+   LIGHT MODE — inline-surface tokens (10th pass)
+
+   ERP, recruitment, alerts/activity and other app pages paint their surfaces
+   with inline `style={{ background: "#111115" }}` etc. — literal hexes that
+   class overrides can never reach. These tokens replace those literals so the
+   same components follow the toggle: each keeps its exact dark value (dark
+   mode unchanged) and gains a light value (light mode renders light).
+   Companion white text (`#e5e7eb`/`#fff`) on converted surfaces becomes
+   `--color-star`, and white-alpha borders become `--surface-border`.
+   ========================================================================== */
+:root {
+  --surface-panel:     #111115;   /* ERP panels                           */
+  --surface-raised:    #1a1a20;   /* ERP raised cards                     */
+  --surface-card:      #1f2937;   /* gray-800 cards (recruitment, etc.)   */
+  --surface-card-2:    #111827;   /* gray-900 cards (alerts, activity)    */
+  --surface-deep:      #0d1117;   /* GitHub-dark surfaces (recruitment)   */
+  --surface-input:     #1a1a1a;   /* native select <option> rows          */
+  --surface-splash:    #060010;   /* auth splash                         */
+  --surface-drive:     #1e2130;   /* drive modals                        */
+  --surface-sandbox:   #151b2b;   /* API error sandbox                   */
+  --surface-option:    #12102a;   /* settings option rows                 */
+  --surface-disabled:  #374151;   /* disabled buttons                     */
+  --surface-border:    rgba(255, 255, 255, 0.07);
+  --border-strong:     #374151;    /* solid borders (ghost btns, dividers)  */
+  --gradient-featured:   linear-gradient(135deg, #0d1a36 0%, #0a0a0a 60%, #1a0d2e 100%);
+  --gradient-newsletter: linear-gradient(135deg, #071a10 0%, #050a06 100%);
+}
+:root[data-theme='light'] {
+  --surface-panel:     #ffffff;
+  --surface-raised:    #f4f1fa;
+  --surface-card:      #ffffff;
+  --surface-card-2:    #f7f5fc;
+  --surface-deep:      #ffffff;
+  --surface-input:     #ffffff;
+  --surface-splash:    #ffffff;
+  --surface-drive:     #ffffff;
+  --surface-sandbox:   #f2eeff;
+  --surface-option:    #ffffff;
+  --surface-disabled:  #e5e1ee;
+  --surface-border:    rgba(26, 21, 32, 0.14);
+  --border-strong:     #d1d5db;    /* visible border on white              */
+  --gradient-featured:   linear-gradient(135deg, #eef2ff 0%, #ffffff 60%, #f4f1ff 100%);
+  --gradient-newsletter: linear-gradient(135deg, #ecfdf5 0%, #f3fbf6 100%);
+}
+
+/* Class-based twins of the same hexes (e.g. `bg-[#1e2130]` drive chips) so
+   components using classNames instead of inline styles also follow the theme. */
+:root[data-theme='light'] [class*="bg-[#1e2130]"],
+:root[data-theme='light'] [class*="bg-[#111827]"],
+:root[data-theme='light'] [class*="bg-[#1f2937]"],
+:root[data-theme='light'] [class*="bg-[#111115]"],
+:root[data-theme='light'] [class*="bg-[#1a1a20]"],
+:root[data-theme='light'] [class*="bg-[#0d1117]"],
+:root[data-theme='light'] [class*="bg-[#151b2b]"],
+:root[data-theme='light'] [class*="bg-[#12102a]"],
+:root[data-theme='light'] [class*="bg-[#060010]"] {
+  background-color: #ffffff;
+  color: var(--color-star);
+}
+
+/* AI-news page: category badges keep their tinted backgrounds but their
+   light pastel label text (text-*-300) is invisible on white cards in light
+   mode. Darken only the labels on badges flagged with .ai-news-badge. */
+:root[data-theme='light'] .ai-news-badge.text-violet-300   { color: #7c3aed; }
+:root[data-theme='light'] .ai-news-badge.text-blue-300     { color: #1d4ed8; }
+:root[data-theme='light'] .ai-news-badge.text-emerald-300  { color: #047857; }
+:root[data-theme='light'] .ai-news-badge.text-amber-300    { color: #b45309; }
+:root[data-theme='light'] .ai-news-badge.text-pink-300     { color: #be185d; }
+:root[data-theme='light'] .ai-news-badge.text-zinc-300     { color: #52525b; }
+
+/* AI-news page: 400-level pastel accents (blue-400 remaps to #66ddff in light
+   mode) and the gradient "News" heading wash out on white. Darken them only
+   within the .ai-news-page scope so other pages keep their accent styling. */
+:root[data-theme='light'] .ai-news-page .text-blue-400     { color: #1d4ed8; }
+:root[data-theme='light'] .ai-news-page .text-violet-400   { color: #7c3aed; }
+:root[data-theme='light'] .ai-news-page .text-amber-400    { color: #b45309; }
+:root[data-theme='light'] .ai-news-page .text-emerald-400  { color: #047857; }
+:root[data-theme='light'] .ai-news-page .ai-news-gradient-title {
+  background-image: linear-gradient(to right, #2563eb, #7c3aed, #2563eb);
+}
+:root[data-theme='light'] .ai-news-page .group:hover [class*="hover:text-blue-300"] {
+  color: #1d4ed8;
+}
+:root[data-theme='light'] .ai-news-page [class*="hover:text-white"]:not([class*="group-hover:text-white"]):hover {
+  color: var(--color-star);
+}
+:root[data-theme='light'] .ai-news-page .group:hover [class*="group-hover:text-white"] {
+  color: #1d4ed8;
+}
+:root[data-theme='light'] .ai-news-page .text-zinc-700 {
+  color: #52525b;
+}
+
+/* Notes page: the card category badges and action buttons use 400-level
+   accent text (text-blue-400 etc.) which the light block doesn't darken
+   (--color-blue-400 stays #66ddff) — pastel on white cards. Darken them
+   only within the .notes-page scope (root of NotesPage.jsx) so other
+   pages keep their accent styling. */
+:root[data-theme='light'] .notes-page .text-blue-400     { color: #1d4ed8; }
+:root[data-theme='light'] .notes-page .text-purple-400   { color: #7c3aed; }
+:root[data-theme='light'] .notes-page .text-yellow-400   { color: #b45309; }
+:root[data-theme='light'] .notes-page .text-emerald-400  { color: #047857; }
+:root[data-theme='light'] .notes-page .text-red-400      { color: #be185d; }
+:root[data-theme='light'] .notes-page .text-slate-400    { color: #52525b; }
+:root[data-theme='light'] .notes-page .text-green-400    { color: #15803d; }
+
+/* ==========================================================================
+   LIGHT MODE — /user-profile (Profile page)
+
+   The header used a hardcoded dark glass gradient and pastel accent chips;
+   ProfileHeader.jsx / Profile.jsx now use theme tokens for the surfaces, and
+   these rules darken the 300/400-level accent text so it reads on white.
+   Scope: .profile-page (root div of Profile.jsx) — no other page affected.
+   ========================================================================== */
+:root[data-theme='light'] .profile-page .text-blue-400     { color: #1d4ed8; }
+:root[data-theme='light'] .profile-page .text-blue-300     { color: #2563eb; }
+:root[data-theme='light'] .profile-page .text-purple-400   { color: #7c3aed; }
+:root[data-theme='light'] .profile-page .text-purple-300   { color: #9333ea; }
+:root[data-theme='light'] .profile-page .text-green-400    { color: #15803d; }
+:root[data-theme='light'] .profile-page .text-green-300    { color: #16a34a; }
+:root[data-theme='light'] .profile-page .text-emerald-400  { color: #047857; }
+:root[data-theme='light'] .profile-page .text-emerald-300  { color: #059669; }
+:root[data-theme='light'] .profile-page .text-yellow-400   { color: #b45309; }
+:root[data-theme='light'] .profile-page .text-yellow-300   { color: #b45309; }
+:root[data-theme='light'] .profile-page .text-orange-400   { color: #c2410c; }
+:root[data-theme='light'] .profile-page .text-orange-300   { color: #c2410c; }
+:root[data-theme='light'] .profile-page .text-red-400      { color: #be123c; }
+:root[data-theme='light'] .profile-page .text-red-300      { color: #be123c; }
+:root[data-theme='light'] .profile-page .text-pink-400     { color: #be185d; }
+:root[data-theme='light'] .profile-page .text-pink-300     { color: #be185d; }
+:root[data-theme='light'] .profile-page .text-cyan-400     { color: #0e7490; }
+:root[data-theme='light'] .profile-page .text-gray-500     { color: #635a70; }
+:root[data-theme='light'] .profile-page .text-gold         { color: #a16207; }
+
+/* ==========================================================================
+   LIGHT MODE — /crowdfunding
+
+   Crowdfunding.jsx is a dark marketing-style section; the surfaces were
+   converted to theme tokens, and these rules darken the 300/400-level accent
+   text that would otherwise stay pastel on white. Scope: .crowdfunding-page
+   (section root of Crowdfunding.jsx) — no other page affected.
+   ========================================================================== */
+:root[data-theme='light'] .crowdfunding-page .text-indigo-400    { color: #4338ca; }
+:root[data-theme='light'] .crowdfunding-page .text-indigo-300    { color: #4f46e5; }
+:root[data-theme='light'] .crowdfunding-page .text-green-400     { color: #15803d; }
+
+/* ==========================================================================
+   LIGHT MODE — uncovered class-based dark-hex surfaces (bg-[#...])
+
+   The token layer, the "twins" block above and the button-fill rules cover
+   the common hexes. Everything else that paints a literal dark surface in
+   the app is flipped to white here so no dark card is left in light mode.
+   Excluded deliberately:
+     - accent colors (#c1ff72, #b0ef62, #6366f1, #5558e0, #10b981) are
+       semantic fills, not dark surfaces
+     - button-fill hexes kept dark by the earlier rule (#1a1a1a, #1A1A1A,
+       #0a0a0a, #09090B) so white button labels survive
+     - landing-only hexes (#111, #111111) never appear in the app
+   The .landing-page scoped rules at the bottom keep the marketing pages
+   dark and re-whiten the text the global inversion rules darkened.     */
+:root[data-theme='light'] [class*="bg-[#0a0b10]"],
+:root[data-theme='light'] [class*="bg-[#0F1423]"],
+:root[data-theme='light'] [class*="bg-[#0a0a0b]"],
+:root[data-theme='light'] [class*="bg-[#121215]"],
+:root[data-theme='light'] [class*="bg-[#0d0f17]"],
+:root[data-theme='light'] [class*="bg-[#11131a]"],
+:root[data-theme='light'] [class*="bg-[#232323]"],
+:root[data-theme='light'] [class*="bg-[#2A2A2A]"],
+:root[data-theme='light'] [class*="bg-[#151B2B]"],
+:root[data-theme='light'] [class*="bg-[#0f0f15]"],
+:root[data-theme='light'] [class*="bg-[#18181b]"],
+:root[data-theme='light'] [class*="bg-[#141726]"],
+:root[data-theme='light'] [class*="bg-[#0f1116]"],
+:root[data-theme='light'] [class*="bg-[#0B0D17]"],
+:root[data-theme='light'] [class*="bg-[#0a0c10]"],
+:root[data-theme='light'] [class*="bg-[#07080c]"],
+:root[data-theme='light'] [class*="bg-[#111318]"],
+:root[data-theme='light'] [class*="bg-[#181818]"],
+:root[data-theme='light'] [class*="bg-[#0f0f0f]"],
+:root[data-theme='light'] [class*="bg-[#050505]"],
+:root[data-theme='light'] [class*="bg-[#262626]"],
+:root[data-theme='light'] [class*="bg-[#05070F]"],
+:root[data-theme='light'] [class*="bg-[#151822]"],
+:root[data-theme='light'] [class*="bg-[#12121a]"],
+:root[data-theme='light'] [class*="bg-[#0B101E]"],
+:root[data-theme='light'] [class*="bg-[#0b0e14]"],
+:root[data-theme='light'] [class*="bg-[#0a0a0f]"],
+:root[data-theme='light'] [class*="bg-[#1C2035]"],
+:root[data-theme='light'] [class*="bg-[#10141d]"],
+:root[data-theme='light'] [class*="bg-[#0F0F0F]"],
+:root[data-theme='light'] [class*="bg-[#0d0f14]"],
+:root[data-theme='light'] [class*="bg-[#2a2d3e]"],
+:root[data-theme='light'] [class*="bg-[#222]"],
+:root[data-theme='light'] [class*="bg-[#0f1117]"],
+:root[data-theme='light'] [class*="bg-[#0f0f12]"],
+:root[data-theme='light'] [class*="bg-[#0E101A]"],
+:root[data-theme='light'] [class*="bg-[#0b0d13]"],
+:root[data-theme='light'] [class*="bg-[#0A0F1C]"],
+:root[data-theme='light'] [class*="bg-[#08090d]"],
+:root[data-theme='light'] [class*="bg-[#2B3135]"],
+:root[data-theme='light'] [class*="bg-[#1a263b]"],
+:root[data-theme='light'] [class*="bg-[#1a1d27]"],
+:root[data-theme='light'] [class*="bg-[#161618]"],
+:root[data-theme='light'] [class*="bg-[#121214]"],
+:root[data-theme='light'] [class*="bg-[#0f1623]"],
+:root[data-theme='light'] [class*="bg-[#0d0a1a]"],
+:root[data-theme='light'] [class*="bg-[#0a0a0c]"],
+:root[data-theme='light'] [class*="bg-[#0A0A0A]"],
+:root[data-theme='light'] [class*="bg-[#000]"],
+:root[data-theme='light'] [class*="bg-[#333]"],
+:root[data-theme='light'] [class*="bg-[#2A3A4A]"],
+:root[data-theme='light'] [class*="bg-[#2a2a2a]"],
+:root[data-theme='light'] [class*="bg-[#2A2725]"],
+:root[data-theme='light'] [class*="bg-[#27272a]"],
+:root[data-theme='light'] [class*="bg-[#252A45]"],
+:root[data-theme='light'] [class*="bg-[#252529]"],
+:root[data-theme='light'] [class*="bg-[#212121]"],
+:root[data-theme='light'] [class*="bg-[#1F2937]"],
+:root[data-theme='light'] [class*="bg-[#1E293B]"],
+:root[data-theme='light'] [class*="bg-[#1e1e22]"],
+:root[data-theme='light'] [class*="bg-[#1e1e1e]"],
+:root[data-theme='light'] [class*="bg-[#1e1b4b]"],
+:root[data-theme='light'] [class*="bg-[#1c1c1e]"],
+:root[data-theme='light'] [class*="bg-[#1A1E32]"],
+:root[data-theme='light'] [class*="bg-[#151a26]"],
+:root[data-theme='light'] [class*="bg-[#13161c]"],
+:root[data-theme='light'] [class*="bg-[#131524]"],
+:root[data-theme='light'] [class*="bg-[#121212]"],
+:root[data-theme='light'] [class*="bg-[#111113]"],
+:root[data-theme='light'] [class*="bg-[#101017]"],
+:root[data-theme='light'] [class*="bg-[#0f111a]"],
+:root[data-theme='light'] [class*="bg-[#0E0F13]"],
+:root[data-theme='light'] [class*="bg-[#0e0d0d]"],
+:root[data-theme='light'] [class*="bg-[#0d0d0f]"],
+:root[data-theme='light'] [class*="bg-[#0d0d0d]"],
+:root[data-theme='light'] [class*="bg-[#0c0c12]"],
+:root[data-theme='light'] [class*="bg-[#0b0c10]"],
+:root[data-theme='light'] [class*="bg-[#0b0b0b]"],
+:root[data-theme='light'] [class*="bg-[#090A10]"],
+:root[data-theme='light'] [class*="bg-[#08080a]"],
+:root[data-theme='light'] [class*="bg-[#060606]"],
+:root[data-theme='light'] [class*="bg-[#050508]"],
+:root[data-theme='light'] [class*="bg-[#030712]"],
+:root[data-theme='light'] [class*="bg-[#030305]"] {
+  background-color: #ffffff;
+  color: var(--color-star);
+}
+
+/* ---- Landing pages keep their dark identity in light mode. ------------- */
+:root[data-theme='light'] .landing-page [class*="bg-[#0b0b0b]"] {
+  background-color: #0b0b0b;
+  color: #f2effa;
+}
+:root[data-theme='light'] .landing-page [class*="bg-[#0f0f0f]"] {
+  background-color: #0f0f0f;
+  color: #f2effa;
+}
+:root[data-theme='light'] .landing-page [class*="bg-[#2A2725]"] {
+  background-color: #2A2725;
+  color: #f2effa;
+}
+:root[data-theme='light'] .landing-page [class*="bg-[#1a1a1a]"] {
+  background-color: #1a1a1a;
+  color: #f2effa;
+}
+:root[data-theme='light'] .landing-page [class*="bg-[#060606]"] {
+  background-color: #060606;
+  color: #f2effa;
+}
+:root[data-theme='light'] .landing-page [class*="bg-[#111111]"] {
+  background-color: #111111;
+  color: #f2effa;
+}
+:root[data-theme='light'] .landing-page [class*="bg-[#111]"] {
+  background-color: #111111;
+  color: #f2effa;
+}
+
+/* Landing text the global light rules inverted is re-whitened so it reads
+   on the kept-dark sections. */
+:root[data-theme='light'] .landing-page .text-white:not(button):not(a):not([class*='bg-']) {
+  color: #f2effa;
+}
+:root[data-theme='light'] .landing-page .text-gray-300 { color: #d1d5db; }
+:root[data-theme='light'] .landing-page .text-gray-400 { color: #9ca3af; }
+:root[data-theme='light'] .landing-page .text-gray-500 { color: #6b7280; }
+:root[data-theme='light'] .landing-page .text-slate-300 { color: #cbd5e1; }
+:root[data-theme='light'] .landing-page .text-slate-400 { color: #94a3b8; }
+:root[data-theme='light'] .landing-page .text-slate-500 { color: #64748b; }
+:root[data-theme='light'] .landing-page .text-zinc-400 { color: #a1a1aa; }
+:root[data-theme='light'] .landing-page .text-zinc-100 { color: #f2effa; }
+:root[data-theme='light'] .landing-page .text-zinc-200 { color: #ded9ec; }
+:root[data-theme='light'] .landing-page .text-zinc-300 { color: #cfcae4; }
+:root[data-theme='light'] .landing-page [class*="text-white/40"]:not([class*='bg-']) { color: rgba(242, 239, 250, 0.4); }
+:root[data-theme='light'] .landing-page [class*="text-white/50"]:not([class*='bg-']) { color: rgba(242, 239, 250, 0.5); }
+:root[data-theme='light'] .landing-page [class*="text-white/60"]:not([class*='bg-']) { color: rgba(242, 239, 250, 0.6); }
+:root[data-theme='light'] .landing-page [class*="text-white/70"]:not([class*='bg-']) { color: rgba(242, 239, 250, 0.7); }
+:root[data-theme='light'] .landing-page [class*="text-white/80"]:not([class*='bg-']) { color: rgba(242, 239, 250, 0.8); }
+:root[data-theme='light'] .landing-page [class*="text-white/85"]:not([class*='bg-']) { color: rgba(242, 239, 250, 0.85); }
+:root[data-theme='light'] .landing-page [class*="text-white/95"]:not([class*='bg-']) { color: rgba(242, 239, 250, 0.95); }
+
+/* ContactForm sits inside the dark landing contact pages (/contact). Its
+   gray-ramp surfaces (from-gray-800/to-gray-900 card, bg-gray-700/50 inputs)
+   would flip light in light mode while the landing text rules keep the labels
+   light — white on white. Keep the form dark inside .landing-page only;
+   app pages (Help, JoinSF) keep the automatic light flip. */
+:root[data-theme='light'] .landing-page [class*='from-gray-800'] {
+  --tw-gradient-from: #2e2945 !important;
+}
+:root[data-theme='light'] .landing-page [class*='to-gray-900'] {
+  --tw-gradient-to: #16122b !important;
+}
+:root[data-theme='light'] .landing-page [class*='bg-gray-700/50'] {
+  background-color: rgba(74, 68, 98, 0.5);
+}
+:root[data-theme='light'] .landing-page [class*='border-gray-600'] {
+  border-color: #6d6683;
+}
+:root[data-theme='light'] .landing-page [class*='border-gray-700'] {
+  border-color: #4a4462;
+}
+:root[data-theme='light'] .landing-page [class*='text-gray-200'] {
+  color: #ded9ec;
+}
+:root[data-theme='light'] .landing-page input::placeholder,
+:root[data-theme='light'] .landing-page textarea::placeholder {
+  color: rgba(169, 162, 194, 0.75);
+}
+
+/* Gradient-clipped headings on the dark landing pages: the global light rule
+   flattens them to dark ink, which vanishes on the kept-dark sections.
+   Re-whiten them inside .landing-page only. */
+:root[data-theme='light'] .landing-page .text-transparent.bg-clip-text {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+          background-clip: initial !important;
+  -webkit-text-fill-color: #f2effa !important;
+  color: #f2effa !important;
+}
+
+/* ---- AI Assistant panel (navbar AI icon drawer): pastel accents were
+        designed for the old dark-only panel and are unreadable on the light
+        surfaces. Darken them within .ai-assistant-panel only. --------------- */
+:root[data-theme='light'] .ai-assistant-panel .text-amber-200 { color: #b45309; } /* amber-700 */
+:root[data-theme='light'] .ai-assistant-panel .text-amber-300 { color: #d97706; } /* amber-600 */
+:root[data-theme='light'] .ai-assistant-panel .text-amber-400 { color: #d97706; } /* amber-600 */
+:root[data-theme='light'] .ai-assistant-panel .text-blue-400  { color: #2563eb; } /* blue-600  */
+:root[data-theme='light'] .ai-assistant-panel .text-emerald-400 { color: #047857; } /* emerald-700 */

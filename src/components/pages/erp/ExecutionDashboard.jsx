@@ -87,7 +87,7 @@ export default function ExecutionDashboard() {
           breadcrumbs={[{ label: "ERP" }, { label: "Execution" }]}
           actions={
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 p-1 rounded-xl" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="flex items-center gap-1 p-1 rounded-xl" style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}>
                 {["day", "week", "month"].map(range => (
                   <button 
                     key={range}
@@ -121,7 +121,7 @@ export default function ExecutionDashboard() {
             <motion.div 
               initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
               className="relative overflow-hidden p-8 rounded-3xl"
-              style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)", borderTop: "2px solid #6366f1" }}
+              style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)", borderTop: "2px solid #6366f1" }}
             >
               <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
                 <Gauge size={180} className="text-indigo-500" />
@@ -148,11 +148,11 @@ export default function ExecutionDashboard() {
                   </div>
                   
                   <div className="mt-8 flex items-center gap-4">
-                    <div className="flex-1 p-4 rounded-2xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                    <div className="flex-1 p-4 rounded-2xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--surface-border)" }}>
                       <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Momentum</p>
                       <p className="text-sm font-bold text-emerald-400">Stable</p>
                     </div>
-                    <div className="flex-1 p-4 rounded-2xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                    <div className="flex-1 p-4 rounded-2xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--surface-border)" }}>
                       <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Efficiency</p>
                       <p className="text-sm font-bold text-indigo-400">0.82x</p>
                     </div>
@@ -182,7 +182,7 @@ export default function ExecutionDashboard() {
                 <motion.div 
                   key={kpi.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
                   className="p-5 rounded-2xl text-center"
-                  style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+                  style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
                 >
                   <div className="flex justify-center mb-2 text-indigo-400">{kpi.icon}</div>
                   <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-1">{kpi.label}</p>
@@ -193,13 +193,13 @@ export default function ExecutionDashboard() {
 
             {/* Activity & Capital */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
-              <div className="p-6 rounded-2xl flex flex-col h-96" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="p-6 rounded-2xl flex flex-col h-96" style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}>
                 <div className="flex flex-col gap-4 mb-4">
                   <div className="flex items-center gap-2">
                     <Zap size={16} className="text-indigo-400" />
                     <h3 className="text-sm font-semibold text-white">Signals</h3>
                   </div>
-                  <div className="flex gap-2 p-1 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                  <div className="flex gap-2 p-1 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--surface-border)" }}>
                     {["all", "validated", "pending"].map(f => (
                       <button key={f} onClick={() => setActivityFilter(f)} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all ${activityFilter === f ? 'bg-indigo-600 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}>{f}</button>
                     ))}
@@ -212,7 +212,7 @@ export default function ExecutionDashboard() {
                         key={act.id} layout initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
                         onClick={() => setSelectedActivity(act)}
                         className="flex gap-3 items-start p-3 rounded-xl hover:bg-white/[0.03] transition-all cursor-pointer"
-                        style={{ border: "1px solid rgba(255,255,255,0.03)" }}
+                        style={{ border: "1px solid var(--surface-border)" }}
                       >
                         <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-indigo-400 shrink-0">
                           {act.user[0]}{act.user.split(' ')[1]?.[0] || ''}
@@ -229,17 +229,17 @@ export default function ExecutionDashboard() {
                 </div>
               </div>
 
-              <div className="p-6 rounded-2xl flex flex-col h-96" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="p-6 rounded-2xl flex flex-col h-96" style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}>
                 <div className="flex items-center gap-2 mb-6">
                   <BarChart2 size={16} className="text-indigo-400" />
                   <h3 className="text-sm font-semibold text-white">Capital</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="p-4 rounded-xl text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                  <div className="p-4 rounded-xl text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--surface-border)" }}>
                      <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Burn</p>
                      <p className="text-lg font-bold text-white">{INITIAL_BURN_RATE.monthly}</p>
                   </div>
-                  <div className="p-4 rounded-xl text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                  <div className="p-4 rounded-xl text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--surface-border)" }}>
                      <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Efficiency</p>
                      <p className="text-lg font-bold text-emerald-400">{INITIAL_BURN_RATE.efficiency}</p>
                   </div>
@@ -257,14 +257,14 @@ export default function ExecutionDashboard() {
 
           {/* Right Column */}
           <div className="lg:col-span-4 flex flex-col gap-6">
-            <div className="p-6 rounded-2xl" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <div className="p-6 rounded-2xl" style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}>
               <div className="flex items-center gap-2 mb-5">
                 <Users size={16} className="text-indigo-400" />
                 <h3 className="text-sm font-semibold text-white">Leaderboard</h3>
               </div>
               <div className="space-y-2">
                 {leaderboard.map((u) => (
-                  <div key={u.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.03] transition-all" style={{ border: "1px solid rgba(255,255,255,0.03)" }}>
+                  <div key={u.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.03] transition-all" style={{ border: "1px solid var(--surface-border)" }}>
                     <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-white shrink-0">{u.avatar}</div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-white truncate">{u.name}</p>
@@ -278,14 +278,14 @@ export default function ExecutionDashboard() {
               </div>
             </div>
 
-            <div className="p-6 rounded-2xl flex-1 flex flex-col" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)", borderTop: "2px solid #f59e0b" }}>
+            <div className="p-6 rounded-2xl flex-1 flex flex-col" style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)", borderTop: "2px solid #f59e0b" }}>
                <div className="flex items-center gap-2 mb-5">
                  <AlertCircle size={16} className="text-amber-500" />
                  <h3 className="text-sm font-semibold text-white">Alerts</h3>
                </div>
                <div className="space-y-3 flex-1 overflow-y-auto pr-2">
                 {INITIAL_WARNINGS.map(warn => (
-                  <div key={warn.id} className="flex gap-3 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                  <div key={warn.id} className="flex gap-3 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--surface-border)" }}>
                     <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${warn.severity === 'high' ? 'bg-red-500 shadow-[0_0_8px_#ef4444]' : 'bg-amber-500 shadow-[0_0_8px_#f59e0b]'}`} />
                     <div>
                       <h4 className="text-xs font-bold text-white mb-0.5">{warn.title}</h4>

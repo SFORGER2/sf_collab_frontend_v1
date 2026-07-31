@@ -25,6 +25,14 @@ export function formatRelativeTime(dateString: string): string {
   })
 }
 
+export function formatCurrency(amount: number | string | null | undefined): string {
+  const value = Number(amount)
+  if (!Number.isFinite(value)) return "$0"
+  if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`
+  if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`
+  return `$${value}`
+}
+
 export function formatDate(dateString: string): string {
   const date = new Date(dateString)
   return date.toLocaleDateString("en-US", {

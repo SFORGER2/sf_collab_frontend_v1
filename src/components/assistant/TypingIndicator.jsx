@@ -11,7 +11,7 @@ export default function TypingIndicator() {
 
   return (
     <div
-      className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/60 border border-white/8 w-fit"
+      className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--muted)] border border-[var(--border)] w-fit"
       role="status"
       aria-label="AI is thinking"
       aria-live="polite"
@@ -38,7 +38,7 @@ export default function TypingIndicator() {
           )
         )}
       </div>
-      <span className="text-[10px] text-zinc-500 font-roboto">
+      <span className="text-[10px] text-[var(--color-dim)] font-roboto">
         AI is thinking…
       </span>
     </div>

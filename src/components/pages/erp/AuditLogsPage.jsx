@@ -165,7 +165,7 @@ export function AuditLogsPage() {
         {/* ── Filters ── */}
         <div
           className="flex flex-wrap gap-3 items-center px-5 py-4 rounded-xl mb-6"
-          style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+          style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
         >
           <Filter size={13} className="text-zinc-500 shrink-0" />
 
@@ -199,7 +199,7 @@ export function AuditLogsPage() {
         </div>
 
         {/* ── Table ── */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}>
           {loading ? (
             <ERPTableSkeleton rows={8} cols={5} />
           ) : filtered.length === 0 ? (
@@ -271,7 +271,7 @@ export function AuditLogsPage() {
                               exit={{ height: 0, opacity: 0 }}
                               transition={{ duration: 0.2, ease: "easeInOut" }}
                             >
-                              <div className="px-5 py-4 border-b border-white/[0.04]" style={{ background: "#0d0d10" }}>
+                              <div className="px-5 py-4 border-b border-white/[0.04]" style={{ background: "var(--surface-panel)" }}>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                                   <div>
                                     <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 mb-1.5">Before</p>

@@ -322,94 +322,95 @@
   }
 }
 
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .notification-page-header h1 {
-    color: #f9fafb;
-  }
+/* Dark mode — follows the app's data-theme switch (see services/theme/theme.js),
+   NOT the OS prefers-color-scheme media query. The theme service sets
+   data-theme="dark" on <html> when the user picks dark mode; these rules only
+   apply then. Light is the un-prefixed base above. */
+:root[data-theme='dark'] .notification-page-header h1 {
+  color: #f9fafb;
+}
 
-  .action-button {
-    background: #374151;
-    border-color: #4b5563;
-    color: #d1d5db;
-  }
+:root[data-theme='dark'] .action-button {
+  background: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
+}
 
-  .action-button:hover {
-    background: #4b5563;
-    color: #f9fafb;
-  }
+:root[data-theme='dark'] .action-button:hover {
+  background: #4b5563;
+  color: #f9fafb;
+}
 
-  .action-button.danger:hover {
-    background: #7f1d1d;
-    border-color: #991b1b;
-    color: #fca5a5;
-  }
+:root[data-theme='dark'] .action-button.danger:hover {
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fca5a5;
+}
 
-  .notification-stats-panel {
-    background: #1f2937;
-    border-color: #374151;
-  }
+:root[data-theme='dark'] .notification-stats-panel {
+  background: #1f2937;
+  border-color: #374151;
+}
 
-  .stat-card {
-    background: #374151;
-    border-color: #4b5563;
-  }
+:root[data-theme='dark'] .stat-card {
+  background: #374151;
+  border-color: #4b5563;
+}
 
-  .stat-value {
-    color: #f9fafb;
-  }
+:root[data-theme='dark'] .stat-value {
+  color: #f9fafb;
+}
 
-  .notification-page-filters {
-    border-color: #374151;
-  }
+:root[data-theme='dark'] .notification-page-filters {
+  border-color: #374151;
+}
 
-  .filter-tab {
-    color: #9ca3af;
-  }
+:root[data-theme='dark'] .filter-tab {
+  color: #9ca3af;
+}
 
-  .filter-tab:hover {
-    background: #374151;
-    color: #f9fafb;
-  }
+:root[data-theme='dark'] .filter-tab:hover {
+  background: #374151;
+  color: #f9fafb;
+}
 
-  .notification-page-content {
-    background: #1f2937;
-    border-color: #374151;
-  }
+:root[data-theme='dark'] .notification-page-content {
+  background: #1f2937;
+  border-color: #374151;
+}
 
-  .notification-page-loading,
-  .notification-page-empty {
-    color: #9ca3af;
-  }
+:root[data-theme='dark'] .notification-page-loading,
+:root[data-theme='dark'] .notification-page-empty {
+  color: #9ca3af;
+}
 
-  .spinner-large {
-    border-color: #4b5563;
-    border-top-color: #3b82f6;
-  }
+:root[data-theme='dark'] .spinner-large {
+  border-color: #4b5563;
+  border-top-color: #3b82f6;
+}
 
-  .notification-page-empty h3 {
-    color: #f9fafb;
-  }
+:root[data-theme='dark'] .notification-page-empty h3 {
+  color: #f9fafb;
+}
 
-  .empty-icon {
-    background: #374151;
-  }
+:root[data-theme='dark'] .empty-icon {
+  background: #374151;
+}
 
-  .load-more-container {
-    border-color: #374151;
-  }
+:root[data-theme='dark'] .load-more-container {
+  border-color: #374151;
+}
 
-  .load-more-button-large {
-    background: #374151;
-    border-color: #4b5563;
-  }
+:root[data-theme='dark'] .load-more-button-large {
+  background: #374151;
+  border-color: #4b5563;
+}
 
-  .load-more-button-large:hover {
-    background: #4b5563;
-  }
+:root[data-theme='dark'] .load-more-button-large:hover {
+  background: #4b5563;
+}
 
-  .spinner-small {
-    border-color: #4b5563;
-    border-top-color: #3b82f6;
-  }
+:root[data-theme='dark'] .spinner-small {
+  border-color: #4b5563;
+  border-top-color: #3b82f6;
 }

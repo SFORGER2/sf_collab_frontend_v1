@@ -1,24 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import axios from "axios";
-import { CheckSquare, AlertTriangle, Trophy, TrendingUp, TrendingDown, Minus, Crown, Medal, Award, BarChart3 } from "lucide-react";
+import { CheckSquare, AlertTriangle, Trophy, Crown, Medal, Award } from "lucide-react";
 
 import { requestInterceptor, responseInterceptor, responseErrorInterceptor } from "../../../utils/APIs/interceptors";
-import { ERPPageHeader } from "../../erp/shared/ERPPageHeader";
-import { ERPLoadingSkeleton } from "../../erp/shared/ERPLoadingSkeleton";
 import { ERPBannerManager } from "../../erp/shared/ERPBanner";
 import { ERPEmptyState } from "../../erp/shared/ERPEmptyState";
 
 // ── Shared UI components ──
 import {
   PageHeader,
-  GlassCard,
-  StatCard,
-  Badge,
   Spinner,
   Button,
-  EmptyState,
 } from "@/components/erp/ui";
 
 const api = axios.create({ baseURL: "" });
@@ -26,19 +20,6 @@ api.interceptors.request.use(requestInterceptor);
 api.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
 const pct = (v) => (v != null ? `${Math.round(v)}%` : "—");
-const PERIODS = [{ value: "weekly", label: "This Week" }, { value: "monthly", label: "This Month" }, { value: "all", label: "All Time" }];
-const RANK_ICONS = [Crown, Medal, Award];
-const RANK_COLORS = ["#f59e0b", "#9ca3af", "#b45309"];
-
-export default function AdminAnalyticsPage() {
-  const { user } = useSelector((s) => s.auth);
-// ── Helpers ────────────────────────────────────────────────────────────────
-const pct = (v) => (v != null ? `${Math.round(v)}%` : "—");
-const toArr = (v, ...keys) => {
-  if (Array.isArray(v)) return v;
-  for (const k of keys) if (Array.isArray(v?.[k])) return v[k];
-  return [];
-};
 
 const PERIODS = [
   { value: "weekly", label: "This Week" },
@@ -49,7 +30,6 @@ const PERIODS = [
 const RANK_ICONS = [Crown, Medal, Award];
 const RANK_COLORS = ["#f59e0b", "#9ca3af", "#b45309"];
 
-// ═══════════════════════════════════════════════════════════════════════════
 export default function AdminAnalyticsPage() {
   const { user } = useSelector((s) => s.auth);
 
@@ -150,32 +130,6 @@ export default function AdminAnalyticsPage() {
   }, [user?.active_workspace_id, period]);
 
   useEffect(() => { load(); }, [load]);
-
-  if (loading) return <div className="min-h-screen bg-[#0a0a0b]"><ERPLoadingSkeleton /></div>;
-
-  return (
-    <div className="min-h-screen bg-[#0a0a0b] text-white overflow-x-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <ERPPageHeader
-          icon={<BarChart3 size={20} />}
-          title="Admin Analytics"
-          description="Workspace performance, telemetry, and contributor insights."
-          breadcrumbs={[{ label: "ERP" }, { label: "Admin" }, { label: "Analytics" }]}
-          actions={
-            <div className="flex bg-[#111115] border border-white/5 rounded-xl p-1">
-              {PERIODS.map((p) => (
-                <button
-                  key={p.value}
-                  onClick={() => setPeriod(p.value)}
-                  className={`px-4 py-2 text-xs font-semibold uppercase tracking-widest rounded-lg transition-all ${
-                    period === p.value ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
-                  {p.label}
-                </button>
-  useEffect(() => {
-    load();
-  }, [load]);
 
   // ── Render ────────────────────────────────────────────────────────────────
   if (loading) return <Spinner />;

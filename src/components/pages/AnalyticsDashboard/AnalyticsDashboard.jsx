@@ -209,7 +209,7 @@ function MetricBreakdown({ data }) {
             <span style={{ fontSize: 12, color: "#9ca3af" }}>{b.label}</span>
             <span style={{ fontSize: 12, fontWeight: 700, color: b.color }}>{Math.round(b.value)}%</span>
           </div>
-          <div style={{ background: "#1f2937", borderRadius: 99, height: 6, overflow: "hidden" }}>
+          <div style={{ background: "var(--surface-card)", borderRadius: 99, height: 6, overflow: "hidden" }}>
             <div style={{
               background: b.color, width: `${Math.min(b.value, 100)}%`,
               height: "100%", borderRadius: 99, transition: "width 0.6s ease",
@@ -332,7 +332,7 @@ function HistoryChart({ history }) {
             const y = H - PAD - (v / 100) * (H - PAD * 2);
             return (
               <line key={v} x1={PAD} y1={y} x2={W - PAD} y2={y}
-                stroke="#1f2937" strokeWidth="1" />
+                stroke="var(--surface-card)" strokeWidth="1" />
             );
           })}
 
@@ -438,7 +438,7 @@ function Banner({ type, children }) {
   const border = { success: "#166534", error: "#991b1b", info: "#1d4ed8" };
   return (
     <div style={{ background: bg[type], border: `1px solid ${border[type]}`,
-      borderRadius: 8, padding: "10px 16px", fontSize: 13, color: "#e5e7eb", marginBottom: 12 }}>
+      borderRadius: 8, padding: "10px 16px", fontSize: 13, color: "var(--color-star)", marginBottom: 12 }}>
       {children}
     </div>
   );
@@ -464,14 +464,14 @@ const s = {
   page:        { padding: "28px 32px", maxWidth: 1100, margin: "0 auto", fontFamily: "'DM Sans', sans-serif" },
   topBar:      { display: "flex", justifyContent: "space-between", alignItems: "flex-start",
                  marginBottom: 24, flexWrap: "wrap", gap: 12 },
-  h1:          { fontSize: 24, fontWeight: 700, color: "#f9fafb", margin: 0 },
+  h1:          { fontSize: 24, fontWeight: 700, color: "var(--color-star)", margin: 0 },
   sub:         { color: "#6b7280", fontSize: 13, marginTop: 4 },
   kpiGrid:     { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12, marginBottom: 16 },
   grid2:       { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12, marginBottom: 16 },
-  card:        { background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 20, marginBottom: 16 },
+  card:        { background: "var(--surface-card-2)", border: "1px solid #1f2937", borderRadius: 12, padding: 20, marginBottom: 16 },
   cardTitle:   { fontSize: 13, fontWeight: 600, color: "#f3f4f6", marginBottom: 16, marginTop: 0 },
   meta:        { fontSize: 12, color: "#6b7280", margin: "4px 0 0" },
-  periodBtn:   { background: "#1f2937", border: "1px solid #374151", borderRadius: 6,
+  periodBtn:   { background: "var(--surface-card)", border: "1px solid #374151", borderRadius: 6,
                  padding: "6px 14px", color: "#9ca3af", fontSize: 12, cursor: "pointer" },
   periodActive:{ background: "#1e1b4b", border: "1px solid #4338ca", borderRadius: 6,
                  padding: "6px 14px", color: "#a5b4fc", fontSize: 12, fontWeight: 600, cursor: "pointer" },

@@ -49,12 +49,12 @@ const FilePreview = ({ file, onRemove }) => {
         <img 
           src={preview} 
           alt="preview" 
-          className="h-16 w-16 md:h-20 md:w-20 object-cover rounded-xl border border-zinc-700 shadow-md"
+          className="h-16 w-16 md:h-20 md:w-20 object-cover rounded-xl border border-[var(--border)] shadow-md"
         />
       ) : (
-        <div className="h-16 px-4 flex items-center gap-2 bg-zinc-800 rounded-xl border border-zinc-700">
-          <Paperclip size={16} className="text-zinc-400" />
-          <span className="text-xs text-zinc-300 max-w-[120px] truncate">{file.name}</span>
+        <div className="h-16 px-4 flex items-center gap-2 bg-[var(--muted)] rounded-xl border border-[var(--border)]">
+          <Paperclip size={16} className="text-[var(--color-dim)]" />
+          <span className="text-xs text-[var(--color-star)] max-w-[120px] truncate">{file.name}</span>
         </div>
       )}
       <button
@@ -100,7 +100,7 @@ const EmojiPicker = ({ isOpen, onSelect, onClose, anchorRef }) => {
     <>
       <div className="fixed inset-0 z-[9998]" onClick={onClose} />
       <div
-        className="fixed p-2 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl z-[9999] w-64 md:w-72 max-h-80 overflow-y-auto"
+        className="fixed p-2 bg-[var(--color-panel)] border border-[var(--border)] rounded-2xl shadow-2xl z-[9999] w-64 md:w-72 max-h-80 overflow-y-auto"
         style={style}
         onClick={(e) => e.stopPropagation()}
       >
@@ -110,7 +110,7 @@ const EmojiPicker = ({ isOpen, onSelect, onClose, anchorRef }) => {
               key={index}
               type="button"
               onClick={() => { onSelect(emoji); onClose(); }}
-              className="p-2 hover:bg-zinc-800 rounded-lg text-xl transition-all active:scale-125"
+              className="p-2 hover:bg-[var(--muted)] rounded-lg text-xl transition-all active:scale-125"
             >
               {emoji}
             </button>
@@ -268,14 +268,14 @@ const ChatInput = ({
   };
 
   return (
-    <div className="border-t border-zinc-800 bg-zinc-900/50 relative w-full">
+    <div className="border-t border-[var(--border)] bg-[var(--color-panel)]/50 relative w-full">
       
       {/* --- IMAGE EDITOR MODAL --- */}
       {editorOpen && (
         <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-between p-4 touch-none overflow-hidden">
           <div className="w-full max-w-2xl flex flex-wrap justify-center gap-2 bg-zinc-900 p-3 rounded-2xl border border-zinc-700 shadow-2xl">
-            <button type="button" onClick={() => setActiveTool('pencil')} className={`p-2 rounded-xl transition-colors ${activeTool === 'pencil' ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400'}`}><Pencil size={20}/></button>
-            <button type="button" onClick={() => setActiveTool('text')} className={`p-2 rounded-xl transition-colors ${activeTool === 'text' ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400'}`}><Type size={20}/></button>
+            <button type="button" onClick={() => setActiveTool('pencil')} className={`p-2 rounded-xl transition-colors ${activeTool === 'pencil' ? 'bg-indigo-600 text-white' : 'bg-[var(--muted)] text-[var(--color-dim)]'}`}><Pencil size={20}/></button>
+            <button type="button" onClick={() => setActiveTool('text')} className={`p-2 rounded-xl transition-colors ${activeTool === 'text' ? 'bg-indigo-600 text-white' : 'bg-[var(--muted)] text-[var(--color-dim)]'}`}><Type size={20}/></button>
             <div className="flex gap-1.5 px-2 items-center overflow-x-auto">
               {COLORS.map(c => (
                 <button key={c} type="button" onClick={() => setActiveColor(c)} className={`w-7 h-7 shrink-0 rounded-full border-2 transition-transform ${activeColor === c ? 'border-white scale-110' : 'border-transparent'}`} style={{backgroundColor: c}} />
@@ -288,7 +288,7 @@ const ChatInput = ({
             <div className="w-full max-w-md px-4 mt-2">
               <input 
                 autoFocus 
-                className="w-full px-4 py-3 bg-zinc-800 border border-indigo-500 rounded-xl text-white outline-none shadow-lg" 
+                className="w-full px-4 py-3 bg-[var(--muted)] border border-indigo-500 rounded-xl text-[var(--color-star)] outline-none shadow-lg" 
                 placeholder="Type then tap image..." 
                 value={textInput} 
                 onChange={(e) => setTextInput(e.target.value)} 
@@ -318,13 +318,13 @@ const ChatInput = ({
         
         <form onSubmit={handleSubmit} className="flex items-center gap-1 md:gap-2">
           <div className="flex items-center gap-0.5 md:gap-1">
-            <button type="button" onClick={() => imageInputRef.current?.click()} className="p-2 hover:bg-zinc-800 rounded-full text-indigo-400 transition-colors" disabled={disabled}><ImageIcon size={18} className="md:w-5 md:h-5" /></button>
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-zinc-800 rounded-full text-indigo-400 transition-colors" disabled={disabled}><Paperclip size={18} className="md:w-5 md:h-5" /></button>
+            <button type="button" onClick={() => imageInputRef.current?.click()} className="p-2 hover:bg-[var(--muted)] rounded-full text-indigo-400 transition-colors" disabled={disabled}><ImageIcon size={18} className="md:w-5 md:h-5" /></button>
+            <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-[var(--muted)] rounded-full text-indigo-400 transition-colors" disabled={disabled}><Paperclip size={18} className="md:w-5 md:h-5" /></button>
             <input ref={imageInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
             <input ref={fileInputRef} type="file" onChange={handleFileSelect} className="hidden" />
           </div>
 
-          <div className="flex-1 relative bg-zinc-800 rounded-2xl border border-zinc-700 focus-within:border-indigo-500/50 transition-all">
+          <div className="flex-1 relative bg-[var(--muted)] rounded-2xl border border-[var(--border)] focus-within:border-indigo-500/50 transition-all">
             <textarea
               ref={inputRef}
               value={value}
@@ -334,10 +334,10 @@ const ChatInput = ({
               onPaste={handlePaste}
               placeholder={placeholder}
               rows={1}
-              className="w-full pl-3 pr-10 py-2.5 bg-transparent text-white text-sm outline-none resize-none max-h-[120px] scrollbar-hide"
+              className="w-full pl-3 pr-10 py-2.5 bg-transparent text-[var(--color-star)] text-sm outline-none resize-none max-h-[120px] scrollbar-hide"
             />
             <div className="absolute right-2 bottom-2">
-              <button ref={emojiBtnRef} type="button" onClick={() => setShowEmoji(!showEmoji)} className="p-1 text-zinc-500 hover:text-indigo-400 transition-colors"><Smile size={20} /></button>
+              <button ref={emojiBtnRef} type="button" onClick={() => setShowEmoji(!showEmoji)} className="p-1 text-[var(--color-dim)] hover:text-indigo-400 transition-colors"><Smile size={20} /></button>
               <EmojiPicker isOpen={showEmoji} onSelect={(e) => onChange(value + e)} onClose={() => setShowEmoji(false)} anchorRef={emojiBtnRef} />
             </div>
           </div>
@@ -348,7 +348,7 @@ const ChatInput = ({
             ) : (value.trim() || selectedFile) ? (
               <button type="submit" className="p-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full transition-all active:scale-90 shadow-lg" disabled={disabled}><Send size={20} /></button>
             ) : (
-              <button type="button" onClick={() => onSend('👍')} className="p-2.5 hover:bg-zinc-800 rounded-full text-xl transition-all active:scale-125" disabled={disabled}>👍</button>
+              <button type="button" onClick={() => onSend('👍')} className="p-2.5 hover:bg-[var(--muted)] rounded-full text-xl transition-all active:scale-125" disabled={disabled}>👍</button>
             )}
           </div>
         </form>

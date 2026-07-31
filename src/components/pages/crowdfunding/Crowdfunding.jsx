@@ -102,14 +102,14 @@ export default function CrowdfundingSection() {
   if (loading) {
     return (
       <section className="py-32 flex justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-white/60" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-dim)]" />
       </section>
     );
   }
 
   return (
     <>
-      <section className="relative mb-20 py-24 px-6 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-white">
+      <section className="crowdfunding-page relative mb-20 py-24 px-6 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-[var(--color-star)]">
         <div className="w-full px-6 md:px-40 mx-auto space-y-16">
 
           {/* ── HEADER ── */}
@@ -118,7 +118,7 @@ export default function CrowdfundingSection() {
               Support SFCollab.{" "}
               <span className="text-indigo-400">Unlock the future.</span>
             </h1>
-            <p className="text-white/60 max-w-2xl mx-auto">
+            <p className="text-[var(--color-dim)] max-w-2xl mx-auto">
               Early supporters unlock permanent advantages and help shape how collaboration platforms are built.
             </p>
             <div className="flex gap-4 justify-center mt-6">
@@ -136,7 +136,7 @@ export default function CrowdfundingSection() {
                   navigator.clipboard.writeText("support@sfcollab.com");
                   toast.success("Email copied to clipboard!");
                 }}
-                className="px-6 py-2 flex gap-3 rounded-lg bg-neutral-800 border border-neutral-700 text-white hover:bg-neutral-700 transition"
+                className="px-6 py-2 flex gap-3 rounded-lg bg-[var(--muted)] border border-[var(--border)] text-[var(--color-star)] hover:bg-[var(--color-panel)] transition"
               >
                 <Copy size={22} />
                 Email
@@ -153,27 +153,27 @@ export default function CrowdfundingSection() {
 
           {/* ── PROGRESS METER ── */}
           <div className="max-w-3xl mx-auto space-y-4">
-            <div className="flex justify-between text-sm text-white/70">
+            <div className="flex justify-between text-sm text-[var(--color-dim)]">
               <span>
                 Raised{" "}
-                <span className="text-white font-semibold">{formatPrice(totalCrowdfunding)}</span>
+                <span className="text-[var(--color-star)] font-semibold">{formatPrice(totalCrowdfunding)}</span>
               </span>
               <span>
                 Goal{" "}
-                <span className="text-white font-semibold">{formatPrice(FUNDING_GOAL)}</span>
+                <span className="text-[var(--color-star)] font-semibold">{formatPrice(FUNDING_GOAL)}</span>
               </span>
             </div>
 
-            <div className="relative h-4 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700">
+            <div className="relative h-4 rounded-full bg-[var(--muted)] overflow-hidden border border-[var(--border)]">
               <div
                 className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-[0_0_20px_rgba(139,92,246,0.6)] transition-all duration-700"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
 
-            <div className="flex justify-between items-center text-xs text-white/60">
+            <div className="flex justify-between items-center text-xs text-[var(--color-dim)]">
               <span>{progressPercent}% funded</span>
-              <span className="text-indigo-400 font-medium">
+              <span className="text-[var(--color-violet)] font-medium">
                 Early supporters get permanent advantages 🚀
               </span>
             </div>
@@ -181,7 +181,7 @@ export default function CrowdfundingSection() {
 
           {/* ── COMING SOON CARD ── */}
           <div className="max-w-2xl mx-auto">
-            <div className="relative overflow-hidden rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-900/30 to-purple-900/20 p-10 text-center space-y-6 shadow-2xl shadow-indigo-500/10">
+            <div className="relative overflow-hidden rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/15 to-purple-500/15 p-10 text-center space-y-6 shadow-2xl shadow-indigo-500/10">
 
               {/* Decorative glow */}
               <div className="absolute -top-20 -right-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -201,13 +201,13 @@ export default function CrowdfundingSection() {
               </div>
 
               <div className="space-y-3 relative">
-                <h2 className="text-3xl md:text-4xl font-bold text-white">
+                <h2 className="text-3xl md:text-4xl font-bold text-[var(--color-star)]">
                   Crowdfunding is{" "}
                   <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
                     launching soon
                   </span>
                 </h2>
-                <p className="text-white/60 max-w-md mx-auto leading-relaxed">
+                <p className="text-[var(--color-dim)] max-w-md mx-auto leading-relaxed">
                   We're putting the final touches on our crowdfunding platform. 
                   Register your interest now and be the first to know when it goes live — 
                   early supporters will unlock exclusive permanent advantages.
@@ -215,7 +215,7 @@ export default function CrowdfundingSection() {
               </div>
 
               {/* What to expect bullets */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-white/70 relative">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-[var(--color-dim)] relative">
                 {[
                   { icon: "🎯", text: "Exclusive early-supporter perks" },
                   { icon: "🔔", text: "Priority launch notification" },
@@ -223,7 +223,7 @@ export default function CrowdfundingSection() {
                 ].map((item, i) => (
                   <div
                     key={i}
-                    className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10"
+                    className="flex flex-col items-center gap-2 p-3 rounded-xl bg-[var(--muted)] border border-[var(--border)]"
                   >
                     <span className="text-2xl">{item.icon}</span>
                     <span>{item.text}</span>
@@ -239,7 +239,7 @@ export default function CrowdfundingSection() {
                       <CheckCircle className="w-6 h-6" />
                       You're on the list!
                     </div>
-                    <p className="text-white/50 text-sm">
+                    <p className="text-[var(--color-dim)] text-sm">
                       We'll send you a notification when crowdfunding launches.
                     </p>
                   </div>
@@ -253,7 +253,7 @@ export default function CrowdfundingSection() {
                       <Bell className="w-5 h-5" />
                       {submitting ? "Registering..." : "Interested in Crowdfunding"}
                     </button>
-                    <p className="text-white/40 text-xs">
+                    <p className="text-[var(--color-dim)] text-xs">
                       No payment required. We'll notify you when it's ready.
                     </p>
                   </div>
@@ -263,7 +263,7 @@ export default function CrowdfundingSection() {
           </div>
 
           {/* ── DISCLAIMER ── */}
-          <div className="max-w-3xl mx-auto bg-neutral-900/50 border border-neutral-700 rounded-xl p-6 text-sm text-neutral-300 space-y-2">
+          <div className="max-w-3xl mx-auto bg-[var(--color-panel)]/70 border border-[var(--border)] rounded-xl p-6 text-sm text-[var(--color-dim)] space-y-2">
             <p>● Crowdfunding is not yet available — no payments can be made at this time</p>
             <p>● Platform fees apply only when you earn</p>
             <p>● Crowdfunding does not guarantee work or income</p>

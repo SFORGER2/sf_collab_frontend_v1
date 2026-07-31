@@ -50,8 +50,8 @@ export default function JobsPage({ pipelineMode }) {
               key={job.id}
               onClick={() => navigate(`/recruitment/jobs/${job.id}`)}
               style={s.jobCard}
-              onMouseEnter={e => e.currentTarget.style.borderColor = "#374151"}
-              onMouseLeave={e => e.currentTarget.style.borderColor = "#1f2937"}
+              onMouseEnter={e => e.currentTarget.style.borderColor = "var(--border-strong)"}
+              onMouseLeave={e => e.currentTarget.style.borderColor = "var(--surface-card)"}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
                 <div style={{ width: 6, height: 6, borderRadius: "50%", background: tab === "open" ? "#22c55e" : "#6b7280" }} />
@@ -59,7 +59,7 @@ export default function JobsPage({ pipelineMode }) {
                   {tab}
                 </span>
               </div>
-              <h3 style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 600, color: "#f9fafb" }}>{job.title}</h3>
+              <h3 style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 600, color: "var(--color-star)" }}>{job.title}</h3>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: job.description ? 10 : 0 }}>
                 {job.department && <span style={s.meta}>{job.department}</span>}
                 {job.location   && <span style={s.meta}>📍 {job.isRemote ? "Remote" : job.location}</span>}
@@ -109,7 +109,7 @@ function EmptyState({ icon, title, action }) {
   return (
     <div style={{ textAlign: "center", padding: "60px 0", color: "#6b7280" }}>
       <div style={{ fontSize: 34, marginBottom: 12 }}>{icon}</div>
-      <p style={{ fontSize: 14, color: "#9ca3af", margin: "0 0 8px" }}>{title}</p>
+      <p style={{ fontSize: 14, color: "var(--color-dim)", margin: "0 0 8px" }}>{title}</p>
       {action && (
         <button onClick={action.onClick}
           style={{ background: "none", border: "none", color: "#fbbf24", fontSize: 13, cursor: "pointer", fontWeight: 500 }}>
@@ -122,15 +122,15 @@ function EmptyState({ icon, title, action }) {
 
 const s = {
   topBar:   { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 },
-  h1:       { fontSize: 24, fontWeight: 700, color: "#f9fafb", margin: 0 },
+  h1:       { fontSize: 24, fontWeight: 700, color: "var(--color-star)", margin: 0 },
   sub:      { color: "#6b7280", fontSize: 13, marginTop: 4, margin: "4px 0 0" },
   tabRow:   { display: "flex", gap: 4, marginBottom: 16, flexWrap: "wrap" },
-  tab:      { background: "#1f2937", border: "1px solid #374151", borderRadius: 6, padding: "6px 14px", color: "#9ca3af", fontSize: 13, cursor: "pointer" },
+  tab:      { background: "var(--surface-card)", border: "1px solid var(--border-strong)", borderRadius: 6, padding: "6px 14px", color: "var(--color-dim)", fontSize: 13, cursor: "pointer" },
   tabActive:{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)", borderRadius: 6, padding: "6px 14px", color: "#fbbf24", fontSize: 13, fontWeight: 600, cursor: "pointer" },
   grid:     { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 },
-  jobCard:  { background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 18, cursor: "pointer", transition: "border-color 0.15s" },
+  jobCard:  { background: "var(--surface-card-2)", border: "1px solid #1f2937", borderRadius: 12, padding: 18, cursor: "pointer", transition: "border-color 0.15s" },
   meta:     { fontSize: 11, color: "#6b7280" },
   btnPrimary:{ background: "#fbbf24", border: "none", borderRadius: 8, padding: "8px 18px", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer" },
-  btnGhost: { background: "transparent", border: "1px solid #374151", borderRadius: 6, padding: "4px 10px", color: "#9ca3af", fontSize: 11, cursor: "pointer" },
+  btnGhost: { background: "transparent", border: "1px solid var(--border-strong)", borderRadius: 6, padding: "4px 10px", color: "var(--color-dim)", fontSize: 11, cursor: "pointer" },
   btnDanger:{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "4px 10px", color: "#f87171", fontSize: 11, cursor: "pointer" },
 };

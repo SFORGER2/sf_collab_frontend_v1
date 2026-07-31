@@ -52,25 +52,25 @@ export default function ConversationHistory({ activeConversationId, onSelectConv
   return (
     <div className="flex flex-col h-full font-roboto">
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/8 shrink-0">
+      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[var(--border)] shrink-0">
         <MessageSquare size={13} className="text-blue-400" aria-hidden="true" />
-        <span className="text-xs font-semibold text-zinc-300">History</span>
+        <span className="text-xs font-semibold text-[var(--color-star)]">History</span>
       </div>
 
       <div className="flex-1 overflow-y-auto overscroll-contain py-1.5 space-y-0.5">
         {loading && (
           <div className="flex items-center justify-center py-8" aria-label="Loading conversations" aria-busy="true">
-            <Loader2 size={16} className="text-zinc-500 animate-spin" aria-hidden="true" />
+            <Loader2 size={16} className="text-[var(--color-dim)] animate-spin" aria-hidden="true" />
           </div>
         )}
 
         {error && !loading && (
           <div className="px-3 py-4 text-center" role="alert">
             <AlertTriangle size={14} className="text-amber-400 mx-auto mb-1.5" aria-hidden="true" />
-            <p className="text-[11px] text-zinc-500 leading-relaxed">{error}</p>
+            <p className="text-[11px] text-[var(--color-dim)] leading-relaxed">{error}</p>
             <button
               onClick={load}
-              className={`mt-2 text-[11px] text-blue-400 hover:text-white transition-colors ${FOCUS_RING}`}
+              className={`mt-2 text-[11px] text-blue-400 hover:text-[var(--color-star)] transition-colors ${FOCUS_RING}`}
             >
               Retry
             </button>
@@ -79,8 +79,8 @@ export default function ConversationHistory({ activeConversationId, onSelectConv
 
         {!loading && !error && conversations.length === 0 && (
           <div className="px-3 py-6 text-center">
-            <MessageSquare size={22} className="text-zinc-700 mx-auto mb-2" aria-hidden="true" />
-            <p className="text-[11px] text-zinc-600 leading-relaxed">No conversations yet.</p>
+            <MessageSquare size={22} className="text-[var(--color-dim)] mx-auto mb-2" aria-hidden="true" />
+            <p className="text-[11px] text-[var(--color-dim)] leading-relaxed">No conversations yet.</p>
           </div>
         )}
 
@@ -96,15 +96,15 @@ export default function ConversationHistory({ activeConversationId, onSelectConv
                 onClick={() => onSelectConversation(conv.id)}
                 className={`w-full text-left flex items-center gap-2.5 px-3 py-2.5 rounded-lg mx-1.5 transition-all duration-200 group ${FOCUS_RING} ${
                   isActive
-                    ? 'bg-blue-600/15 border border-blue-500/25 text-white'
-                    : 'hover:bg-zinc-800/60 text-zinc-400 hover:text-white border border-transparent'
+                    ? 'bg-[var(--color-violet)]/15 border border-[var(--color-violet)]/30 text-[var(--color-star)]'
+                    : 'hover:bg-[var(--muted)] text-[var(--color-dim)] hover:text-[var(--color-star)] border border-transparent'
                 }`}
                 aria-current={isActive ? 'page' : undefined}
                 aria-label={`Open conversation: ${conv.title || conv.preview || 'Untitled'}`}
               >
                 <MessageSquare
                   size={12}
-                  className={isActive ? 'text-blue-400' : 'text-zinc-600 group-hover:text-zinc-400'}
+                  className={isActive ? 'text-blue-400' : 'text-[var(--color-dim)] group-hover:text-[var(--color-star)]'}
                   aria-hidden="true"
                 />
                 <div className="flex-1 min-w-0">
@@ -112,13 +112,13 @@ export default function ConversationHistory({ activeConversationId, onSelectConv
                     {conv.title || conv.preview || 'Untitled conversation'}
                   </p>
                   <div className="flex items-center gap-1 mt-0.5">
-                    <Clock size={8} className="text-zinc-600 shrink-0" aria-hidden="true" />
-                    <span className="text-[9px] text-zinc-600">
+                    <Clock size={8} className="text-[var(--color-dim)] shrink-0" aria-hidden="true" />
+                    <span className="text-[9px] text-[var(--color-dim)]">
                       {timeAgo(conv.updated_at || conv.created_at)}
                     </span>
                   </div>
                 </div>
-                <ChevronRight size={10} className="text-zinc-700 group-hover:text-zinc-500 shrink-0" aria-hidden="true" />
+                <ChevronRight size={10} className="text-[var(--color-dim)] group-hover:text-[var(--color-star)] shrink-0" aria-hidden="true" />
               </motion.button>
             );
           })}

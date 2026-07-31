@@ -19,7 +19,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock,
   LogIn,
@@ -221,8 +220,8 @@ export function MyAttendancePage() {
           transition={{ delay: 0.05 }}
           className="relative overflow-hidden rounded-2xl mb-6 p-6 sm:p-8"
           style={{
-            background: "linear-gradient(135deg, #111115 0%, #16161d 100%)",
-            border: "1px solid rgba(255,255,255,0.06)",
+            background: "linear-gradient(135deg, var(--surface-panel) 0%, var(--surface-raised) 100%)",
+            border: "1px solid var(--surface-border)",
           }}
         >
           {/* Background glow */}
@@ -373,7 +372,7 @@ export function MyAttendancePage() {
         {/* ── History Table ── */}
         <div
           className="rounded-2xl overflow-hidden"
-          style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+          style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
         >
           {/* Table header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
@@ -545,7 +544,7 @@ export function WorkspaceAttendancePage() {
         {/* Filter row */}
         <div
           className="flex flex-wrap gap-3 items-center px-5 py-4 rounded-xl mb-6"
-          style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+          style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
         >
           <div className="flex items-center gap-2">
             <Calendar size={14} className="text-zinc-500" />
@@ -560,7 +559,7 @@ export function WorkspaceAttendancePage() {
         </div>
 
         {/* Table */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}>
           <div className="px-6 py-4 border-b border-white/[0.06]">
             <h2 className="text-sm font-semibold text-zinc-200">
               Member Attendance — {new Date(dateFilter).toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}

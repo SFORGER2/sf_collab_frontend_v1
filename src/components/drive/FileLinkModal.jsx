@@ -201,7 +201,7 @@ export default function FileLinkModal({ isOpen, onClose, file }) {
                     onClick={() => { setActiveType(key); setSearch(''); setResults([]); }}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
                     style={{
-                      background: activeType === key ? `${color}22` : '#1e2130',
+                      background: activeType === key ? `${color}22` : 'var(--surface-drive)',
                       color:      activeType === key ? color : '#64748b',
                       border:     `1px solid ${activeType === key ? `${color}55` : '#2a2d3e'}`,
                     }}

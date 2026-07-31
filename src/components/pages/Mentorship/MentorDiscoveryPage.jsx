@@ -365,12 +365,12 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
                                  text-white text-sm focus:outline-none focus:border-blue-500/50 appearance-none"
                       style={{ colorScheme: 'dark' }}
                     >
-                      <option value="" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Select a Vision</option>
+                      <option value="" style={{ backgroundColor: 'var(--surface-input)', color: "var(--color-star)" }}>Select a Vision</option>
                       {myIdeas.map(idea => (
                         <option
                           key={idea.id}
                           value={idea.id}
-                          style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}
+                          style={{ backgroundColor: 'var(--surface-input)', color: "var(--color-star)" }}
                         >
                           {idea.title} — {Math.round(idea.readinessScore || idea.readiness_score || 0)}% ready
                         </option>
@@ -388,12 +388,12 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
                                  text-white text-sm focus:outline-none focus:border-blue-500/50 appearance-none"
                       style={{ colorScheme: 'dark' }}
                     >
-                      <option value="" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Select a Startup</option>
+                      <option value="" style={{ backgroundColor: 'var(--surface-input)', color: "var(--color-star)" }}>Select a Startup</option>
                       {myStartups.map(s => (
                         <option
                           key={s.id}
                           value={s.id}
-                          style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}
+                          style={{ backgroundColor: 'var(--surface-input)', color: "var(--color-star)" }}
                         >
                           {s.name}
                         </option>

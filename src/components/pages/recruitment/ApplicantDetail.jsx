@@ -60,21 +60,21 @@ export default function ApplicantDetail() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
           <div style={{ flex: 1, minWidth: 200 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
-              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#f9fafb" }}>{data.name}</h1>
+              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "var(--color-star)" }}>{data.name}</h1>
               <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
                 background: `${sc}22`, color: sc, textTransform: "capitalize" }}>
                 {data.stage?.replace("_", " ")}
               </span>
               {data.isArchived && (
                 <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20,
-                  background: "#1f2937", color: "#6b7280" }}>Archived</span>
+                  background: "var(--surface-card)", color: "#6b7280" }}>Archived</span>
               )}
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
               {data.email    && <a href={`mailto:${data.email}`} style={s.link}>✉️ {data.email}</a>}
               {data.phone    && <span style={s.meta}>📞 {data.phone}</span>}
               {data.linkedin && <a href={data.linkedin} target="_blank" rel="noreferrer" style={s.link}>💼 LinkedIn</a>}
-              {data.portfolio && <a href={data.portfolio} target="_blank" rel="noreferrer" style={{ ...s.link, color: "#9ca3af" }}>🌐 Portfolio</a>}
+              {data.portfolio && <a href={data.portfolio} target="_blank" rel="noreferrer" style={{ ...s.link, color: "var(--color-dim)" }}>🌐 Portfolio</a>}
               {data.resumeUrl && <a href={data.resumeUrl} target="_blank" rel="noreferrer" style={{ ...s.link, color: "#fbbf24" }}>📄 Resume</a>}
             </div>
           </div>
@@ -108,8 +108,8 @@ export default function ApplicantDetail() {
                     style={{
                       padding: "6px 12px", borderRadius: 8, border: "none", cursor: "pointer",
                       fontSize: 12, fontWeight: 500, textTransform: "capitalize",
-                      background: active ? `${SC[stage]}22` : "#1f2937",
-                      color: active ? SC[stage] : "#9ca3af",
+                      background: active ? `${SC[stage]}22` : "var(--surface-card)",
+                      color: active ? SC[stage] : "var(--color-dim)",
                       opacity: movingStage ? 0.5 : 1,
                     }}>
                     {stage.replace("_", " ")}
@@ -131,11 +131,11 @@ export default function ApplicantDetail() {
                   const lc = log.status === "replied" ? "#22c55e" : log.status === "bounced" ? "#ef4444" : "#6b7280";
                   return (
                     <div key={log.id} style={{ display: "flex", gap: 10, padding: 12,
-                      background: "#0d1117", borderRadius: 8, border: "1px solid #1f2937", marginBottom: 8 }}>
+                      background: "var(--surface-deep)", borderRadius: 8, border: "1px solid #1f2937", marginBottom: 8 }}>
                       <span style={{ fontSize: 15, flexShrink: 0 }}>{CH[log.channel] ?? "💬"}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: "#e5e7eb", textTransform: "capitalize" }}>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--color-star)", textTransform: "capitalize" }}>
                             {log.channel}
                           </span>
                           <span style={{ fontSize: 10, padding: "1px 8px", borderRadius: 20,
@@ -174,8 +174,8 @@ export default function ApplicantDetail() {
             </div>
             {editNotes
               ? <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={5}
-                  style={{ width: "100%", background: "#0d1117", border: "1px solid #374151",
-                    borderRadius: 8, padding: "10px 12px", color: "#f9fafb", fontSize: 13,
+                  style={{ width: "100%", background: "var(--surface-deep)", border: "1px solid var(--border-strong)",
+                    borderRadius: 8, padding: "10px 12px", color: "var(--color-star)", fontSize: 13,
                     resize: "vertical", fontFamily: "inherit", boxSizing: "border-box" }}
                   placeholder="Add notes about this candidate..." />
               : <p style={{ margin: 0, fontSize: 13, color: data.notes ? "#d1d5db" : "#6b7280",
@@ -193,7 +193,7 @@ export default function ApplicantDetail() {
             ? <p style={s.empty}>No history yet.</p>
             : <div style={{ position: "relative" }}>
                 <div style={{ position: "absolute", left: 8, top: 0, bottom: 0,
-                  width: 1, background: "#1f2937" }} />
+                  width: 1, background: "var(--surface-card)" }} />
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   {data.stageHistory.map(h => {
                     const c = SC[h.toStage] ?? "#6b7280";
@@ -210,7 +210,7 @@ export default function ApplicantDetail() {
                               <span style={{ fontSize: 11, color: "#6b7280", textTransform: "capitalize" }}>
                                 {h.fromStage.replace("_", " ")}
                               </span>
-                              <span style={{ fontSize: 11, color: "#374151" }}>→</span>
+                              <span style={{ fontSize: 11, color: "var(--color-dim)" }}>→</span>
                             </>}
                             <span style={{ fontSize: 11, fontWeight: 600, color: c, textTransform: "capitalize" }}>
                               {h.toStage.replace("_", " ")}
@@ -242,14 +242,14 @@ export default function ApplicantDetail() {
 }
 
 const s = {
-  card:      { background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 20 },
+  card:      { background: "var(--surface-card-2)", border: "1px solid #1f2937", borderRadius: 12, padding: 20 },
   cardTitle: { fontSize: 13, fontWeight: 600, color: "#f3f4f6", marginBottom: 14, marginTop: 0 },
   bodyGrid:  { display: "grid", gridTemplateColumns: "1fr 280px", gap: 16, alignItems: "start" },
   link:      { fontSize: 12, color: "#60a5fa", textDecoration: "none" },
   meta:      { fontSize: 12, color: "#6b7280" },
   empty:     { color: "#6b7280", fontSize: 13, textAlign: "center", padding: "16px 0", margin: 0 },
-  btnGhost:  { background: "transparent", border: "1px solid #374151", borderRadius: 6,
-               padding: "5px 12px", color: "#9ca3af", fontSize: 11, cursor: "pointer" },
-  btnSmall:  { background: "#1f2937", border: "1px solid #374151", borderRadius: 6,
+  btnGhost:  { background: "transparent", border: "1px solid var(--border-strong)", borderRadius: 6,
+               padding: "5px 12px", color: "var(--color-dim)", fontSize: 11, cursor: "pointer" },
+  btnSmall:  { background: "var(--surface-card)", border: "1px solid var(--border-strong)", borderRadius: 6,
                padding: "5px 12px", color: "#fbbf24", fontSize: 11, fontWeight: 600, cursor: "pointer" },
 };

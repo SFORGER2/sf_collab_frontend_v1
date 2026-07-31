@@ -118,7 +118,7 @@ export default function TaskDetail() {
 
         {error && <ERPBannerManager error={error} onDismissError={() => setError(null)} />}
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-8 rounded-2xl mb-8" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-8 rounded-2xl mb-8" style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}>
           {task.description && (
             <div className="mb-8">
               <h2 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-3">Description</h2>
@@ -150,7 +150,7 @@ export default function TaskDetail() {
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-8 rounded-2xl" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-8 rounded-2xl" style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <FileText size={18} className="text-zinc-400" />

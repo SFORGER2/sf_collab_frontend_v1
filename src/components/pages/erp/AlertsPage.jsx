@@ -142,7 +142,7 @@ export function AlertsPage() {
         {/* ── Filter bar ── */}
         <div
           className="flex flex-wrap items-center gap-3 px-5 py-4 rounded-xl mb-6"
-          style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+          style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
         >
           <Filter size={13} className="text-zinc-500 shrink-0" />
 
@@ -254,7 +254,7 @@ export function AlertsPage() {
               transition={{ duration: 0.2, ease: "easeOut" }}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md rounded-2xl p-6 shadow-2xl"
-              style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.08)" }}
+              style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
             >
               {/* Modal header */}
               <div className="flex items-center justify-between mb-5">
@@ -280,7 +280,7 @@ export function AlertsPage() {
                   onChange={(e) => setModal({ ...modal, note: e.target.value })}
                   rows={3}
                   className="w-full rounded-xl px-4 py-3 text-sm resize-none outline-none transition-all"
-                  style={{ background: "#1a1a20", border: "1px solid rgba(255,255,255,0.07)", color: "#e5e7eb" }}
+                  style={{ background: "var(--surface-raised)", border: "1px solid var(--surface-border)", color: "var(--color-star)" }}
                   placeholder="e.g. User submitted update, task completed…"
                 />
               </div>
@@ -289,7 +289,7 @@ export function AlertsPage() {
                 <button
                   onClick={() => setModal(null)}
                   className="flex-1 py-2.5 rounded-xl text-sm font-medium text-zinc-400 hover:text-white transition-colors"
-                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--surface-border)" }}
                 >
                   Cancel
                 </button>
@@ -377,9 +377,9 @@ function AlertCard({ alert, isAdmin, onResolve, resolving, resolved, onViewUser 
       transition={{ duration: 0.18 }}
       className="flex gap-4 px-5 py-4 rounded-xl transition-all group"
       style={{
-        background: "#111115",
-        border: "1px solid rgba(255,255,255,0.06)",
-        borderLeft: `3px solid ${resolved ? "#374151" : m.color}`,
+        background: "var(--surface-panel)",
+        border: "1px solid var(--surface-border)",
+        borderLeft: `3px solid ${resolved ? "var(--border-strong)" : m.color}`,
         opacity: resolved ? 0.6 : 1,
       }}
     >
@@ -454,7 +454,7 @@ function AlertCard({ alert, isAdmin, onResolve, resolving, resolved, onViewUser 
             <button
               onClick={onViewUser}
               className="px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-white transition-colors flex items-center gap-1"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--surface-border)" }}
             >
               <ExternalLink size={10} /> View
             </button>

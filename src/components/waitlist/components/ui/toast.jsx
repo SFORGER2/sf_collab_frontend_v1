@@ -1,7 +1,7 @@
 import * as React from "react"
 import { cva } from "class-variance-authority"
 import { X } from "lucide-react"
-import { cn } from "../lib/utils"
+import { cn } from "../../../../lib/utils"
 
 const toastVariants = cva(
   "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all animate-fade-in-up",

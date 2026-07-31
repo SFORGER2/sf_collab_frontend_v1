@@ -263,7 +263,7 @@ export default function Login() {
         <div style={{
           position: 'relative',
           overflow: 'hidden',
-          backgroundColor: '#060010',
+          backgroundColor: 'var(--surface-splash)',
           zIndex: 999
         }}
           onMouseMove={(e) => {

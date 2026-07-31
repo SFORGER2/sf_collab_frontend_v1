@@ -183,7 +183,7 @@ const NotesPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+    <div className="notes-page min-h-screen bg-[var(--color-void)] text-[var(--color-star)] relative overflow-hidden">
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
@@ -195,20 +195,20 @@ const NotesPage = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/10"
+        className="sticky top-0 z-40 bg-[var(--color-panel)]/80 backdrop-blur-xl border-b border-[var(--border)]"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl">
+                <div className="p-3 bg-gradient-to-br from-[var(--color-cyan)] to-[var(--color-violet)] rounded-xl">
                   <Tag className="w-6 h-6 text-white" />
                 </div>
-                <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-[var(--color-star)] to-[var(--color-cyan)] bg-clip-text text-transparent">
                   Notes
                 </h1>
               </div>
-              <p className="text-sm text-gray-400 ml-15">
+              <p className="text-sm text-[var(--color-dim)] ml-15">
                 {filteredNotes.length} of {notes.length} notes
               </p>
             </div>
@@ -236,13 +236,13 @@ const NotesPage = () => {
         <div className="space-y-4">
           {/* Search Bar */}
           <div className="relative group">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[var(--color-dim)]" />
             <input
               type="text"
               placeholder="Search notes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all hover:border-white/20"
+              className="w-full pl-12 pr-4 py-3 bg-[var(--color-panel)] backdrop-blur-lg border border-[var(--border)] rounded-xl text-[var(--color-star)] placeholder:text-[var(--color-dim)] focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all hover:border-[var(--border)]"
             />
           </div>
 
@@ -250,16 +250,16 @@ const NotesPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {/* Category Filter */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
+              <label className="block text-xs font-semibold text-[var(--color-dim)] mb-2 uppercase tracking-wide">
                 Category
               </label>
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="w-full px-4 py-2 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500/50 hover:border-white/20 transition-all"
+                className="w-full px-4 py-2 bg-[var(--color-panel)] backdrop-blur-lg border border-[var(--border)] rounded-lg text-[var(--color-star)] focus:outline-none focus:border-blue-500/50 hover:border-[var(--border)] transition-all"
               >
                 {categories.map((cat) => (
-                  <option className="bg-gray-900 text-white" key={cat} value={cat}>
+                  <option className="bg-[var(--color-panel)] text-[var(--color-star)]" key={cat} value={cat}>
                     {cat.charAt(0).toUpperCase() + cat.slice(1)}
                   </option>
                 ))}
@@ -268,16 +268,16 @@ const NotesPage = () => {
 
             {/* Visibility Filter */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
+              <label className="block text-xs font-semibold text-[var(--color-dim)] mb-2 uppercase tracking-wide">
                 Visibility
               </label>
               <select
                 value={filterVisibility}
                 onChange={(e) => setFilterVisibility(e.target.value)}
-                className="w-full px-4 py-2 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500/50 hover:border-white/20 transition-all"
+                className="w-full px-4 py-2 bg-[var(--color-panel)] backdrop-blur-lg border border-[var(--border)] rounded-lg text-[var(--color-star)] focus:outline-none focus:border-blue-500/50 hover:border-[var(--border)] transition-all"
               >
                 {visibilityOptions.map((vis) => (
-                  <option className="bg-gray-900 text-white" key={vis} value={vis}>
+                  <option className="bg-[var(--color-panel)] text-[var(--color-star)]" key={vis} value={vis}>
                     {vis.charAt(0).toUpperCase() + vis.slice(1)}
                   </option>
                 ))}
@@ -286,18 +286,18 @@ const NotesPage = () => {
 
             {/* Sort */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
+              <label className="block text-xs font-semibold text-[var(--color-dim)] mb-2 uppercase tracking-wide">
                 Sort By
               </label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-4 py-2 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500/50 hover:border-white/20 transition-all"
+                className="w-full px-4 py-2 bg-[var(--color-panel)] backdrop-blur-lg border border-[var(--border)] rounded-lg text-[var(--color-star)] focus:outline-none focus:border-blue-500/50 hover:border-[var(--border)] transition-all"
               >
-                <option className="bg-gray-900 text-white" value="recent">Most Recent</option>
-                <option className="bg-gray-900 text-white" value="oldest">Oldest First</option>
-                <option className="bg-gray-900 text-white" value="alphabetical">Alphabetical</option>
-                <option className="bg-gray-900 text-white" value="pinned">Pinned First</option>
+                <option className="bg-[var(--color-panel)] text-[var(--color-star)]" value="recent">Most Recent</option>
+                <option className="bg-[var(--color-panel)] text-[var(--color-star)]" value="oldest">Oldest First</option>
+                <option className="bg-[var(--color-panel)] text-[var(--color-star)]" value="alphabetical">Alphabetical</option>
+                <option className="bg-[var(--color-panel)] text-[var(--color-star)]" value="pinned">Pinned First</option>
               </select>
             </div>
 
@@ -310,7 +310,7 @@ const NotesPage = () => {
                   setFilterVisibility('all');
                   setSortBy('recent');
                 }}
-                className="w-full px-4 py-2 bg-white/5 backdrop-blur-lg border border-white/10 text-white rounded-lg hover:bg-white/10 hover:border-white/20 transition-all font-medium"
+                className="w-full px-4 py-2 bg-[var(--color-panel)] backdrop-blur-lg border border-[var(--border)] text-[var(--color-star)] rounded-lg hover:bg-[var(--muted)] hover:border-[var(--border)] transition-all font-medium"
               >
                 Reset
               </button>
@@ -327,13 +327,13 @@ const NotesPage = () => {
             animate={{ y: 0, opacity: 1 }}
             className="text-center py-16"
           >
-            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl inline-block mb-4">
-              <AlertCircle className="w-12 h-12 text-gray-600" />
+            <div className="p-4 bg-[var(--color-panel)] border border-[var(--border)] rounded-2xl inline-block mb-4">
+              <AlertCircle className="w-12 h-12 text-[var(--color-dim)]" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-300 mb-2">
+            <h3 className="text-xl font-semibold text-[var(--color-star)] mb-2">
               No notes found
             </h3>
-            <p className="text-gray-500">
+            <p className="text-[var(--color-dim)]">
               {searchQuery
                 ? 'Try adjusting your search query'
                 : 'Create your first note to get started'}
@@ -420,7 +420,7 @@ const NoteCard = ({
       whileHover={{ y: -4 }}
       className="group relative"
     >
-      <div className="relative h-full bg-[#1A1A1A] border border-white/10 rounded-xl p-6 hover:border-white/20 hover:bg-[#212121] transition-all duration-300 flex flex-col">
+      <div className="relative h-full bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 hover:border-[var(--color-cyan)] hover:bg-[var(--muted)] transition-all duration-300 flex flex-col">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
@@ -430,7 +430,7 @@ const NoteCard = ({
                 {note.category}
               </span>
             </div>
-            <h3 className="text-lg font-bold text-white line-clamp-2">
+            <h3 className="text-lg font-bold text-[var(--color-star)] line-clamp-2">
               {note.title}
             </h3>
           </div>
@@ -441,13 +441,13 @@ const NoteCard = ({
         </div>
 
         {/* Content Preview */}
-        <p className="text-gray-300 text-sm line-clamp-3 mb-4 flex-1">
+        <p className="text-[var(--color-dim)] text-sm line-clamp-3 mb-4 flex-1">
           {note.content}
         </p>
 
         {/* Meta Info */}
-        <div className="space-y-3 mb-4 pt-4 border-t border-white/10">
-          <div className="flex items-center justify-between text-xs text-gray-400">
+        <div className="space-y-3 mb-4 pt-4 border-t border-[var(--border)]">
+          <div className="flex items-center justify-between text-xs text-[var(--color-dim)]">
             <div className="flex items-center gap-2">
               <Clock className="w-3 h-3" />
               {new Date(note.updatedAt).toLocaleDateString()}
@@ -460,13 +460,13 @@ const NoteCard = ({
               {note.tags.slice(0, 2).map((tag) => (
                 <span
                   key={tag}
-                  className="px-2 py-1 bg-white/5 text-gray-300 border border-white/10 rounded-md hover:bg-white/10 transition-colors text-xs"
+                  className="px-2 py-1 bg-[var(--muted)] text-[var(--color-dim)] border border-[var(--border)] rounded-md hover:bg-[color-mix(in_srgb,var(--color-star)_10%,var(--muted))] transition-colors text-xs"
                 >
                   #{tag}
                 </span>
               ))}
               {note.tags.length > 2 && (
-                <span className="px-2 py-1 bg-white/5 text-gray-400 rounded-md text-xs">
+                <span className="px-2 py-1 bg-[var(--muted)] text-[var(--color-dim)] rounded-md text-xs">
                   +{note.tags.length - 2}
                 </span>
               )}
@@ -475,7 +475,7 @@ const NoteCard = ({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-4 border-t border-white/10">
+        <div className="flex items-center gap-2 pt-4 border-t border-[var(--border)]">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -490,7 +490,7 @@ const NoteCard = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => onTogglePin(note.id)}
-            className="px-3 py-2 bg-white/5 border border-white/10 text-white/60 rounded-lg hover:bg-yellow-500/20 hover:border-yellow-500/30 hover:text-yellow-400 transition-all"
+            className="px-3 py-2 bg-[var(--muted)] border border-[var(--border)] text-[var(--color-dim)] rounded-lg hover:bg-yellow-500/20 hover:border-yellow-500/30 hover:text-yellow-400 transition-all"
             title={note.isPinned ? 'Unpin' : 'Pin'}
           >
             <Pin className="w-4 h-4" />
@@ -500,7 +500,7 @@ const NoteCard = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => onToggleArchive(note.id)}
-            className="px-3 py-2 bg-white/5 border border-white/10 text-white/60 rounded-lg hover:bg-purple-500/20 hover:border-purple-500/30 hover:text-purple-400 transition-all"
+            className="px-3 py-2 bg-[var(--muted)] border border-[var(--border)] text-[var(--color-dim)] rounded-lg hover:bg-purple-500/20 hover:border-purple-500/30 hover:text-purple-400 transition-all"
             title={note.isArchived ? 'Restore' : 'Archive'}
           >
             <Archive className="w-4 h-4" />
@@ -660,18 +660,18 @@ const NoteModal = ({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-[#1A1A1A] backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-[var(--card)] backdrop-blur-xl border border-[var(--border)] rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
-        <div className="sticky top-0 flex items-center justify-between p-6 border-b border-white/10 bg-[#1A1A1A] backdrop-blur-xl">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+        <div className="sticky top-0 flex items-center justify-between p-6 border-b border-[var(--border)] bg-[var(--card)] backdrop-blur-xl">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-[var(--color-cyan)] to-[var(--color-violet)] bg-clip-text text-transparent">
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-all"
+            className="p-2 hover:bg-[var(--muted)] rounded-lg transition-all"
           >
-            <X className="w-6 h-6 text-gray-400 hover:text-white" />
+            <X className="w-6 h-6 text-[var(--color-dim)] hover:text-[var(--color-star)]" />
           </button>
         </div>
 
@@ -679,7 +679,7 @@ const NoteModal = ({
         <form onSubmit={onSubmit} className="p-6 space-y-6">
           {/* Title */}
           <div>
-            <label className="block text-sm font-semibold text-white mb-2">
+            <label className="block text-sm font-semibold text-[var(--color-star)] mb-2">
               Title
             </label>
             <input
@@ -688,13 +688,13 @@ const NoteModal = ({
               value={formData.title}
               onChange={handleChange}
               placeholder="Note title..."
-              className="w-full px-4 py-3 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all hover:border-white/20"
+              className="w-full px-4 py-3 bg-[var(--color-panel)] backdrop-blur-lg border border-[var(--border)] rounded-lg text-[var(--color-star)] placeholder:text-[var(--color-dim)] focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all hover:border-[var(--border)]"
             />
           </div>
 
           {/* Content */}
           <div>
-            <label className="block text-sm font-semibold text-white mb-2">
+            <label className="block text-sm font-semibold text-[var(--color-star)] mb-2">
               Content
             </label>
             <textarea
@@ -703,50 +703,50 @@ const NoteModal = ({
               onChange={handleChange}
               placeholder="Note content..."
               rows="8"
-              className="w-full px-4 py-3 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none hover:border-white/20"
+              className="w-full px-4 py-3 bg-[var(--color-panel)] backdrop-blur-lg border border-[var(--border)] rounded-lg text-[var(--color-star)] placeholder:text-[var(--color-dim)] focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none hover:border-[var(--border)]"
             />
           </div>
 
           {/* Category and Visibility */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-white mb-2">
+              <label className="block text-sm font-semibold text-[var(--color-star)] mb-2">
                 Category
               </label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500/50 transition-all hover:border-white/20"
+                className="w-full px-4 py-3 bg-[var(--color-panel)] backdrop-blur-lg border border-[var(--border)] rounded-lg text-[var(--color-star)] focus:outline-none focus:border-blue-500/50 transition-all hover:border-[var(--border)]"
               >
-                <option className="bg-gray-900 text-white" value="general">General</option>
-                <option className="bg-gray-900 text-white" value="meeting">Meeting</option>
-                <option className="bg-gray-900 text-white" value="ideas">Ideas</option>
-                <option className="bg-gray-900 text-white" value="todo">To-Do</option>
-                <option className="bg-gray-900 text-white" value="decision">Decision</option>
+                <option className="bg-[var(--color-panel)] text-[var(--color-star)]" value="general">General</option>
+                <option className="bg-[var(--color-panel)] text-[var(--color-star)]" value="meeting">Meeting</option>
+                <option className="bg-[var(--color-panel)] text-[var(--color-star)]" value="ideas">Ideas</option>
+                <option className="bg-[var(--color-panel)] text-[var(--color-star)]" value="todo">To-Do</option>
+                <option className="bg-[var(--color-panel)] text-[var(--color-star)]" value="decision">Decision</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-white mb-2">
+              <label className="block text-sm font-semibold text-[var(--color-star)] mb-2">
                 Visibility
               </label>
               <select
                 name="visibility"
                 value={formData.visibility}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500/50 transition-all hover:border-white/20"
+                className="w-full px-4 py-3 bg-[var(--color-panel)] backdrop-blur-lg border border-[var(--border)] rounded-lg text-[var(--color-star)] focus:outline-none focus:border-blue-500/50 transition-all hover:border-[var(--border)]"
               >
-                <option className="bg-gray-900 text-white" value="private">Private</option>
-                <option className="bg-gray-900 text-white" value="team">Team</option>
-                <option className="bg-gray-900 text-white" value="public">Public</option>
+                <option className="bg-[var(--color-panel)] text-[var(--color-star)]" value="private">Private</option>
+                <option className="bg-[var(--color-panel)] text-[var(--color-star)]" value="team">Team</option>
+                <option className="bg-[var(--color-panel)] text-[var(--color-star)]" value="public">Public</option>
               </select>
             </div>
           </div>
 
           {/* Tags */}
           <div>
-            <label className="block text-sm font-semibold text-white mb-2">
+            <label className="block text-sm font-semibold text-[var(--color-star)] mb-2">
               Tags
             </label>
             <div className="flex gap-2 mb-3">
@@ -756,7 +756,7 @@ const NoteModal = ({
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
                 placeholder="Add a tag..."
-                className="flex-1 px-4 py-2 bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-all hover:border-white/20"
+                className="flex-1 px-4 py-2 bg-[var(--color-panel)] backdrop-blur-lg border border-[var(--border)] rounded-lg text-[var(--color-star)] placeholder:text-[var(--color-dim)] focus:outline-none focus:border-blue-500/50 transition-all hover:border-[var(--border)]"
               />
               <button
                 type="button"
@@ -772,7 +772,7 @@ const NoteModal = ({
                 {formData.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-full text-sm"
+                    className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-500/30 text-[var(--color-cyan)] rounded-full text-sm"
                   >
                     #{tag}
                     <button
@@ -789,11 +789,11 @@ const NoteModal = ({
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-3 pt-4 border-t border-white/10">
+          <div className="flex gap-3 pt-4 border-t border-[var(--border)]">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 bg-white/5 border border-white/10 text-white rounded-lg hover:bg-white/10 hover:border-white/20 transition-all font-medium"
+              className="flex-1 px-4 py-3 bg-[var(--color-panel)] border border-[var(--border)] text-[var(--color-star)] rounded-lg hover:bg-[var(--muted)] hover:border-[var(--border)] transition-all font-medium"
             >
               Cancel
             </button>

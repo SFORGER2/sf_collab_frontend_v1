@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Briefcase, Users, Settings } from "lucide-react";
+import { apply } from "@/services/theme/theme";
 
 export default function PreferencesSection({ formData, onChange }) {
   const prefs = formData.preferences || {};
@@ -43,12 +44,10 @@ export default function PreferencesSection({ formData, onChange }) {
 
   const handleThemeChange = (theme) => {
     onChange({ ...prefs, theme: theme });
-    // Toggle between dark and light color schemes
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else if (theme === 'light') {
-      document.documentElement.classList.remove('dark');
-    }
+    // Keep the app-wide theme in sync with the user's preference
+    if (theme === 'dark') apply('dark');
+    else if (theme === 'light') apply('light');
+    else apply(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
   };
 
   return (

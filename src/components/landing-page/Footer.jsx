@@ -51,7 +51,7 @@ const Footer = () => {
   return (
     <footer
       ref={footerRef}
-      className="relative bg-[#0b0b0b] z-999999999999 text-gray-300 py-16 px-6 lg:px-20 border-t border-white/10"
+      className="landing-page relative bg-[#0b0b0b] z-999999999999 text-gray-300 py-16 px-6 lg:px-20 border-t border-white/10"
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
         {/*Brand*/}

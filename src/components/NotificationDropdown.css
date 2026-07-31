@@ -224,58 +224,57 @@
   }
 }
 
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .notification-dropdown {
-    background: #1f2937;
-    border-color: #374151;
-  }
+/* Dark mode — follows the app's data-theme switch (see services/theme/theme.js),
+   NOT the OS prefers-color-scheme media query. */
+:root[data-theme='dark'] .notification-dropdown {
+  background: #1f2937;
+  border-color: #374151;
+}
 
-  .notification-dropdown-header,
-  .notification-filters,
-  .notification-dropdown-footer {
-    border-color: #374151;
-  }
+:root[data-theme='dark'] .notification-dropdown-header,
+:root[data-theme='dark'] .notification-filters,
+:root[data-theme='dark'] .notification-dropdown-footer {
+  border-color: #374151;
+}
 
-  .notification-dropdown-title h3 {
-    color: #f9fafb;
-  }
+:root[data-theme='dark'] .notification-dropdown-title h3 {
+  color: #f9fafb;
+}
 
-  .icon-button {
-    color: #9ca3af;
-  }
+:root[data-theme='dark'] .icon-button {
+  color: #9ca3af;
+}
 
-  .icon-button:hover {
-    background: #374151;
-    color: #f9fafb;
-  }
+:root[data-theme='dark'] .icon-button:hover {
+  background: #374151;
+  color: #f9fafb;
+}
 
-  .filter-button {
-    background: #374151;
-    border-color: #4b5563;
-    color: #d1d5db;
-  }
+:root[data-theme='dark'] .filter-button {
+  background: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
+}
 
-  .filter-button:hover {
-    background: #4b5563;
-    color: #f9fafb;
-  }
+:root[data-theme='dark'] .filter-button:hover {
+  background: #4b5563;
+  color: #f9fafb;
+}
 
-  .notification-loading,
-  .notification-empty {
-    color: #9ca3af;
-  }
+:root[data-theme='dark'] .notification-loading,
+:root[data-theme='dark'] .notification-empty {
+  color: #9ca3af;
+}
 
-  .spinner {
-    border-color: #4b5563;
-    border-top-color: #3b82f6;
-  }
+:root[data-theme='dark'] .spinner {
+  border-color: #4b5563;
+  border-top-color: #3b82f6;
+}
 
-  .load-more-button {
-    background: #374151;
-  }
+:root[data-theme='dark'] .load-more-button {
+  background: #374151;
+}
 
-  .load-more-button:hover {
-    background: #4b5563;
-  }
+:root[data-theme='dark'] .load-more-button:hover {
+  background: #4b5563;
 }

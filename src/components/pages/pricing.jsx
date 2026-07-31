@@ -7,7 +7,7 @@ const Pricing = () => {
   return (
     <>
       <NavBar />
-      <div className="bg-[#0b0b0b] text-white relative overflow-hidden min-h-screen flex items-center justify-center">
+      <div className="landing-page bg-[#0b0b0b] text-white relative overflow-hidden min-h-screen flex items-center justify-center">
         {/* Floating blobs */}
         <div className="absolute inset-0 -z-10">
           <div className="absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-indigo-600/30 to-purple-700/30 rounded-full blur-3xl animate-pulse"></div>

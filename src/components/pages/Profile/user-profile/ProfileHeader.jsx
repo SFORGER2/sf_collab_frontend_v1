@@ -70,7 +70,7 @@ const ProfileHeader = ({
         <motion.div
           animate={{ scale: [1, 1.08, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className={`absolute -bottom-2 -right-2 px-3 py-1.5 rounded-full border-2 border-gray-800 bg-slate-900 ${special.bgColor} ${special.color} font-semibold text-xs shadow-lg shadow-black/50 backdrop-blur-sm flex items-center gap-1`}
+          className={`absolute -bottom-2 -right-2 px-3 py-1.5 rounded-full border-2 border-[var(--border)] bg-slate-900 ${special.bgColor} ${special.color} font-semibold text-xs shadow-lg shadow-black/50 backdrop-blur-sm flex items-center gap-1`}
         >
           <Icon className="w-3.5 h-3.5" />
           {special.name}
@@ -82,7 +82,7 @@ const ProfileHeader = ({
       <motion.div
         animate={{ scale: [1, 1.08, 1] }}
         transition={{ duration: 2, repeat: Infinity }}
-        className="absolute -bottom-2 -right-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-gray-800 shadow-lg shadow-blue-500/50 backdrop-blur-sm flex items-center gap-1.5"
+        className="absolute -bottom-2 -right-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-bold px-3 py-1.5 rounded-full border-2 border-[var(--border)] shadow-lg shadow-blue-500/50 backdrop-blur-sm flex items-center gap-1.5"
       >
         <Zap className="w-3.5 h-3.5" />
         Level {level}
@@ -124,8 +124,8 @@ const ProfileHeader = ({
         />
       </div>
 
-      {/* Dark Glass Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-black/80 to-gray-900/80 backdrop-blur-xl" />
+      {/* Theme-aware glass background — dark panel in dark mode, light in light mode */}
+      <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--color-panel)_78%,transparent)] backdrop-blur-xl" />
 
       {/* Cover Photo */}
       <div
@@ -143,7 +143,7 @@ const ProfileHeader = ({
         <div className="relative -top-12">
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="relative w-32 h-32 rounded-full border-4 border-gray-800 bg-gradient-to-br from-blue-500/20 to-purple-500/20 group/picture"
+            className="relative w-32 h-32 rounded-full border-4 border-[var(--border)] bg-gradient-to-br from-blue-500/20 to-purple-500/20 group/picture"
           >
             {/* ✅ Use getAvatarUrl */}
             <img
@@ -169,7 +169,7 @@ const ProfileHeader = ({
               <motion.div
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="absolute z-10 -top-2 -right-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-2 py-1 rounded-full border-2 border-gray-800"
+                className="absolute z-10 -top-2 -right-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-2 py-1 rounded-full border-2 border-[var(--border)]"
               >
                 <Zap className="w-3 h-3 inline mr-0.5" />
                 Pro
@@ -182,13 +182,13 @@ const ProfileHeader = ({
         <div className="flex flex-wrap justify-between items-start -mt-6">
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-4 mb-2">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-[var(--color-star)] to-[var(--color-dim)] bg-clip-text text-transparent">
                 {user?.firstName} {user?.lastName}
               </h1>
               {user?.profile?.socialLinks && Object.entries(user.profile.socialLinks).some(([_, url]) => url) && (
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
+                  className="flex items-center gap-2 px-3 py-2 bg-[var(--color-panel)]/60 rounded-lg backdrop-blur-sm border border-[var(--border)]"
                 >
                   <LinkIcon className="w-4 h-4 text-cyan-400" />
                   <div className="flex gap-2">
@@ -220,7 +220,7 @@ const ProfileHeader = ({
               {/* Location */}
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
+                className="flex items-center gap-2 px-3 py-2 bg-[var(--color-panel)]/60 rounded-lg backdrop-blur-sm border border-[var(--border)]"
               >
                 <MapPin className="w-4 h-4 text-blue-400" />
                 {user?.profile?.city ?
@@ -234,7 +234,7 @@ const ProfileHeader = ({
               {!isOtherUser &&
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
+                  className="flex items-center gap-2 px-3 py-2 bg-[var(--color-panel)]/60 rounded-lg backdrop-blur-sm border border-[var(--border)]"
                 >
                   <Mail className="w-4 h-4 text-purple-400" />
                   <span className="text-gray-300">{user?.email}</span>
@@ -246,7 +246,7 @@ const ProfileHeader = ({
               {joinedOn && (
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
+                  className="flex items-center gap-2 px-3 py-2 bg-[var(--color-panel)]/60 rounded-lg backdrop-blur-sm border border-[var(--border)]"
                 >
                   <Calendar className="w-4 h-4 text-green-400" />
                   <span className="text-gray-300">Joined {joinedOn}</span>
@@ -257,7 +257,7 @@ const ProfileHeader = ({
               {user?.profile?.company && (
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
+                  className="flex items-center gap-2 px-3 py-2 bg-[var(--color-panel)]/60 rounded-lg backdrop-blur-sm border border-[var(--border)]"
                 >
                   <Sparkles className="w-4 h-4 text-yellow-400" />
                   <span className="text-gray-300">{user?.profile?.company}</span>

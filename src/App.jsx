@@ -292,6 +292,11 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      {/* Outer crash net: the provider stack (socket/chat/notifications) sits
+          ABOVE the per-page boundary. If one of those providers throws during
+          render, React unmounts the whole tree and leaves a silent white
+          screen. Wrapping them here keeps that from ever blanking the app. */}
+      <RouteBoundary>
       <SocketProvider token={access_token}>
         <ChatNotificationProvider>
           <ChatContactsProvider token={access_token}>
@@ -609,6 +614,7 @@ export default function App() {
           </ChatContactsProvider>
         </ChatNotificationProvider>
       </SocketProvider>
+      </RouteBoundary>
     </BrowserRouter>
   );
 }

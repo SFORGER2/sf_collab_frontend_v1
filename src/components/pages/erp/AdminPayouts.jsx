@@ -36,7 +36,7 @@ const STATUS_META = {
   paid:       { label: "Paid",       color: "#10b981", bg: "rgba(16,185,129,0.1)",   icon: CheckCircle2 },
   approved:   { label: "Approved",   color: "#6366f1", bg: "rgba(99,102,241,0.1)",   icon: CheckCircle2 },
   pending:    { label: "Pending",    color: "#f59e0b", bg: "rgba(245,158,11,0.1)",   icon: Clock },
-  held:       { label: "On Hold",    color: "#9ca3af", bg: "rgba(156,163,175,0.1)",  icon: AlertCircle },
+  held:       { label: "On Hold",    color: "var(--color-dim)", bg: "rgba(156,163,175,0.1)",  icon: AlertCircle },
   cancelled:  { label: "Cancelled",  color: "#ef4444", bg: "rgba(239,68,68,0.1)",    icon: XCircle },
 };
 
@@ -140,7 +140,7 @@ export default function AdminPayouts() {
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 whileHover={{ translateY: -2 }}
                 className="p-4 rounded-2xl"
-                style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)", borderTop: `2px solid ${kpi.accent}` }}
+                style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)", borderTop: `2px solid ${kpi.accent}` }}
               >
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">{kpi.label}</p>
@@ -157,7 +157,7 @@ export default function AdminPayouts() {
         {/* Filter */}
         <div
           className="flex flex-wrap gap-3 items-center px-5 py-4 rounded-xl mb-6"
-          style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+          style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
         >
           <Filter size={13} className="text-zinc-500 shrink-0" />
           <label className="text-xs text-zinc-400 font-medium">Pool</label>
@@ -182,7 +182,7 @@ export default function AdminPayouts() {
         </div>
 
         {/* Table */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}>
           {loading ? (
             <ERPTableSkeleton rows={6} cols={6} />
           ) : payouts.length === 0 ? (
@@ -273,7 +273,7 @@ export default function AdminPayouts() {
               initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md rounded-2xl p-6 shadow-2xl"
-              style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.08)" }}
+              style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
             >
               <h2 className="text-base font-bold mb-2 text-white">Hold Payout</h2>
               <p className="text-sm text-zinc-400 mb-4">Please provide a reason for holding this payout.</p>
@@ -281,11 +281,11 @@ export default function AdminPayouts() {
                 placeholder="Reason for hold…"
                 rows={3}
                 className="w-full rounded-xl px-4 py-3 text-sm resize-none outline-none"
-                style={{ background: "#1a1a20", border: "1px solid rgba(255,255,255,0.07)", color: "#e5e7eb" }}
+                style={{ background: "var(--surface-raised)", border: "1px solid var(--surface-border)", color: "var(--color-star)" }}
                 onChange={(e) => setModal({ ...modal, reason: e.target.value })}
               />
               <div className="flex gap-3 mt-5">
-                <button onClick={() => setModal(null)} className="flex-1 py-2.5 rounded-xl text-sm text-zinc-400 transition-colors" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>Cancel</button>
+                <button onClick={() => setModal(null)} className="flex-1 py-2.5 rounded-xl text-sm text-zinc-400 transition-colors" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--surface-border)" }}>Cancel</button>
                 <button
                   onClick={() => handleAction(modal.payoutId, "hold", modal.reason)}
                   disabled={actionLoading}

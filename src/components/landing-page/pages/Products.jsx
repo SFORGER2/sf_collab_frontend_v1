@@ -94,7 +94,7 @@ const Products = () => {
   return (
     <>
       <Navbar  />
-    <div ref={main} className="bg-[#0b0b0b] py-20 px-6 lg:px-20">
+    <div ref={main} className="landing-page bg-[#0b0b0b] py-20 px-6 lg:px-20">
       <div className="text-center space-y-2 mb-16">
         <h2 className="text-3xl lg:text-5xl font-bold text-white tracking-wide bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
           Core Systems

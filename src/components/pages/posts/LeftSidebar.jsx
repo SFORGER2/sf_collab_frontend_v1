@@ -201,7 +201,7 @@ export default function LeftSidebar({ activeTab, onTabChange, onSettingsClick })
   return (
     <div className="w-80 space-y-2">
       {/* Search */}
-      <Card className="bg-zinc-900/50 backdrop-blur-xl border-zinc-800/50">
+      <Card className="bg-[var(--color-panel)]/70 backdrop-blur-xl border-[var(--border)]">
         <CardContent className="p-4">
           <div className="relative">
             <Search className="absolute left-3 top-2.5 text-zinc-500" size={18} />
@@ -210,7 +210,7 @@ export default function LeftSidebar({ activeTab, onTabChange, onSettingsClick })
               placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              className="w-full bg-zinc-800 text-white rounded-lg px-4 py-2 pl-9 text-sm outline-none border border-zinc-700 focus:border-blue-400"
+              className="w-full bg-[var(--muted)] text-[var(--color-star)] rounded-lg px-4 py-2 pl-9 text-sm outline-none border border-[var(--border)] placeholder:text-[var(--color-dim)] focus:border-blue-400"
             />
           </div>
           {searchResults.length > 0 && (
@@ -221,7 +221,7 @@ export default function LeftSidebar({ activeTab, onTabChange, onSettingsClick })
                 return (
                   <div
                     key={uid}
-                    className="flex items-center justify-between p-2 hover:bg-zinc-800/30 rounded cursor-pointer"
+                    className="flex items-center justify-between p-2 hover:bg-[color-mix(in_srgb,var(--color-star)_6%,transparent)] rounded cursor-pointer"
                     onClick={() => { if (String(uid) !== String(user?.id)) { navigate(`/user-profile?userId=${uid}`); setSearchQuery(""); setSearchResults([]); }}}
                   >
                     <div 
@@ -263,7 +263,7 @@ export default function LeftSidebar({ activeTab, onTabChange, onSettingsClick })
       </Card>
 
       {/* Profile card with corrected counts */}
-      <Card className="bg-zinc-900/50 backdrop-blur-xl border-zinc-800/50">
+      <Card className="bg-[var(--color-panel)]/70 backdrop-blur-xl border-[var(--border)]">
         <CardContent className="p-6">
           <div className="flex items-center space-x-4 mb-4">
             <Avatar className="w-16 h-16 ring-2 ring-blue-400/50">
@@ -283,17 +283,17 @@ export default function LeftSidebar({ activeTab, onTabChange, onSettingsClick })
           <div className="grid grid-cols-2 gap-4 text-center mb-4">
             <button
               onClick={() => openFollowModal('connections')}
-              className="hover:bg-zinc-700/50 rounded-lg p-2 transition-colors cursor-pointer"
+              className="hover:bg-[color-mix(in_srgb,var(--color-star)_8%,transparent)] rounded-lg p-2 transition-colors cursor-pointer"
             >
-              <p className="font-bold text-white">{followersCount}</p>
-              <p className="text-xs text-zinc-400">Connections</p>
+              <p className="font-bold text-[var(--color-star)]">{followersCount}</p>
+              <p className="text-xs text-[var(--color-dim)]">Connections</p>
             </button>
             <button
               onClick={() => openFollowModal('pending')}
-              className="hover:bg-zinc-700/50 rounded-lg p-2 transition-colors cursor-pointer"
+              className="hover:bg-[color-mix(in_srgb,var(--color-star)_8%,transparent)] rounded-lg p-2 transition-colors cursor-pointer"
             >
-              <p className="font-bold text-white">{followingCount}</p>
-              <p className="text-xs text-zinc-400">Pending</p>
+              <p className="font-bold text-[var(--color-star)]">{followingCount}</p>
+              <p className="text-xs text-[var(--color-dim)]">Pending</p>
             </button>
           </div>
 
@@ -309,7 +309,7 @@ export default function LeftSidebar({ activeTab, onTabChange, onSettingsClick })
               >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-white font-semibold capitalize">{showFollowModal}</h3>
-                  <button onClick={() => setShowFollowModal(null)} className="text-zinc-400 hover:text-white text-xl leading-none">×</button>
+                  <button onClick={() => setShowFollowModal(null)} className="text-zinc-400 hover:text-[var(--color-star)] text-xl leading-none">×</button>
                 </div>
                 <div className="space-y-3 max-h-[400px] overflow-y-auto">
                   {followListLoading ? (
@@ -345,7 +345,7 @@ export default function LeftSidebar({ activeTab, onTabChange, onSettingsClick })
       </Card>
 
       {/* Navigation */}
-      <Card className="bg-zinc-900/50 backdrop-blur-xl border-zinc-800/50">
+      <Card className="bg-[var(--color-panel)]/70 backdrop-blur-xl border-[var(--border)]">
         <CardContent className="p-4">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -356,8 +356,8 @@ export default function LeftSidebar({ activeTab, onTabChange, onSettingsClick })
                 onClick={() => handleMenuClick(item)}
                 className={`w-full justify-start mb-2 ${
                   activeTab === item.id
-                    ? "bg-gray-700 text-white border-blue-500/30"
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                    ? "bg-[color-mix(in_srgb,var(--color-star)_12%,var(--color-panel))] text-[var(--color-star)] border-blue-500/30"
+                    : "text-[var(--color-dim)] hover:text-[var(--color-star)] hover:bg-[color-mix(in_srgb,var(--color-star)_8%,var(--color-panel))]"
                 }`}
               >
                 <Icon size={20} className="mr-3" />
@@ -369,7 +369,7 @@ export default function LeftSidebar({ activeTab, onTabChange, onSettingsClick })
       </Card>
 
       {/* Suggestions */}
-      <Card className="bg-zinc-900/50 backdrop-blur-xl border-zinc-800/50">
+      <Card className="bg-[var(--color-panel)]/70 backdrop-blur-xl border-[var(--border)]">
         <CardHeader>
           <h3 className="font-semibold text-white">Suggestions for you</h3>
         </CardHeader>

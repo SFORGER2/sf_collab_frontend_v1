@@ -34,7 +34,7 @@ const Products = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full bg-[#0b0b0b]"
+        className="landing-page w-full bg-[#0b0b0b]"
       >
         <div className="bg-[#0b0b0b] text-white relative overflow-hidden min-h-screen flex items-center justify-center">
           {/* Floating blobs */}

@@ -57,7 +57,7 @@ const CalculatorPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--color-void)] text-[var(--color-star)] relative overflow-hidden">
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
@@ -69,30 +69,30 @@ const CalculatorPage = () => {
       <motion.nav
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 z-50 backdrop-blur-xl border-b border-white/10"
+        className="sticky top-0 z-50 backdrop-blur-xl border-b border-[var(--border)]"
       >
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate(-1)}
-                className="p-2 hover:bg-white/10 rounded-lg transition-all duration-300"
+                className="p-2 hover:bg-[var(--muted)] rounded-lg transition-all duration-300"
               >
-                <ArrowLeft className="w-5 h-5 text-white/70 hover:text-white" />
+                <ArrowLeft className="w-5 h-5 text-[var(--color-dim)] hover:text-[var(--color-star)]" />
               </button>
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl shadow-lg shadow-blue-500/20">
+                <div className="p-2.5 bg-gradient-to-br from-[var(--color-cyan)] to-[var(--color-violet)] rounded-xl shadow-lg shadow-blue-500/20">
                   <Calculator className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">
+                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[var(--color-cyan)] to-[var(--color-violet)] bg-clip-text text-transparent">
                     Calculator Suite
                   </h1>
-                  <p className="text-xs text-white/50 mt-1">Professional financial calculations</p>
+                  <p className="text-xs text-[var(--color-dim)] mt-1">Professional financial calculations</p>
                 </div>
               </div>
             </div>
-            <Badge className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-blue-300 border-blue-400/30 px-3 py-1.5">
+            <Badge className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-[var(--color-cyan)] border-[var(--color-cyan)] px-3 py-1.5">
               <Sparkles className="w-3 h-3 mr-1.5" />
               Tools
             </Badge>
@@ -109,10 +109,10 @@ const CalculatorPage = () => {
             transition={{ delay: 0.1 }}
             className="overflow-x-auto"
           >
-            <TabsList className="inline-flex bg-white/5 backdrop-blur-xl border border-white/10 p-1.5 rounded-xl w-full justify-start sm:justify-center">
+            <TabsList className="inline-flex bg-[var(--muted)] backdrop-blur-xl border border-[var(--border)] p-1.5 rounded-xl w-full justify-start sm:justify-center">
               <TabsTrigger
                 value="normal-calculator"
-                className="rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/30 data-[state=active]:to-cyan-500/30 data-[state=active]:border data-[state=active]:border-blue-400/50 data-[state=active]:text-blue-100 text-white/70 hover:text-white/90"
+                className="rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/40 data-[state=active]:to-cyan-500/40 data-[state=active]:border data-[state=active]:border-[var(--color-cyan)] data-[state=active]:text-[var(--color-star)] text-[var(--color-dim)] hover:text-[var(--color-star)]"
               >
                 <Calculator className="w-4 h-4 mr-2" />
                 <span>Basic Calculator</span>
@@ -139,7 +139,7 @@ const CalculatorPage = () => {
           className="mt-12 space-y-6"
         >
           <div className="space-y-3">
-            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-[var(--color-star)] flex items-center gap-2">
               <Zap className="w-6 h-6 text-yellow-400" />
               Coming Soon
             </h2>
@@ -160,11 +160,11 @@ const CalculatorPage = () => {
                   className="group relative overflow-hidden rounded-xl"
                 >
                   <div className={`absolute inset-0 bg-gradient-to-r ${calc.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-                  <div className="relative bg-slate-900/50 backdrop-blur border border-white/10 group-hover:border-white/20 rounded-xl p-4 transition-all">
+                  <div className="relative bg-[var(--card)] backdrop-blur border border-[var(--border)] group-hover:border-[var(--color-cyan)] rounded-xl p-4 transition-all">
                     <div className={`inline-flex p-2.5 rounded-lg bg-gradient-to-br ${calc.color} mb-3`}>
                       <Icon className="w-5 h-5 text-white" />
                     </div>
-                    <h3 className="text-white font-semibold text-sm">{calc.label}</h3>
+                    <h3 className="text-[var(--color-star)] font-semibold text-sm">{calc.label}</h3>
                     <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
                       <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
                       Coming Soon

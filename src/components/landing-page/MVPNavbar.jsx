@@ -111,7 +111,7 @@ export default function MVPNavBar() {
   return (
     <>
       {/* Menu Overlay */}
-      <div ref={overlayRef} className='fixed inset-0 z-40 hidden bg-[#0f0f0f] text-white items-center justify-center'>
+      <div ref={overlayRef} className='landing-page fixed inset-0 z-40 hidden bg-[#0f0f0f] text-white items-center justify-center'>
         <div className='w-full h-full flex items-center lg:pt-5 pt-10 justify-between p-4'>
 
           {/* Left Menu */}
@@ -170,7 +170,7 @@ export default function MVPNavBar() {
       </div>
       <div 
         ref={navbarRef}
-        className='fixed z-40 flex justify-between items-center w-full px-4 h-12 lg:h-20 transition-transform'
+        className='landing-page fixed z-40 flex justify-between items-center w-full px-4 h-12 lg:h-20 transition-transform'
       >
         
         <div className="md:pt-0 pt-4 h-full flex items-center">

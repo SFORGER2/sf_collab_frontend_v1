@@ -127,11 +127,11 @@ export default function RegisterExistingStartup() {
                 className={selectClasses}
                 style={{ colorScheme: "dark" }}
               >
-                <option value="" style={{ backgroundColor: "#1a1a1a", color: "#fff" }}>
+                <option value="" style={{ backgroundColor: "var(--surface-input)", color: "var(--color-star)" }}>
                   Select an industry
                 </option>
                 {INDUSTRIES.map((ind) => (
-                  <option key={ind} value={ind} style={{ backgroundColor: "#1a1a1a", color: "#fff" }}>
+                  <option key={ind} value={ind} style={{ backgroundColor: "var(--surface-input)", color: "var(--color-star)" }}>
                     {ind}
                   </option>
                 ))}
@@ -198,7 +198,7 @@ export default function RegisterExistingStartup() {
               style={{ colorScheme: "dark" }}
             >
               {STAGES.map((s) => (
-                <option key={s.value} value={s.value} style={{ backgroundColor: "#1a1a1a", color: "#fff" }}>
+                <option key={s.value} value={s.value} style={{ backgroundColor: "var(--surface-input)", color: "var(--color-star)" }}>
                   {s.label}
                 </option>
               ))}

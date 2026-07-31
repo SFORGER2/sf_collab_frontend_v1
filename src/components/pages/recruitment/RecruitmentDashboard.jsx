@@ -27,7 +27,7 @@ export default function RecruitmentDashboard() {
       {/* Header */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24, flexWrap:"wrap", gap:12 }}>
         <div>
-          <h1 style={{ margin:0, fontSize:24, fontWeight:700, color:"#f9fafb" }}>Recruitment Overview</h1>
+          <h1 style={{ margin:0, fontSize:24, fontWeight:700, color:"var(--color-star)" }}>Recruitment Overview</h1>
           <p style={{ margin:"4px 0 0", fontSize:13, color:"#6b7280" }}>Manage roles, track candidates, close faster.</p>
         </div>
         <button onClick={() => setShowCreate(true)} style={s.btnPrimary}>+ New Role</button>
@@ -42,7 +42,7 @@ export default function RecruitmentDashboard() {
           { label:"Follow-ups Due",   value: summary?.pendingFollowups?.length ?? 0, accent:"#f87171" },
         ].map(stat => (
           <div key={stat.label} style={{ ...s.card, borderTop:`3px solid ${stat.accent}` }}>
-            <p style={{ margin:"0 0 10px", fontSize:11, fontWeight:600, color:"#9ca3af", textTransform:"uppercase", letterSpacing:"0.06em" }}>
+            <p style={{ margin:"0 0 10px", fontSize:11, fontWeight:600, color:"var(--color-dim)", textTransform:"uppercase", letterSpacing:"0.06em" }}>
               {stat.label}
             </p>
             <p style={{ margin:0, fontSize:36, fontWeight:700, color:stat.accent, fontFamily:"monospace", lineHeight:1 }}>
@@ -89,16 +89,16 @@ export default function RecruitmentDashboard() {
                 return (
                   <div key={job.id} onClick={() => navigate(`/recruitment/jobs/${job.id}`)}
                     style={s.listRow}
-                    onMouseEnter={e => e.currentTarget.style.borderColor = "#374151"}
-                    onMouseLeave={e => e.currentTarget.style.borderColor = "#1f2937"}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = "var(--border-strong)"}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = "var(--surface-card)"}
                   >
                     <div>
-                      <p style={{ margin:0, fontSize:13, fontWeight:600, color:"#f9fafb" }}>{job.title}</p>
+                      <p style={{ margin:0, fontSize:13, fontWeight:600, color:"var(--color-star)" }}>{job.title}</p>
                       <p style={{ margin:"2px 0 0", fontSize:11, color:"#6b7280" }}>
                         {job.department ?? "—"} · {t} candidate{t !== 1 ? "s" : ""}
                       </p>
                     </div>
-                    <span style={{ color:"#374151" }}>›</span>
+                    <span style={{ color:"var(--color-dim)" }}>›</span>
                   </div>
                 );
               })
@@ -112,7 +112,7 @@ export default function RecruitmentDashboard() {
             : summary.pendingFollowups.map(item => (
                 <div key={item.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:"1px solid #1f2937" }}>
                   <div>
-                    <p style={{ margin:0, fontSize:13, color:"#e5e7eb", fontWeight:500 }}>
+                    <p style={{ margin:0, fontSize:13, color:"var(--color-star)", fontWeight:500 }}>
                       {item.channel?.charAt(0).toUpperCase() + item.channel?.slice(1)} outreach
                     </p>
                     <p style={{ margin:"2px 0 0", fontSize:11, color:"#6b7280" }}>#{item.id}</p>
@@ -133,10 +133,10 @@ export default function RecruitmentDashboard() {
 }
 
 const s = {
-  card:      { background:"#111827", border:"1px solid #1f2937", borderRadius:12, padding:20, marginBottom:0 },
+  card:      { background:"var(--surface-card-2)", border:"1px solid #1f2937", borderRadius:12, padding:20, marginBottom:0 },
   cardTitle: { fontSize:13, fontWeight:600, color:"#f3f4f6", marginBottom:14, marginTop:0 },
-  listRow:   { display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 12px", borderRadius:8, background:"#0d1117", border:"1px solid #1f2937", cursor:"pointer", marginBottom:8, transition:"border-color 0.15s" },
+  listRow:   { display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 12px", borderRadius:8, background:"var(--surface-deep)", border:"1px solid #1f2937", cursor:"pointer", marginBottom:8, transition:"border-color 0.15s" },
   empty:     { color:"#6b7280", fontSize:13, textAlign:"center", padding:"20px 0", margin:0 },
   btnPrimary:{ background:"#fbbf24", border:"none", borderRadius:8, padding:"8px 18px", color:"#000", fontSize:13, fontWeight:700, cursor:"pointer" },
-  btnSmall:  { background:"#1f2937", border:"1px solid #374151", borderRadius:6, padding:"5px 12px", color:"#fbbf24", fontSize:11, fontWeight:600, cursor:"pointer", whiteSpace:"nowrap" },
+  btnSmall:  { background:"var(--surface-card)", border:"1px solid var(--border-strong)", borderRadius:6, padding:"5px 12px", color:"#fbbf24", fontSize:11, fontWeight:600, cursor:"pointer", whiteSpace:"nowrap" },
 };

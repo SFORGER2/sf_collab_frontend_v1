@@ -293,7 +293,7 @@ export default function CreatePost({ currentUser, onPost }) {
           <Button
             onClick={handlePost}
             disabled={!canSubmit || storyNeedsFile}
-            className="bg-gradient-to-br from-gray-600 to-black text-gray-200 hover:from-gray-800 hover:to-gray-400 hover:cursor-pointer disabled:bg-zinc-800 disabled:text-zinc-600 gap-2 group relative overflow-hidden"
+            className="bg-gradient-to-br from-violet-600 via-blue-600 to-blue-500 text-white hover:from-violet-700 hover:via-blue-700 hover:to-blue-600 hover:cursor-pointer disabled:bg-[var(--muted)] disabled:text-[var(--color-dim)] gap-2 group relative overflow-hidden"
           >
             <span className="relative z-10 flex items-center gap-2">
               {isUploading ? (

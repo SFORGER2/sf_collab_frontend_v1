@@ -13,6 +13,22 @@ import { SOCKET_API_URL } from "./config";
  */
 let _instance = null;
 
+/**
+ * True when the token looks like a real authenticated token.
+ * Mirrors the guard used by SocketProvider — keeping it in one place so the
+ * two can never drift apart (both must agree on what counts as "authenticated").
+ */
+export const isSocketTokenValid = (rawToken) => {
+  const t = typeof rawToken === "string" ? rawToken.trim() : "";
+  const normalized = t.startsWith("Bearer ") ? t.slice(7).trim() : t;
+  return !(
+    !normalized ||
+    normalized === "undefined" ||
+    normalized === "null" ||
+    normalized.length < 10
+  );
+};
+
 export const getSocketInstance = (liveToken = null) => {
   // Resolve the best available token
   const token =
