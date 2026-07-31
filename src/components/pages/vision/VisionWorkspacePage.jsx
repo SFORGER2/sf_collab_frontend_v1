@@ -43,6 +43,7 @@ import {
   mockSimilarVisions,
   mockSuggestedContributors,
 } from '@/services/mock/mockProfiles';
+import ApplicationModal from '../discoverStartups/ApplicationModal';
 
 // ── helpers ──────────────────────────────────────────────────────────────
 
@@ -309,6 +310,7 @@ export default function VisionWorkspacePage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showConvert, setShowConvert] = useState(false);
+  const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
   const { showAds } = useEntitlements();
 
   const isCreator = idea && user && idea.creator?.id === user.id;
@@ -442,7 +444,7 @@ export default function VisionWorkspacePage() {
         />
 
         {/* What you can do here, from your role's point of view */}
-        <VisionActions viewerRole={viewerRole} isCreator={isCreator} />
+        <VisionActions viewerRole={viewerRole} isCreator={isCreator} onApply={() => setIsApplicationModalOpen(true)} />
 
         {/* Signals — each milestone is a thing you can go and prove */}
         <section className="cosmos-panel p-6">
@@ -678,6 +680,13 @@ export default function VisionWorkspacePage() {
           />
         )}
       </AnimatePresence>
+
+      <ApplicationModal
+        isOpen={isApplicationModalOpen}
+        onClose={() => setIsApplicationModalOpen(false)}
+        entity={idea}
+        entityType="vision"
+      />
     </div>
   );
 }
