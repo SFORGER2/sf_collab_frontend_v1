@@ -1,0 +1,11 @@
+node_modules
+backend
+.git
+.github
+.claude
+.agents
+dist
+public/*.mp4
+public/*.mp3
+public/**/*.mp4
+public/**/*.mp3
