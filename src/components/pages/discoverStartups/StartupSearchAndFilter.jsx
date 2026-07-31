@@ -77,9 +77,9 @@ export default function StartupSearchAndFilter({
         {/* Desktop Filters Sidebar - Only in discover mode */}
         {mode === 'discover' && (
           <motion.div
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
+            initial={{ y: 15, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
             className="hidden md:block shrink-0 w-full"
           >
             <div className="w-full">

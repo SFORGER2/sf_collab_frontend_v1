@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { byMomentum } from "@/services/vision/momentum";
 import { SAMPLE_VISIONS } from "@/services/mock/boards";
 import IdeationHeader from "./IdeationHeader";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import ScrollToTop from "../../sections/ScrollToTop";
 import { ideaAPI } from "@/utils/APIs/ideaAPI";
 import { useSelector } from "react-redux";
@@ -11,6 +11,7 @@ import { getProfilePicture } from "@/utils/getProfilePicture";
 import IdeationCard from "./IdeationCard";
 import IdeationTutorial from "./IdeationTutorial";
 import { motion } from "framer-motion";
+import { IdeationCardSkeleton } from "../vision/VisionSkeletons";
 
 /* Twelve sample Visions spread across stage, industry and engagement — a
    board where everything burns says as little as one where nothing does. */
@@ -27,10 +28,21 @@ const calculateTimeAgo = (createdAt) => {
 };
 
 const Ideation = ({ activeRole }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStage, setSelectedStage] = useState("All Stages");
-  const [selectedIndustry, setSelectedIndustry] = useState("All Industries");
-  const [sortBy, setSortBy] = useState("trending");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+  const [selectedStage, setSelectedStage] = useState(searchParams.get("stage") || "All Stages");
+  const [selectedIndustry, setSelectedIndustry] = useState(searchParams.get("industry") || "All Industries");
+  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "trending");
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set("search", searchQuery);
+    if (selectedStage !== "All Stages") params.set("stage", selectedStage);
+    if (selectedIndustry !== "All Industries") params.set("industry", selectedIndustry);
+    if (sortBy !== "trending") params.set("sort", sortBy);
+    setSearchParams(params, { replace: true });
+  }, [searchQuery, selectedStage, selectedIndustry, sortBy, setSearchParams]);
+
   const [ideas, setIdeas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -166,16 +178,28 @@ const Ideation = ({ activeRole }) => {
   // ── Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-          className="w-10 h-10 rounded-full"
-          style={{
-            border: "2px solid rgba(59,130,246,0.15)",
-            borderTopColor: "#3b82f6",
-          }}
-        />
+      <div className="min-h-screen bg-black px-4">
+        <IdeationTutorial activeRole={activeRole} />
+        <div className="mb-0 mt-0">
+          <IdeationHeader
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedStage={selectedStage}
+            setSelectedStage={setSelectedStage}
+            selectedIndustry={selectedIndustry}
+            setSelectedIndustry={setSelectedIndustry}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            onCreateIdea={handleCreateIdea}
+            setShowNewIdeaForm={setShowNewIdeaForm}
+            showNewIdeaForm={showNewIdeaForm}
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 max-sm:p-2">
+          {[...Array(6)].map((_, i) => (
+            <IdeationCardSkeleton key={i} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -230,7 +254,7 @@ const Ideation = ({ activeRole }) => {
     <div className="min-h-screen bg-black px-4">
       <IdeationTutorial activeRole={activeRole} />
 
-      <div className="mb-0 mt-10">
+      <div className="mb-0 mt-0">
         <IdeationHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}

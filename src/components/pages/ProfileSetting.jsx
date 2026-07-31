@@ -6,7 +6,7 @@ import React, { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
 import { setUser } from "../../services/auth/authSlice"
-import { usersAPI } from "@/utils/APIs/userAPI"
+import { getProfilePicture } from "@/utils/getProfilePicture"
 
 const ProfileSetting = () => {
   const navigate  = useNavigate()
@@ -15,6 +15,7 @@ const ProfileSetting = () => {
 
   const [isLoading, setIsLoading] = useState(false)
   const [bioLength, setBioLength] = useState(0)
+  const avatar = getProfilePicture(user) || "/default-user.jpeg"
 
   // FIX: was entirely hardcoded ("sfcollab", placeholder URLs).
   // Now pre-populated from Redux user state so the user sees their real data.
@@ -109,7 +110,7 @@ const handleSubmit = async (e) => {
               <div className="w-24 h-24 rounded-full overflow-hidden text-center py-4 border border-white/10">
                 <img
                   loading="lazy"
-                  src={user?.profile_picture || user?.profilePicture || "/default-user.jpeg"}
+                  src={avatar}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />

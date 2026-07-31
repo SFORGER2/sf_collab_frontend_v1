@@ -94,68 +94,72 @@ const ProfileHeader = ({
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative mb-8 border border-gray-700 rounded-2xl overflow-hidden group"
+      className="relative mb-8 border border-white/10 hover:border-white/15 rounded-2xl overflow-hidden shadow-2xl bg-slate-950/60 group transition-all duration-300"
     >
       {/* Animated Gradient Background */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           animate={{
             scale: [1, 1.1, 1],
-            opacity: [0.3, 0.5, 0.3],
+            opacity: [0.25, 0.45, 0.25],
           }}
           transition={{
             duration: 10,
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute -top-40 -left-40 w-80 h-80 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-full blur-3xl"
+          className="absolute -top-40 -left-40 w-80 h-80 bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 rounded-full blur-3xl"
         />
         <motion.div
           animate={{
             scale: [1.1, 1, 1.1],
-            opacity: [0.4, 0.2, 0.4],
+            opacity: [0.35, 0.2, 0.35],
           }}
           transition={{
             duration: 12,
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 rounded-full blur-3xl"
+          className="absolute -bottom-40 -right-40 w-80 h-80 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 rounded-full blur-3xl"
         />
       </div>
 
       {/* Theme-aware glass background — dark panel in dark mode, light in light mode */}
-      <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--color-panel)_78%,transparent)] backdrop-blur-xl" />
+      <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--color-panel)_78%,transparent)] backdrop-blur-xl pointer-events-none" />
 
       {/* Cover Photo */}
       <div
-        className="relative h-48 dashboard-bg"
+        className="relative h-36 sm:h-44 md:h-52 dashboard-bg border-b border-white/[0.08] overflow-hidden"
         style={{
           backgroundImage: user?.cover_photo ? `url(${getMediaUrl(user.cover_photo)})` : undefined,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
-      />
+      >
+        {/* Subtle cover photo gradient ramp overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent pointer-events-none" />
+      </div>
 
       {/* Profile Info */}
-      <div className="relative px-8 pb-6">
+      <div className="relative px-3 sm:px-6 md:px-8 pb-5 sm:pb-6">
         {/* Profile Picture */}
-        <div className="relative -top-12">
+        <div className="relative -top-10 sm:-top-12 md:-top-14">
           <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="relative w-32 h-32 rounded-full border-4 border-[var(--border)] bg-gradient-to-br from-blue-500/20 to-purple-500/20 group/picture"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+            className="relative w-24 h-24 sm:w-28 md:w-32 sm:h-28 md:h-32 rounded-full border-[3.5px] border-slate-950 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-indigo-500/20 shadow-[0_8px_30px_rgba(0,0,0,0.7)] group/picture overflow-visible"
           >
             {/* ✅ Use getAvatarUrl */}
             <img
               src={getAvatarUrl(user)}
               alt={user?.firstName}
-              className="w-full h-full object-cover group-hover/picture:scale-110 rounded-full transition-transform duration-300"
+              className="w-full h-full object-cover group-hover/picture:scale-105 rounded-full transition-transform duration-300"
               onError={(e) => {
                 // Fallback to initials if image fails
                 e.target.style.display = 'none';
                 const parent = e.target.parentElement;
                 const fallback = document.createElement('div');
-                fallback.className = 'w-full h-full flex items-center justify-center text-4xl font-bold text-white bg-gradient-to-br from-blue-500 to-purple-600';
+                fallback.className = 'w-full h-full flex items-center justify-center text-2xl sm:text-3xl font-bold text-white bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-full shadow-inner';
                 fallback.textContent = (user?.firstName?.[0] || 'U') + (user?.lastName?.[0] || '');
                 parent.appendChild(fallback);
               }}
@@ -169,9 +173,9 @@ const ProfileHeader = ({
               <motion.div
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="absolute z-10 -top-2 -right-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-2 py-1 rounded-full border-2 border-[var(--border)]"
+                className="absolute z-10 -top-2 -right-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded-full border-2 border-slate-950 shadow-md flex items-center gap-0.5"
               >
-                <Zap className="w-3 h-3 inline mr-0.5" />
+                <Zap className="w-3 h-3 inline shrink-0" />
                 Pro
               </motion.div>
             )}
@@ -179,19 +183,16 @@ const ProfileHeader = ({
         </div>
 
         {/* User Info */}
-        <div className="flex flex-wrap justify-between items-start -mt-6">
-          <div className="flex-1">
-            <div className="flex flex-wrap items-center gap-4 mb-2">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-[var(--color-star)] to-[var(--color-dim)] bg-clip-text text-transparent">
+        <div className="flex flex-wrap justify-between items-start -mt-6 sm:-mt-8">
+          <div className="flex-1 min-w-0 pr-2">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-white drop-shadow-sm break-words max-w-full">
                 {user?.firstName} {user?.lastName}
               </h1>
               {user?.profile?.socialLinks && Object.entries(user.profile.socialLinks).some(([_, url]) => url) && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-[var(--color-panel)]/60 rounded-lg backdrop-blur-sm border border-[var(--border)]"
-                >
-                  <LinkIcon className="w-4 h-4 text-cyan-400" />
-                  <div className="flex gap-2">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/60 hover:bg-slate-800/80 rounded-xl backdrop-blur-md border border-white/10 hover:border-white/20 shadow-sm transition-all flex-wrap">
+                  <LinkIcon className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <div className="flex gap-2.5 flex-wrap">
                     {Object.entries(user.profile.socialLinks).map(([platform, url]) =>
                       url && (
                         <a
@@ -199,7 +200,7 @@ const ProfileHeader = ({
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-gray-300 hover:text-cyan-400 capitalize text-xs transition-colors"
+                          className="text-slate-300 hover:text-cyan-400 capitalize text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/50 rounded-sm"
                           title={platform}
                         >
                           {platform}
@@ -207,136 +208,104 @@ const ProfileHeader = ({
                       )
                     )}
                   </div>
-                </motion.div>
+                </div>
               )}
             </div>
 
-            <p className="text-gray-300 mb-4 max-w-2xl">
-              {user?.profile?.bio}
-            </p>
+            {user?.profile?.bio && (
+              <p className="text-slate-300 text-xs sm:text-sm md:text-base leading-relaxed mb-4 max-w-2xl font-normal break-words">
+                {user.profile.bio}
+              </p>
+            )}
 
             {/* User Details */}
-            <div className="flex flex-wrap gap-3 text-sm">
+            <div className="flex flex-wrap gap-2 sm:gap-2.5 text-xs sm:text-sm">
               {/* Location */}
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-2 px-3 py-2 bg-[var(--color-panel)]/60 rounded-lg backdrop-blur-sm border border-[var(--border)]"
-              >
-                <MapPin className="w-4 h-4 text-blue-400" />
+              <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 bg-slate-900/60 hover:bg-slate-800/70 rounded-xl backdrop-blur-md border border-white/10 hover:border-white/20 text-xs font-medium shadow-sm transition-all max-w-full">
+                <MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                 {user?.profile?.city ?
-                  <span className="text-gray-300">{user?.profile?.city}, {user?.profile?.country}</span>
+                  <span className="text-slate-200 truncate">{user?.profile?.city}, {user?.profile?.country}</span>
                   :
-                  <span className="text-gray-500">Location not set</span>
+                  <span className="text-slate-400">Location not set</span>
                 }
-              </motion.div>
+              </div>
 
               {/* Email */}
-              {!isOtherUser &&
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-[var(--color-panel)]/60 rounded-lg backdrop-blur-sm border border-[var(--border)]"
-                >
-                  <Mail className="w-4 h-4 text-purple-400" />
-                  <span className="text-gray-300">{user?.email}</span>
-                </motion.div>
-              }
+              {!isOtherUser && (
+                <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 bg-slate-900/60 hover:bg-slate-800/70 rounded-xl backdrop-blur-md border border-white/10 hover:border-white/20 text-xs font-medium shadow-sm transition-all max-w-full">
+                  <Mail className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  <span className="text-slate-200 truncate max-w-[200px] sm:max-w-xs">{user?.email}</span>
+                </div>
+              )}
 
-              {/* Join Date — hidden rather than rendering "Joined Invalid Date",
-                  which is what an absent or malformed createdAt produced. */}
+              {/* Join Date */}
               {joinedOn && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-[var(--color-panel)]/60 rounded-lg backdrop-blur-sm border border-[var(--border)]"
-                >
-                  <Calendar className="w-4 h-4 text-green-400" />
-                  <span className="text-gray-300">Joined {joinedOn}</span>
-                </motion.div>
+                <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 bg-slate-900/60 hover:bg-slate-800/70 rounded-xl backdrop-blur-md border border-white/10 hover:border-white/20 text-xs font-medium shadow-sm transition-all">
+                  <Calendar className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span className="text-slate-200">Joined {joinedOn}</span>
+                </div>
               )}
 
               {/* Company */}
               {user?.profile?.company && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-[var(--color-panel)]/60 rounded-lg backdrop-blur-sm border border-[var(--border)]"
-                >
-                  <Sparkles className="w-4 h-4 text-yellow-400" />
-                  <span className="text-gray-300">{user?.profile?.company}</span>
-                </motion.div>
+                <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 bg-slate-900/60 hover:bg-slate-800/70 rounded-xl backdrop-blur-md border border-white/10 hover:border-white/20 text-xs font-medium shadow-sm transition-all max-w-full">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="text-slate-200 truncate">{user?.profile?.company}</span>
+                </div>
               )}
 
               {/* Streak Days */}
               {profileData?.streak_days > 0 && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-orange-500/20 rounded-lg backdrop-blur-sm border border-orange-500/50"
-                >
-                  <Flame className="w-4 h-4 text-orange-400" />
-                  <span className="text-orange-300">{profileData.streak_days} day streak</span>
-                </motion.div>
+                <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/15 rounded-xl backdrop-blur-md border border-amber-500/30 text-xs font-medium shadow-sm transition-all">
+                  <Flame className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="text-amber-300">{profileData.streak_days} day streak</span>
+                </div>
               )}
 
               {/* Satisfaction Score */}
               {profileData?.satisfaction_percentage && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-pink-500/20 rounded-lg backdrop-blur-sm border border-pink-500/50"
-                >
-                  <Heart className="w-4 h-4 text-pink-400" />
+                <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 bg-pink-500/10 hover:bg-pink-500/15 rounded-xl backdrop-blur-md border border-pink-500/30 text-xs font-medium shadow-sm transition-all">
+                  <Heart className="w-3.5 h-3.5 text-pink-400 shrink-0" />
                   <span className="text-pink-300">{profileData.satisfaction_percentage}% satisfaction</span>
-                </motion.div>
+                </div>
               )}
 
               {/* Total Revenue */}
               {profileData?.total_revenue > 0 && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-green-500/20 rounded-lg backdrop-blur-sm border border-green-500/50"
-                >
-                  <TrendingUp className="w-4 h-4 text-green-400" />
-                  <span className="text-green-300">${(profileData.total_revenue || 0).toFixed(2)} revenue</span>
-                </motion.div>
+                <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/15 rounded-xl backdrop-blur-md border border-emerald-500/30 text-xs font-medium shadow-sm transition-all">
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span className="text-emerald-300">${(profileData.total_revenue || 0).toFixed(2)} revenue</span>
+                </div>
               )}
 
               {/* Achievements Count */}
               {profileData?.achievements?.length > 0 && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-yellow-500/20 rounded-lg backdrop-blur-sm border border-yellow-500/50"
-                >
-                  <Trophy className="w-4 h-4 text-yellow-400" />
-                  <span className="text-yellow-300">{profileData.achievements.length} achievements</span>
-                </motion.div>
+                <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/15 rounded-xl backdrop-blur-md border border-amber-500/30 text-xs font-medium shadow-sm transition-all">
+                  <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="text-amber-300">{profileData.achievements.length} achievements</span>
+                </div>
               )}
 
               {/* Display Active Plans */}
               {user?.builder_plan_id && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-emerald-500/20 rounded-lg backdrop-blur-sm border border-emerald-500/50"
-                >
-                  <Zap className="w-4 h-4 text-emerald-400" />
+                <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/15 rounded-xl backdrop-blur-md border border-emerald-500/30 text-xs font-medium shadow-sm transition-all">
+                  <Zap className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   <span className="text-emerald-300">{formatPlanName(user?.builder_plan_id)}</span>
-                </motion.div>
+                </div>
               )}
 
               {user?.founder_plan_id && (
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-purple-500/20 rounded-lg backdrop-blur-sm border border-purple-500/50"
-                >
-                  <Zap className="w-4 h-4 text-purple-400" />
+                <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/15 rounded-xl backdrop-blur-md border border-purple-500/30 text-xs font-medium shadow-sm transition-all">
+                  <Zap className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                   <span className="text-purple-300">{formatPlanName(user?.founder_plan_id)}</span>
-                </motion.div>
+                </div>
               )}
 
-              {
-                /* `currentUser` is null until the auth profile resolves, and
-                   the whole page threw here on first paint. */
-                currentUser?.active_startups_count > 0 && currentUser?.id !== user?.id && (
-                  <>
-                    <InviteToStartup user={user} />
-                    <AddFriend user={user} />
-                  </>
+              {currentUser?.active_startups_count > 0 && currentUser?.id !== user?.id && (
+                <>
+                  <InviteToStartup user={user} />
+                  <AddFriend user={user} />
+                </>
               )}
 
               {/* Profile Completion Warning */}
@@ -350,12 +319,13 @@ const ProfileHeader = ({
 
                 return emptyFields >= 3 && currentUser && currentUser.id === user?.id && (
                   <motion.div
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={onSettingsClick}
-                    className="flex items-center gap-2 px-3 py-2 bg-orange-500/20 rounded-lg backdrop-blur-sm border border-orange-500/50 cursor-pointer"
+                    className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl backdrop-blur-md border border-rose-500/30 cursor-pointer text-xs font-medium shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50"
                   >
-                    <Sparkles className="w-4 h-4 text-red-400" />
-                    <span className="text-red-300">Complete your profile</span>
+                    <Sparkles className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                    <span className="text-rose-300">Complete your profile</span>
                   </motion.div>
                 );
               })()}
@@ -364,17 +334,14 @@ const ProfileHeader = ({
 
           {/* Action Buttons */}
           {currentUser && currentUser.id === user?.id && (
-            <div className="flex flex-col gap-4">
+            <div className="flex items-center mt-3 sm:mt-0 w-full sm:w-auto">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={onSettingsClick}
-                /* Was a blue→purple gradient that read as a stray shadcn button
-                   against the cosmos palette. Now the gold accent used for
-                   primary actions everywhere else. */
-                className="flex items-center gap-2 my-4 mx-auto px-4 py-2 rounded-xl border border-gold/40 bg-gold/10 text-gold hover:bg-gold/20 hover:border-gold/60 backdrop-blur-sm transition-all"
+                className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 hover:border-amber-500/50 backdrop-blur-sm transition-all text-xs font-semibold shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 min-h-[40px] sm:min-h-0"
               >
-                <Settings className="w-4 h-4" />
+                <Settings className="w-3.5 h-3.5" />
                 Edit Profile
               </motion.button>
             </div>

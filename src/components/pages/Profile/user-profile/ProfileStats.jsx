@@ -114,14 +114,14 @@ const ProfileStats = ({ profile }) => {
   }, [profile]);
 
   return (
-    <div className="mt-6 flex flex-col gap-3">
-      <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+    <div className="mt-5 sm:mt-6 flex flex-col gap-3">
+      <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))]">
         {hero.map((stat, i) => (
           <HeroTile key={stat.key} stat={stat} index={i} navigate={navigate} />
         ))}
       </div>
 
-      <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(148px,1fr))]">
+      <div className="grid gap-2.5 sm:gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,165px),1fr))]">
         {rest.map((stat, i) => (
           <MiniTile key={stat.key} stat={stat} index={i} navigate={navigate} />
         ))}
@@ -143,15 +143,25 @@ function HeroTile({ stat, index, navigate }) {
       onClick={to ? () => navigate(to) : undefined}
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
+      whileHover={to ? { y: -3 } : undefined}
       transition={{ delay: index * 0.06, duration: 0.4 }}
       style={{ '--cosmos-accent': accent }}
-      className={`cosmos-card group relative overflow-hidden p-5 text-left flex items-center gap-4
-        ${to ? 'cursor-pointer' : ''}`}
+      className={`cosmos-card group relative overflow-hidden p-5 text-left flex items-center gap-4 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50
+        ${to ? 'cursor-pointer hover:border-[color-mix(in_srgb,var(--cosmos-accent)_65%,transparent)] hover:bg-[#121424]/90 hover:shadow-[0_0_30px_-5px_color-mix(in_srgb,var(--cosmos-accent)_45%,transparent)]' : ''}`}
     >
-      {/* Accent bloom, revealed on hover */}
+      {/* Top accent horizon light leak on hover */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute -right-10 -top-10 w-36 h-36 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${accent}, transparent)`,
+        }}
+      />
+
+      {/* Vibrant accent bloom, revealed on hover */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-8 -top-8 w-40 h-40 rounded-full opacity-0 group-hover:opacity-35 transition-opacity duration-500 blur-2xl"
         style={{ background: accent }}
       />
 
@@ -164,25 +174,28 @@ function HeroTile({ stat, index, navigate }) {
           <Eyebrow>{label}</Eyebrow>
           {to && (
             <ArrowUpRight
-              size={11}
-              className="text-dim opacity-0 group-hover:opacity-100 transition-opacity"
+              size={13}
+              style={{ color: accent }}
+              className="opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200"
             />
           )}
         </div>
 
         <div className="flex items-baseline gap-1.5 mt-1">
           <span
-            className="font-display text-[1.85rem] leading-none tabular-nums"
+            className="font-display text-[1.85rem] leading-none tabular-nums font-bold"
             style={{ color: accent }}
           >
             {value.toLocaleString()}
           </span>
-          <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-dim">
+          <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-slate-400 font-semibold">
             {unit}
           </span>
         </div>
 
-        <p className="text-[0.78rem] text-dim mt-1.5 truncate">{caption(milestone)}</p>
+        <p className="text-[0.78rem] text-slate-400 group-hover:text-slate-200 transition-colors duration-200 font-medium mt-1.5 truncate">
+          {caption(milestone)}
+        </p>
       </div>
     </Wrapper>
   );
@@ -194,7 +207,7 @@ function RingGauge({ pct, accent, children }) {
   const C = 2 * Math.PI * R;
 
   return (
-    <div className="relative shrink-0 w-[62px] h-[62px] grid place-items-center">
+    <div className="relative shrink-0 w-[62px] h-[62px] grid place-items-center group-hover:scale-105 transition-transform duration-300">
       <svg viewBox="0 0 62 62" className="absolute inset-0 -rotate-90">
         <circle cx="31" cy="31" r={R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
         <motion.circle
@@ -207,12 +220,12 @@ function RingGauge({ pct, accent, children }) {
           initial={{ strokeDashoffset: C }}
           animate={{ strokeDashoffset: C - (C * pct) / 100 }}
           transition={{ duration: 1.1, ease: 'easeOut', delay: 0.2 }}
-          style={{ filter: `drop-shadow(0 0 6px ${accent}88)` }}
+          style={{ filter: `drop-shadow(0 0 8px ${accent}aa)` }}
         />
       </svg>
       <span
-        className="grid place-items-center w-10 h-10 rounded-full"
-        style={{ background: `${accent}18` }}
+        className="grid place-items-center w-10 h-10 rounded-full transition-transform group-hover:scale-110 group-hover:shadow-[0_0_12px_color-mix(in_srgb,var(--cosmos-accent)_50%,transparent)]"
+        style={{ background: `${accent}18`, border: `1px solid ${accent}44` }}
       >
         {children}
       </span>
@@ -230,27 +243,36 @@ function MiniTile({ stat, index, navigate }) {
       onClick={to ? () => navigate(to) : undefined}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      whileHover={to ? { y: -2 } : undefined}
       transition={{ delay: 0.2 + index * 0.04, duration: 0.35 }}
       style={{ '--cosmos-accent': accent }}
-      className={`cosmos-card group relative p-3.5 text-left flex items-center gap-3
-        ${to ? 'cursor-pointer' : ''}`}
+      className={`cosmos-card group relative overflow-hidden p-3.5 sm:p-4 text-left flex items-center gap-3 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 min-w-0
+        ${to ? 'cursor-pointer hover:border-[color-mix(in_srgb,var(--cosmos-accent)_55%,transparent)] hover:bg-[#121424]/90 hover:shadow-[0_0_20px_-6px_color-mix(in_srgb,var(--cosmos-accent)_40%,transparent)]' : ''}`}
     >
+      {/* Accent bloom on mini tile hover */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-6 -top-6 w-28 h-28 rounded-full opacity-0 group-hover:opacity-30 transition-opacity duration-500 blur-xl"
+        style={{ background: accent }}
+      />
+
       <span
         className="grid place-items-center w-8 h-8 rounded-lg shrink-0 transition-transform group-hover:scale-110"
-        style={{ background: `${accent}18` }}
+        style={{ background: `${accent}18`, border: `1px solid ${accent}33` }}
       >
         <Icon size={14} style={{ color: accent }} />
       </span>
 
-      <div className="min-w-0">
-        <div className="font-display text-[1.05rem] leading-none tabular-nums text-star">
-          {Number(value).toLocaleString()}
-          <span className="font-mono text-[9px] tracking-[0.12em] uppercase text-dim ml-1">
+      <div className="min-w-0 flex-1 relative z-10">
+        <div className="flex items-baseline flex-wrap gap-1 font-display text-[1.05rem] leading-none tabular-nums text-white font-bold">
+          <span>{Number(value).toLocaleString()}</span>
+          <span className="font-mono text-[9px] tracking-wider uppercase text-slate-400 font-semibold">
             {unit}
           </span>
         </div>
-        {/* Labels wrap rather than truncate — "Knowledge pos…" helps nobody. */}
-        <div className="cosmos-stat-label mt-1 leading-tight">{label}</div>
+        <div className="mt-1 leading-tight text-slate-300 group-hover:text-white transition-colors duration-200 font-medium text-[10px] sm:text-[11px] tracking-wider uppercase break-words font-mono">
+          {label}
+        </div>
       </div>
     </Wrapper>
   );

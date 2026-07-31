@@ -1,4 +1,4 @@
-import { Briefcase, CheckCircle, Clock, Layers, MoreHorizontal, Users } from "lucide-react";
+import { Briefcase, CheckCircle, Clock, Layers, Lightbulb, MoreHorizontal, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -118,6 +118,7 @@ export default function DesktopBuilderDashboard({
         node: (
           <div className="grid grid-cols-2 gap-3.5">
             <QuickAction label="Browse startups" href="/discover-startups" icon={Briefcase} accent="#4fd8ff" />
+            <QuickAction label="Explore Visions" href="/ideation" icon={Lightbulb} accent="#ffbf5e" />
             <QuickAction label="Saved startups" href="/saved-startups" icon={Users} accent="#4fd8ff" />
             <QuickAction label="My applications" href="/builder/my-applications" icon={CheckCircle} accent="#3ee6a0" />
             <QuickAction label="Rewards" href="/builder/rewards" icon={Layers} accent="#ffbf5e" />

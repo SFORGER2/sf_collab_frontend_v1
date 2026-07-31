@@ -37,9 +37,9 @@ export const WEIGHTS = {
 const HALF_LIFE_DAYS = 14;
 
 export const TIERS = [
-  { id: 'blazing', min: 320, label: 'Blazing', accent: '#ff6f3c', flames: 3 },
-  { id: 'hot', min: 140, label: 'Hot', accent: '#ffa03c', flames: 2 },
-  { id: 'warm', min: 55, label: 'Rising', accent: '#ffbf5e', flames: 1 },
+  { id: 'blazing', min: 320, label: 'Trending', accent: '#60a5fa', flames: 1 },
+  { id: 'hot', min: 140, label: 'High Activity', accent: '#c084fc', flames: 1 },
+  { id: 'warm', min: 55, label: 'Rising', accent: '#34d399', flames: 1 },
 ];
 
 /**

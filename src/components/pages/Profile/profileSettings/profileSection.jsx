@@ -2,7 +2,7 @@ import { toast } from "react-toastify";
 import { countries } from "./countries";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { getProfilePicture } from "@/utils/getProfilePicture";
+import { getProfilePicture, resolveBackendUrl } from "@/utils/getProfilePicture";
 import { builderFocusOptions } from "./builderFocus";
 import { motion } from "framer-motion";
 import {
@@ -36,30 +36,17 @@ const SOCIALS = [
 
 const BIO_LIMIT = 300;
 
-/**
- * Profile settings.
- *
- * Rebuilt on the shared settings primitives. The previous version stacked five
- * differently-coloured gradient panels (blue, purple, green, orange, pink) with
- * `bg-gray-700` inputs — a pre-cosmos design that read as five unrelated forms.
- * Now one panel style throughout, with a single accent per group.
- *
- * Note this is the *bulk* editor. Most day-to-day corrections happen on the
- * profile page itself via the per-field pencil (see InlineField); this screen
- * is for the account-level things that don't belong on a public profile —
- * roles, location, the picture, and the links.
- */
 export default function ProfileSection({ formData, setFormData, uploadProfilePicture }) {
   const timezones = useMemo(
     () => (Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : ["UTC"]),
     []
   );
   const [loadingCountry, setLoadingCountry] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [roles, setRoles] = useState([]);
   const { user } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    // Mentor is a real role now — it was missing here, so nobody could pick it.
     setRoles(["founder", "builder", "mentor", "influencer", "investor"]);
   }, []);
 
@@ -72,12 +59,30 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
   const handleImage = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Clear value so re-selecting same file triggers event
+    e.target.value = "";
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file (PNG, JPG, WebP, etc.)");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size must be less than 5MB");
+      return;
+    }
+
     try {
+      setIsUploading(true);
       const url = await uploadProfilePicture(file);
-      patchProfile({ picture: url });
-      toast.success("Image uploaded");
-    } catch {
-      toast.error("Failed to upload image");
+      if (url) {
+        patchProfile({ picture: url });
+      }
+    } catch (err) {
+      console.error("Failed to upload image:", err);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -112,11 +117,17 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
   const isLocationSet =
     !!formData.profile?.country && !!formData.profile?.city && !!formData.preferences?.timezone;
 
-  const picture = getProfilePicture(user) || formData.profile?.picture;
+  const currentFormPic = formData.profile?.picture;
+  const picture = useMemo(() => {
+    if (currentFormPic !== undefined) {
+      return currentFormPic ? resolveBackendUrl(currentFormPic) : null;
+    }
+    return getProfilePicture(user);
+  }, [currentFormPic, user]);
 
   return (
     <motion.div
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-6 w-full max-w-full min-w-0"
       initial="hidden"
       animate="visible"
       variants={container}
@@ -133,27 +144,36 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
       {/* Picture */}
       <motion.div variants={item}>
         <SettingsCard title="Profile picture" accent="#4fd8ff">
-          <div className="flex flex-wrap items-center gap-5">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-5">
             <div
-              className="w-20 h-20 rounded-full overflow-hidden shrink-0 grid place-items-center"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(79,216,255,0.3)" }}
+              className="w-20 h-20 rounded-full overflow-hidden shrink-0 grid place-items-center relative transition-all duration-200"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(79,216,255,0.35)",
+                boxShadow: "0 0 18px -4px rgba(79,216,255,0.22)",
+              }}
             >
-              {picture ? (
-                <img loading="lazy" src={picture} className="w-full h-full object-cover" alt="" />
+              {isUploading ? (
+                <Loader2 size={22} className="animate-spin text-cyan-400" />
+              ) : picture ? (
+                <img loading="lazy" src={picture} className="w-full h-full object-cover" alt="Profile" />
               ) : (
-                <span className="font-mono text-[9px] tracking-[0.14em] uppercase text-dim">
+                <span className="font-mono text-[9px] tracking-[0.14em] uppercase text-dim/70 font-medium">
                   No image
                 </span>
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center sm:justify-start gap-2.5 sm:gap-3 w-full sm:w-auto">
               <CosmosButton
                 variant="ghost"
                 size="sm"
                 onClick={() => document.querySelector("#profileInput")?.click()}
+                disabled={isUploading}
+                className="w-full sm:w-auto min-h-[44px] justify-center"
               >
-                <Upload size={14} /> Upload
+                {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                {isUploading ? "Uploading…" : "Upload"}
               </CosmosButton>
               <input
                 id="profileInput"
@@ -163,17 +183,20 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
                 onChange={handleImage}
               />
 
-              {formData.profile?.picture && (
+              {picture && (
                 <button
                   type="button"
                   onClick={() => patchProfile({ picture: null })}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-red-500/30 text-[0.85rem] text-red-400 hover:bg-red-500/10 transition-colors"
+                  disabled={isUploading}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[44px] rounded-xl border border-red-500/30 text-[0.84rem] font-medium text-red-400 hover:bg-red-500/10 hover:border-red-500/50 active:scale-[0.98] transition-all duration-200 shadow-xs cursor-pointer disabled:opacity-50"
                 >
                   <Trash2 size={13} /> Remove
                 </button>
               )}
 
-              <span className="text-[0.78rem] text-dim">Square images work best.</span>
+              <span className="text-[0.78rem] font-medium text-dim/80 w-full text-center sm:text-left mt-1 sm:mt-0 break-words">
+                Square images work best. Max 5MB.
+              </span>
             </div>
           </div>
         </SettingsCard>
@@ -181,8 +204,8 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
 
       {/* Identity */}
       <motion.div variants={item}>
-        <SettingsCard title="Basics" accent="#ffbf5e">
-          <FieldGrid>
+        <SettingsCard title="Basics" accent="#ffbf5e" bodyClassName="gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             <Field label="First name" required>
               <TextInput
                 value={formData.firstName || ""}
@@ -195,17 +218,19 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
                 onChange={(e) => setFormData((p) => ({ ...p, lastName: e.target.value }))}
               />
             </Field>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             <Field label="Email" hint="Change this from Account & Security.">
               <TextInput value={formData.email || ""} readOnly />
             </Field>
             <Field label="Account status">
               <TextInput value={formData.status || ""} readOnly className="capitalize" />
             </Field>
-          </FieldGrid>
+          </div>
 
           <Field
             label="Bio"
-            className="mt-4"
             error={bioOver ? `${bio.length}/${BIO_LIMIT} — too long to save` : null}
             hint={bioOver ? null : `${bio.length}/${BIO_LIMIT} characters`}
           >
@@ -225,12 +250,13 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
           title="Your roles"
           hint="Roles change your navigation, dashboard and what the ecosystem offers you. You can hold more than one."
           accent="#8b6cff"
+          bodyClassName="gap-3"
         >
           {(formData.roles || []).length === 0 && (
             <Notice tone="error">Pick at least one role — the app can't lay itself out without one.</Notice>
           )}
 
-          <div className={(formData.roles || []).length === 0 ? "mt-3" : ""}>
+          <div>
             <PillGroup
               options={roles}
               value={formData.roles || []}
@@ -240,7 +266,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
           </div>
 
           {formData.roles?.includes("influencer") && !user?.roles?.includes("influencer") && (
-            <div className="mt-3">
+            <div>
               <Notice tone="info">
                 Influencer needs an application. Saving takes you to the form.
               </Notice>
@@ -248,7 +274,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
           )}
 
           {formData.roles?.includes("builder") && (
-            <Field label="Builder focus" className="mt-4" required>
+            <Field label="Builder focus" required>
               <Select
                 value={formData.preferences?.builderPreferences || ""}
                 onChange={(e) => patchPrefs({ builderPreferences: e.target.value })}
@@ -267,14 +293,14 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
       <motion.div variants={item}>
         <SettingsCard title="Location & timezone" accent="#3ee6a0">
           {!isLocationSet && (
-            <div className="mb-4">
+            <div>
               <Notice>
                 Matchmaking, meeting times and local discovery stay switched off until this is set.
               </Notice>
             </div>
           )}
 
-          <FieldGrid>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             <Field label="Country">
               <Select
                 value={formData.profile?.country || ""}
@@ -290,9 +316,9 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
                 onChange={(e) => patchProfile({ city: e.target.value })}
               />
             </Field>
-          </FieldGrid>
+          </div>
 
-          <Field label="Timezone" className="mt-4">
+          <Field label="Timezone">
             <Select
               value={formData.preferences?.timezone || ""}
               onChange={(e) => patchPrefs({ timezone: e.target.value })}
@@ -301,12 +327,13 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
             />
           </Field>
 
-          <div className="mt-4">
+          <div>
             <CosmosButton
               variant="ghost"
               size="sm"
               onClick={handleAutoDetectLocation}
               disabled={loadingCountry}
+              className="min-h-[44px]"
             >
               {loadingCountry ? <Loader2 size={14} className="animate-spin" /> : <Crosshair size={14} />}
               {loadingCountry ? "Detecting…" : "Detect from my connection"}
@@ -335,7 +362,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
           hint="The assistant reads GitHub and LinkedIn to fill in your skills and history."
           accent="#ff6fd8"
         >
-          <FieldGrid>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {SOCIALS.map(({ key, label, placeholder }) => (
               <Field key={key} label={label}>
                 <TextInput
@@ -349,7 +376,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
                 />
               </Field>
             ))}
-          </FieldGrid>
+          </div>
         </SettingsCard>
       </motion.div>
     </motion.div>

@@ -47,10 +47,13 @@ export const usersAPI = {
   },
 
   updateProfile: async (userId, profileData, accessToken, dType = 'multipart/form-data') => {
+    const isFormData = typeof FormData !== 'undefined' && profileData instanceof FormData;
     const headers = {
-      'Content-Type': dType,
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     };
+    if (!isFormData) {
+      headers['Content-Type'] = dType === 'multipart/form-data' ? 'application/json' : dType;
+    }
     const response = await api.put(`/users/${userId}`, profileData, { headers });
     return response.data;
   },

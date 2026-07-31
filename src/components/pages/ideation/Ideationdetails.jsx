@@ -29,8 +29,10 @@ import {
   AtSign,
   Plus,
   Info,
+  Target,
+  Wrench,
 } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "@/utils/config";
 import { ideaAPI } from "@/utils/APIs/ideaAPI";
@@ -38,17 +40,19 @@ import { useSelector } from "react-redux";
 import { usersAPI } from "@/utils/APIs/userAPI";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import useSocket from "@/utils/hooks/useSocket";
+import VisionNotFound from "../vision/VisionNotFound";
 import DeleteConfirmationModal from "@/utils/confirm";
 import VisionReadinessCard from '@/components/pages/ideation/VisionReadinessCard';
 import MatchmakingSection from './MatchmakingSection';
 import { getStageColor, getCategoryColor } from './getStageColor';
+import AdSlot from "@/components/cosmos/AdSlot";
 
 const BASE_URL = API_BASE_URL + "/ideas";
 const API_URL = API_BASE_URL;
 
 const MOCK_IDEAS = [
   {
-    id: "mock-idea-1",
+    id: "sv-1",
     title: "Founder Match: Find Your Tech Co-Founder",
     description: "A simple tool that connects non-technical founders with developers based on actual skills and shared interests, not just resume buzzwords.",
     projectDetails: "We're building a platform to solve the biggest headache for early-stage startups: finding a technical co-founder. Instead of endless networking events, we use smart matching to connect you with builders who have the right skills, tech stack, and vibe.",
@@ -77,34 +81,18 @@ const MOCK_IDEAS = [
     teamMembers: [
       { name: "Alice Smith", role: "Frontend Developer" },
       { name: "Bob Johnson", role: "Backend Developer" },
-      { name: "Charlie Davis", role: "UI/UX Designer" },
-      { name: "Diana Prince", role: "Product Manager" },
-      { name: "Evan Wright", role: "QA Engineer" },
-      { name: "Fiona Gallagher", role: "DevOps Engineer" },
-      { name: "George Martin", role: "Data Scientist" },
-      { name: "Hannah Abbott", role: "Marketing Specialist" },
-      { name: "Ian Malcolm", role: "Security Expert" },
-      { name: "Julia Roberts", role: "Fullstack Developer" },
-      { name: "Kevin Hart", role: "Content Creator" },
-      { name: "Laura Croft", role: "Mobile Developer" },
-      { name: "Michael Scott", role: "Scrum Master" },
-      { name: "Nina Dobrev", role: "Business Analyst" },
-      { name: "Oscar Isaac", role: "Cloud Architect" },
-      { name: "Penelope Cruz", role: "SEO Specialist" },
-      { name: "Quentin Tarantino", role: "Creative Director" },
-      { name: "Rachel Green", role: "Sales Representative" },
-      { name: "Steve Rogers", role: "System Administrator" },
-      { name: "Tony Stark", role: "AI Engineer" }
+      { name: "Charlie Davis", role: "UI/UX Designer" }
     ],
     collaborators: 1,
     tags: ["Matchmaking", "Startup Tool", "Community"],
     visionState: "public",
     readinessScore: 85,
     isConverted: false,
-    problemStatement: "Non-technical founders struggle to find developers who are not only skilled but actually interested in their startup's domain and values. Endlessly browsing LinkedIn or spamming Discord channels leads to low-quality matches and wasted time.",
-    solution: "A tailored matching system that analyzes both tech stack requirements and soft-skill alignments (like builder consistency, streak metrics, and sector interests) to introduce founders to verified co-developers.",
+    problemStatement: "Non-technical founders struggle to find developers who are both skilled and genuinely interested in their domain. Networking events and cold LinkedIn outreach produce low-quality matches and waste months.",
+    solution: "Matching on tech stack requirements *and* soft-signal alignment — build consistency, sector interest, availability — so introductions start warm instead of cold.",
+    whereItStands: "Working prototype matching on skills and availability. Next: bring in contribution history so the score reflects what people have actually shipped, not what they claim.",
     requiredRoles: ["Fullstack Engineer", "Product Designer", "Growth Marketer"],
-    techStack: ["React", "Node.js", "MongoDB", "Tailwind CSS", "WebSockets"]
+    techStack: ["REACT", "NODE.JS", "POSTGRES", "TAILWIND", "WEBSOCKETS"]
   },
   {
     id: "mock-idea-2",
@@ -228,11 +216,19 @@ const MOCK_RECOMMENDATIONS = [
 ];
 
 const VisionDetails = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [idea, setIdea] = useState(null);
   const [comments, setComments] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [activeTab, setActiveTab] = useState("comments");
-  const [activeMainTab, setActiveMainTab] = useState("pitch");
+  const [activeMainTab, setActiveMainTab] = useState(searchParams.get("tab") || "pitch");
+
+  const handleMainTabChange = (tabId) => {
+    setActiveMainTab(tabId);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", tabId);
+    setSearchParams(newParams, { replace: true });
+  };
   const [ideaCreator, setIdeaCreator] = useState(null);
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState("");
@@ -252,10 +248,8 @@ const VisionDetails = () => {
   const discussionSectionRef = useRef(null);
   const fileInputRef = useRef(null);
   const location = useLocation();
-  const navigate = useNavigate();
-
-  const queryParams = new URLSearchParams(location.search);
-  const ideaId = queryParams.get("id")?.toString();
+  const params = useParams();
+  const ideaId = searchParams.get("id")?.toString() || searchParams.get("ideaId")?.toString() || searchParams.get("visionId")?.toString() || params?.id?.toString();
   const { user, access_token } = useSelector((state) => state.auth);
   const { socket } = useSocket();
 
@@ -385,33 +379,40 @@ const VisionDetails = () => {
     const fetchIdea = async () => {
       try {
         setLoading(true);
-        const res = await ideaAPI.getIdeaById(ideaId);
-        setIdea(res.data.idea);
-        setLikes(res.data.idea.likes ?? 0);
-        setLiked(res.data.idea.hasLiked || false);
-        setBookmarked(res.data.idea.hasBookmarked || false);
-        if (user && res.data.idea.likedBy?.length) {
-          setLiked(res.data.idea.likedBy.includes(user.id));
+        let res = null;
+        if (ideaId) {
+          res = await ideaAPI.getIdeaById(ideaId).catch(() => null);
         }
-        const commentsRes = await ideaAPI.getIdeaComments({ ideaId });
-        const allComments = commentsRes.data.comments || [];
-        setComments(allComments.filter((c) => !c.suggestion));
-        setSuggestions(allComments.filter((c) => c.suggestion));
-        setIdea((prevIdea) => ({ ...prevIdea, comments: allComments }));
-      } catch (error) {
-        console.error("Error fetching vision (using mock fallback):", error);
-        const fallbackIdea = MOCK_IDEAS.find(i => i.id === ideaId) || MOCK_IDEAS[0];
+        const ideaData = res?.data?.idea || res?.data || null;
+
+        if (ideaData && ideaData.title) {
+          setIdea(ideaData);
+          setLikes(ideaData.likes ?? 0);
+          setLiked(ideaData.hasLiked || false);
+          setBookmarked(ideaData.hasBookmarked || false);
+          if (user && ideaData.likedBy?.length) {
+            setLiked(ideaData.likedBy.includes(user.id));
+          }
+          const commentsRes = await ideaAPI.getIdeaComments({ ideaId }).catch(() => null);
+          const allComments = commentsRes?.data?.comments || [];
+          setComments(allComments.filter((c) => !c.suggestion));
+          setSuggestions(allComments.filter((c) => c.suggestion));
+          setIdea((prevIdea) => ({ ...prevIdea, comments: allComments }));
+          return;
+        }
+
+        // Fallback to sample visions
+        const fallbackIdea = MOCK_IDEAS.find(i => String(i.id) === String(ideaId) || String(i.id) === `sv-${ideaId}`) || MOCK_IDEAS[0];
         setIdea(fallbackIdea);
-        setLikes(fallbackIdea.likes);
+        setLikes(fallbackIdea.likes || 0);
         setLiked(false);
         setBookmarked(false);
 
-        // High fidelity mock comments/suggestions to populate empty workspace in offline/mock mode
         const mockComments = [
           {
             id: "mc-1",
             content: "This looks like a really promising project! I've ran into this exact co-founder search problem three times before. Definitely needed.",
-            createdAt: new Date(Date.now() - 3600000 * 3).toISOString(), // 3 hours ago
+            createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
             author: { firstName: "Sarah", lastName: "Chen", email: "sarah.chen@example.com" },
             likes: 4,
             userLiked: false
@@ -419,7 +420,7 @@ const VisionDetails = () => {
           {
             id: "mc-2",
             content: "Agreed. Are you planning to add a portfolio verification mechanic or is it purely self-reported skill tags?",
-            createdAt: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
+            createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
             author: { firstName: "Alex", lastName: "Rivera", email: "alex.rivera@example.com" },
             likes: 2,
             userLiked: false
@@ -430,7 +431,7 @@ const VisionDetails = () => {
           {
             id: "ms-1",
             content: "Suggest using GitHub OAuth to automatically analyze repositories and generate verified developer tags instead of manual input.",
-            createdAt: new Date(Date.now() - 3600000 * 5).toISOString(), // 5 hours ago
+            createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
             author: { firstName: "Elena", lastName: "Rostova", email: "elena.r@example.com" },
             likes: 5,
             userLiked: false,
@@ -440,6 +441,13 @@ const VisionDetails = () => {
 
         setComments(mockComments);
         setSuggestions(mockSuggestions);
+      } catch (error) {
+        console.error("Error fetching vision (using mock fallback):", error);
+        const fallbackIdea = MOCK_IDEAS.find(i => String(i.id) === String(ideaId) || String(i.id) === `sv-${ideaId}`) || MOCK_IDEAS[0];
+        setIdea(fallbackIdea);
+        setLikes(fallbackIdea.likes || 0);
+        setLiked(false);
+        setBookmarked(false);
       } finally {
         setLoading(false);
       }
@@ -832,15 +840,7 @@ const VisionDetails = () => {
   }
 
   if (!idea) {
-    return (
-      <motion.div
-        className="min-h-screen flex items-center justify-center text-red-400 bg-black"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        Idea not found.
-      </motion.div>
-    );
+    return <VisionNotFound />;
   }
 
   const containerVariants = {
@@ -891,30 +891,30 @@ const VisionDetails = () => {
 
       {/* Header */}
       <motion.div
-        className="sticky top-0 z-40 border-b border-white/10 bg-black/80 backdrop-blur-xl"
+        className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#030712]/85 backdrop-blur-xl"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="w-full mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="w-full mx-auto px-4 py-3.5 flex items-center justify-between">
           <Link
             to="/ideation"
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-200 group text-sm font-semibold"
+            className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors duration-200 group text-xs sm:text-sm font-medium"
           >
-            <motion.div whileHover={{ x: -3 }} transition={{ duration: 0.2 }} className="p-1.5 bg-white/5 border border-white/[0.08] rounded-lg group-hover:bg-white/10 group-hover:border-white/15 transition-all">
+            <motion.div whileHover={{ x: -3 }} transition={{ duration: 0.2 }} className="p-1.5 bg-white/[0.04] border border-white/[0.08] rounded-xl group-hover:bg-white/[0.08] group-hover:border-white/15 transition-all">
               <ArrowLeft className="h-4 w-4" />
             </motion.div>
             <span>Back to Ideas</span>
           </Link>
 
-          <div className="flex items-center gap-2 p-1 bg-[#0b0c10]/40 border border-white/[0.05] rounded-xl backdrop-blur-md shadow-lg">
+          <div className="flex items-center gap-1.5 p-1 bg-[#0b0c10]/60 border border-white/[0.08] rounded-2xl backdrop-blur-md shadow-xl">
             <motion.button
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
-              className={`p-2 rounded-lg border transition-all duration-200 ${liked
-                ? "bg-red-500/10 text-red-400 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]"
-                : "bg-transparent border-transparent text-gray-400 hover:text-white hover:bg-white/5"
+              className={`p-2 rounded-xl border transition-all duration-200 ${liked
+                ? "bg-red-500/10 text-red-400 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.15)]"
+                : "bg-transparent border-transparent text-zinc-400 hover:text-white hover:bg-white/[0.06]"
                 }`}
               onClick={handleLike}
               title="Like this idea"
@@ -923,7 +923,7 @@ const VisionDetails = () => {
                 animate={liked ? { scale: [1, 1.25, 1] } : {}}
                 transition={{ duration: 0.3 }}
               >
-                <Heart className={`h-4.5 w-4.5 ${liked ? "fill-current" : ""}`} />
+                <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
               </motion.div>
             </motion.button>
 
@@ -931,20 +931,20 @@ const VisionDetails = () => {
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
-              className="p-2 rounded-lg border border-transparent bg-transparent text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200"
+              className="p-2 rounded-xl border border-transparent bg-transparent text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-all duration-200"
               onClick={handleShare}
               title="Share this idea"
             >
-              <Share2 className="h-4.5 w-4.5" />
+              <Share2 className="h-4 w-4" />
             </motion.button>
 
             <motion.button
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
-              className={`p-2 rounded-lg border transition-all duration-200 ${bookmarked
-                ? "bg-blue-500/10 text-blue-400 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]"
-                : "bg-transparent border-transparent text-gray-400 hover:text-white hover:bg-white/5"
+              className={`p-2 rounded-xl border transition-all duration-200 ${bookmarked
+                ? "bg-blue-500/10 text-blue-400 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+                : "bg-transparent border-transparent text-zinc-400 hover:text-white hover:bg-white/[0.06]"
                 }`}
               onClick={handleBookmark}
               aria-pressed={bookmarked}
@@ -955,7 +955,7 @@ const VisionDetails = () => {
                 transition={{ duration: 0.3 }}
               >
                 <Bookmark
-                  className={`h-4.5 w-4.5 ${bookmarked ? "fill-current" : ""}`}
+                  className={`h-4 w-4 ${bookmarked ? "fill-current" : ""}`}
                 />
               </motion.div>
             </motion.button>
@@ -967,15 +967,15 @@ const VisionDetails = () => {
                 whileTap="tap"
                 onClick={handleActivate}
                 disabled={activating}
-                className="px-3 py-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10
-                  hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold transition-all flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10
+                  hover:bg-emerald-500/20 text-emerald-400 text-xs font-medium transition-all flex items-center gap-1.5"
                 title="Vision meets all requirements — activate as Startup"
               >
                 🚀 {activating ? 'Activating...' : 'Activate as Startup'}
               </motion.button>
             )}
             {isCreator && eligibility && !eligibility.eligible && (
-              <div className="text-[10px] text-zinc-500 px-2 py-1 rounded border border-zinc-800 bg-zinc-900">
+              <div className="text-[10px] text-zinc-400 px-2 py-1 rounded-lg border border-zinc-800 bg-zinc-900/80">
                 {eligibility.next_requirement || 'Build readiness to activate'}
               </div>
             )}
@@ -984,16 +984,17 @@ const VisionDetails = () => {
                 variants={buttonVariants}
                 whileHover="hover"
                 whileTap="tap"
-                className="p-2 rounded-lg border border-transparent bg-transparent text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
+                className="p-2 rounded-xl border border-transparent bg-transparent text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
                 onClick={() => setShowDeleteModal(true)}
                 title="Delete this idea"
               >
-                <Trash2 className="h-4.5 w-4.5" />
+                <Trash2 className="h-4 w-4" />
               </motion.button>
             )}
           </div>
         </div>
-      </motion.div>      {/* Top Layout Grid: Hero Card & Startup Readiness */}
+      </motion.div>
+
       {/* Top Layout Grid: Hero Card & Startup Readiness */}
       <motion.div
         className="w-full mx-auto px-2 md:px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10 items-stretch"
@@ -1005,7 +1006,7 @@ const VisionDetails = () => {
         <div className="lg:col-span-2">
           {/* Hero Card */}
           <motion.div
-            className="relative bg-gradient-to-b from-[#0e1118] to-[#07090d] border border-white/[0.08] rounded-3xl p-8 lg:p-10 shadow-[0_32px_64px_rgba(0,0,0,0.6)] h-full flex flex-col justify-between overflow-hidden group transition-all duration-550"
+            className="relative bg-gradient-to-b from-[#0e1118] to-[#07090d] border border-white/[0.08] rounded-3xl p-4 sm:p-6 lg:p-10 shadow-[0_32px_64px_rgba(0,0,0,0.6)] h-full flex flex-col justify-between overflow-hidden group transition-all duration-550"
             variants={itemVariants}
             whileHover={{ y: -4 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -1026,10 +1027,10 @@ const VisionDetails = () => {
                     {idea.stage || "Concept"}
                   </span>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-white via-blue-100 to-gray-200 bg-clip-text text-transparent mb-4 tracking-tight leading-tight">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-white via-blue-100 to-gray-200 bg-clip-text text-transparent mb-4 tracking-tight leading-tight break-words">
                   {idea.title}
                 </h1>
-                <p className="text-gray-400/90 text-base md:text-lg leading-relaxed">{idea.description}</p>
+                <p className="text-gray-400/90 text-sm sm:text-base md:text-lg leading-relaxed">{idea.description}</p>
               </div>
 
               {idea.imageUrl && (
@@ -1038,7 +1039,7 @@ const VisionDetails = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   src={idea.imageUrl}
                   alt={idea.title}
-                  className="w-full h-64 object-cover rounded-xl border border-white/10"
+                  className="w-full h-44 sm:h-56 md:h-64 object-cover rounded-xl border border-white/10"
                 />
               )}
 
@@ -1065,39 +1066,39 @@ const VisionDetails = () => {
             <div className="relative z-10 mt-8 pt-8 border-t border-white/[0.06]">
               {/* Stats Bar */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <motion.div variants={itemVariants} className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.1] hover:bg-white/[0.04] transition-all duration-300 cursor-pointer shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
-                  <div className="flex items-center gap-1.5 text-red-400 mb-1">
+                <motion.div variants={itemVariants} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-white/15 hover:bg-white/[0.05] transition-all duration-300 cursor-pointer shadow-md">
+                  <div className="flex items-center gap-1.5 text-red-400 mb-0.5">
                     <Heart className="h-4 w-4" />
-                    <span className="font-bold text-lg">{likes}</span>
+                    <span className="font-semibold text-base sm:text-lg">{likes}</span>
                   </div>
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Likes</span>
+                  <span className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider">Likes</span>
                 </motion.div>
-                <motion.div variants={itemVariants} className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.1] hover:bg-white/[0.04] transition-all duration-300 cursor-pointer shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
-                  <div className="flex items-center gap-1.5 text-green-400 mb-1">
+                <motion.div variants={itemVariants} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-white/15 hover:bg-white/[0.05] transition-all duration-300 cursor-pointer shadow-md">
+                  <div className="flex items-center gap-1.5 text-emerald-400 mb-0.5">
                     <MessageSquare className="h-4 w-4" />
-                    <span className="font-bold text-lg">{idea.comments?.length ?? 0}</span>
+                    <span className="font-semibold text-base sm:text-lg">{idea.comments?.length ?? 0}</span>
                   </div>
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Comments</span>
+                  <span className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider">Comments</span>
                 </motion.div>
-                <motion.div variants={itemVariants} className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.1] hover:bg-white/[0.04] transition-all duration-300 cursor-pointer shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
-                  <div className="flex items-center gap-1.5 text-blue-400 mb-1">
+                <motion.div variants={itemVariants} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-white/15 hover:bg-white/[0.05] transition-all duration-300 cursor-pointer shadow-md">
+                  <div className="flex items-center gap-1.5 text-blue-400 mb-0.5">
                     <Users className="h-4 w-4" />
-                    <span className="font-bold text-lg">{idea.teamMembers?.length ?? 0}</span>
+                    <span className="font-semibold text-base sm:text-lg">{idea.teamMembers?.length ?? 0}</span>
                   </div>
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Team</span>
+                  <span className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider">Team</span>
                 </motion.div>
-                <motion.div variants={itemVariants} className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.1] hover:bg-white/[0.04] transition-all duration-300 cursor-pointer shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
-                  <div className="flex items-center gap-1.5 text-amber-400 mb-1">
+                <motion.div variants={itemVariants} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-white/15 hover:bg-white/[0.05] transition-all duration-300 cursor-pointer shadow-md">
+                  <div className="flex items-center gap-1.5 text-amber-400 mb-0.5">
                     <Clock className="h-4 w-4" />
-                    <span className="font-semibold text-[13px]">{new Date(idea.createdAt).toLocaleDateString()}</span>
+                    <span className="font-semibold text-xs sm:text-sm">{new Date(idea.createdAt).toLocaleDateString()}</span>
                   </div>
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Posted</span>
+                  <span className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider">Posted</span>
                 </motion.div>
               </div>
 
               {/* Action Buttons */}
               <motion.div
-                className="flex flex-wrap gap-3 pt-6"
+                className="flex flex-col sm:flex-row flex-wrap gap-3 pt-6"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
@@ -1106,38 +1107,38 @@ const VisionDetails = () => {
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
-                  className="bg-gradient-to-r from-blue-650 to-indigo-650 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold text-xs px-6 py-3 rounded-xl flex items-center gap-2 transition-all duration-200 shadow-[0_8px_20px_rgba(37,99,235,0.2)]"
+                  className="w-full sm:w-auto justify-center bg-gradient-to-r from-blue-650 to-indigo-650 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold text-xs px-6 py-3 rounded-xl flex items-center gap-2 transition-all duration-200 shadow-[0_8px_20px_rgba(37,99,235,0.2)]"
                   onClick={handleStartDiscussion}
                 >
                   <MessageSquare className="h-4 w-4" />
                   Start Discussion
                 </motion.button>
                 {!isCreator && (
-                  <div>
+                  <div className="w-full sm:w-auto">
                     {myCollabStatus === 'approved' ? (
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                        <div className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
                           <Check className="h-4 w-4" />
                           Co-Developer Joined
                         </div>
                         <motion.button
                           variants={buttonVariants} whileHover="hover" whileTap="tap"
                           onClick={handleLeaveIdea}
-                          className="px-4 py-2.5 rounded-xl bg-red-500/5 hover:bg-red-500/15 border border-red-500/20 text-red-400 text-xs font-medium transition-all duration-200"
+                          className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-red-500/5 hover:bg-red-500/15 border border-red-500/20 text-red-400 text-xs font-medium transition-all duration-200"
                         >
                           Leave Project
                         </motion.button>
                       </div>
                     ) : myCollabStatus === 'pending' ? (
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                        <div className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold">
                           <Clock className="h-4 w-4" />
                           Interest Sent — Reviewing
                         </div>
                         <motion.button
                           variants={buttonVariants} whileHover="hover" whileTap="tap"
                           onClick={handleCancelMyRequest}
-                          className="px-4 py-2.5 rounded-xl bg-red-500/5 hover:bg-red-500/15 border border-red-500/20 text-red-400 text-xs font-medium transition-all duration-200"
+                          className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-red-500/5 hover:bg-red-500/15 border border-red-500/20 text-red-400 text-xs font-medium transition-all duration-200"
                         >
                           Cancel
                         </motion.button>
@@ -1145,7 +1146,7 @@ const VisionDetails = () => {
                     ) : (
                       <motion.button
                         variants={buttonVariants} whileHover="hover" whileTap="tap"
-                        className="bg-white/5 hover:bg-white/10 border border-white/15 px-6 py-3 rounded-xl text-white text-xs font-semibold transition-all duration-200"
+                        className="w-full sm:w-auto justify-center bg-white/5 hover:bg-white/10 border border-white/15 px-6 py-3 rounded-xl text-white text-xs font-semibold transition-all duration-200"
                         onClick={() => setShowJoinModal(true)}
                       >
                         <Plus className="h-4 w-4 mr-1.5 inline" />
@@ -1175,7 +1176,7 @@ const VisionDetails = () => {
       <div className="w-full mx-auto px-2 md:px-4 mb-8 relative z-10 border-b border-white/[0.06]">
         <div className="flex gap-4">
           <button
-            onClick={() => setActiveMainTab("pitch")}
+            onClick={() => handleMainTabChange("pitch")}
             className={`pb-3.5 px-2 font-semibold text-base transition-all duration-300 relative flex items-center gap-2 ${activeMainTab === "pitch"
               ? "text-blue-400"
               : "text-gray-500 hover:text-gray-300"
@@ -1190,7 +1191,7 @@ const VisionDetails = () => {
             )}
           </button>
           <button
-            onClick={() => setActiveMainTab("collab")}
+            onClick={() => handleMainTabChange("collab")}
             className={`pb-3.5 px-2 font-semibold text-base transition-all duration-300 relative flex items-center gap-2.5 ${activeMainTab === "collab"
               ? "text-purple-400"
               : "text-gray-500 hover:text-gray-300"
@@ -1222,106 +1223,156 @@ const VisionDetails = () => {
             initial="hidden"
             animate="visible"
           >
-            {/* Left Column - Project Details */}
-            <div className="lg:col-span-2">
-              <motion.div
-                className="relative bg-gradient-to-b from-[#0e1118] to-[#07090d] border border-white/[0.08] rounded-3xl p-8 lg:p-10 shadow-[0_24px_48px_rgba(0,0,0,0.5)] h-full flex flex-col justify-between overflow-hidden group"
-                variants={itemVariants}
-                whileHover={{ y: -2 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              >
-                <div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-3xl pointer-events-none" />
-                  <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 relative z-10">
-                    <div className="p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20 shadow-inner">
-                      <Tag className="h-5 w-5 text-blue-400" />
+            {/* Left Column - Project Details & missing sections */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* AdSlot Top Banner */}
+              <AdSlot placement="ideation-details" format="banner" className="w-full" />
+
+              {/* Problem & Solution Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* THE PROBLEM */}
+                <motion.div
+                  variants={itemVariants}
+                  className="relative bg-gradient-to-b from-[#0e1118] to-[#07090d] border border-white/[0.08] rounded-3xl p-6 sm:p-7 shadow-[0_24px_48px_rgba(0,0,0,0.5)] flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2.5 bg-pink-500/10 border border-pink-500/20 text-pink-400 rounded-full flex items-center justify-center">
+                        <Target className="h-4.5 w-4.5" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-mono tracking-[0.2em] font-bold text-pink-400 uppercase block">
+                          T H E   P R O B L E M
+                        </span>
+                        <h3 className="text-sm font-bold text-white mt-0.5">What is actually broken</h3>
+                      </div>
                     </div>
-                    <span className="bg-gradient-to-r from-white via-blue-100 to-gray-300 bg-clip-text text-transparent">
-                      Project Details
-                    </span>
-                  </h2>
-
-                  <div className="space-y-6 relative z-10">
-                    {/* Overview */}
-                    <div className="overview-container bg-[#07080c]/30 border border-white/[0.03] p-5 rounded-2xl">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-blue-400 mb-2.5 flex items-center gap-1.5">
-                        <TrendingUp className="h-3.5 w-3.5" /> Overview
-                      </h3>
-                      <p className="whitespace-pre-line leading-relaxed text-sm text-gray-300">
-                        {idea.projectDetails || idea.description}
-                      </p>
-                    </div>
-
-                    {/* Challenge & Proposed Solution Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Problem Statement */}
-                      {(idea.problemStatement || idea.problem_statement) && (
-                        <div className="problem-container bg-[#07080c]/35 border border-white/[0.03] p-5 rounded-2xl hover:border-white/[0.06] transition-all duration-300">
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-2 flex items-center gap-1.5">
-                            <AlertCircle className="h-3.5 w-3.5" /> Problem Statement
-                          </h3>
-                          <p className="text-xs text-gray-400 leading-relaxed">
-                            {idea.problemStatement || idea.problem_statement}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Solution */}
-                      {idea.solution && (
-                        <div className="solution-container bg-[#07080c]/35 border border-white/[0.03] p-5 rounded-2xl hover:border-white/[0.06] transition-all duration-300">
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-2 flex items-center gap-1.5">
-                            <Lightbulb className="h-3.5 w-3.5" /> Proposed Solution
-                          </h3>
-                          <p className="text-xs text-gray-400 leading-relaxed">
-                            {idea.solution}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Matchmaking & Tech Stack Details Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Required Roles */}
-                      {(idea.requiredRoles || idea.required_roles) && (
-                        <div className="roles-container bg-[#07080c]/35 border border-white/[0.03] p-5 rounded-2xl hover:border-white/[0.06] transition-all duration-300">
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-blue-400 mb-3 flex items-center gap-1.5">
-                            <Users className="h-3.5 w-3.5" /> Required Roles
-                          </h3>
-                          <div className="flex flex-wrap gap-2">
-                            {(Array.isArray(idea.requiredRoles || idea.required_roles)
-                              ? (idea.requiredRoles || idea.required_roles)
-                              : [idea.requiredRoles || idea.required_roles]
-                            ).map((role, idx) => (
-                              <span key={idx} className="text-xs px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-300 rounded-lg font-medium hover:bg-blue-500/20 transition-all cursor-default">
-                                {role}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Technology Stack */}
-                      {(idea.techStack || idea.tech_stack) && (
-                        <div className="tech-container bg-[#07080c]/35 border border-white/[0.03] p-5 rounded-2xl hover:border-white/[0.06] transition-all duration-300">
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400 mb-3 flex items-center gap-1.5">
-                            <Zap className="h-3.5 w-3.5" /> Tech Stack
-                          </h3>
-                          <div className="flex flex-wrap gap-2">
-                            {(Array.isArray(idea.techStack || idea.tech_stack)
-                              ? (idea.techStack || idea.tech_stack)
-                              : [idea.techStack || idea.tech_stack]
-                            ).map((tech, idx) => (
-                              <span key={idx} className="text-xs px-3 py-1.5 bg-purple-500/10 border border-purple-500/20 text-purple-300 rounded-lg font-medium hover:bg-purple-500/20 transition-all cursor-default">
-                                {tech}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <p className="text-xs sm:text-sm text-gray-300/90 leading-relaxed">
+                      {idea.problemStatement || idea.problem_statement || "Non-technical founders struggle to find developers who are both skilled and genuinely interested in their domain. Networking events and cold LinkedIn outreach produce low-quality matches and waste months."}
+                    </p>
                   </div>
+                </motion.div>
+
+                {/* THE SOLUTION */}
+                <motion.div
+                  variants={itemVariants}
+                  className="relative bg-gradient-to-b from-[#0e1118] to-[#07090d] border border-white/[0.08] rounded-3xl p-6 sm:p-7 shadow-[0_24px_48px_rgba(0,0,0,0.5)] flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center">
+                        <Lightbulb className="h-4.5 w-4.5" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-mono tracking-[0.2em] font-bold text-emerald-400 uppercase block">
+                          T H E   S O L U T I O N
+                        </span>
+                        <h3 className="text-sm font-bold text-white mt-0.5">What this does about it</h3>
+                      </div>
+                    </div>
+                    <p className="text-xs sm:text-sm text-gray-300/90 leading-relaxed">
+                      {idea.solution || "Matching on tech stack requirements *and* soft-signal alignment — build consistency, sector interest, availability — so introductions start warm instead of cold."}
+                    </p>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* WHERE IT STANDS */}
+              <motion.div
+                variants={itemVariants}
+                className="relative bg-gradient-to-b from-[#0e1118] to-[#07090d] border border-white/[0.08] rounded-3xl p-6 sm:p-7 shadow-[0_24px_48px_rgba(0,0,0,0.5)]"
+              >
+                <span className="text-[10px] font-mono tracking-[0.2em] font-bold text-cyan-400 uppercase mb-2.5 block">
+                  W H E R E   I T   S T A N D S
+                </span>
+                <p className="text-xs sm:text-sm text-gray-300/90 leading-relaxed">
+                  {idea.whereItStands || idea.where_it_stands || "Working prototype matching on skills and availability. Next: bring in contribution history so the score reflects what people have actually shipped, not what they claim."}
+                </p>
+              </motion.div>
+
+              {/* WHO THIS NEEDS */}
+              <motion.div
+                variants={itemVariants}
+                className="relative bg-gradient-to-b from-[#0e1118] to-[#07090d] border border-white/[0.08] rounded-3xl p-6 sm:p-7 shadow-[0_24px_48px_rgba(0,0,0,0.5)]"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-mono tracking-[0.2em] font-bold text-cyan-400 uppercase">
+                    W H O   T H I S   N E E D S
+                  </span>
+                  <span className="text-[10px] font-mono tracking-[0.14em] uppercase text-zinc-400 font-semibold">
+                    {(Array.isArray(idea.requiredRoles || idea.required_roles)
+                      ? (idea.requiredRoles || idea.required_roles)
+                      : ["Fullstack Engineer", "Product Designer", "Growth Marketer"]
+                    ).length} OPEN
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-400 mb-5">
+                  Named roles, not "looking for cofounders" — so you can tell in one read whether it's you.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                  {(Array.isArray(idea.requiredRoles || idea.required_roles) && (idea.requiredRoles || idea.required_roles).length > 0
+                    ? (idea.requiredRoles || idea.required_roles)
+                    : ["Fullstack Engineer", "Product Designer", "Growth Marketer"]
+                  ).map((role, idx) => (
+                    <div key={idx} className="bg-[#07080c]/60 border border-white/[0.08] hover:border-amber-500/30 rounded-2xl p-4 flex items-center justify-between transition-all duration-200 group">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl group-hover:scale-105 transition-transform shrink-0">
+                          <Wrench className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs sm:text-sm font-semibold text-white truncate">{role}</p>
+                          <span className="text-[9px] font-mono tracking-[0.14em] uppercase text-zinc-500 block mt-0.5">OPEN</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setJoinMessage(`Applying for ${role}`);
+                          setShowJoinModal(true);
+                        }}
+                        className="px-3.5 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 text-white text-xs font-semibold transition-all duration-200 shrink-0 ml-2 cursor-pointer"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </motion.div>
+
+              {/* BUILT WITH */}
+              <motion.div
+                variants={itemVariants}
+                className="relative bg-gradient-to-b from-[#0e1118] to-[#07090d] border border-white/[0.08] rounded-3xl p-6 sm:p-7 shadow-[0_24px_48px_rgba(0,0,0,0.5)]"
+              >
+                <span className="text-[10px] font-mono tracking-[0.2em] font-bold text-amber-400 uppercase mb-3.5 block">
+                  B U I L T   W I T H
+                </span>
+                <div className="flex flex-wrap gap-2.5">
+                  {(Array.isArray(idea.techStack || idea.tech_stack) && (idea.techStack || idea.tech_stack).length > 0
+                    ? (idea.techStack || idea.tech_stack)
+                    : ["REACT", "NODE.JS", "POSTGRES", "TAILWIND", "WEBSOCKETS"]
+                  ).map((tech, idx) => (
+                    <span key={idx} className="px-3.5 py-1.5 rounded-xl border border-white/10 bg-[#07080c] text-zinc-300 font-mono text-xs uppercase tracking-wider font-semibold hover:border-purple-500/30 transition-all cursor-default">
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Overview / Details if present */}
+              {idea.projectDetails && (
+                <motion.div
+                  variants={itemVariants}
+                  className="relative bg-gradient-to-b from-[#0e1118] to-[#07090d] border border-white/[0.08] rounded-3xl p-6 sm:p-7 shadow-[0_24px_48px_rgba(0,0,0,0.5)]"
+                >
+                  <span className="text-[10px] font-mono tracking-[0.2em] font-bold text-blue-400 uppercase mb-2.5 block">
+                    A B O U T   T H I S   V I S I O N
+                  </span>
+                  <p className="whitespace-pre-line leading-relaxed text-xs sm:text-sm text-gray-300">
+                    {idea.projectDetails}
+                  </p>
+                </motion.div>
+              )}
             </div>
 
             {/* Right Column - Creator & Info Cards */}
@@ -1366,17 +1417,17 @@ const VisionDetails = () => {
               )}
 
               {/* Creator Card */}
-              <Link to={`/user-profile?userId=${idea.creator?.id}`} className="block flex-1">
+              <Link to={`/user-profile?userId=${idea.creator?.id || idea.creator?._id || idea.author?.id || idea.author?._id}`} className="block flex-1">
                 <motion.div
-                  className="relative bg-gradient-to-b from-[#0e1118] to-[#07090d] border border-white/[0.08] rounded-3xl p-6 shadow-[0_24px_48px_rgba(0,0,0,0.5)] group transition-all h-full flex flex-col justify-between"
+                  className="relative bg-gradient-to-b from-[#0e1118] to-[#07090d] border border-white/[0.08] rounded-3xl p-4 sm:p-6 shadow-[0_24px_48px_rgba(0,0,0,0.5)] group transition-all h-full flex flex-col justify-between"
                   variants={itemVariants}
                   whileHover={{ y: -2, borderColor: "rgba(59,130,246,0.2)" }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 rounded-3xl pointer-events-none transition-all duration-500" />
                   <div>
-                    <h2 className="text-sm font-bold mb-5 relative z-10 flex items-center gap-2 text-gray-400">
-                      <div className="w-1 h-3.5 bg-blue-550 rounded-full" />
+                    <h2 className="text-xs font-semibold mb-5 relative z-10 flex items-center gap-2 text-zinc-400 uppercase tracking-wider">
+                      <div className="w-1 h-3.5 bg-blue-500 rounded-full" />
                       Idea Creator
                     </h2>
                     <div className="text-center space-y-4">
@@ -1407,13 +1458,13 @@ const VisionDetails = () => {
                           </p>
                         )}
                         {ideaCreator?.profile?.city && (
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-zinc-400 mt-1">
                             📍 {ideaCreator.profile.city}, {ideaCreator.profile.country}
                           </p>
                         )}
                       </div>
                       {ideaCreator?.profile?.bio && (
-                        <p className="text-xs text-gray-405 leading-relaxed italic line-clamp-2 select-none">
+                        <p className="text-xs text-zinc-400 leading-relaxed italic line-clamp-2 select-none">
                           "{ideaCreator.profile.bio}"
                         </p>
                       )}
@@ -1422,33 +1473,33 @@ const VisionDetails = () => {
                       <div className="grid grid-cols-3 gap-2 pt-4 border-t border-white/[0.06]">
                         <div className="bg-[#07080c]/40 border border-white/[0.03] rounded-xl p-2.5">
                           <p className="text-sm font-bold text-blue-400">{ideaCreator?.active_startups_count ?? 0}</p>
-                          <p className="text-[10px] text-gray-500">Startups</p>
+                          <p className="text-[10px] text-zinc-400">Startups</p>
                         </div>
                         <div className="bg-[#07080c]/40 border border-white/[0.03] rounded-xl p-2.5">
                           <p className="text-sm font-bold text-purple-400 flex items-center justify-center gap-1">
                             {ideaCreator?.statistics?.total_likes_received ?? 0}
                           </p>
-                          <p className="text-[10px] text-gray-500">Total Likes</p>
+                          <p className="text-[10px] text-zinc-400">Total Likes</p>
                         </div>
                         <div className="bg-[#07080c]/40 border border-white/[0.03] rounded-xl p-2.5">
-                          <p className="text-sm font-bold text-green-400">{ideaCreator?.streak_days ?? 0}</p>
-                          <p className="text-[10px] text-gray-500">Streak</p>
+                          <p className="text-sm font-bold text-emerald-400">{ideaCreator?.streak_days ?? 0}</p>
+                          <p className="text-[10px] text-zinc-400">Streak</p>
                         </div>
                       </div>
 
                       {/* Additional Info */}
                       <div className="space-y-2 pt-3 border-t border-white/[0.06] text-left">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-gray-550">Satisfaction</span>
+                          <span className="text-zinc-400">Satisfaction</span>
                           <span className="font-semibold text-amber-400">{ideaCreator?.satisfaction_percentage?.toFixed(0) ?? 0}%</span>
                         </div>
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-gray-550">Revenue Generated</span>
+                          <span className="text-zinc-400">Revenue Generated</span>
                           <span className="font-semibold text-emerald-400">${ideaCreator?.total_revenue?.toLocaleString() ?? 0}</span>
                         </div>
                         {ideaCreator?.pref_language && (
                           <div className="flex justify-between items-center text-xs">
-                            <span className="text-gray-555">Language</span>
+                            <span className="text-zinc-400">Language</span>
                             <span className="font-semibold text-gray-300">{ideaCreator.pref_language.toUpperCase()}</span>
                           </div>
                         )}
@@ -1650,7 +1701,7 @@ const VisionDetails = () => {
           <div className="bg-[#0b0d13] border border-white/[0.08] rounded-2xl overflow-hidden shadow-[0_24px_48px_rgba(0,0,0,0.6)] grid grid-cols-1 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-white/[0.06]">
 
             {/* Left Column - Discussion Workspace (75%) */}
-            <div className="lg:col-span-3 p-6 md:p-8 flex flex-col gap-6">
+            <div className="lg:col-span-3 p-3.5 sm:p-6 md:p-8 flex flex-col gap-6">
 
               {/* Header with Title & Inline Tabs */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.06]">
@@ -1900,7 +1951,7 @@ const VisionDetails = () => {
             </div>
 
             {/* Right Column - Team Sidebar (25%) */}
-            <div className="lg:col-span-1 p-6 flex flex-col gap-6 bg-[#08090d]/60">
+            <div className="lg:col-span-1 p-4 sm:p-6 flex flex-col gap-6 bg-[#08090d]/60">
 
               {/* Sticky / Fixed Sidebar Header */}
               <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] shrink-0">
@@ -1946,9 +1997,9 @@ const VisionDetails = () => {
                       <p className="text-xs font-semibold text-white truncate">
                         {ideaCreator?.firstName || idea?.creator?.firstName} {ideaCreator?.lastName || idea?.creator?.lastName}
                       </p>
-                      <span className="text-[9px] bg-blue-500/10 border border-blue-500/20 text-blue-450 font-medium px-1 rounded shrink-0 select-none">Founder</span>
+                      <span className="text-[9px] bg-blue-500/10 border border-blue-500/20 text-blue-400 font-medium px-1 rounded shrink-0 select-none">Founder</span>
                     </div>
-                    <p className="text-[10px] text-gray-550 truncate">Founder & Lead</p>
+                    <p className="text-[10px] text-zinc-400 truncate">Founder & Lead</p>
                   </div>
                 </div>
 
@@ -1978,14 +2029,14 @@ const VisionDetails = () => {
                           <p className="text-xs font-medium text-gray-300 truncate">
                             {member.name || `${member.firstName || ''} ${member.lastName || ''}`.trim() || "Co-Developer"}
                           </p>
-                          <p className="text-[10px] text-gray-550 truncate">{member.role || "Co-Developer"}</p>
+                          <p className="text-[10px] text-zinc-400 truncate">{member.role || "Co-Developer"}</p>
                         </div>
                       </div>
                     );
                   })
                 ) : (
                   <div className="text-center py-6 bg-white/[0.01] rounded-xl border border-dashed border-white/5">
-                    <p className="text-[10px] text-gray-550">No co-developers yet.</p>
+                    <p className="text-[10px] text-zinc-400">No co-developers yet.</p>
                   </div>
                 )}
               </div>

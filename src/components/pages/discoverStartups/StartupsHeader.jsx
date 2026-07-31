@@ -66,9 +66,9 @@ export default function StartupsHeader({ mode, modeConfig }) {
             </span>
             <br />
             <motion.span
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
             >
               <ShinyText
                 text={modeConfig.headerSubtitle}

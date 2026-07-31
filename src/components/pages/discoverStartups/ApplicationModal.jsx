@@ -40,10 +40,19 @@ const ApplicationModal = ({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const roles =
-    Object.keys(item?.roles || {}).length > 0
-      ? Object.keys(item.roles)
-      : item?.requiredRoles || [];
+  useEffect(() => {
+    if (isOpen) {
+      setRole(roleSelected || "");
+    }
+  }, [isOpen, roleSelected]);
+
+  const roles = React.useMemo(() => {
+    if (Array.isArray(item?.roles)) return item.roles;
+    if (item?.roles && typeof item.roles === "object") return Object.keys(item.roles);
+    if (Array.isArray(item?.rolesNeeded)) return item.rolesNeeded;
+    if (Array.isArray(item?.requiredRoles)) return item.requiredRoles;
+    return [];
+  }, [item]);
 
   // ── Validation ─────────────────────────────────────────────────────────────
   const validate = () => {
@@ -155,7 +164,7 @@ const ApplicationModal = ({
         className="
           !w-[96vw]
           !max-w-[1100px]
-          z-999
+          z-[9999]
           h-[96vh] lg:h-auto
           bg-[#0E0F13]
           border border-white/10

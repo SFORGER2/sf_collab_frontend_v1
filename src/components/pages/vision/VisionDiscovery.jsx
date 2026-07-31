@@ -118,7 +118,7 @@ export function VisionDiscovery({ viewerRole = 'member', isCreator = false, resu
   const cost = CREDIT_COSTS.matchSuggestion;
 
   return (
-    <section className="cosmos-panel p-6" style={{ '--cosmos-accent': config.accent }}>
+    <section className="cosmos-panel p-4 sm:p-6" style={{ '--cosmos-accent': config.accent }}>
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div className="min-w-0">
           <Eyebrow>{config.eyebrow}</Eyebrow>
@@ -298,14 +298,15 @@ function BulkOutreach({ config, total }) {
 
 function ResultRow({ item, kind, accent }) {
   const isPerson = kind === 'people';
+  const itemId = item.id || item._id;
   const to = isPerson
-    ? `/users/${item.id}`
+    ? `/user-profile?userId=${itemId}`
     : kind === 'visions'
-      ? `/vision/${item.id}`
-      : `/startup-details/${item.id}`;
+      ? `/ideation-details?id=${itemId}`
+      : `/startup-details/${itemId}`;
 
   return (
-    <li className="flex items-center gap-3 py-3">
+    <li className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 py-3">
       <span
         className="w-9 h-9 rounded-full flex items-center justify-center font-mono text-[11px] shrink-0"
         style={{ background: `${accent}1f`, color: accent }}

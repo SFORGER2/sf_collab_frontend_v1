@@ -81,7 +81,7 @@ export function VisionActions({ viewerRole = 'member', isCreator = false, onAppl
   const Primary = config.primary.icon;
 
   return (
-    <section className="cosmos-panel p-6" style={{ '--cosmos-accent': config.accent }}>
+    <section className="cosmos-panel p-4 sm:p-6" style={{ '--cosmos-accent': config.accent }}>
       <Eyebrow className="mb-4">{isCreator ? 'Your Vision' : config.eyebrow}</Eyebrow>
 
       <div className="flex flex-wrap gap-2.5">
@@ -131,7 +131,7 @@ export function SuggestedContributors({ viewerRole, isCreator, suggestions = [] 
   const locked = suggestions.slice(FREE_VISIBLE);
 
   return (
-    <section className="cosmos-panel p-6" style={{ '--cosmos-accent': '#4fd8ff' }}>
+    <section className="cosmos-panel p-4 sm:p-6" style={{ '--cosmos-accent': '#4fd8ff' }}>
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
           <Eyebrow>AI matchmaking</Eyebrow>
@@ -175,7 +175,7 @@ export function SuggestedContributors({ viewerRole, isCreator, suggestions = [] 
 
 function PersonRow({ person }) {
   return (
-    <li className="flex items-center gap-3 py-3">
+    <li className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 py-3">
       <span className="w-9 h-9 rounded-full bg-cyan/12 text-cyan flex items-center justify-center font-mono text-[11px] shrink-0">
         {(person.name || '?').slice(0, 2).toUpperCase()}
       </span>
@@ -202,15 +202,15 @@ export function SimilarVisions({ isCreator, similar = [] }) {
   if (isCreator) return null;
 
   return (
-    <section className="cosmos-panel p-6" style={{ '--cosmos-accent': '#4fd8ff' }}>
+    <section className="cosmos-panel p-4 sm:p-6" style={{ '--cosmos-accent': '#4fd8ff' }}>
       <Eyebrow className="mb-1.5">Explore</Eyebrow>
       <h2 className="font-display text-[1.05rem] text-star mb-4">Similar Visions</h2>
 
       {similar.length > 0 ? (
-        <ul className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+        <ul className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))]">
           {similar.map((v) => (
-            <li key={v.id}>
-              <Link to={`/vision/${v.id}`} className="cosmos-card cosmos-card-interactive p-4 block h-full">
+            <li key={v.id || v._id}>
+              <Link to={`/ideation-details?id=${v.id || v._id}`} className="cosmos-card cosmos-card-interactive p-4 block h-full">
                 <span className="block text-[0.95rem] text-star leading-snug line-clamp-2">
                   {v.title}
                 </span>

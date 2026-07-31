@@ -9,7 +9,7 @@ import AnnouncementsSection from "../../dashboard/AnnouncementsSection";
 import Calendar from "@/components/sections/Calendar";
 import WorldClock from "@/components/sections/WorldClock";
 import { Link } from "react-router-dom";
-import { CheckCircle, Clock, Layers, Briefcase, Users, ChevronRight } from "lucide-react";
+import { CheckCircle, Clock, Layers, Briefcase, Lightbulb, Users, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 const MobileBuilderDashboard = ({
@@ -65,6 +65,7 @@ const MobileBuilderDashboard = ({
 
       <div className="grid grid-cols-2 gap-3">
         <QuickAction label="Browse" href="/discover-startups" icon={Briefcase} />
+        <QuickAction label="Visions" href="/ideation" icon={Lightbulb} />
         <QuickAction label="Saved" href="/saved-startups" icon={Users} />
       </div>
 

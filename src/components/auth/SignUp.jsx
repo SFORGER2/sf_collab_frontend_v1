@@ -1,6 +1,6 @@
 import { useState, useEffect,useRef } from "react"
 import { Eye, EyeOff, Mail, Lock, User, MapPin, Building, Globe, Clock } from "lucide-react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom"
 import { setUser,setToken } from "../../services/auth/authSlice";
 import { useDispatch } from "react-redux";
 import NavBar from "../sections/NavBar";
@@ -19,8 +19,12 @@ import { authAPI } from "@/utils/APIs/authAPI";
 
 export default function SignUp() {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch=useDispatch();
   const [searchParams] = useSearchParams();
+  // Where a CTA that sent an unauthenticated user here wants them to land
+  // after a successful signup (e.g. "Create a Vision" -> /vision/new).
+  const redirectTo = location.state?.redirectTo || '/dashboard';
 
   const referralCode = searchParams.get("ref");
   const [isLoading, setIsLoading] = useState(false)
@@ -110,7 +114,7 @@ export default function SignUp() {
         dispatch(setUser(user));
         
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate(redirectTo);
         }, 1000);
         
       }else if(type === "oauth_error") {
@@ -239,7 +243,7 @@ export default function SignUp() {
           navigate(`/verify-email?token=${verificationResponse.verification_token}`);
           toast.info("Verification code sent to your email, continue to verify.");
         } else {
-          navigate('/dashboard');
+          navigate(redirectTo);
         }
       } else {
         setErrors(prev => ({

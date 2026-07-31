@@ -137,7 +137,7 @@ export function getCurrentContext(pathname) {
 
   if (pathname.startsWith("/dashboard")) return 1;
 
-  if (["/ideation", "/submit-idea", "/my-ideas", "/ideas-feed"].some((p) => pathname.startsWith(p))) return 2;
+  if (["/ideation", "/ideation-details", "/vision", "/submit-idea", "/my-ideas", "/ideas-feed", "/saved-ideas"].some((p) => pathname.startsWith(p))) return 2;
 
   if (["/posts", "/my-posts", "/discover-users"].some((p) => pathname.startsWith(p))) return 5;
 

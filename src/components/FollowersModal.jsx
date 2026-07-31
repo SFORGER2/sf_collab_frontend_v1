@@ -50,29 +50,29 @@ export function FollowersModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm"
           onClick={onClose}
         >
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden"
+            className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex justify-between items-center p-4 border-b border-zinc-800">
+            <div className="flex justify-between items-center p-3.5 sm:p-4 border-b border-zinc-800">
               <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-blue-400" />
-                <h3 className="text-lg font-semibold">{title}</h3>
+                <Users className="w-5 h-5 text-blue-400 shrink-0" />
+                <h3 className="text-base sm:text-lg font-semibold">{title}</h3>
               </div>
-              <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-white hover:bg-zinc-800 rounded-full">
+              <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-white hover:bg-zinc-800 rounded-full focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500">
                 <X size={18} />
               </button>
             </div>
 
             {/* List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2">
               <InfiniteList
                 items={items}
                 renderItem={(user) => (
