@@ -64,7 +64,7 @@ export default function NotificationSection({ formData, onChange }) {
   const set = (patch) => onChange({ ...settings, ...patch });
 
   return (
-    <motion.div className="flex flex-col gap-4" initial="hidden" animate="visible" variants={container}>
+    <motion.div className="flex flex-col gap-6 w-full max-w-full min-w-0" initial="hidden" animate="visible" variants={container}>
       <motion.div variants={item}>
         <SectionHead
           icon={Bell}
@@ -77,7 +77,7 @@ export default function NotificationSection({ formData, onChange }) {
       {GROUPS.map((group) => (
         <motion.div key={group.label} variants={item}>
           <SettingsCard title={group.label} hint={group.hint} accent={group.accent}>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5 sm:gap-3 w-full min-w-0">
               {group.items.map((t) => (
                 <Toggle
                   key={t.key}
@@ -113,38 +113,42 @@ export default function NotificationSection({ formData, onChange }) {
 
       <motion.div variants={item}>
         <SettingsCard title="Quiet hours" accent="#3ee6a0">
-          <Toggle
-            label="Hold notifications overnight"
-            description="Anything that arrives in this window waits until it ends."
-            checked={quiet.enabled}
-            onChange={(v) => set({ quietHours: { ...quiet, enabled: v } })}
-            accent="#3ee6a0"
-          />
+          <div className="flex flex-col gap-3">
+            <Toggle
+              label="Hold notifications overnight"
+              description="Anything that arrives in this window waits until it ends."
+              checked={quiet.enabled}
+              onChange={(v) => set({ quietHours: { ...quiet, enabled: v } })}
+              accent="#3ee6a0"
+            />
 
-          {quiet.enabled && (
-            <FieldGrid className="mt-4">
-              <Field label="From">
-                <TextInput
-                  type="time"
-                  value={quiet.start || ''}
-                  onChange={(e) => set({ quietHours: { ...quiet, start: e.target.value } })}
-                />
-              </Field>
-              <Field label="Until">
-                <TextInput
-                  type="time"
-                  value={quiet.end || ''}
-                  onChange={(e) => set({ quietHours: { ...quiet, end: e.target.value } })}
-                />
-              </Field>
-            </FieldGrid>
-          )}
+            {quiet.enabled && (
+              <div className="pt-2 border-t border-white/[0.08] animate-in fade-in-0 duration-200">
+                <FieldGrid>
+                  <Field label="From">
+                    <TextInput
+                      type="time"
+                      value={quiet.start || ''}
+                      onChange={(e) => set({ quietHours: { ...quiet, start: e.target.value } })}
+                    />
+                  </Field>
+                  <Field label="Until">
+                    <TextInput
+                      type="time"
+                      value={quiet.end || ''}
+                      onChange={(e) => set({ quietHours: { ...quiet, end: e.target.value } })}
+                    />
+                  </Field>
+                </FieldGrid>
+              </div>
+            )}
+          </div>
         </SettingsCard>
       </motion.div>
 
-      <p className="flex items-center gap-2 text-[0.78rem] text-dim px-1">
-        <Mail size={12} /> Email delivery follows your digest setting.
-        <Clock size={12} className="ml-2" /> Times use your profile timezone.
+      <p className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[0.78rem] font-medium text-dim/80 px-1 mt-1 min-w-0">
+        <span className="flex items-center gap-1.5 break-words"><Mail size={13} className="text-dim/70 shrink-0" /> Email delivery follows your digest setting.</span>
+        <span className="flex items-center gap-1.5 break-words"><Clock size={13} className="text-dim/70 shrink-0" /> Times use your profile timezone.</span>
       </p>
     </motion.div>
   );

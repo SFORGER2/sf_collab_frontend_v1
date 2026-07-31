@@ -22,10 +22,21 @@ import { API_BASE_URL as API_URL } from "@/utils/config";
 function CollabRequestModal({ idea, onClose, onSuccess, accessToken }) {
   const [message, setMessage] = useState("");
   const [role, setRole] = useState("co-developer");
+  const [customRole, setCustomRole] = useState("");
+  const [confirmedCustomRole, setConfirmedCustomRole] = useState("");
+  const [availability, setAvailability] = useState("");
+  const [skills, setSkills] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 2-step wizard
 
-  const roles = ["co-developer", "designer", "marketer", "business analyst", "advisor", "other"];
+  const roles = [
+    { id: "co-developer", label: "Co-Developer", icon: "💻" },
+    { id: "designer", label: "Designer", icon: "🎨" },
+    { id: "marketer", label: "Marketer", icon: "🚀" },
+    { id: "business analyst", label: "Business Analyst", icon: "📊" },
+    { id: "advisor", label: "Advisor", icon: "💡" },
+    { id: "other", label: "Other", icon: "✨" },
+  ];
 
   const availabilityOptions = [
     { id: "< 5 hrs / week", label: "< 5 hrs", sub: "/ week" },
@@ -55,7 +66,7 @@ function CollabRequestModal({ idea, onClose, onSuccess, accessToken }) {
       const finalRole = role === "other" ? confirmedCustomRole : role;
       const res = await axios.post(
         `/api/ideas/${idea.id}/collab-requests`,
-        { message, role },
+        { message, role: finalRole, availability, skills },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
       toast.success("Application sent! The creator will review it.");
@@ -799,6 +810,37 @@ function InterestButton({ icon: Icon, label, accent, ideaId, kind }) {
   );
 }
 
+function UserAvatar({ author, sizeClass = "h-8 w-8 sm:h-9 sm:w-9" }) {
+  const [error, setError] = useState(false);
+  const photoUrl = getProfilePicture(author);
+  const name = author?.name || author?.firstName || "User";
+  const initials = name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(n => n[0]?.toUpperCase())
+    .join("") || "?";
+
+  if (!photoUrl || error) {
+    return (
+      <div className={`${sizeClass} rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-semibold flex items-center justify-center text-[10px] sm:text-xs shrink-0 shadow-sm overflow-hidden`}>
+        {initials}
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${sizeClass} rounded-full border border-white/10 ring-1 ring-white/10 overflow-hidden shrink-0 shadow-sm bg-slate-800 flex items-center justify-center`}>
+      <img
+        src={photoUrl}
+        alt=""
+        onError={() => setError(true)}
+        className="w-full h-full object-cover"
+      />
+    </div>
+  );
+}
+
 // ── Main Card ─────────────────────────────────────────────────────────────────
 export default function VisionCard({ content, shouldBlur }) {
   // FIX: useNavigate was missing — caused "navigate is not defined" crash
@@ -812,29 +854,32 @@ export default function VisionCard({ content, shouldBlur }) {
   const isOwnIdea = user?.id === (content?.author?.id || content?.creator?.id);
   const author = useMemo(() => content?.author || content?.creator || {}, [content]);
 
+  const ideaId = content?.id || content?._id || content?.idea_id;
+  const authorId = author?.id || author?._id || author?.userId;
+
   const handleLike = useCallback(async e => {
     e?.preventDefault?.(); e?.stopPropagation?.();
-    if (!content?.id) return;
+    if (!ideaId) return;
     try {
       // Optimistic update
       setLiked(prev => { setLikes(l => prev ? l - 1 : l + 1); return !prev; });
-      const res = await ideaAPI?.likeIdea?.(content?.id, access_token);
+      const res = await ideaAPI?.likeIdea?.(ideaId, access_token);
       // ideaAPI normalises to { data: { idea: { hasLiked, likes } } }
       const ideaData = res?.data?.idea || {};
       if (typeof ideaData.likes === 'number') setLikes(ideaData.likes);
       if (typeof ideaData.hasLiked === 'boolean') setLiked(ideaData.hasLiked);
     } catch (err) { console.error(err); }
-  }, [content?.id, access_token]);
+  }, [ideaId, access_token]);
 
   const handleBookmark = async e => {
     e?.preventDefault?.(); e?.stopPropagation?.();
-    if (!content?.id || !user?.id) { toast.error("Unable to bookmark at this time"); return; }
+    if (!ideaId || !user?.id) { toast.error("Unable to bookmark at this time"); return; }
     try {
       const body = {
-        user_id: user?.id, idea_id: content?.id,
+        user_id: user?.id, idea_id: ideaId,
         title: content?.title,
         content_preview: content?.description?.substring(0, 100),
-        url: `/ideation-details?id=${content?.id}`,
+        url: `/ideation-details?id=${ideaId}`,
       };
       const response = await ideaAPI?.toggleIdeaBookmark?.(body);
       setBookmarked(response?.data?.isBookmarked);
@@ -855,7 +900,7 @@ export default function VisionCard({ content, shouldBlur }) {
           first momentum tier, which is most cards. */}
       <BurningBox
         item={content}
-        onClick={() => navigate(`/ideation-details?id=${content?.id}`)}
+        onClick={() => navigate(`/ideation-details?id=${ideaId}`)}
         className="cosmos-showcase relative block h-full overflow-hidden cursor-pointer"
       >
         {shouldBlur && (
@@ -868,14 +913,14 @@ export default function VisionCard({ content, shouldBlur }) {
           </div>
         )}
 
-        <div className={`p-6 space-y-4 h-full flex flex-col ${shouldBlur ? "blur-sm pointer-events-none" : ""}`}>
+        <div className={`p-4 sm:p-6 space-y-3.5 sm:space-y-4 h-full flex flex-col ${shouldBlur ? "blur-sm pointer-events-none" : ""}`}>
 
           {/* Portfolio header: banner behind, logo overlapping it.
               An uploaded image wins; otherwise a gradient derived from the id
               gives the card a stable identity rather than a grey rectangle. */}
-          <div className="-mx-6 -mt-6 mb-1">
+          <div className="-mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-1">
             <div
-              className="cosmos-alive-banner relative h-28 w-full overflow-hidden"
+              className="cosmos-alive-banner relative h-24 sm:h-28 w-full overflow-hidden"
               style={{
                 ...(content?.imageUrl ? {} : { background: content?.banner || bannerFor(String(content?.id || '')) }),
                 // Stagger the sheen so a grid doesn't shimmer in lockstep.
@@ -889,47 +934,38 @@ export default function VisionCard({ content, shouldBlur }) {
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
               )}
+              {/* Top ambient edge highlight line */}
+              <span className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent z-10 pointer-events-none" />
+
+              {/* Multi-layered gradient vignette & internal lighting */}
               <span
                 aria-hidden="true"
                 className="absolute inset-0"
-                style={{ background: 'linear-gradient(180deg, rgba(9,7,20,0.08) 0%, rgba(9,7,20,0.8) 100%)' }}
+                style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.1) 0%, transparent 75%), linear-gradient(180deg, rgba(9,7,20,0.05) 0%, rgba(9,7,20,0.3) 45%, rgba(9,7,20,0.85) 100%)' }}
               />
 
-              <span className="absolute top-3 right-3">
+              <span className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-10">
                 <StreakBadge item={content} />
               </span>
 
-              {/* Someone else is looking at this right now. Nothing else on a
-                  board conveys "alive" as cheaply as another person's presence. */}
-              {(content?.collaborators || 0) > 2 && (
+              {(content?.collaborators || 0) > 0 && (
                 <span
-                  /* Top-left: the logo overlaps the banner's bottom-left
-                     corner, so anything placed there is read through it. */
-                  className="absolute top-3 left-3 inline-flex items-center gap-1.5 font-mono text-[9px] tracking-[0.12em] uppercase px-2 py-1 rounded-full"
-                  style={{ background: 'rgba(0,0,0,0.5)', color: '#3ee6a0' }}
+                  className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 z-10 inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-emerald-300 bg-slate-950/70 backdrop-blur-md px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-emerald-500/25 shadow-sm"
                 >
-                  <span className="cosmos-live-dot" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   {content.collaborators} active
-                </span>
-              )}
-
-              {content?.readinessScore > 0 && (
-                <span
-                  className="absolute bottom-3 right-3 font-mono text-[9.5px] tracking-[0.12em] uppercase px-2 py-1 rounded-full"
-                  style={{ background: 'rgba(0,0,0,0.55)', color: '#ffbf5e' }}
-                >
-                  {content.readinessScore}% ready
                 </span>
               )}
             </div>
 
-            <div className="px-6 -mt-7 relative">
+            <div className="px-4 sm:px-6 -mt-5 sm:-mt-6 relative z-10">
               <span
-                className="grid place-items-center w-14 h-14 rounded-2xl font-display text-[1.05rem]"
+                className="grid place-items-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl font-display text-[0.85rem] sm:text-[0.95rem] font-bold transition-all duration-200 group-hover:scale-105"
                 style={{
                   background: content?.banner || bannerFor(String(content?.id || '')),
-                  border: '3px solid var(--color-panel)',
-                  color: '#14111f',
+                  border: '2px solid #0b1120',
+                  boxShadow: '0 8px 20px -4px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.12) inset',
+                  color: '#ffffff',
                 }}
               >
                 {content?.logoText || (content?.title || '??').slice(0, 2).toUpperCase()}
@@ -937,71 +973,73 @@ export default function VisionCard({ content, shouldBlur }) {
             </div>
           </div>
 
-          {/* FIX: inner author <Link> replaced with <div> + stopPropagation to prevent nested <a> */}
+          {/* Author & Badges row — full width author line + badges on next line on mobile; side-by-side on tablet/desktop */}
           <div
-            onClick={e => { e.preventDefault(); e.stopPropagation(); navigate(`/user-profile?userId=${author?.id}`); }}
-            className="flex items-start justify-between cursor-pointer"
+            onClick={e => { e.preventDefault(); e.stopPropagation(); if (authorId) navigate(`/user-profile?userId=${authorId}`); }}
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 cursor-pointer group/author"
           >
-            <div className="flex items-center gap-3">
-              <img src={getProfilePicture(author)}
-                className="h-10 w-10 rounded-full border-2 border-blue-500/30 object-cover"
-                alt={author?.name} />
-              <div>
-                <p className="text-sm font-semibold text-white">{author?.name}</p>
-                <p className="text-xs text-gray-400">{author?.role}</p>
+            <div className="flex items-center gap-2.5 min-w-0 w-full sm:w-auto">
+              <UserAvatar author={author} />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-semibold text-white group-hover/author:text-blue-300 transition-colors truncate">{author?.name || 'Creator'}</p>
+                <p className="text-[0.7rem] sm:text-xs text-gray-400 font-medium truncate">{author?.role || 'Founder'}</p>
               </div>
             </div>
-            {/* The streak badge lives on the banner now — showing it twice on
-                one card made the heat read as noise rather than a signal. */}
-            <span className={`${getStageColor(content?.stage)} text-xs px-3 py-1.5 rounded-full font-semibold shrink-0`}>
-              {content?.stage}
-            </span>
+            
+            <div className="flex items-center gap-1.5 shrink-0 flex-wrap sm:flex-nowrap">
+              {content?.readinessScore > 0 && (
+                <span className="text-[0.7rem] sm:text-xs font-medium px-2 sm:px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 whitespace-nowrap">
+                  {content.readinessScore}% ready
+                </span>
+              )}
+              {content?.stage && (
+                <span className={`${getStageColor(content?.stage)} text-[0.7rem] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full shrink-0 shadow-xs whitespace-nowrap`}>
+                  {content?.stage}
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="flex-1">
-            <h2 className="text-lg font-bold text-white leading-tight line-clamp-2 mb-2">{content?.title}</h2>
-            <p className="text-sm text-gray-300 line-clamp-3">{content?.description}</p>
+          <div className="flex-1 space-y-1.5">
+            <h2 className="text-sm sm:text-lg font-bold text-white leading-snug line-clamp-2 group-hover:text-blue-200 transition-colors">{content?.title}</h2>
+            <p className="text-xs sm:text-sm text-gray-300/90 leading-relaxed line-clamp-3 font-normal">{content?.description}</p>
           </div>
 
           {content?.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 pt-0.5">
               {content?.tags?.slice(0, 2)?.map((tag, i) => (
-                <motion.span key={i} whileHover={{ scale: 1.05 }}
-                  className="text-[0.72rem] text-dim bg-white/[0.05] border border-white/10 px-2.5 py-0.5 rounded-full">
+                <motion.span key={i} whileHover={{ scale: 1.04 }}
+                  className="text-[0.7rem] sm:text-[0.72rem] text-gray-300 font-medium bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 hover:border-white/20 px-2 sm:px-2.5 py-0.5 rounded-full transition-all duration-200 whitespace-nowrap">
                   #{tag}
                 </motion.span>
               ))}
-              {content?.tags?.length > 3 && (
-                <span className="text-xs text-gray-500 px-3 py-1">+{content?.tags?.length - 3}</span>
+              {content?.tags?.length > 2 && (
+                <span className="text-[0.7rem] text-gray-400/80 px-1.5 py-0.5 font-medium">+{content?.tags?.length - 2}</span>
               )}
             </div>
           )}
 
-          {/* One quiet stats line, one primary action, one icon row.
-              This block used to stack five full-width buttons — Save, Share,
-              Contribute, Use, Invest, Connect — which is what made the board
-              read as a form rather than something to browse. Secondary actions
-              are icons now; only the primary one keeps its label. */}
-          <div className="border-t border-white/[0.07] pt-3.5 mt-auto">
-            <div className="flex items-center gap-4 text-[0.78rem] text-dim mb-3">
+          {/* One quiet stats line, one primary action, one icon row. */}
+          <div className="border-t border-white/[0.08] pt-3 mt-auto">
+            <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-start gap-2 sm:gap-3.5 text-[0.74rem] sm:text-[0.78rem] text-dim mb-2.5 font-medium">
               <button
                 type="button"
                 onClick={handleLike}
-                className="flex items-center gap-1.5 hover:text-red-400 transition-colors"
+                className="flex items-center gap-1 hover:text-red-400 transition-colors active:scale-95"
               >
                 <Heart className={`h-3.5 w-3.5 ${liked ? "text-red-500 fill-red-500" : ""}`} />
                 <span className="tabular-nums">{likes}</span>
               </button>
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1">
                 <MessageCircle className="h-3.5 w-3.5" />
                 <span className="tabular-nums">{content?.comments || 0}</span>
               </span>
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1">
                 <Users className="h-3.5 w-3.5" />
                 <span className="tabular-nums">{content?.collaborators || 0}</span>
               </span>
-              <span className="flex items-center gap-1.5 ml-auto text-dim/70">
-                <Clock className="h-3 w-3" />{content?.timeAgo}
+              <span className="flex items-center gap-1 ml-auto text-dim/70 font-normal text-[0.7rem] sm:text-[0.78rem] whitespace-nowrap">
+                <Clock className="h-3 w-3 shrink-0" />{content?.timeAgo}
               </span>
             </div>
 
@@ -1009,9 +1047,9 @@ export default function VisionCard({ content, shouldBlur }) {
               <CollabButton content={content} accessToken={access_token} isOwnIdea={isOwnIdea} />
             </div>
 
-            {/* Secondary signals as icons — same actions, a fifth of the space. */}
+            {/* Secondary signals as icons — formatted for 320px viewports */}
             <div
-              className="flex items-center gap-1.5 mt-2"
+              className="flex items-center gap-1 sm:gap-1.5 mt-2 sm:mt-2.5 flex-wrap sm:flex-nowrap justify-between sm:justify-start"
               onClick={e => { e?.preventDefault?.(); e?.stopPropagation?.(); }}
             >
               {!isOwnIdea && (
@@ -1025,12 +1063,12 @@ export default function VisionCard({ content, shouldBlur }) {
                 onClick={handleBookmark}
                 title={bookmarked ? 'Saved' : 'Save'}
                 aria-label="Save"
-                className="grid place-items-center w-9 h-9 rounded-xl border transition-colors"
+                className="grid place-items-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl border transition-all duration-150 active:scale-95 shrink-0"
                 style={bookmarked
                   ? { borderColor: 'rgba(255,191,94,0.5)', background: 'rgba(255,191,94,0.12)', color: '#ffbf5e' }
                   : { borderColor: 'rgba(255,255,255,0.12)', color: 'var(--color-dim)' }}
               >
-                <Bookmark className={`h-4 w-4 ${bookmarked ? 'fill-current' : ''}`} />
+                <Bookmark className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${bookmarked ? 'fill-current' : ''}`} />
               </button>
               <button
                 type="button"
@@ -1040,16 +1078,13 @@ export default function VisionCard({ content, shouldBlur }) {
                 }}
                 title="Share"
                 aria-label="Share"
-                className="grid place-items-center w-9 h-9 rounded-xl border border-white/[0.12] text-dim hover:text-star hover:border-white/25 transition-colors"
+                className="grid place-items-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-white/[0.12] text-dim hover:text-star hover:border-white/25 transition-all duration-150 active:scale-95 shrink-0"
               >
-                <Share2 className="h-4 w-4" />
+                <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
 
-              {/* Connect with the creator. This was dropped in the card
-                  simplification, which was a deletion rather than a redesign —
-                  restored, as an icon so it costs the same space as the rest. */}
               {!isOwnIdea && (
-                <span className="ml-auto" title="Connect with the creator">
+                <span className="ml-auto shrink-0" title="Connect with the creator">
                   <ConnectionButton
                     userId={content?.author?.id || content?.creator?.id}
                     size="sm"

@@ -68,7 +68,7 @@ const ConnectWithUsers = () => {
   }, [searchQuery, fetchUsers]);
 
   const handleUserClick = (userId) => {
-    navigate(`/user-profile/${userId}`);
+    navigate(`/user-profile?userId=${userId}`);
   };
 
   const handleSendMessage = (userId, e) => {

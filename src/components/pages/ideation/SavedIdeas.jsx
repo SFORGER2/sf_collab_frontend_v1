@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Eye, Search, TrendingUp, Layers, Mail, AlertCircle, CheckCircle } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { ideaAPI } from '@/utils/APIs/ideaAPI';
@@ -7,6 +8,7 @@ import usePaginatedFetch from '@/utils/hooks/usePaginated';
 import InfiniteList from '@/components/InfiniteList';
 import IdeationCard from './IdeationCard';
 import { getProfilePicture } from '@/utils/getProfilePicture';
+import { IdeationCardSkeleton } from '../vision/VisionSkeletons';
 
 const calculateTimeAgo = (createdAt) => {
   const now = new Date();
@@ -23,9 +25,20 @@ const SavedIdeas = () => {
   const { user } = useSelector((state) => state.auth);
   const { activeRole } = useSelector((state) => state.auth);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [stageFilter, setStageFilter] = useState('all');
-  const [industryFilter, setIndustryFilter] = useState('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [stageFilter, setStageFilter] = useState(searchParams.get('stage') || 'all');
+  const [industryFilter, setIndustryFilter] = useState(searchParams.get('industry') || 'all');
+
+  // Keep filters in the URL so they survive back-navigation (e.g. opening a
+  // saved idea and pressing Back), mirroring Ideation.jsx's pattern.
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('search', searchQuery);
+    if (stageFilter !== 'all') params.set('stage', stageFilter);
+    if (industryFilter !== 'all') params.set('industry', industryFilter);
+    setSearchParams(params, { replace: true });
+  }, [searchQuery, stageFilter, industryFilter, setSearchParams]);
 
   const {
   items: rawIdeas,
@@ -276,30 +289,38 @@ const SavedIdeas = () => {
     </motion.div>
 
     {/* Results Grid */}
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-    >
-      <InfiniteList
-      items={savedIdeas}
-      loading={loading}
-      sentinelRef={targetRef}
-      containerClassName="contents"
-      renderItem={(item, index) => (
-        <motion.div
-        key={item.id || index}
-        variants={itemVariants}
-        >
-        <IdeationCard
-          content={item}
-          index={index}
+    {loading && savedIdeas.length === 0 ? (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[...Array(6)].map((_, i) => (
+          <IdeationCardSkeleton key={i} />
+        ))}
+      </div>
+    ) : (
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
+        <InfiniteList
+        items={savedIdeas}
+        loading={loading}
+        sentinelRef={targetRef}
+        containerClassName="contents"
+        renderItem={(item, index) => (
+          <motion.div
+          key={item.id || index}
+          variants={itemVariants}
+          >
+          <IdeationCard
+            content={item}
+            index={index}
+          />
+          </motion.div>
+        )}
         />
-        </motion.div>
-      )}
-      />
-    </motion.div>
+      </motion.div>
+    )}
 
     {/* Empty State */}
     {!loading && savedIdeas.length === 0 && (

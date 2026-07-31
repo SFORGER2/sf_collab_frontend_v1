@@ -11,6 +11,10 @@ export default function SideBarLink({ link, onClick }) {
   // Must use useLocation() to get the React Router pathname for correct active styling.
   const location = useLocation();
 
+  const isActive =
+    location.pathname === link.href ||
+    (link.href === "/ideation" && (location.pathname === "/ideation-details" || location.pathname.startsWith("/vision")));
+
   return (
     <TooltipProvider key={link.id}>
       <Tooltip key={link.id}>
@@ -18,7 +22,7 @@ export default function SideBarLink({ link, onClick }) {
           <Link
             to={link.href}
             className={`relative flex items-center justify-center w-full px-2 py-2 rounded-lg transition-colors ${
-              location.pathname === link.href
+              isActive
                 ? "bg-white text-gray-900"
                 : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
             }`}

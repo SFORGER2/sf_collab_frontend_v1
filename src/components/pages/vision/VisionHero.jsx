@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, Rocket } from 'lucide-react';
 import { CosmosButton, Display, Eyebrow, MomentumFlame, Tag } from '@/components/cosmos';
 
@@ -46,7 +47,7 @@ export function VisionHero({
 
   return (
     <section
-      className="cosmos-panel cosmos-panel-accent relative overflow-hidden p-6 sm:p-8"
+      className="cosmos-panel cosmos-panel-accent relative overflow-hidden p-4 sm:p-8"
       style={{ '--cosmos-accent': arcColor }}
     >
       {/* A single soft nebula behind the ring, keyed to progress. */}
@@ -63,12 +64,12 @@ export function VisionHero({
       />
 
       <div className="relative flex flex-wrap items-start gap-6">
-        <div className="flex-1 min-w-[260px]">
+        <div className="flex-1 min-w-0 sm:min-w-[260px]">
           <div className="flex items-center gap-2.5 mb-4">
             <button
               onClick={onBack}
               aria-label="Back"
-              className="p-1.5 rounded-lg text-dim hover:text-star hover:bg-white/[0.06] transition-colors"
+              className="p-1.5 rounded-lg text-dim hover:text-star hover:bg-white/[0.06] transition-colors min-w-[44px] min-h-[44px] inline-flex items-center justify-center"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -94,9 +95,18 @@ export function VisionHero({
             {idea.industry && <Tag>{idea.industry}</Tag>}
             {idea.stage && <Tag>{idea.stage}</Tag>}
             {idea.creator?.name && (
-              <span className="font-mono text-[10.5px] tracking-[0.14em] uppercase text-dim">
-                by {idea.creator.name}
-              </span>
+              (idea.creator.id || idea.creator._id) ? (
+                <Link
+                  to={`/user-profile?userId=${idea.creator.id || idea.creator._id}`}
+                  className="font-mono text-[10.5px] tracking-[0.14em] uppercase text-dim hover:text-star transition-colors"
+                >
+                  by {idea.creator.name}
+                </Link>
+              ) : (
+                <span className="font-mono text-[10.5px] tracking-[0.14em] uppercase text-dim">
+                  by {idea.creator.name}
+                </span>
+              )
             )}
           </div>
 
@@ -135,7 +145,7 @@ export function VisionHero({
             onClick={onRefresh}
             disabled={refreshing}
             aria-label="Refresh vision points"
-            className="absolute -bottom-1 left-1/2 -translate-x-1/2 p-1.5 rounded-lg text-dim hover:text-star hover:bg-white/[0.06] transition-colors disabled:opacity-40"
+            className="absolute -bottom-1 left-1/2 -translate-x-1/2 p-1.5 rounded-lg text-dim hover:text-star hover:bg-white/[0.06] transition-colors disabled:opacity-40 min-w-[44px] min-h-[44px] inline-flex items-center justify-center"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
           </button>

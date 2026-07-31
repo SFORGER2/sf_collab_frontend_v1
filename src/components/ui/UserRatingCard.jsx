@@ -96,7 +96,7 @@ function RateModal({ category, subjectId, subjectName, existing, onClose, onSave
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-2xl p-5 space-y-4"
+        className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-2xl p-4 sm:p-5 space-y-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -126,7 +126,7 @@ function RateModal({ category, subjectId, subjectName, existing, onClose, onSave
           onClick={submit}
           disabled={saving || !score}
           className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-40
-                     rounded-xl text-black font-semibold text-sm transition-colors"
+                     rounded-xl text-black font-semibold text-sm transition-colors min-h-[44px]"
         >
           {saving ? "Saving…" : existing ? "Update Rating" : "Submit Rating"}
         </button>
@@ -161,7 +161,7 @@ function DisputeModal({ ratingId, onClose, onFiled }) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-2xl p-5 space-y-4"
+        className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-2xl p-4 sm:p-5 space-y-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -247,12 +247,12 @@ export default function UserRatingCard({ subjectId, subjectName }) {
 
   return (
     <>
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+      <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 hover:border-white/20 rounded-2xl p-4 sm:p-5 shadow-xl transition-all">
         {/* Header row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Star size={15} className="text-amber-400 fill-amber-400" />
-            <span className="text-sm font-semibold text-white">
+            <span className="text-xs sm:text-sm font-bold text-white">
               {loading
                 ? "Loading…"
                 : overallAvg
@@ -260,12 +260,12 @@ export default function UserRatingCard({ subjectId, subjectName }) {
                 : "No ratings yet"}
             </span>
             {totalRatings > 0 && (
-              <span className="text-xs text-zinc-500">({totalRatings})</span>
+              <span className="text-xs text-slate-400 font-medium">({totalRatings})</span>
             )}
           </div>
           <button
             onClick={() => setExpanded((v) => !v)}
-            className="text-zinc-400 hover:text-white transition-colors"
+            className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500/50"
           >
             {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
@@ -273,7 +273,7 @@ export default function UserRatingCard({ subjectId, subjectName }) {
 
         {/* Expanded category breakdown */}
         {expanded && (
-          <div className="mt-3 space-y-2">
+          <div className="mt-3 space-y-2 pt-2 border-t border-white/5">
             {CATEGORIES.map((cat) => {
               const data     = summary[cat];
               const myRating = myRatings[cat];
@@ -281,22 +281,22 @@ export default function UserRatingCard({ subjectId, subjectName }) {
                 <div
                   key={cat}
                   className="flex items-center justify-between py-1.5
-                             border-b border-zinc-800 last:border-0"
+                             border-b border-white/5 last:border-0"
                 >
                   {/* Category + avg */}
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xs text-zinc-400 w-20 shrink-0">
+                    <span className="text-xs text-slate-300 font-medium w-20 shrink-0 capitalize">
                       {LABELS[cat]}
                     </span>
                     {data ? (
                       <div className="flex items-center gap-1.5">
                         <Stars value={Math.round(data.average)} readonly size={11} />
-                        <span className="text-xs text-zinc-500">
+                        <span className="text-[11px] text-slate-400 font-mono">
                           {data.average} ({data.count})
                         </span>
                       </div>
                     ) : (
-                      <span className="text-xs text-zinc-700">—</span>
+                      <span className="text-xs text-slate-600">—</span>
                     )}
                   </div>
 
@@ -306,9 +306,9 @@ export default function UserRatingCard({ subjectId, subjectName }) {
                     {!isOwnProfile && (
                       <button
                         onClick={() => setRateModal(cat)}
-                        className="text-[10px] px-2 py-0.5 rounded-full border border-zinc-700
-                                   text-zinc-400 hover:border-amber-500/50 hover:text-amber-400
-                                   transition-colors"
+                        className="text-[10px] px-2.5 py-0.5 rounded-full border border-slate-700
+                                   text-slate-300 hover:border-amber-500/50 hover:text-amber-400 hover:bg-amber-500/10
+                                   transition-all font-semibold"
                       >
                         {myRating ? "Edit" : "Rate"}
                       </button>
@@ -318,9 +318,9 @@ export default function UserRatingCard({ subjectId, subjectName }) {
                     {isOwnProfile && data && !myRating?.has_dispute && (
                       <button
                         onClick={() => setDisputeModal({ id: cat })}
-                        className="text-[10px] px-2 py-0.5 rounded-full border border-zinc-700
-                                   text-zinc-400 hover:border-red-500/50 hover:text-red-400
-                                   transition-colors flex items-center gap-1"
+                        className="text-[10px] px-2.5 py-0.5 rounded-full border border-slate-700
+                                   text-slate-400 hover:border-rose-500/50 hover:text-rose-400 hover:bg-rose-500/10
+                                   transition-all font-semibold flex items-center gap-1"
                       >
                         <Flag size={9} /> Dispute
                       </button>

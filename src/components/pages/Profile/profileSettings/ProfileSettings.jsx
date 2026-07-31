@@ -153,17 +153,18 @@ const ProfileSettings = ({ back, activeSection: propActiveSection, initialActive
     try {
       const result = await updateUser(form, true);
       const updatedUser = result.user || result.data?.user || null;
-      const pictureUrl = updatedUser?.profile?.picture || updatedUser?.profile_picture;
+      const pictureUrl = updatedUser?.profile?.picture || updatedUser?.profile_picture || updatedUser?.avatar;
       if (pictureUrl) {
         setFormData(prev => ({
           ...prev,
-          profile: { ...prev.profile, picture: pictureUrl },
+          profile: { ...(prev.profile || {}), picture: pictureUrl },
         }));
       }
       toast.success('Profile picture updated');
       return pictureUrl;
     } catch (e) {
-      toast.error(e.message || 'Failed to upload picture');
+      const msg = e?.response?.data?.error || e?.message || 'Failed to upload picture';
+      toast.error(msg);
       throw e;
     }
   };
@@ -276,6 +277,20 @@ const ProfileSettings = ({ back, activeSection: propActiveSection, initialActive
     }
   };
 
+
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const nextIndex = (index + 1) % sections.length;
+      setActiveSection(sections[nextIndex].id);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prevIndex = (index - 1 + sections.length) % sections.length;
+      setActiveSection(sections[prevIndex].id);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-[60vh] grid place-items-center text-dim">Loading settings…</div>
@@ -285,53 +300,65 @@ const ProfileSettings = ({ back, activeSection: propActiveSection, initialActive
   const savable = activeSection === 'profile' || activeSection === 'notifications';
 
   return (
-    <div className="min-h-screen text-star">
-      <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="text-star w-full max-w-full min-w-0 overflow-x-hidden">
+      <div className="max-w-[1180px] w-full max-w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-8 pb-4 sm:pb-8 min-w-0">
         {/* Masthead */}
-        <div className="flex flex-wrap items-center gap-3 mb-7">
+        <div className="relative flex items-center justify-center mb-5 sm:mb-8 min-w-0 w-full min-h-[50px]">
           <button
+            type="button"
             onClick={back}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 text-[0.85rem] text-dim hover:text-star hover:bg-white/[0.05] transition-colors"
+            aria-label="Back"
+            className="absolute left-0 inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 min-h-[38px] sm:min-h-[42px] rounded-xl border border-white/10 bg-white/[0.04] text-[0.82rem] sm:text-[0.85rem] font-medium text-dim hover:text-star hover:bg-white/[0.08] hover:border-white/20 active:scale-[0.98] transition-all duration-200 shadow-sm cursor-pointer shrink-0 z-10"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to profile
+            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>Back</span>
           </button>
-          <div className="min-w-0">
-            <Eyebrow>Account</Eyebrow>
-            <h1 className="font-display text-[1.7rem] text-star leading-tight mt-1">Settings</h1>
+          <div className="text-center min-w-0 mx-auto">
+            <Eyebrow className="text-center">Account</Eyebrow>
+            <h1 className="font-display text-[1.35rem] sm:text-[1.75rem] font-bold text-star leading-tight tracking-tight mt-0.5 break-words text-center">Settings</h1>
           </div>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[15rem_1fr]">
-          {/* Section nav — a rail on desktop, a scrollable row on mobile */}
-          <nav className="lg:sticky lg:top-20 lg:self-start">
-            <div className="cosmos-panel p-2 flex lg:flex-col gap-1 overflow-x-auto">
-              {sections.map((section) => {
+        <div className="grid grid-cols-1 lg:grid-cols-[15rem_minmax(0,1fr)] gap-5 sm:gap-8 w-full max-w-full min-w-0">
+          {/* Section nav — sticky top 3-column equal-width segmented control on mobile/tablet, sticky rail on desktop */}
+          <nav
+            aria-label="Account settings sections"
+            className="sticky top-0 lg:top-20 z-20 py-1 sm:py-0 lg:self-start w-full max-w-full min-w-0 flex justify-center lg:block"
+          >
+            <div
+              role="tablist"
+              aria-orientation="horizontal"
+              className="grid grid-cols-3 lg:flex lg:flex-col gap-1 sm:gap-1.5 w-full max-w-md lg:max-w-none mx-auto p-1 sm:p-1.5 rounded-2xl bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl shadow-lg select-none lg:w-full"
+            >
+              {sections.map((section, idx) => {
                 const isActive = activeSection === section.id;
                 return (
                   <button
                     key={section.id}
+                    role="tab"
+                    id={`settings-tab-${section.id}`}
+                    aria-selected={isActive}
+                    aria-controls={`settings-panel-${section.id}`}
+                    tabIndex={isActive ? 0 : -1}
                     onClick={() => setActiveSection(section.id)}
-                    className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[0.88rem] whitespace-nowrap transition-colors shrink-0"
-                    style={
+                    onKeyDown={(e) => handleKeyDown(e, idx)}
+                    className={`group flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-0.5 sm:gap-2.5 px-1.5 sm:px-3 lg:px-4 py-1.5 sm:py-2.5 min-h-[46px] sm:min-h-[44px] rounded-xl text-[0.66rem] sm:text-[0.84rem] lg:text-[0.88rem] leading-tight transition-all duration-200 w-full text-center lg:text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 touch-manipulation ${
                       isActive
-                        ? {
-                            background: 'rgba(255,191,94,0.1)',
-                            color: '#ffbf5e',
-                            boxShadow: 'inset 2px 0 0 #ffbf5e',
-                          }
-                        : { color: 'var(--color-dim)' }
-                    }
+                        ? 'bg-amber-500/15 text-amber-400 font-semibold border border-amber-500/30 shadow-[0_0_15px_rgba(255,191,94,0.2)]'
+                        : 'text-dim hover:text-star hover:bg-white/[0.04] border border-transparent'
+                    }`}
                   >
-                    <section.icon className="w-4 h-4 shrink-0" />
-                    {section.label}
+                    <section.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform duration-200 group-hover:scale-105 pointer-events-none" />
+                    <span className="pointer-events-none leading-tight font-medium">
+                      {section.label}
+                    </span>
                   </button>
                 );
               })}
             </div>
           </nav>
 
-          <div className="min-w-0">
+          <div className="min-w-0 w-full max-w-full pb-4 sm:pb-0">
               {activeSection === 'profile' && (
                 <ProfileSection
                   formData={formData}
@@ -368,15 +395,13 @@ const ProfileSettings = ({ back, activeSection: propActiveSection, initialActive
               {activeSection === 'preferences' && <PreferencesSection formData={formData} onChange={(patch) => setFormData(prev => ({ ...prev, preferences: { ...prev.preferences, ...patch } }))} />}
               {activeSection === 'saved' && <SavedSection formData={formData} setFormData={setFormData} />}
 
-            {/* Save bar. Account & Security has its own per-action buttons, so
-                the generic Save is hidden there rather than showing a button
-                that only ever explains itself in a toast. */}
+            {/* Save bar — floating/sticky mobile action bar on phones, border-t bar on desktop */}
             {savable && (
-              <div className="flex flex-wrap items-center justify-end gap-3 mt-5 pt-5 border-t border-white/[0.07]">
-                <span className="text-[0.8rem] text-dim mr-auto">
+              <div className="sticky bottom-4 sm:static z-30 p-3.5 sm:p-0 rounded-2xl sm:rounded-none bg-[#120e24]/95 sm:bg-transparent backdrop-blur-2xl sm:backdrop-blur-none border border-white/15 sm:border-t sm:border-white/[0.08] sm:border-x-0 sm:border-b-0 shadow-[0_15px_40px_rgba(0,0,0,0.8)] sm:shadow-none flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-3.5 mt-5 sm:pt-4 w-full max-w-full min-w-0">
+                <span className="text-[0.78rem] sm:text-[0.82rem] font-medium text-dim/85 flex items-center justify-center sm:justify-start gap-1.5 break-words max-w-full text-center sm:text-left">
                   Changes apply across the whole ecosystem.
                 </span>
-                <CosmosButton variant="primary" size="sm" onClick={handleSave} disabled={saving}>
+                <CosmosButton variant="primary" size="sm" onClick={handleSave} disabled={saving} className="w-full sm:w-auto min-h-[46px] justify-center shadow-[0_0_20px_rgba(255,191,94,0.35)] font-semibold">
                   <Save className="w-4 h-4" />
                   {saving ? 'Saving…' : 'Save changes'}
                 </CosmosButton>

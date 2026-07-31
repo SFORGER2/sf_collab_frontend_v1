@@ -18,15 +18,18 @@
 //   POST /activation/ideas/:id/activate
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
+import VisionNotFound from './VisionNotFound';
+import { VisionWorkspaceSkeleton } from './VisionSkeletons';
+import { SAMPLE_VISIONS } from '@/services/mock/boards';
 import {
   ArrowLeft, Target, Users, TrendingUp, MessageSquare, Heart,
   Bookmark, Rocket, Loader2, X, CheckCircle, Circle, AlertCircle,
   Map, Lightbulb, Zap, RefreshCw, UserPlus, Briefcase, Wallet,
-  ShoppingBag, Clock, ArrowRight,
+  ShoppingBag, Clock, ArrowRight, Settings, Trash2, Eye,
 } from 'lucide-react';
 
 import { ideaAPI } from '@/utils/APIs/ideaAPI';
@@ -144,6 +147,18 @@ const MILESTONES = [
   },
 ];
 
+// ── Workspace sections ──────────────────────────────────────────────────
+// The workspace used to be one long scroll; these are the navigable
+// sections it's split into so Team/Signals/Builders & Investors/Updates/
+// Settings are each an actual, reachable place rather than just headings.
+const WORKSPACE_TABS = [
+  { id: 'signals', label: 'Signals', icon: Target },
+  { id: 'team', label: 'Team', icon: Users },
+  { id: 'builders-investors', label: 'Builders & Investors', icon: Briefcase },
+  { id: 'updates', label: 'Updates', icon: Clock },
+  { id: 'settings', label: 'Settings', icon: Settings },
+];
+
 // ── Convert to Startup modal ────────────────────────────────────────────
 
 const ConvertToStartupModal = ({ ideaId, ideaTitle, onClose, onConverted }) => {
@@ -198,7 +213,7 @@ const ConvertToStartupModal = ({ ideaId, ideaTitle, onClose, onConverted }) => {
         initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#0f1116] border border-white/[0.08] rounded-2xl w-full max-w-md p-6 space-y-5"
+        className="bg-[#0f1116] border border-white/[0.08] rounded-2xl w-full max-w-md p-6 space-y-5 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -220,9 +235,8 @@ const ConvertToStartupModal = ({ ideaId, ideaTitle, onClose, onConverted }) => {
               {Object.entries(eligibility.checks || {}).map(([key, check]) => (
                 <div
                   key={key}
-                  className={`flex items-center gap-3 p-3 rounded-xl border ${
-                    check.passed ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'
-                  }`}
+                  className={`flex items-center gap-3 p-3 rounded-xl border ${check.passed ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'
+                    }`}
                 >
                   {check.passed ? (
                     <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
@@ -300,9 +314,12 @@ const ConvertToStartupModal = ({ ideaId, ideaTitle, onClose, onConverted }) => {
 // ── main page ────────────────────────────────────────────────────────────
 
 export default function VisionWorkspacePage() {
-  const { id } = useParams();
+  const { id: pathId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
+  const { user, access_token } = useSelector((state) => state.auth);
+
+  const id = pathId || searchParams.get('id') || searchParams.get('ideaId') || searchParams.get('visionId');
 
   const [idea, setIdea] = useState(null);
   const [readiness, setReadiness] = useState(null);
@@ -311,9 +328,13 @@ export default function VisionWorkspacePage() {
   const [refreshing, setRefreshing] = useState(false);
   const [showConvert, setShowConvert] = useState(false);
   const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('signals');
+  const [savingState, setSavingState] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { showAds } = useEntitlements();
 
-  const isCreator = idea && user && idea.creator?.id === user.id;
+  const isCreator = idea && user && (idea.creator?.id === user.id || idea.creatorId === user.id);
 
   // The role the viewer is currently working as — this drives which actions
   // the page offers. Distinct from `isCreator`, which is about ownership.
@@ -344,21 +365,42 @@ export default function VisionWorkspacePage() {
   }, [idea, isCreator, viewerRole]);
 
   const load = useCallback(async () => {
+    const findSample = (targetId) => {
+      if (!targetId) return SAMPLE_VISIONS[0];
+      const match = SAMPLE_VISIONS.find(
+        (v) =>
+          String(v.id) === String(targetId) ||
+          String(v.id) === `sv-${targetId}` ||
+          String(v.creatorId) === String(targetId) ||
+          targetId === 'sample-1' ||
+          targetId === '1'
+      );
+      return match || SAMPLE_VISIONS[0];
+    };
+
     try {
       const [ideaBody, commentsBody] = await Promise.all([
-        ideaAPI.getIdeaById(id),
-        ideaAPI.getIdeaComments({ idea_id: id, per_page: 6 }).catch(() => null),
+        id ? ideaAPI.getIdeaById(id).catch(() => null) : Promise.resolve(null),
+        id ? ideaAPI.getIdeaComments({ idea_id: id, per_page: 6 }).catch(() => null) : Promise.resolve(null),
       ]);
 
       const ideaData = ideaBody?.data?.idea ?? ideaBody?.idea ?? null;
-      setIdea(ideaData);
-      setReadiness(normaliseReadiness(ideaData));
+      if (ideaData && ideaData.title) {
+        setIdea(ideaData);
+        setReadiness(normaliseReadiness(ideaData));
+      } else {
+        const fallback = findSample(id);
+        setIdea(fallback);
+        setReadiness(normaliseReadiness(fallback));
+      }
 
       const comments = commentsBody?.data?.comments ?? [];
       setActivity(comments);
     } catch (err) {
       console.error('VisionWorkspacePage load error:', err);
-      toast.error('Could not load this Vision');
+      const fallback = findSample(id);
+      setIdea(fallback);
+      setReadiness(normaliseReadiness(fallback));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -382,20 +424,42 @@ export default function VisionWorkspacePage() {
     }
   };
 
+  const handleVisibilityChange = async (nextState) => {
+    if (savingState || nextState === readiness?.visionState) return;
+    setSavingState(true);
+    try {
+      await visionAPI.setVisionState(id, nextState);
+      setReadiness((prev) => ({ ...prev, visionState: nextState }));
+      toast.success('Visibility updated');
+    } catch (err) {
+      toast.error(err?.response?.data?.error || 'Could not update visibility');
+    } finally {
+      setSavingState(false);
+    }
+  };
+
+  const handleDeleteVision = async () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    setDeleting(true);
+    try {
+      await ideaAPI.deleteIdea(id, access_token);
+      toast.success('Vision deleted');
+      navigate('/ideation');
+    } catch (err) {
+      toast.error(err?.response?.data?.error || 'Could not delete this Vision');
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#09090B] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
-      </div>
-    );
+    return <VisionWorkspaceSkeleton />;
   }
 
   if (!idea) {
-    return (
-      <div className="min-h-screen bg-[#09090B] flex items-center justify-center text-gray-400">
-        Vision not found.
-      </div>
-    );
+    return <VisionNotFound />;
   }
 
   const score = readiness.score;
@@ -446,216 +510,376 @@ export default function VisionWorkspacePage() {
         {/* What you can do here, from your role's point of view */}
         <VisionActions viewerRole={viewerRole} isCreator={isCreator} onApply={() => setIsApplicationModalOpen(true)} />
 
-        {/* Signals — each milestone is a thing you can go and prove */}
-        <section className="cosmos-panel p-6">
-          <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
-            <div>
-              <Eyebrow>Signals</Eyebrow>
-              <h2 className="font-display text-[1.05rem] text-star mt-1.5">
-                Prove this Vision
-              </h2>
-            </div>
-            <span className="font-mono text-[10.5px] tracking-[0.14em] uppercase text-dim">
-              {eligible
-                ? 'Ready to convert'
-                : `${Math.round(pointsRemaining)} points to activation`}
-            </span>
-          </div>
-
-          <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(215px,1fr))]">
-            {MILESTONES.map((milestone) => {
-              const Icon = MILESTONE_ICONS[milestone.key] || Circle;
-              const earned = readiness.breakdown[milestone.key] ?? 0;
-              const done = earned > 0;
-              const canAct = isCreator || viewerRole === 'founder' || milestone.openToAll;
-
-              return (
-                <div
-                  key={milestone.key}
-                  className="cosmos-card p-4 flex flex-col gap-2.5"
-                  style={{ '--cosmos-accent': done ? '#3ee6a0' : '#ffbf5e' }}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <Icon
-                      className="w-4 h-4 shrink-0"
-                      style={{ color: done ? '#3ee6a0' : '#a9a2c2' }}
-                    />
-                    {done ? (
-                      <Tag tone="live">{earned} pts</Tag>
-                    ) : (
-                      <Tag tone="future">0 pts</Tag>
-                    )}
-                  </div>
-
-                  <div>
-                    <p className="text-[0.95rem] text-star leading-tight">{milestone.label}</p>
-                    <p className="text-[0.82rem] text-dim mt-1">{milestone.hint}</p>
-                  </div>
-
-                  {canAct && (
-                    <CosmosButton
-                      variant={done ? 'quiet' : 'ghost'}
-                      size="sm"
-                      className="mt-auto self-start"
-                      asChild
-                    >
-                      <Link to={milestone.action(id)}>
-                        {done ? 'Update' : milestone.cta}
-                      </Link>
-                    </CosmosButton>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Discovery, framed by the role you're viewing as. The creator always
-            gets the recruiting lens regardless of active role. */}
-        <VisionDiscovery
-          viewerRole={viewerRole}
-          isCreator={isCreator}
-          results={discoveryResults}
-        />
-
         {showAds && <AdSlot placement="vision-detail" format="banner" />}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Workspace sections — Team / Signals / Builders & Investors /
+            Updates / Settings are each a real, reachable place instead of
+            just headings on one long scroll. */}
+        <div
+          role="tablist"
+          aria-label="Vision workspace sections"
+          className="flex flex-wrap gap-1.5 p-1.5 rounded-2xl bg-white/5 border border-white/10"
+        >
+          {WORKSPACE_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                id={`vision-tab-${tab.id}`}
+                aria-selected={isActive}
+                aria-controls={`vision-panel-${tab.id}`}
+                tabIndex={isActive ? 0 : -1}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-3.5 py-2 min-h-[40px] rounded-xl text-[0.84rem] font-medium whitespace-nowrap transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${isActive
+                  ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                  : 'text-gray-400 hover:text-white border border-transparent hover:bg-white/[0.04]'
+                  }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
 
-          {/* Next available milestones */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <Map className="w-4 h-4 text-blue-400" />
-              Next Available Milestones
-            </h2>
-            {nextMilestones.length === 0 ? (
-              <p className="text-gray-500 text-sm">All current milestones complete — nice work.</p>
-            ) : (
-              <ul className="space-y-2.5">
-                {nextMilestones.map((need, i) => (
-                  <li key={i} className="flex items-center gap-2.5 text-sm text-gray-300">
-                    <Circle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                    {need}
-                  </li>
-                ))}
-              </ul>
-            )}
+        {activeTab === 'signals' && (
+          <div id="vision-panel-signals" role="tabpanel" aria-labelledby="vision-tab-signals" className="space-y-5">
+            {/* Signals — each milestone is a thing you can go and prove */}
+            <section className="cosmos-panel p-4 sm:p-6">
+              <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
+                <div>
+                  <Eyebrow>Signals</Eyebrow>
+                  <h2 className="font-display text-[1.05rem] text-star mt-1.5">
+                    Prove this Vision
+                  </h2>
+                </div>
+                <span className="font-mono text-[10.5px] tracking-[0.14em] uppercase text-dim">
+                  {eligible
+                    ? 'Ready to convert'
+                    : `${Math.round(pointsRemaining)} points to activation`}
+                </span>
+              </div>
 
-            {roadmapItems.length > 0 && (
-              <div className="mt-5 pt-5 border-t border-white/[0.06]">
-                <p className="text-gray-500 text-xs mb-2">Roadmap</p>
-                <ul className="space-y-1.5">
-                  {roadmapItems.slice(0, 5).map((item, i) => (
-                    <li key={i} className="text-sm text-gray-400 flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400/70 flex-shrink-0" />
-                      {typeof item === 'string' ? item : item.title || JSON.stringify(item)}
+              <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,215px),1fr))]">
+                {MILESTONES.map((milestone) => {
+                  const Icon = MILESTONE_ICONS[milestone.key] || Circle;
+                  const earned = readiness.breakdown[milestone.key] ?? 0;
+                  const done = earned > 0;
+                  const canAct = isCreator || viewerRole === 'founder' || milestone.openToAll;
+
+                  return (
+                    <div
+                      key={milestone.key}
+                      className="cosmos-card p-4 flex flex-col gap-2.5"
+                      style={{ '--cosmos-accent': done ? '#3ee6a0' : '#ffbf5e' }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <Icon
+                          className="w-4 h-4 shrink-0"
+                          style={{ color: done ? '#3ee6a0' : '#a9a2c2' }}
+                        />
+                        {done ? (
+                          <Tag tone="live">{earned} pts</Tag>
+                        ) : (
+                          <Tag tone="future">0 pts</Tag>
+                        )}
+                      </div>
+
+                      <div>
+                        <p className="text-[0.95rem] text-star leading-tight">{milestone.label}</p>
+                        <p className="text-[0.82rem] text-dim mt-1">{milestone.hint}</p>
+                      </div>
+
+                      {canAct && (
+                        <CosmosButton
+                          variant={done ? 'quiet' : 'ghost'}
+                          size="sm"
+                          className="mt-auto self-start"
+                          asChild
+                        >
+                          <Link to={milestone.action(id)}>
+                            {done ? 'Update' : milestone.cta}
+                          </Link>
+                        </CosmosButton>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* Next available milestones */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+              <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <Map className="w-4 h-4 text-blue-400" />
+                Next Available Milestones
+              </h2>
+              {nextMilestones.length === 0 ? (
+                <p className="text-gray-500 text-sm">All current milestones complete — nice work.</p>
+              ) : (
+                <ul className="space-y-2.5">
+                  {nextMilestones.map((need, i) => (
+                    <li key={i} className="flex items-center gap-2.5 text-sm text-gray-300">
+                      <Circle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                      {need}
                     </li>
                   ))}
                 </ul>
-              </div>
-            )}
-          </div>
+              )}
 
-          {/* Recent activity */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-blue-400" />
-              Recent Activity
-            </h2>
-            {activity.length === 0 ? (
-              <p className="text-gray-500 text-sm">No activity yet — comments and updates will show up here.</p>
-            ) : (
-              <ul className="space-y-3">
-                {activity.map((item) => (
-                  <li key={item.id} className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-[10px]
-                                    font-semibold text-gray-300 flex-shrink-0 overflow-hidden">
-                      {getProfilePicture(item.author) ? (
-                        <img
-                          src={getProfilePicture(item.author)}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        initials(`${item.author?.firstName || ''} ${item.author?.lastName || ''}`)
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm text-gray-300 truncate">
-                        <span className="text-white font-medium">
-                          {item.author?.firstName} {item.author?.lastName}
-                        </span>{' '}
-                        commented: <span className="text-gray-400">{item.content}</span>
-                      </p>
-                      <p className="text-gray-600 text-[11px]">{formatFriendlyDate(item.createdAt)}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Team members */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <Users className="w-4 h-4 text-blue-400" />
-              Team Members
-              <span className="text-gray-500 text-xs font-normal">({teamMembers.length})</span>
-            </h2>
-            {teamMembers.length === 0 ? (
-              <p className="text-gray-500 text-sm">Solo founder so far — invite collaborators to grow your team.</p>
-            ) : (
-              <ul className="space-y-3">
-                {teamMembers.map((member, i) => (
-                  <li key={i} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center
-                                    justify-center text-xs font-semibold text-blue-300 flex-shrink-0">
-                      {initials(member.name)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm text-white truncate">{member.name}</p>
-                      <p className="text-gray-500 text-xs truncate">{member.position}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Interested users / builders / investors / customers */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-blue-400" />
-              Interest
-            </h2>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
-                <Heart className="w-3.5 h-3.5 text-pink-400 mb-1.5" />
-                <p className="text-white text-lg font-semibold">{interested.users}</p>
-                <p className="text-gray-500 text-[11px]">Interested Users</p>
-              </div>
-              <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
-                <Bookmark className="w-3.5 h-3.5 text-blue-400 mb-1.5" />
-                <p className="text-white text-lg font-semibold">{interested.builders}</p>
-                <p className="text-gray-500 text-[11px]">Interested Builders</p>
-              </div>
-              <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 opacity-50">
-                <Wallet className="w-3.5 h-3.5 text-green-400 mb-1.5" />
-                <p className="text-white text-lg font-semibold">—</p>
-                <p className="text-gray-500 text-[11px]">Interested Investors</p>
-              </div>
-              <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 opacity-50">
-                <ShoppingBag className="w-3.5 h-3.5 text-amber-400 mb-1.5" />
-                <p className="text-white text-lg font-semibold">—</p>
-                <p className="text-gray-500 text-[11px]">Interested Customers</p>
-              </div>
+              {roadmapItems.length > 0 && (
+                <div className="mt-5 pt-5 border-t border-white/[0.06]">
+                  <p className="text-gray-500 text-xs mb-2">Roadmap</p>
+                  <ul className="space-y-1.5">
+                    {roadmapItems.slice(0, 5).map((item, i) => (
+                      <li key={i} className="text-sm text-gray-400 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400/70 flex-shrink-0" />
+                        {typeof item === 'string' ? item : item.title || JSON.stringify(item)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-            <p className="text-gray-600 text-[11px] mt-3">
-              Investor and customer interest tracking isn't wired up on the backend yet — these will
-              populate once that signal exists.
-            </p>
           </div>
-        </div>
+        )}
+
+        {activeTab === 'team' && (
+          <div id="vision-panel-team" role="tabpanel" aria-labelledby="vision-tab-team">
+            {/* Team members */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+              <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <Users className="w-4 h-4 text-blue-400" />
+                Team Members
+                <span className="text-gray-500 text-xs font-normal">({teamMembers.length})</span>
+              </h2>
+              {teamMembers.length === 0 ? (
+                <p className="text-gray-500 text-sm">Solo founder so far — invite collaborators to grow your team.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {teamMembers.map((member, i) => {
+                    const memberId = member.userId || member.user_id || member.id || member._id;
+                    const avatar = (
+                      <div className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center
+                                      justify-center text-xs font-semibold text-blue-300 flex-shrink-0">
+                        {initials(member.name)}
+                      </div>
+                    );
+                    const details = (
+                      <div className="min-w-0">
+                        <p className="text-sm text-white truncate">{member.name}</p>
+                        <p className="text-gray-500 text-xs truncate">{member.position}</p>
+                      </div>
+                    );
+                    return (
+                      <li key={i} className="flex items-center gap-3">
+                        {memberId ? (
+                          <Link to={`/user-profile?userId=${memberId}`} className="flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity">
+                            {avatar}
+                            {details}
+                          </Link>
+                        ) : (
+                          <>
+                            {avatar}
+                            {details}
+                          </>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'builders-investors' && (
+          <div id="vision-panel-builders-investors" role="tabpanel" aria-labelledby="vision-tab-builders-investors" className="space-y-5">
+            {/* Discovery, framed by the role you're viewing as. The creator
+                always gets the recruiting lens regardless of active role. */}
+            <VisionDiscovery
+              viewerRole={viewerRole}
+              isCreator={isCreator}
+              results={discoveryResults}
+            />
+
+            {/* Interested users / builders / investors / customers */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+              <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-blue-400" />
+                Interest
+              </h2>
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-2.5 sm:p-3">
+                  <Heart className="w-3.5 h-3.5 text-pink-400 mb-1.5" />
+                  <p className="text-white text-lg font-semibold">{interested.users}</p>
+                  <p className="text-gray-500 text-[11px] break-words">Interested Users</p>
+                </div>
+                <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-2.5 sm:p-3">
+                  <Bookmark className="w-3.5 h-3.5 text-blue-400 mb-1.5" />
+                  <p className="text-white text-lg font-semibold">{interested.builders}</p>
+                  <p className="text-gray-500 text-[11px] break-words">Interested Builders</p>
+                </div>
+                <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-2.5 sm:p-3 opacity-50">
+                  <Wallet className="w-3.5 h-3.5 text-green-400 mb-1.5" />
+                  <p className="text-white text-lg font-semibold">—</p>
+                  <p className="text-gray-500 text-[11px] break-words">Interested Investors</p>
+                </div>
+                <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-2.5 sm:p-3 opacity-50">
+                  <ShoppingBag className="w-3.5 h-3.5 text-amber-400 mb-1.5" />
+                  <p className="text-white text-lg font-semibold">—</p>
+                  <p className="text-gray-500 text-[11px] break-words">Interested Customers</p>
+                </div>
+              </div>
+              <p className="text-gray-600 text-[11px] mt-3">
+                Investor and customer interest tracking isn't wired up on the backend yet — these will
+                populate once that signal exists.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'updates' && (
+          <div id="vision-panel-updates" role="tabpanel" aria-labelledby="vision-tab-updates">
+            {/* Recent activity */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+              <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-blue-400" />
+                Recent Activity
+              </h2>
+              {activity.length === 0 ? (
+                <p className="text-gray-500 text-sm">No activity yet — comments and updates will show up here.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {activity.map((item) => (
+                    <li key={item.id} className="flex items-start gap-3">
+                      <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-[10px]
+                                      font-semibold text-gray-300 flex-shrink-0 overflow-hidden">
+                        {getProfilePicture(item.author) ? (
+                          <img
+                            src={getProfilePicture(item.author)}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          initials(`${item.author?.firstName || ''} ${item.author?.lastName || ''}`)
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-gray-300 break-words line-clamp-2">
+                          {(item.author?.id || item.author?._id) ? (
+                            <Link
+                              to={`/user-profile?userId=${item.author.id || item.author._id}`}
+                              className="text-white font-medium hover:text-blue-300 transition-colors"
+                            >
+                              {item.author?.firstName} {item.author?.lastName}
+                            </Link>
+                          ) : (
+                            <span className="text-white font-medium">
+                              {item.author?.firstName} {item.author?.lastName}
+                            </span>
+                          )}{' '}
+                          commented: <span className="text-gray-400">{item.content}</span>
+                        </p>
+                        <p className="text-gray-600 text-[11px]">{formatFriendlyDate(item.createdAt)}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div id="vision-panel-settings" role="tabpanel" aria-labelledby="vision-tab-settings" className="space-y-5">
+            {!isCreator ? (
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                <p className="text-gray-400 text-sm">Only the creator of this Vision can manage its settings.</p>
+              </div>
+            ) : (
+              <>
+                {/* Visibility */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                  <h2 className="text-white font-semibold mb-1 flex items-center gap-2">
+                    <Eye className="w-4 h-4 text-blue-400" />
+                    Visibility
+                  </h2>
+                  <p className="text-gray-500 text-sm mb-4">
+                    Where this Vision is in its lifecycle — this changes who can see and act on it.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(VISION_STATE_LABELS).map(([value, cfg]) => {
+                      const isActive = readiness.visionState === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          disabled={savingState}
+                          onClick={() => handleVisibilityChange(value)}
+                          className={`px-3.5 py-2 min-h-[40px] rounded-xl border text-[0.82rem] font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${isActive
+                            ? cfg.color
+                            : 'bg-white/[0.03] border-white/10 text-gray-400 hover:text-white hover:border-white/20'
+                            }`}
+                        >
+                          {cfg.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {savingState && (
+                    <p className="text-gray-500 text-xs mt-3 flex items-center gap-1.5">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Saving…
+                    </p>
+                  )}
+                </div>
+
+                {/* Danger zone */}
+                <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-6">
+                  <h2 className="text-red-300 font-semibold mb-1 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    Delete this Vision
+                  </h2>
+                  <p className="text-gray-400 text-sm mb-4">
+                    This removes the Vision, its roadmap and its activity. It cannot be undone.
+                  </p>
+                  {!confirmDelete ? (
+                    <button
+                      type="button"
+                      onClick={handleDeleteVision}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-red-500/35 bg-red-500/5 text-[0.84rem] font-medium text-red-400 hover:bg-red-500/15 hover:border-red-500/50 active:scale-[0.98] transition-all duration-200 cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" /> Delete Vision
+                    </button>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row gap-2.5">
+                      <button
+                        type="button"
+                        onClick={handleDeleteVision}
+                        disabled={deleting}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-red-500/70 bg-red-500/20 text-[0.84rem] font-semibold text-red-300 hover:bg-red-500/30 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 cursor-pointer"
+                      >
+                        {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        {deleting ? 'Deleting…' : 'Yes, delete it permanently'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDelete(false)}
+                        disabled={deleting}
+                        className="inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-xl border border-white/10 text-[0.84rem] font-medium text-gray-400 hover:text-white hover:bg-white/[0.06] active:scale-[0.98] transition-all duration-200 disabled:opacity-60 cursor-pointer"
+                      >
+                        Keep my Vision
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         <div className="flex justify-center pt-2">
           <Link

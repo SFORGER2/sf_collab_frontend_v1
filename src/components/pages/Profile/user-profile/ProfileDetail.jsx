@@ -152,8 +152,8 @@ export default function ProfileDetail({ profile = {}, isOwner = false, onFieldSa
             </button>
 
             {isOpen && (
-              <div className="px-5 pb-5">
-                <div className="grid gap-x-6 gap-y-3 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+              <div className="px-4 sm:px-5 pb-4 sm:pb-5">
+                <div className="grid gap-x-6 gap-y-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))]">
                   {visible.map((field) => (
                     <FieldRow
                       key={field.key}

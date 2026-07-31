@@ -14,7 +14,7 @@ const PREFIX = 'sfc.draft.';
  * written work gets lost.
  *
  *   <DraftField draftKey="vision-123-problem" label="The problem"
- *               value={value} onSave={next => …} multiline />
+ *               value={value} onSave={next => …} onChange={next => …} multiline />
  *
  * A recovered draft is offered on mount if one is newer than the saved value,
  * so a closed tab or a crash doesn't cost anything.
@@ -28,6 +28,7 @@ export function DraftField({
   label,
   value = '',
   onSave,
+  onChange,
   onDiscard,
   placeholder,
   multiline = false,
@@ -47,6 +48,14 @@ export function DraftField({
   const wrapRef = useRef(null);
 
   const dirty = text !== saved;
+
+  // Sync with parent value changes
+  useEffect(() => {
+    if (value !== saved && !dirty) {
+      setText(value);
+      setSaved(value);
+    }
+  }, [value, saved, dirty]);
 
   // Offer any draft left behind by a previous session.
   useEffect(() => {
@@ -84,6 +93,9 @@ export function DraftField({
     const next = e.target.value;
     setText(next);
     setStatus('drafting');
+    
+    // Call onChange immediately for real-time parent state updates
+    onChange?.(next);
 
     clearTimeout(timer.current);
     timer.current = setTimeout(() => writeDraft(next), autoSaveMs);
@@ -105,11 +117,15 @@ export function DraftField({
     setStatus('idle');
     clearDraft();
     setPrompt(false);
+    // Update parent state to the last saved value
+    onChange?.(saved);
     onDiscard?.();
   };
 
   // Clicking outside with unsaved changes raises the prompt.
   const handleBlur = (e) => {
+    // Don't re-prompt if prompt is already visible
+    if (prompt) return;
     if (wrapRef.current?.contains(e.relatedTarget)) return;
     if (dirty) setPrompt(true);
   };
@@ -146,31 +162,37 @@ export function DraftField({
       )}
 
       {recovered && (
-        <div className="flex flex-wrap items-center gap-2.5 p-3 rounded-xl border border-gold/30 bg-gold/[0.06]">
-          <RotateCcw size={14} className="text-gold shrink-0" />
-          <span className="text-[0.85rem] text-star flex-1 min-w-[140px]">
-            You have an unsaved draft from a previous session.
-          </span>
-          <CosmosButton
-            variant="quiet"
-            size="sm"
-            onClick={() => {
-              setText(recovered.text);
-              setRecovered(null);
-            }}
-          >
-            Restore
-          </CosmosButton>
-          <CosmosButton
-            variant="quiet"
-            size="sm"
-            onClick={() => {
-              clearDraft();
-              setRecovered(null);
-            }}
-          >
-            Discard
-          </CosmosButton>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2.5 p-3 sm:p-3.5 rounded-xl border border-gold/30 bg-gold/[0.06]">
+          <div className="flex items-start gap-2 sm:flex-1 sm:min-w-0">
+            <RotateCcw size={14} className="text-gold shrink-0 mt-0.5" />
+            <span className="text-[0.82rem] sm:text-[0.85rem] text-star leading-snug">
+              You have an unsaved draft from a previous session.
+            </span>
+          </div>
+          <div className="flex gap-2 sm:shrink-0">
+            <CosmosButton
+              variant="quiet"
+              size="sm"
+              onClick={() => {
+                setText(recovered.text);
+                setRecovered(null);
+              }}
+              className="justify-center flex-1 xs:flex-none"
+            >
+              Restore
+            </CosmosButton>
+            <CosmosButton
+              variant="quiet"
+              size="sm"
+              onClick={() => {
+                clearDraft();
+                setRecovered(null);
+              }}
+              className="justify-center flex-1 xs:flex-none"
+            >
+              Discard
+            </CosmosButton>
+          </div>
         </div>
       )}
 
@@ -187,19 +209,36 @@ export function DraftField({
       />
 
       {prompt && (
-        <div className="flex flex-wrap items-center gap-2.5 p-3 rounded-xl border border-gold/35 bg-gold/[0.07]">
-          <span className="text-[0.88rem] text-star flex-1 min-w-[160px]">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2.5 p-3 sm:p-3.5 rounded-xl border border-gold/35 bg-gold/[0.07]">
+          <span className="text-[0.85rem] sm:text-[0.88rem] text-star leading-snug sm:flex-1 sm:min-w-0">
             You have unsaved changes. Keep them?
           </span>
-          <CosmosButton variant="primary" size="sm" onClick={commit}>
-            <Save size={13} /> Save
-          </CosmosButton>
-          <CosmosButton variant="quiet" size="sm" onClick={() => setPrompt(false)}>
-            Keep editing
-          </CosmosButton>
-          <CosmosButton variant="quiet" size="sm" onClick={discard}>
-            <X size={13} /> Discard
-          </CosmosButton>
+          <div className="flex flex-col xs:flex-row gap-2 sm:gap-2 sm:shrink-0">
+            <CosmosButton 
+              variant="primary" 
+              size="sm" 
+              onClick={commit} 
+              className="justify-center xs:w-auto"
+            >
+              <Save size={13} /> Save
+            </CosmosButton>
+            <CosmosButton 
+              variant="quiet" 
+              size="sm" 
+              onClick={() => setPrompt(false)} 
+              className="justify-center xs:w-auto whitespace-nowrap"
+            >
+              Keep editing
+            </CosmosButton>
+            <CosmosButton 
+              variant="quiet" 
+              size="sm" 
+              onClick={discard} 
+              className="justify-center xs:w-auto"
+            >
+              <X size={13} /> Discard
+            </CosmosButton>
+          </div>
         </div>
       )}
     </div>

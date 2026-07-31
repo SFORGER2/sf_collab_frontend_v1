@@ -607,89 +607,42 @@
    already true of every card in the app.
    ───────────────────────────────────────────────────────────────────────── */
 .cosmos-burning {
-  --heat: #ffbf5e;
-  --heat-2: #ff6f3c;
-  --heat-strength: 0.4;
+  --heat: #60a5fa;
+  --heat-2: #3b82f6;
+  --heat-strength: 0.2;
   position: relative;
   isolation: isolate;
 }
 
-.cosmos-burning[data-heat='warm']    { --heat: #ffd08a; --heat-2: #ffa03c; --heat-strength: 0.35; }
-.cosmos-burning[data-heat='hot']     { --heat: #ffbf5e; --heat-2: #ff6f3c; --heat-strength: 0.65; }
-.cosmos-burning[data-heat='blazing'] { --heat: #ffa03c; --heat-2: #ff3c2f; --heat-strength: 1; }
+.cosmos-burning[data-heat='warm']    { --heat: #34d399; --heat-2: #10b981; --heat-strength: 0.2; }
+.cosmos-burning[data-heat='hot']     { --heat: #c084fc; --heat-2: #a855f7; --heat-strength: 0.25; }
+.cosmos-burning[data-heat='blazing'] { --heat: #60a5fa; --heat-2: #3b82f6; --heat-strength: 0.3; }
 
-/* Breathing heat glow around the whole box. */
+/* Subtle accent ring on trending cards */
 .cosmos-burning::before {
   content: '';
   position: absolute;
-  inset: -1px;
+  inset: 0px;
   border-radius: inherit;
   padding: 1px;
   background: linear-gradient(140deg,
-    color-mix(in srgb, var(--heat) 85%, transparent) 0%,
-    color-mix(in srgb, var(--heat-2) 70%, transparent) 45%,
-    color-mix(in srgb, var(--heat) 60%, transparent) 100%);
+    color-mix(in srgb, var(--heat) 40%, transparent) 0%,
+    color-mix(in srgb, var(--heat-2) 20%, transparent) 50%,
+    transparent 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
           mask-composite: exclude;
-  opacity: calc(0.45 + var(--heat-strength) * 0.55);
-  animation: cosmos-heat-breathe 2.6s ease-in-out infinite;
+  opacity: 0.6;
   pointer-events: none;
   z-index: 1;
 }
 
-/* Flame licks along the top edge — two layers drifting at different rates so
-   they never repeat in lockstep. */
 .cosmos-burning::after {
-  content: '';
-  position: absolute;
-  /* Kept inside the top edge: cards are overflow:hidden, so anything above
-     y=0 is simply clipped away and the licks never render. */
-  left: -10%;
-  right: -10%;
-  top: 0;
-  height: 40px;
-  background:
-    radial-gradient(closest-side ellipse at 18% 0%, color-mix(in srgb, var(--heat) 85%, transparent), transparent 76%),
-    radial-gradient(closest-side ellipse at 46% 0%, color-mix(in srgb, var(--heat-2) 78%, transparent), transparent 72%),
-    radial-gradient(closest-side ellipse at 74% 0%, color-mix(in srgb, var(--heat) 72%, transparent), transparent 78%),
-    radial-gradient(closest-side ellipse at 92% 0%, color-mix(in srgb, var(--heat-2) 60%, transparent), transparent 74%);
-  filter: blur(9px);
-  opacity: calc(var(--heat-strength) * 0.85);
-  animation: cosmos-heat-lick 3.1s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 1;
+  display: none;
 }
 
-/* Outer bloom, so the card reads as hot from a distance. */
 .cosmos-burning {
-  box-shadow:
-    0 0 calc(22px * var(--heat-strength)) color-mix(in srgb, var(--heat-2) calc(45% * var(--heat-strength)), transparent),
-    0 0 calc(60px * var(--heat-strength)) color-mix(in srgb, var(--heat-2) calc(18% * var(--heat-strength)), transparent);
-}
-
-@keyframes cosmos-heat-breathe {
-  0%, 100% { opacity: calc(0.42 + var(--heat-strength) * 0.4); }
-  50%      { opacity: calc(0.62 + var(--heat-strength) * 0.38); }
-}
-
-@keyframes cosmos-heat-lick {
-  0%, 100% { transform: translateX(0) scaleY(1);      opacity: calc(var(--heat-strength) * 0.75); }
-  30%      { transform: translateX(9px) scaleY(1.3);  opacity: calc(var(--heat-strength) * 1); }
-  55%      { transform: translateX(-4px) scaleY(0.85); opacity: calc(var(--heat-strength) * 0.6); }
-  80%      { transform: translateX(5px) scaleY(1.15); opacity: calc(var(--heat-strength) * 0.9); }
-}
-
-/* Streak ribbon — the "on a run" badge that sits on a burning box. */
-.cosmos-streak {
-  background: linear-gradient(100deg, var(--heat-2), var(--heat));
-  color: #1a0d05;
-  animation: cosmos-streak-pulse 1.8s ease-in-out infinite;
-}
-
-@keyframes cosmos-streak-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--heat) 55%, transparent); }
-  60%      { box-shadow: 0 0 0 6px transparent; }
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
 @media (prefers-reduced-motion: reduce) {
