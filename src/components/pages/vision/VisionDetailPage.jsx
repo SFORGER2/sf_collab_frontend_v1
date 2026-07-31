@@ -13,6 +13,7 @@ import {
   ProgressRail, Reveal, StreakBadge, Tag,
 } from '@/components/cosmos';
 import { SAMPLE_PEOPLE } from '@/services/mock/people';
+import ApplicationModal from '../discoverStartups/ApplicationModal';
 
 /**
  * The Vision page.
@@ -83,6 +84,8 @@ export default function VisionDetailPage() {
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -214,7 +217,7 @@ export default function VisionDetailPage() {
                   </>
                 ) : (
                   <>
-                    <CosmosButton variant="primary" onClick={() => toast.info('Application flow needs the collab endpoint')}>
+                    <CosmosButton variant="primary" onClick={() => setIsApplicationModalOpen(true)}>
                       <Rocket size={15} /> Ask to join
                     </CosmosButton>
                     <CosmosButton variant="ghost" onClick={() => { setLiked(!liked); }}>
@@ -313,7 +316,10 @@ export default function VisionDetailPage() {
                     Open
                   </span>
                 </span>
-                <CosmosButton variant="quiet" size="sm" onClick={() => toast.info('Needs the collab endpoint')}>
+                <CosmosButton variant="quiet" size="sm" onClick={() => {
+                  setSelectedRole(role);
+                  setIsApplicationModalOpen(true);
+                }}>
                   Apply
                 </CosmosButton>
               </div>
@@ -377,6 +383,17 @@ export default function VisionDetailPage() {
           )}
         </Panel>
       )}
+
+      <ApplicationModal
+        isOpen={isApplicationModalOpen}
+        onClose={() => {
+          setIsApplicationModalOpen(false);
+          setSelectedRole(null);
+        }}
+        entity={vision}
+        entityType="vision"
+        roleSelected={selectedRole}
+      />
     </div>
   );
 }
