@@ -29,7 +29,7 @@ import { useSelector } from 'react-redux';
 
 import { calendarEventsAPI, projectGoalsAPI, startupsAPI, tasksAPI } from '@/utils/APIs/startupsAPI';
 import { toast } from 'react-toastify';
-import SendJoinRequestModal from './modals/SendJoinRequestModal';
+import ApplicationModal from '../discoverStartups/ApplicationModal';
 import ManageJoinRequestsModal from './modals/ManageJoinRequestsModal';
 import AcceptInvitationModal from './modals/AcceptInvitationModal';
 import ProjectGoalsSection from './sections/ProjectGoalsSection';
@@ -67,7 +67,7 @@ const StartupDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
-  const [isSendJoinRequestModalOpen, setIsSendJoinRequestModalOpen] = useState(false);
+  const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isDeleteStartupModalOpen, setIsDeleteStartupModalOpen] = useState(false);
   const [isDemoteModalOpen, setIsDemoteModalOpen] = useState(false);
@@ -554,7 +554,7 @@ const StartupDetailPage = () => {
       {/* Hero Section */}
       <HeroSection
         startup={startup}
-        onJoinClick={() => isAdmin ? setIsJoinModalOpen(true) : setIsSendJoinRequestModalOpen(true)}
+        onJoinClick={() => isAdmin ? setIsJoinModalOpen(true) : setIsApplicationModalOpen(true)}
         members={members}
         isAdmin={isAdmin}
         getStageBadgeVariant={getStageBadgeVariant}
@@ -710,16 +710,11 @@ const StartupDetailPage = () => {
 
       {/* Modals */}
       {!isAdmin && (
-        <SendJoinRequestModal
-          isOpen={isSendJoinRequestModalOpen}
-          onClose={() => setIsSendJoinRequestModalOpen(false)}
-          startupId={id}
-          startupRoles={startup?.roles || []}
-          startupName={startup?.name || ''}
-          onSuccess={() => {
-            setIsSendJoinRequestModalOpen(false);
-            toast.success('Join request sent successfully!');
-          }}
+        <ApplicationModal
+          isOpen={isApplicationModalOpen}
+          onClose={() => setIsApplicationModalOpen(false)}
+          entity={startup}
+          entityType="startup"
         />
       )}
       {pendingInvitation && !isAdmin && (

@@ -54,6 +54,17 @@ export function aiTools(id, role = "member") {
     href: "/ai-dashboard",
     label: "AI Tools",
     subItems: [
+      { id: "ai-matchmaking", href: "/ai-matchmaking", label: "AI Matchmaking", icon: <BrainCircuit size={18} /> },
+      { id: "ai-news", href: "/ai-news", label: "AI News Feed", icon: <Rss size={18} /> },
+      { id: "logo-generator", href: "/logo-generator", label: "Logo Generator", icon: <Wand2 size={18} /> },
+      { id: "business-plan", href: "/business-plan", label: "Business Plan", icon: <ClipboardList size={18} /> },
+      { id: "qwen-chat", href: "/qwen-chat", label: "Qwen Chat", icon: <Bot size={18} /> },
+      { id: "data-scraper", href: "/data-scraper", label: "Data Scraper", icon: <Database size={18} /> },
+      { id: "multimodal-images", href: "/multimodal-images", label: "Multimodal Images", icon: <Images size={18} /> },
+      { id: "video-generator", href: "/video-generator", label: "Video Generator", icon: <VideoIcon size={18} /> },
+      { id: "caption-generator", href: "/caption-generator", label: "Caption Generator", icon: <CaptionsIcon size={18} /> },
+      { id: "ai-assistant-tools", href: "/ai-assistant-tools", label: "AI Assistant Tools", icon: <FileText size={18} /> },
+
       ...allowed.map((key) => ALL_AI_TOOLS.find((t) => t.id === key)).filter(Boolean),
       { id: "ai-all", href: "/ai-dashboard", label: "All AI Tools", icon: <Cpu size={18} /> },
     ],

@@ -32,7 +32,7 @@ const ROLE_CONFIG = {
   builder: {
     accent: '#4fd8ff',
     eyebrow: 'Get involved',
-    primary: { label: 'Apply to contribute', icon: Handshake, to: '#apply' },
+    primary: { label: 'Apply to contribute', icon: Handshake, action: 'apply' },
     secondary: [
       { label: 'Save for later', icon: Bookmark, to: '#save' },
       { label: 'Ask a question', icon: MessageSquare, to: '#discuss' },
@@ -76,7 +76,7 @@ const ROLE_CONFIG = {
   },
 };
 
-export function VisionActions({ viewerRole = 'member', isCreator = false }) {
+export function VisionActions({ viewerRole = 'member', isCreator = false, onApply }) {
   const config = ROLE_CONFIG[viewerRole] || ROLE_CONFIG.member;
   const Primary = config.primary.icon;
 
@@ -85,10 +85,16 @@ export function VisionActions({ viewerRole = 'member', isCreator = false }) {
       <Eyebrow className="mb-4">{isCreator ? 'Your Vision' : config.eyebrow}</Eyebrow>
 
       <div className="flex flex-wrap gap-2.5">
-        <CosmosButton variant="primary" size="sm" asChild>
-          <Link to={config.primary.to}>
-            <Primary size={14} /> {config.primary.label}
-          </Link>
+        <CosmosButton variant="primary" size="sm" asChild={!config.primary.action}>
+          {config.primary.action === 'apply' ? (
+            <button onClick={onApply}>
+              <Primary size={14} /> {config.primary.label}
+            </button>
+          ) : (
+            <Link to={config.primary.to}>
+              <Primary size={14} /> {config.primary.label}
+            </Link>
+          )}
         </CosmosButton>
 
         {config.secondary.map((action) => {

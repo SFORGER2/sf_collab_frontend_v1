@@ -161,6 +161,7 @@ import FounderManageTeam from "./components/pages/founder/manageTeam/FounderMana
 import FounderManageTasks from "./components/pages/founder/manageTasks/FounderManageTasks.jsx";
 import SavedIdeas from "./components/pages/ideation/SavedIdeas.jsx";
 import AIToolsGuard from "./components/ai/AIToolsGuard.jsx";
+import AIAssistantTools from "./components/pages/ai-assistant/AIAssistantTools.jsx";
 import BuilderStartups from "./components/pages/builderStartups/BuilderStartups.jsx";
 import BuilderMatchingStartupsPage from "./components/pages/builderStartups/BuilderMatchingStartupsPage.jsx";
 import InviteToStartup from "./components/pages/inviteToStartup/InviteToStartup.jsx";

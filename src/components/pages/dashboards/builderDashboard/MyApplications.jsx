@@ -68,17 +68,28 @@ const MyApplications = () => {
   };
 
   const statusUI = {
+    // spec statuses
+    applied: {
+      label: "Applied",
+      class: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+      icon: <Briefcase className="w-4 h-4" />,
+    },
     pending: {
-      label: "Pending",
-      class: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-      icon: <Clock className="w-4 h-4" />,
+      label: "Applied",
+      class: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+      icon: <Briefcase className="w-4 h-4" />,
     },
     under_review: {
       label: "Under Review",
-      class: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-      icon: <AlertCircle className="w-4 h-4" />,
+      class: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+      icon: <Clock className="w-4 h-4" />,
     },
     approved: {
+      label: "Accepted",
+      class: "bg-green-500/20 text-green-300 border-green-500/30",
+      icon: <CheckCircle className="w-4 h-4" />,
+    },
+    accepted: {
       label: "Accepted",
       class: "bg-green-500/20 text-green-300 border-green-500/30",
       icon: <CheckCircle className="w-4 h-4" />,
@@ -87,6 +98,11 @@ const MyApplications = () => {
       label: "Rejected",
       class: "bg-red-500/20 text-red-300 border-red-500/30",
       icon: <X className="w-4 h-4" />,
+    },
+    withdrawn: {
+      label: "Withdrawn",
+      class: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+      icon: <AlertCircle className="w-4 h-4" />,
     },
   };
 
@@ -332,20 +348,28 @@ const MyApplications = () => {
                       <div className="relative flex flex-col md:flex-row justify-between gap-6 items-start md:items-center">
                         <div className="space-y-3 flex-1 min-w-0">
                           <h3 className="text-xl font-semibold text-white group-hover:text-blue-300 transition-colors truncate">
-                            {app.startup?.name || "Startup"}
+                            {app.startup?.name || app.vision?.title || app.startup?.title || "Application"}
                           </h3>
                           <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs w-fit">
-                            {app.role || "Role not specified"}
+                            {app.role || "General Application"}
                           </Badge>
                           {app.message && (
                             <p className="text-gray-400 text-sm italic">
                               "{app.message}"
                             </p>
                           )}
-                          <p className="text-xs text-gray-500 flex items-center gap-2 mt-2">
-                            <Calendar className="w-3 h-3" />
-                            Applied on {new Date(app.createdAt).toLocaleDateString()}
-                          </p>
+                          <div className="flex flex-col gap-1">
+                            <p className="text-xs text-gray-500 flex items-center gap-2">
+                              <Calendar className="w-3 h-3" />
+                              Applied {new Date(app.createdAt || app.created_at).toLocaleDateString()}
+                            </p>
+                            {(app.updatedAt || app.updated_at) && (
+                              <p className="text-xs text-gray-600 flex items-center gap-2">
+                                <TrendingUp className="w-3 h-3" />
+                                Last updated {new Date(app.updatedAt || app.updated_at).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-3 flex-shrink-0 w-full md:w-auto">
