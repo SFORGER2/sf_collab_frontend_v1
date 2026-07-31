@@ -5,7 +5,6 @@ import { createBrowserRouter } from "react-router-dom";
 import Home from "../components/pages/Home.jsx";
 import Layout from "../Layout/Layout.jsx";
 import Project from "../components/pages/Project.jsx";
-// import Profile from "../components/pages/Profile.jsx";
 import Dashboard from "../components/pages/dashboard/dashboard.jsx";
 import Ideation from "../components/pages/ideation/Ideation.jsx";
 import Knowledge from "../components/pages/knowledge/Knowledge.jsx";
@@ -16,6 +15,9 @@ import Preferences from "../components/pages/Preferences.jsx";
 import AccountandSecurity from "../components/pages/AccountandSecurity.jsx";
 import Login from "../components/auth/Login.jsx";
 import SignUp from "../components/auth/SignUp.jsx";
+import AdminLogin from "../components/auth/AdminLogin.jsx"; // 🔹 Added
+import AdminDashboard from "../components/pages/admin/AdminDashboard.jsx"; // 🔹 Added
+import Unauthorized from "../components/pages/Unauthorized.jsx"; // 🔹 Added
 import OAuthCallback from "../components/auth/OAuthCallback.jsx";
 import RegisterStartUp from "../components/pages/register-startup/RegisterStartUp.jsx";
 import StartUp from "../components/pages/StartUp.jsx";
@@ -39,241 +41,115 @@ import BusinessIdeaGenerator from "../components/pages/Business_plan_generator/p
 import Test from "../components/pages/Test.jsx";
 import ScraperForm from "../components/pages/Data_scraper/ScraperForm.jsx";
 import PDFSigningApp from "@/components/pages/PDF_Signing/PDFSigningApp.jsx";
-import ChatPage from "@/components/pages/chat/ChatPage.jsx";
-
-// import TimezoneConverter from "../components/pages/TimezoneConverter/TimezoneConverter.jsx";
 import ChatComponent from "../components/pages/chat/ChatComponent.jsx";
-
 import DiscoverStartups from "../components/pages/discoverStartups/DiscoverStartups.jsx";
 import StartupDetailPage from "../components/pages/startupDetails/StartupDetailPage.jsx";
 import Profile from "../components/pages/Profile/user-profile/Profile.jsx";
 import ProfileSetup from "../components/pages/ProfileSetup.jsx";
 
 export const router = createBrowserRouter([
-  // Authentication routes (accessible only when not logged in)
+  // 🔹 Public Authentication Routes
   {
     path: "/login",
     element: (
+      <AuthRoute>
         <Login />
+      </AuthRoute>
     ),
   },
   {
     path: "/signup",
-    element: 
+    element: (
+      <AuthRoute>
         <SignUp />
-     ,
+      </AuthRoute>
+    ),
+  },
+  {
+    path: "/admin/login",
+    element: (
+      <AuthRoute>
+        <AdminLogin />
+      </AuthRoute>
+    ),
   },
 
-  // Profile setup route - shown after signup/login
+  // 🔹 Profile setup route - member only
   {
     path: "/profile-setup",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute role="member">
         <ProfileSetup />
       </ProtectedRoute>
     ),
   },
 
-  // OAuth callback route
-  // {
-  //   path: "/auth/callback",
-  //   element: <OAuthCallback />,
-  // },
-  // Routes are now public for development
+  // 🔹 Main Layout - member only
   {
     path: "/",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute role="member">
         <Layout />
       </ProtectedRoute>
     ),
-    // element: <Layout />,
     children: [
-      {
-        path: "/projects",
-        element: <Project />,
-      },
-      
-      {
-        path: "/project-management",
-        element: <ProjectManagement />,
-      },
-      
-      {
-        path: "/video-tutorials",
-        element: <VideoTutorials />,
-      },
-      
-      {
-        path: "/Test",
-        element: <Test />,
-      },
-
-      {
-        path: "/pricing",    
-        element: <Pricing />,
-      },
-      
-      
-      //todo: need to be fixed it's working but slow
-      {
-        path: "/business-plan",
-        element: <BusinessIdeaGenerator />,
-      },
-      
-      //todo: need to be fixed
-      {
-        path: "/data-scraper",
-        element: <ScraperForm />,
-      },
-      
-      //? FIXED
-      {
-        path: "/chat",
-        element: <ChatComponent />,
-      },
-      
-      //!fixed
-      {
-        path: "/dashboard",
-        element: <Dashboard />,
-      },
-      
-      {
-  path: "/pitch-deck",
-  element: <PitchDeckHome />,
-},
-
-{
-  path: "/pitch-deck/create",
-  element: <PitchDeckCreate />,
-},
-
-{
-  path: "/pitch-deck/my-decks",
-  element: <MyDecks />,
-},
-      //!fixed
-      // {
-      //   path: "/startup",
-      //   element: <StartUp />,
-      // },
-      
-      //? FIXED
-      {
-        path: "/register-startup",
-        element: <RegisterStartUp />,
-      },
-      
-      //? FIXED
-      {
-        path: "/discover-startups",
-        element: <DiscoverStartups />,
-      },
-      
-      //? FIXED 
-      {
-        path: "/startup-details/:id",
-        element: <StartupDetailPage />,
-      },
-      
-      //todo: need to be fixed
-      {
-        path: "/user-profile",
-        element: <Profile />,
-      },
-      
-      {
-        path: "/ideation",
-        element: <Ideation />,
-      },
-      
-      {
-        path: "/knowledge",
-        element: <Knowledge />,
-      },
-      
-      {
-        path: "/posts",
-        element: <Posts />,
-      },
-      
-      {
-        path: "/saved",
-        element: <SavedList />
-      },
-      
-      {
-        path: "/help",
-        element: <Help />,
-      },
-      
-      {
-        path: "/notifications",
-        element: <Notifications />,
-      },
-      
-      {
-        path: "/home-details",
-        element: <HomedetailsPage />,
-      },
-      
-      {
-        path: "/ideation-details",
-        element: <Idationdetails />,
-      },
-      
-      {
-        path: "/knowledge-details",
-        element: <Knowledgedetails />,
-      },
-      
-      {
-        path: "/project-details",
-        element: <ProjectDetails />,
-      },
-      
-      // {
-      //   path: "/startup-details",
-      //   element: <StartUpdetails />,
-      // },
-      
-      // {
-      //   path: "/messages",
-      //   element: <ChatPage />,
-      // },
-
-      {
-        path: "/getting-started",
-        element: <GettingStarted/>
-      },
-      
-      {
-        path:"/team-collaboration",
-        element: <TeamCollaboration/>
-      },
-      
+      { path: "/projects", element: <Project /> },
+      { path: "/project-management", element: <ProjectManagement /> },
+      { path: "/video-tutorials", element: <VideoTutorials /> },
+      { path: "/Test", element: <Test /> },
+      { path: "/pricing", element: <Pricing /> },
+      { path: "/business-plan", element: <BusinessIdeaGenerator /> },
+      { path: "/data-scraper", element: <ScraperForm /> },
+      { path: "/chat", element: <ChatComponent /> },
+      { path: "/dashboard", element: <Dashboard /> }, // 🔹 Member Dashboard
+      { path: "/pitch-deck", element: <PitchDeckHome /> },
+      { path: "/pitch-deck/create", element: <PitchDeckCreate /> },
+      { path: "/pitch-deck/my-decks", element: <MyDecks /> },
+      { path: "/register-startup", element: <RegisterStartUp /> },
+      { path: "/discover-startups", element: <DiscoverStartups /> },
+      { path: "/startup-details/:id", element: <StartupDetailPage /> },
+      { path: "/user-profile", element: <Profile /> },
+      { path: "/ideation", element: <Ideation /> },
+      { path: "/knowledge", element: <Knowledge /> },
+      { path: "/posts", element: <Posts /> },
+      { path: "/saved", element: <SavedList /> },
+      { path: "/help", element: <Help /> },
+      { path: "/notifications", element: <Notifications /> },
+      { path: "/home-details", element: <HomedetailsPage /> },
+      { path: "/ideation-details", element: <Idationdetails /> },
+      { path: "/knowledge-details", element: <Knowledgedetails /> },
+      { path: "/project-details", element: <ProjectDetails /> },
+      { path: "/getting-started", element: <GettingStarted /> },
+      { path: "/team-collaboration", element: <TeamCollaboration /> },
       {
         path: "/setting",
         element: <Setting />,
         children: [
-          {
-            path: "/setting/",
-            element: <ProfileSetting />,
-          },
-          {
-            path: "/setting/preferences",
-            element: <Preferences />,
-          },
-          {
-            path: "/setting/account",
-            element: <AccountandSecurity />,
-          },
+          { path: "/setting/", element: <ProfileSetting /> },
+          { path: "/setting/preferences", element: <Preferences /> },
+          { path: "/setting/account", element: <AccountandSecurity /> },
         ],
       },
-  ], 
-},
-  // Catch all unmatched routes
+    ],
+  },
+
+  // 🔹 Admin Dashboard - admin only
+  {
+    path: "/admin/dashboard",
+    element: (
+      <ProtectedRoute role="admin">
+        <AdminDashboard />
+      </ProtectedRoute>
+    ),
+  },
+
+  // 🔹 Unauthorized Page
+  {
+    path: "/unauthorized",
+    element: <Unauthorized />,
+  },
+
+  // 🔹 Catch all unmatched routes
   {
     path: "*",
     element: (

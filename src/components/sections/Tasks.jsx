@@ -24,7 +24,7 @@ const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 // Status mapping between frontend and backend
 const statusMapping = {
   'today': 'Planned',
-  'in_progress': 'In Progress', 
+  'in_progress': 'In Progress',
   'completed': 'Done',
   'overdue': 'Overdue'
 };
@@ -37,14 +37,14 @@ const reverseStatusMapping = {
 };
 
 const statuses = [
-  { id: 'planned', name: 'Planned', color: '#6B7280', backendStatus: 'today' },
+  { id: 'planned', name: 'Planned', color: '#71717A', backendStatus: 'today' },
   { id: 'in-progress', name: 'In Progress', color: '#F59E0B', backendStatus: 'in_progress' },
   { id: 'done', name: 'Done', color: '#10B981', backendStatus: 'completed' },
   { id: 'overdue', name: 'Overdue', color: '#EF4444', backendStatus: 'overdue' },
 ];
 
 const columns = [
-  { id: 'planned', name: 'Planned', color: '#6B7280', backendStatus: 'today' },
+  { id: 'planned', name: 'Planned', color: '#71717A', backendStatus: 'today' },
   { id: 'in-progress', name: 'In Progress', color: '#F59E0B', backendStatus: 'in_progress' },
   { id: 'done', name: 'Done', color: '#10B981', backendStatus: 'completed' },
   { id: 'overdue', name: 'Overdue', color: '#EF4444', backendStatus: 'overdue' },
@@ -93,6 +93,17 @@ const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
   month: 'short',
   day: 'numeric',
 });
+
+const priorityBadgeClass = (priority) => {
+  switch (priority) {
+    case 'high':
+      return 'border border-red-500/20 bg-red-500/10 text-red-400';
+    case 'medium':
+      return 'border border-amber-500/20 bg-amber-500/10 text-amber-400';
+    default:
+      return 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-400';
+  }
+};
 
 export default function Tasks({ searchQuery = "" }) {
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' or 'list'
@@ -236,7 +247,7 @@ export default function Tasks({ searchQuery = "" }) {
 
     // Find the target status/column
     const targetColumn = columns.find((col) => col.id === over.id);
-    
+
     if (!targetColumn) {
       return;
     }
@@ -246,8 +257,8 @@ export default function Tasks({ searchQuery = "" }) {
       features.map((feature) => {
         if (feature.id === active.id) {
           const newStatus = statuses.find(status => status.backendStatus === targetColumn.backendStatus) || statuses[0];
-          return { 
-            ...feature, 
+          return {
+            ...feature,
             status: newStatus,
             column: targetColumn.id
           };
@@ -276,32 +287,6 @@ export default function Tasks({ searchQuery = "" }) {
     return filterList(features, q);
   }, [searchQuery, features]);
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high':
-        return 'from-rose-500/40 to-red-600/40';
-      case 'medium':
-        return 'from-amber-500/40 to-orange-600/40';
-      case 'low':
-        return 'from-emerald-500/40 to-green-600/40';
-      default:
-        return 'from-slate-500/40 to-slate-600/40';
-    }
-  };
-
-  const getPriorityColorTwo = (priority) => {
-    switch (priority) {
-      case 'high':
-        return 'rgba(181, 13, 139, 0.20)';
-      case 'medium':
-        return 'rgba(207, 137, 25, 0.20)';
-      case 'low':
-        return 'rgba(20, 181, 138, 0.20)';
-      default:
-        return 'rgba(100, 116, 139, 0.20)';
-    }
-  };
-
   // Kanban Card Component - as a function that takes feature as parameter
   const KanbanTaskCard = (feature) => (
     <KanbanCard
@@ -309,48 +294,45 @@ export default function Tasks({ searchQuery = "" }) {
       id={feature.id}
       key={feature.id}
       name={feature.name}
+      className="border border-zinc-800 bg-zinc-900/80 hover:border-zinc-700"
     >
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="flex flex-col gap-1 flex-1">
-          <p className="m-0 flex-1 font-medium text-sm text-white">
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div className="flex flex-1 flex-col gap-1">
+          <p className="m-0 flex-1 text-sm font-medium text-zinc-100">
             {feature.name}
           </p>
-          <p className="m-0 text-slate-400 text-xs line-clamp-2">
+          <p className="m-0 line-clamp-2 text-xs text-zinc-400">
             {feature.description}
           </p>
         </div>
         {feature.owner && (
           <Avatar className="h-6 w-6 shrink-0">
             <AvatarImage src={feature.owner.image} />
-            <AvatarFallback className="text-xs">
+            <AvatarFallback className="bg-indigo-600 text-xs text-white">
               {feature.owner.firstName?.slice(0, 1)}{feature.owner.lastName?.slice(0, 1)}
             </AvatarFallback>
           </Avatar>
         )}
       </div>
-      
-      <div className="flex items-center justify-between mt-2">
-        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${
-          feature.priority === 'high' ? 'bg-red-500/20 text-red-300' :
-          feature.priority === 'medium' ? 'bg-amber-500/20 text-amber-300' :
-          'bg-emerald-500/20 text-emerald-300'
-        }`}>
+
+      <div className="mt-2 flex items-center justify-between">
+        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${priorityBadgeClass(feature.priority)}`}>
           {feature.priority}
         </span>
-        <p className="m-0 text-slate-400 text-xs">
+        <p className="m-0 text-xs text-zinc-500">
           {shortDateFormatter.format(feature.endAt)}
         </p>
       </div>
 
       {feature.progress_percentage > 0 && (
         <div className="mt-2">
-          <div className="w-full bg-slate-700 rounded-full h-1.5">
-            <div 
-              className="bg-blue-500 h-1.5 rounded-full" 
+          <div className="h-1.5 w-full rounded-full bg-zinc-800">
+            <div
+              className="h-1.5 rounded-full bg-indigo-500"
               style={{ width: `${feature.progress_percentage}%` }}
             />
           </div>
-          <span className="text-xs text-slate-400 mt-1 block">
+          <span className="mt-1 block text-xs text-zinc-500">
             {feature.progress_percentage}% complete
           </span>
         </div>
@@ -366,41 +348,38 @@ export default function Tasks({ searchQuery = "" }) {
       key={feature.id}
       name={feature.name}
       parent={parent}
+      className="border border-zinc-800 bg-zinc-900/60 hover:border-zinc-700"
     >
-      <div className="flex items-center gap-3 w-full">
+      <div className="flex w-full items-center gap-3">
         <div
           className="h-2 w-2 shrink-0 rounded-full"
           style={{ backgroundColor: feature.status.color }}
         />
-        
-        <div className="flex-1 min-w-0">
-          <p className="m-0 font-medium text-sm text-white truncate">
+
+        <div className="min-w-0 flex-1">
+          <p className="m-0 truncate text-sm font-medium text-zinc-100">
             {feature.name}
           </p>
-          <p className="m-0 text-slate-400 text-xs truncate">
+          <p className="m-0 truncate text-xs text-zinc-500">
             {feature.description}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-            feature.priority === 'high' ? 'bg-red-500/20 text-red-300' :
-            feature.priority === 'medium' ? 'bg-amber-500/20 text-amber-300' :
-            'bg-emerald-500/20 text-emerald-300'
-          }`}>
+          <span className={`rounded-full px-2 py-1 text-xs font-semibold ${priorityBadgeClass(feature.priority)}`}>
             {feature.priority}
           </span>
 
           {feature.owner && (
             <Avatar className="h-6 w-6 shrink-0">
               <AvatarImage src={feature.owner.image} />
-              <AvatarFallback className="text-xs">
+              <AvatarFallback className="bg-indigo-600 text-xs text-white">
                 {feature.owner.firstName?.slice(0, 1)}{feature.owner.lastName?.slice(0, 1)}
               </AvatarFallback>
             </Avatar>
           )}
 
-          <span className="text-xs text-slate-400 w-16 text-right">
+          <span className="w-16 text-right text-xs text-zinc-500">
             {shortDateFormatter.format(feature.endAt)}
           </span>
         </div>
@@ -409,69 +388,69 @@ export default function Tasks({ searchQuery = "" }) {
   );
 
   return (
-    <div className="overflow-hidden bg-transparent px-8 w-full">
-      <div className="w-full mx-auto">
+    <div className="w-full overflow-hidden bg-transparent px-8">
+      <div className="mx-auto w-full">
         {/* Header */}
         <div className="mb-8 w-full">
-          <div className="flex items-center justify-between mb-3">
+          <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2.5">
-                <CheckCircle2 className="h-7 w-7 text-white" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10">
+                <CheckCircle2 className="h-5 w-5 text-indigo-400" />
               </div>
-              <ShinyText 
-                text="Tasks Board" 
-                disabled={false} 
-                speed={3} 
-                className='custom-class text-2xl font-bold' 
+              <ShinyText
+                text="Tasks Board"
+                disabled={false}
+                speed={3}
+                className='custom-class text-2xl font-bold'
               />
             </div>
-            
+
             {/* View Mode Toggle */}
-            <div className="flex items-center gap-2  rounded-lg p-1 border border-slate-700/50">
+            <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900 p-1">
               <button
                 onClick={() => setViewMode('kanban')}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'kanban' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'text-slate-400 hover:text-white'
+                className={`rounded-md p-2 transition-colors ${
+                  viewMode === 'kanban'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-zinc-400 hover:text-zinc-100'
                 }`}
               >
                 <Grid className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'list' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'text-slate-400 hover:text-white'
+                className={`rounded-md p-2 transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-zinc-400 hover:text-zinc-100'
                 }`}
               >
                 <List className="h-4 w-4" />
               </button>
             </div>
           </div>
-          <p className="text-slate-400 text-lg ml-14">Manage and track your project tasks</p>
+          <p className="ml-14 text-sm text-zinc-400">Manage and track your project tasks</p>
         </div>
 
         {/* Kanban View */}
         {viewMode === 'kanban' && (
           <div className="w-full">
             <KanbanProvider
-              className="w-full flex flex-wrap gap-6 items-center justify-center"
+              className="flex w-full flex-wrap items-center justify-center gap-6"
               columns={columns}
               data={filteredFeatures}
               onDataChange={setFeatures}
             >
               {(column) => (
-                <KanbanBoard id={column.id} key={column.id} className="bg-slate-800/30 rounded-lg border border-slate-700/50 p-4 min-h-[500px] w-74">
+                <KanbanBoard id={column.id} key={column.id} className="w-74 min-h-[500px] rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
                   <KanbanHeader>
                     <div className="flex items-center gap-2">
                       <div
                         className="h-2 w-2 rounded-full"
                         style={{ backgroundColor: column.color }}
                       />
-                      <span className="text-white font-semibold">{column.name}</span>
-                      <span className="bg-slate-700/50 text-slate-300 text-xs px-2 py-1 rounded-full">
+                      <span className="font-semibold text-zinc-100">{column.name}</span>
+                      <span className="rounded-full bg-zinc-800 px-2 py-1 text-xs text-zinc-400">
                         {filteredFeatures.filter(feature => feature.column === column.id)?.length}
                       </span>
                     </div>
@@ -487,13 +466,13 @@ export default function Tasks({ searchQuery = "" }) {
 
         {/* List View */}
         {viewMode === 'list' && (
-          <div className=" p-6">
+          <div className="p-6">
             <ListProvider onDragEnd={handleDragEnd}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {statuses.map((status) => (
                   <ListGroup id={status.name} key={status.name} className="min-h-[400px]">
-                    <ListHeader 
-                      color={status.color} 
+                    <ListHeader
+                      color={status.color}
                       name={status.name}
                       count={filteredFeatures.filter(f => f.status.name === status.name).length}
                     />
@@ -501,15 +480,15 @@ export default function Tasks({ searchQuery = "" }) {
                       {filteredFeatures
                         .filter((feature) => feature.status.name === status.name)
                         .map((feature, index) => (
-                          <ListTaskItem 
-                            key={feature.id} 
-                            feature={feature} 
-                            index={index} 
-                            parent={feature.status.name} 
+                          <ListTaskItem
+                            key={feature.id}
+                            feature={feature}
+                            index={index}
+                            parent={feature.status.name}
                           />
                         ))}
                       {filteredFeatures.filter(f => f.status.name === status.name).length === 0 && (
-                        <div className="text-sm text-slate-400 py-4 text-center bg-slate-800/20 rounded-lg border border-slate-700/30">
+                        <div className="rounded-lg border border-zinc-800/60 bg-zinc-900/40 py-4 text-center text-sm text-zinc-500">
                           No tasks
                         </div>
                       )}

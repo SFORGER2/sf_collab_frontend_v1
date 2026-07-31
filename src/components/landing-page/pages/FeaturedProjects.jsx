@@ -5,10 +5,9 @@ import { ChevronRight, ChevronLeft, ArrowRight } from 'lucide-react';
 import Footer from '../Footer';
 import Navbar from '../Navbar';
 
-export default function FeaturedProjects() {
-  gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger);
 
-  // Mock data - replace with API call
+export default function FeaturedProjects() {
   const MOCK_PROJECTS = [
     {
       id: 1,
@@ -37,34 +36,16 @@ export default function FeaturedProjects() {
       metrics: '5k beta testers',
       image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop',
     },
-    {
-      id: 4,
-      title: 'LearnSmart',
-      pitch: 'Personalized learning powered by AI',
-      stage: 'Beta',
-      roles: ['React Dev', 'Python Dev', 'UX Designer'],
-      metrics: '25k students',
-      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
-    },
-    {
-      id: 5,
-      title: 'HealthSync',
-      pitch: 'Patient-doctor coordination made simple',
-      stage: 'Prototype',
-      roles: ['Mobile Dev', 'Backend Dev', 'Security Specialist'],
-      metrics: '10 hospitals',
-      image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&h=300&fit=crop',
-    },
   ];
 
   const StageBadge = ({ stage }) => {
     const colors = {
-      'Idea': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-      'Prototype': 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-      'Beta': 'bg-green-500/20 text-green-300 border-green-500/30',
+      'Idea': 'bg-blue-500/20 text-blue-300 border-blue-500/30 shadow-sm',
+      'Prototype': 'bg-purple-500/20 text-purple-300 border-purple-500/30 shadow-sm',
+      'Beta': 'bg-green-500/20 text-green-300 border-green-500/30 shadow-sm',
     };
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${colors[stage]}`}>
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold border backdrop-blur-md ${colors[stage]}`}>
         {stage}
       </span>
     );
@@ -72,7 +53,7 @@ export default function FeaturedProjects() {
 
   const ProjectCard = ({ project, onApply }) => {
     return (
-      <div className="bg-[#111111] rounded-2xl overflow-hidden border border-gray-800 hover:border-purple-500/40 hover:shadow-[0_0_40px_rgba(139,92,246,0.2)] transition-all duration-300 flex flex-col h-full">
+      <div className="bg-[#111111]/80 backdrop-blur-md rounded-2xl overflow-hidden border border-gray-800 hover:border-purple-500/40 hover:shadow-[0_0_40px_rgba(139,92,246,0.3)] transition-all duration-300 flex flex-col h-full transform hover:-translate-y-1">
         <img loading="lazy" src={project.image} alt={project.title} className="w-full h-48 object-cover" />
         <div className="p-6 flex flex-col flex-grow">
           <div className="flex items-start justify-between mb-3">
@@ -84,7 +65,7 @@ export default function FeaturedProjects() {
             <p className="text-xs text-gray-400 mb-2">Roles Needed</p>
             <div className="flex flex-wrap gap-2">
               {project.roles.map((role, i) => (
-                <span key={i} className="bg-gray-800 text-gray-300 px-2 py-1 rounded text-xs">
+                <span key={i} className="bg-gradient-to-r from-gray-800 to-gray-700 text-gray-200 px-2 py-1 rounded-full text-xs border border-gray-600/40">
                   {role}
                 </span>
               ))}
@@ -94,7 +75,7 @@ export default function FeaturedProjects() {
             <span className="text-sm text-purple-400 font-medium">{project.metrics}</span>
             <button
               onClick={() => onApply(project.id)}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-opacity flex items-center gap-2"
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 shadow-md"
             >
               Apply <ArrowRight size={16} />
             </button>
@@ -104,66 +85,39 @@ export default function FeaturedProjects() {
     );
   };
 
-  const FeaturedProjects = () => {
-    const [projects, setProjects] = useState(MOCK_PROJECTS);
-    const [scrollPos, setScrollPos] = useState(0);
-    const carouselRef = useRef(null);
-    const mainRef = useRef(null);
+  const [projects, setProjects] = useState(MOCK_PROJECTS);
+  const carouselRef = useRef(null);
+  const mainRef = useRef(null);
 
-    useEffect(() => {
-      const ctx = gsap.context(() => {
-        gsap.fromTo(
-          '.projects-header',
-          { opacity: 0, y: 30 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            ease: 'power3.out',
-          }
-        );
-        gsap.fromTo(
-          '.project-card',
-          { opacity: 0, y: 40 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            ease: 'power3.out',
-            stagger: 0.1,
-          }
-        );
-      }, mainRef);
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo('.projects-header', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' });
+      gsap.fromTo('.project-card', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', stagger: 0.1 });
+    }, mainRef);
+    return () => ctx.revert();
+  }, []);
 
-      return () => ctx.revert();
-    }, []);
+  const scroll = (direction) => {
+    if (!carouselRef.current) return;
+    const scrollAmount = 400;
+    const newPos = direction === 'left'
+      ? carouselRef.current.scrollLeft - scrollAmount
+      : carouselRef.current.scrollLeft + scrollAmount;
+    carouselRef.current.scrollTo({ left: newPos, behavior: 'smooth' });
+  };
 
-    const scroll = (direction) => {
-      if (!carouselRef.current) return;
-      const scrollAmount = 400;
-      const newPos = direction === 'left' ? scrollPos - scrollAmount : scrollPos + scrollAmount;
-      carouselRef.current.scrollTo({ left: newPos, behavior: 'smooth' });
-      setScrollPos(newPos);
-    };
+  const handleApply = (projectId) => {
+    console.log('Apply clicked for project:', projectId);
+  };
 
-    const handleApply = (projectId) => {
-      // TODO: Implement navigation to enrollment/profile page
-      console.log('Apply clicked for project:', projectId);
-    };
-
-    // TODO: Add useEffect to fetch projects from API
-    // useEffect(() => {
-    //   fetchProjects().then(data => setProjects(data));
-    // }, []);
-
-    return (
-      <>
-        <Navbar />
+  return (
+    <>
+      <Navbar />
       <section ref={mainRef} className="bg-[#0b0b0b] text-white py-20 px-6 lg:px-20 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="projects-header text-center mb-16">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-gray-400 to-white bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
               Explore projects changing the game.
             </h1>
             <p className="text-gray-300 max-w-3xl mx-auto text-lg leading-relaxed">
@@ -211,10 +165,8 @@ export default function FeaturedProjects() {
             </div>
           </div>
         </div>
-        </section>
-        <Footer />  
-        </>
-    );
-  };
-  return <FeaturedProjects />;
+      </section>
+      <Footer />  
+    </>
+  );
 }

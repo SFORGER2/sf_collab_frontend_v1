@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { API_URL } from "@/utils/config";
-import { UserPlus, X, List, Grid3x3, Users } from "lucide-react";
+import { UserPlus, X, List, Grid3x3, Users, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -163,67 +163,71 @@ export default function TeamSection({ members, setMembers, isFounder, isAdmin, s
         message={isDeleteAdminConfirmOpen ? "Are you sure you want to remove admin privileges from this member?" : "Are you sure you want to remove this member from the startup?"}
         type="soft" />
 
-      <div className="space-y-6">
+      <div className="space-y-6 text-zinc-100">
         {/* Header */}
         <motion.div
-          className="flex flex-wrap items-center justify-between"
+          className="flex flex-wrap items-center justify-between gap-3"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           <div>
-            <h2 className="text-3xl font-bold bg-linear-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+            <h2 className="text-xl font-bold tracking-tight text-zinc-50">
               Team Members
             </h2>
-            <p className="text-gray-400 text-sm mt-1">{members.length} members</p>
+            <p className="mt-1 text-sm text-zinc-400">{members.length} members</p>
           </div>
 
           <div className="flex items-center gap-2">
             {/* View switch */}
-            <div className="flex rounded-lg bg-gray-800 border border-gray-700 overflow-hidden">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  size="sm"
-                  variant={view === "list" ? "default" : "ghost"}
-                  onClick={() => setView("list")}
-                  className={view === "list" ? "bg-linear-to-r from-blue-600 to-cyan-600 border-0" : "border-gray-600 hover:border-gray-500"}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  size="sm"
-                  variant={view === "grid" ? "default" : "ghost"}
-                  onClick={() => setView("grid")}
-                  className={view === "grid" ? "bg-linear-to-r from-blue-600 to-cyan-600 border-0" : "border-gray-600 hover:border-gray-500"}
-                >
-                  <Grid3x3 className="w-4 h-4" />
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  size="sm"
-                  variant={view === "compact" ? "default" : "ghost"}
-                  onClick={() => setView("compact")}
-                  className={view === "compact" ? "bg-linear-to-r from-blue-600 to-cyan-600 border-0" : "border-gray-600 hover:border-gray-500"}
-                >
-                  <Users className="w-4 h-4" />
-                </Button>
-              </motion.div>
+            <div className="flex overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setView("list")}
+                className={`rounded-none ${
+                  view === "list"
+                    ? "bg-indigo-600 text-white hover:bg-indigo-500"
+                    : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                }`}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setView("grid")}
+                className={`rounded-none ${
+                  view === "grid"
+                    ? "bg-indigo-600 text-white hover:bg-indigo-500"
+                    : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                }`}
+              >
+                <Grid3x3 className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setView("compact")}
+                className={`rounded-none ${
+                  view === "compact"
+                    ? "bg-indigo-600 text-white hover:bg-indigo-500"
+                    : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                }`}
+              >
+                <Users className="h-4 w-4" />
+              </Button>
             </div>
 
             {isAdmin && (
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  size="sm"
-                  onClick={() => setIsAddMemberModalOpen(true)}
-                  className="bg-linear-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-lg hover:shadow-blue-500/50 transition-all"
-                >
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Add Member
-                </Button>
-              </motion.div>
+              <Button
+                size="sm"
+                onClick={() => setIsAddMemberModalOpen(true)}
+                className="bg-indigo-600 text-white hover:bg-indigo-500"
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add Member
+              </Button>
             )}
           </div>
         </motion.div>
@@ -258,44 +262,47 @@ export default function TeamSection({ members, setMembers, isFounder, isAdmin, s
   );
 }
 
+const roleSelectClass =
+  "text-xs bg-zinc-950 text-zinc-200 border border-zinc-700 rounded px-2 py-1 capitalize focus:outline-none focus:ring-1 focus:ring-indigo-500";
+
 const TeamListView = ({ members, isFounder, isAdmin, user, handlePromoteMember, handleRemoveMember, handleRemoveMemberAdmin, handleChangeRole, roles }) => (
   <motion.div
-    className="space-y-3"
+    className="space-y-2"
     variants={containerVariants}
     initial="hidden"
     animate="visible"
   >
     {members.map((member) => (
       <motion.div key={member.id} variants={itemVariants}>
-        <Card className="bg-gray-800 border-gray-700 hover:border-blue-500 transition-all">
+        <Card className="border-zinc-800 bg-zinc-900/60 transition-colors hover:border-zinc-700">
           <CardContent className="p-0">
             <Link
               to={`/user-profile?userId=${member.userId}`}
               className="flex items-center justify-between p-4"
             >
-              <div className="flex items-center gap-4 min-w-0 flex-1">
+              <div className="flex min-w-0 flex-1 items-center gap-4">
                 <Avatar className="h-12 w-12 shrink-0">
                   <AvatarImage
                     src={
                       getProfilePicture(member)
                     }
                   />
-                  <AvatarFallback className="bg-blue-600 text-white">
+                  <AvatarFallback className="bg-indigo-600 text-white">
                     {member.firstName?.[0]}
                     {member.lastName?.[0]}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-white truncate">
+                  <p className="truncate text-sm font-semibold text-zinc-100">
                     {member.firstName} {member.lastName}
                   </p>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="mt-1 flex items-center gap-2">
                     {isAdmin && member.role !== 'founder' ? (
                       <select
                         value={member.role}
                         onChange={(e) => handleChangeRole && handleChangeRole(member.id, e.target.value)}
                         onClick={(e) => e.preventDefault()}
-                        className="text-xs bg-gray-700 text-white border border-gray-600 rounded px-2 py-1 capitalize"
+                        className={roleSelectClass}
                       >
                         {Object.keys(roles || {}).map((role) => (
                           <option key={role} value={role}>
@@ -308,7 +315,7 @@ const TeamListView = ({ members, isFounder, isAdmin, user, handlePromoteMember, 
                         {member.role}
                       </Badge>
                     )}
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-zinc-500">
                       {new Date(member.joinedAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -320,17 +327,18 @@ const TeamListView = ({ members, isFounder, isAdmin, user, handlePromoteMember, 
                         e.preventDefault();
                         handlePromoteMember(member.id);
                       }}
-                      className="text-sm text-green-400 hover:bg-green-500/10 hover:text-green-500 ml-2 border border-green-500 rounded-full px-3 py-1 transition-all"
+                      className="ml-2 flex items-center gap-1 rounded-full border border-emerald-500/30 px-3 py-1 text-sm text-emerald-400 transition-all hover:bg-emerald-500/10 hover:text-emerald-300"
                     >
+                      <Crown className="h-3.5 w-3.5" />
                       Promote to admin
                     </button>
                   )
                 }
                 {
                   member.admin && member.role !== 'founder' && (
-                    <Badge className="text-xs capitalize bg-green-500/20 text-green-400">
+                    <Badge className="flex items-center gap-1 border border-emerald-500/20 bg-emerald-500/10 text-xs capitalize text-emerald-400 hover:bg-emerald-500/10">
                       Admin
-                      {isFounder && <X className="w-3 h-3 text-green-400 hover:bg-green-500/10 hover:text-green-500 rounded-full p-0.5 transition-all cursor-pointer" onClick={(e) => {
+                      {isFounder && <X className="h-3 w-3 cursor-pointer rounded-full p-0.5 text-emerald-400 transition-all hover:bg-emerald-500/10 hover:text-emerald-300" onClick={(e) => {
                         e.preventDefault();
                         handleRemoveMemberAdmin(member.id);
                       }} />}
@@ -346,9 +354,9 @@ const TeamListView = ({ members, isFounder, isAdmin, user, handlePromoteMember, 
                     e.preventDefault();
                     handleRemoveMember(member.id);
                   }}
-                  className="h-8 w-8 text-red-400 hover:bg-red-500/10 hover:text-red-500 ml-2"
+                  className="ml-2 h-8 w-8 text-red-400 hover:bg-red-500/10 hover:text-red-300"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </Button>
 
               )}
@@ -363,40 +371,39 @@ const TeamListView = ({ members, isFounder, isAdmin, user, handlePromoteMember, 
 
 const TeamGridView = ({ members, isAdmin, isFounder, user, handleRemoveMemberAdmin, handlePromoteMember, handleRemoveMember, handleChangeRole, roles }) => (
   <motion.div
-    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+    className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
     variants={containerVariants}
     initial="hidden"
     animate="visible"
   >
     {members.map((member) => (
       <motion.div key={member.id} variants={itemVariants}>
-        <Card className="bg-linear-to-br from-gray-800 to-gray-900 border-gray-700 hover:border-blue-500 transition-all h-full">
-          <CardContent className="p-4 flex flex-col items-center justify-center">
+        <Card className="h-full border-zinc-800 bg-zinc-900/60 transition-colors hover:border-zinc-700">
+          <CardContent className="flex flex-col items-center justify-center p-4">
             <Link
               to={`/user-profile?userId=${member.userId}`}
               className="flex flex-col items-center text-center"
             >
-              <Avatar className="h-16 w-16 mb-3">
+              <Avatar className="mb-3 h-16 w-16">
                 <AvatarImage
                   src={
                     getProfilePicture(member)
                   }
                 />
-                <AvatarFallback className="bg-blue-600 text-white text-lg">
+                <AvatarFallback className="bg-indigo-600 text-lg text-white">
                   {member.firstName?.[0]}
                   {member.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
-              <p className="text-sm font-semibold text-white">
+              <p className="text-sm font-semibold text-zinc-100">
                 {member.firstName} {member.lastName}
               </p>
-              {console.log(member.role, roles)}
               {isAdmin && member.role !== 'founder' ? (
                 <select
                   value={member.role}
                   onChange={(e) => handleChangeRole && handleChangeRole(member.id, e.target.value)}
                   onClick={(e) => e.preventDefault()}
-                  className="text-xs bg-gray-700 text-white border border-gray-600 rounded px-2 py-1 capitalize mt-2"
+                  className={`${roleSelectClass} mt-2`}
                 >
                   {Object.keys(roles || {}).map((role) => (
                     <option key={role} value={role}>
@@ -405,11 +412,11 @@ const TeamGridView = ({ members, isAdmin, isFounder, user, handleRemoveMemberAdm
                   ))}
                 </select>
               ) : (
-                <Badge className={`text-xs capitalize mt-2 ${getRoleBadgeColor(member.role)}`}>
+                <Badge className={`mt-2 text-xs capitalize ${getRoleBadgeColor(member.role)}`}>
                   {member.role}
                 </Badge>
               )}
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="mt-2 text-xs text-zinc-500">
                 Joined {new Date(member.joinedAt).toLocaleDateString()}
               </p>
             </Link>
@@ -417,11 +424,11 @@ const TeamGridView = ({ members, isAdmin, isFounder, user, handleRemoveMemberAdm
               member.admin && member.role !== 'founder' && (
                 <Badge
                   onClick={() => isFounder && handleRemoveMemberAdmin(member.id)}
-                  className="mx-auto my-2 text-xs capitalize bg-green-500/20 text-green-400">
+                  className="mx-auto my-2 flex items-center gap-1 border border-emerald-500/20 bg-emerald-500/10 text-xs capitalize text-emerald-400 hover:bg-emerald-500/10">
                   Admin
                   {
                     isFounder &&
-                    <X className="w-3 h-3 text-green-400 hover:bg-green-500/10 hover:text-green-500 rounded-full p-0.5 transition-all" />
+                    <X className="h-3 w-3 cursor-pointer rounded-full p-0.5 text-emerald-400 transition-all hover:bg-emerald-500/10 hover:text-emerald-300" />
                   }
                 </Badge>
               )
@@ -431,8 +438,9 @@ const TeamGridView = ({ members, isAdmin, isFounder, user, handleRemoveMemberAdm
                 variant="ghost"
                 size="icon"
                 onClick={() => handlePromoteMember(member.id)}
-                className="h-8 text-green-400 hover:bg-green-500/10 hover:text-green-500 mt-3 w-full"
+                className="mt-3 h-8 w-full gap-1.5 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
               >
+                <Crown className="h-3.5 w-3.5" />
                 Promote to admin
               </Button>
             )}
@@ -441,9 +449,9 @@ const TeamGridView = ({ members, isAdmin, isFounder, user, handleRemoveMemberAdm
                 variant="ghost"
                 size="icon"
                 onClick={() => handleRemoveMember(member.id)}
-                className="h-8 text-red-400 hover:bg-red-500/10 hover:text-red-500 mt-3 w-full"
+                className="mt-3 h-8 w-full text-red-400 hover:bg-red-500/10 hover:text-red-300"
               >
-                <X className="w-4 h-4 mr-2" />
+                <X className="mr-2 h-4 w-4" />
                 Remove
               </Button>
             )}
@@ -467,22 +475,22 @@ const TeamCompactView = ({ members, isAdmin, isFounder, handleRemoveMember, user
           <Tooltip>
             <TooltipTrigger>
               <Link to={`/user-profile?userId=${member.userId}`}>
-                <Avatar className="h-10 w-10 border-2 border-blue-500 hover:border-cyan-400 cursor-pointer object-cover">
+                <Avatar className="h-10 w-10 cursor-pointer border-2 border-zinc-700 object-cover hover:border-indigo-500">
                   <AvatarImage
                     src={
                       getProfilePicture(member)
                     }
                   />
-                  <AvatarFallback className="bg-blue-600 text-white text-xs">
+                  <AvatarFallback className="bg-indigo-600 text-xs text-white">
                     {member.firstName?.[0]}
                     {member.lastName?.[0]}
                   </AvatarFallback>
                 </Avatar>
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-gray-900 border-gray-700 flex flex-col items-center justify-center">
-              <div className="text-sm w-full">
-                <p className="font-semibold text-center w-full text-white">
+            <TooltipContent side="right" className="flex flex-col items-center justify-center border-zinc-800 bg-zinc-900">
+              <div className="w-full text-sm">
+                <p className="w-full text-center font-semibold text-zinc-100">
                   {member.firstName} {member.lastName}
                 </p>
 
@@ -490,7 +498,7 @@ const TeamCompactView = ({ members, isAdmin, isFounder, handleRemoveMember, user
                   <select
                     value={member.role}
                     onChange={(e) => handleChangeRole && handleChangeRole(member.id, e.target.value)}
-                    className="mt-2 w-full px-2 py-1 text-xs bg-gray-800 text-white border border-gray-700 rounded capitalize"
+                    className={`${roleSelectClass} mt-2 w-full`}
                   >
                     {Object.keys(roles || {}).map((role) => (
                       <option key={role} value={role}>
@@ -500,18 +508,18 @@ const TeamCompactView = ({ members, isAdmin, isFounder, handleRemoveMember, user
                   </select>
                 )}
                 {!isAdmin && (
-                  <p className="text-xs text-gray-400 capitalize mt-1">{member.role}</p>
+                  <p className="mt-1 text-center text-xs capitalize text-zinc-400">{member.role}</p>
                 )}
 
                 {
                   member.admin && member.role !== 'founder' && (
                     <Badge
                       onClick={() => isFounder && handleRemoveMemberAdmin(member.id)}
-                      className="mx-auto my-2 text-xs capitalize bg-green-500/20 text-green-400">
+                      className="mx-auto my-2 flex items-center gap-1 border border-emerald-500/20 bg-emerald-500/10 text-xs capitalize text-emerald-400 hover:bg-emerald-500/10">
                       Admin
                       {
                         isFounder &&
-                        <X className="w-3 h-3 text-green-400 hover:bg-green-500/10 hover:text-green-500 rounded-full p-0.5 transition-all" />
+                        <X className="h-3 w-3 cursor-pointer rounded-full p-0.5 text-emerald-400 transition-all hover:bg-emerald-500/10 hover:text-emerald-300" />
                       }
                     </Badge>
                   )
@@ -521,7 +529,7 @@ const TeamCompactView = ({ members, isAdmin, isFounder, handleRemoveMember, user
                     variant="ghost"
                     size="sm"
                     onClick={() => handleRemoveMember(member.id)}
-                    className="text-red-400 hover:bg-red-500 mt-2 w-full"
+                    className="mt-2 w-full text-red-400 hover:bg-red-500/10 hover:text-red-300"
                   >
                     Remove
                   </Button>
@@ -531,7 +539,7 @@ const TeamCompactView = ({ members, isAdmin, isFounder, handleRemoveMember, user
                     variant="ghost"
                     size="sm"
                     onClick={() => handlePromoteMember(member.id)}
-                    className="text-green-400 hover:bg-green-500 mt-2 w-full"
+                    className="mt-2 w-full text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
                   >
                     Promote to admin
                   </Button>
@@ -549,10 +557,10 @@ const TeamCompactView = ({ members, isAdmin, isFounder, handleRemoveMember, user
 const getRoleBadgeColor = (role) => {
   switch (role) {
     case "founder":
-      return "bg-purple-500/20 text-purple-400";
+      return "border border-violet-500/20 bg-violet-500/10 text-violet-400";
     case "co-founder":
-      return "bg-blue-500/20 text-blue-400";
+      return "border border-indigo-500/20 bg-indigo-500/10 text-indigo-400";
     default:
-      return "bg-gray-500/20 text-gray-400";
+      return "border border-zinc-600/40 bg-zinc-500/10 text-zinc-400";
   }
 };

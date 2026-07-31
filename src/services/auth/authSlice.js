@@ -71,6 +71,13 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    // 🔹 NEW: setRole reducer
+    setRole: (state, action) => {
+      if (state.user) {
+        state.user.role = action.payload; // "admin" or "member"
+        localStorage.setItem('user', JSON.stringify(state.user));
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -86,6 +93,10 @@ const authSlice = createSlice({
         state.hasCheckedProfile = true;
         state.error = null;
         if (state.user) {
+          // 🔹 Ensure role is stored
+          if (!state.user.role) {
+            state.user.role = "member"; // default role
+          }
           localStorage.setItem('user', JSON.stringify(state.user));
         }
       })
@@ -104,6 +115,9 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.hasCheckedProfile = true;
         if (state.user) {
+          if (!state.user.role) {
+            state.user.role = "member";
+          }
           localStorage.setItem('user', JSON.stringify(state.user));
         }
       })
@@ -122,6 +136,9 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.hasCheckedProfile = true;
         if (state.user) {
+          if (!state.user.role) {
+            state.user.role = "member";
+          }
           localStorage.setItem('user', JSON.stringify(state.user));
         }
       })
@@ -138,6 +155,9 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.hasCheckedProfile = true;
         if (state.user) {
+          if (!state.user.role) {
+            state.user.role = "member";
+          }
           localStorage.setItem('user', JSON.stringify(state.user));
         }
       })
@@ -163,5 +183,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, setToken, logout, clearError, updateUser } = authSlice.actions;
+export const { setUser, setToken, logout, clearError, updateUser, setRole } = authSlice.actions;
 export default authSlice.reducer;

@@ -9,8 +9,6 @@ import { groupFeatures } from "./groupFeatures";
 import { aiFeatures } from "./aiFeatures";
 
 export default function SideBarFeatureGroup({ link, onClick }) {
-  // FIX: original used bare `location.pathname` which reads window.location (always "/"),
-  // not the React Router location. Must use the hook for correct active-route detection.
   const location = useLocation();
 
   return (
@@ -19,13 +17,11 @@ export default function SideBarFeatureGroup({ link, onClick }) {
         <Tooltip key={link.id}>
           <TooltipTrigger asChild>
             <button
-              // FIX: was calling handleDropdownClick("profile") which was never
-              // defined anywhere — replaced with the onClick prop passed in.
               onClick={onClick}
               className="flex items-center gap-2.5 w-11 h-11 transition-all duration-300 group"
               style={{ zIndex: 9999999999 }}
             >
-              <div className="flex items-center justify-center w-full px-2 py-2 rounded-lg transition-colors text-gray-400 hover:bg-[#2A2A2A] hover:text-white">
+              <div className="flex items-center justify-center w-full px-2 py-2 rounded-lg transition-colors text-gray-400 hover:bg-purple-100 hover:text-purple-700">
                 <div className="flex items-center justify-center">
                   {link.icon}
                 </div>
@@ -54,18 +50,18 @@ export default function SideBarFeatureGroup({ link, onClick }) {
                         <Link
                           key={page.id}
                           to={page.href}
-                          className={`flex flex-col items-center p-3 rounded-lg transition-all ${
+                          className={`flex flex-col items-center p-4 gap-2 rounded-lg transition-all ${
                             location.pathname === page.href
-                              ? "bg-white text-gray-900"
-                              : "text-gray-400 hover:bg-black/60 hover:text-white"
+                              ? "bg-purple-600 text-white shadow-lg ring-2 ring-purple-400"
+                              : "text-gray-400 hover:bg-purple-100 hover:text-purple-700"
                           }`}
                           onClick={onClick}
                           style={{ zIndex: 9999999999 }}
                         >
-                          <div className="flex items-center justify-center mb-2">
+                          <div className="flex items-center justify-center mb-2 w-8 h-8 rounded-full bg-purple-100 text-purple-600">
                             {page.icon}
                           </div>
-                          <span className="text-xs font-medium text-center mb-1">
+                          <span className="text-sm font-semibold text-center">
                             {page.label}
                           </span>
                           <p className="text-xs text-gray-500 text-center">

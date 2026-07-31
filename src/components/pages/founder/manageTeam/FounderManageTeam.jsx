@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 
 import { startupsAPI } from "@/utils/APIs/startupsAPI";
 import AddMemberModal from "../../startupDetails/modals/AddMember";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,8 +18,10 @@ import {
   Shield,
   Calendar,
   AlertCircle,
+  CheckCircle2,
   ChevronDown,
   Building2,
+  X,
 } from "lucide-react";
 import DeleteConfirmationModal from "@/utils/confirm";
 
@@ -50,7 +52,7 @@ const FounderManageTeam = () => {
     try {
       const params = { my_startups: true };
       const response = await startupsAPI.getAll(params);
-      
+
       if (response.success && response.data.startups.length > 0) {
         const startupsWithMembers = await Promise.all(
           response.data.startups.map(async (startup) => {
@@ -191,7 +193,7 @@ const FounderManageTeam = () => {
 
   const getFilteredStartups = () => {
     if (!searchQuery) return startups;
-    
+
     return startups.filter((startup) => {
       const startupMatches = startup.name.toLowerCase().includes(searchQuery.toLowerCase());
       const membersMatch = startup.members.some((member) =>
@@ -207,13 +209,13 @@ const FounderManageTeam = () => {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+      transition: { staggerChildren: 0.08, delayChildren: 0.05 },
     },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   };
 
   const filteredStartups = getFilteredStartups();
@@ -224,30 +226,22 @@ const FounderManageTeam = () => {
   );
 
   return (
-    <div className="min-h-screen bg-black text-white px-2 md:px-4 py-8">
-      {/* Animated Background */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
-        <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" style={{ animationDelay: '2s' }} />
-      </div>
-
-      <div className="w-full mx-auto space-y-8 relative w-full">
+    <div className="min-h-screen bg-zinc-950 px-2 py-8 text-zinc-100 md:px-4">
+      <div className="relative mx-auto w-full space-y-6">
         {/* Header */}
         <motion.div
-          className="space-y-4"
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl">
-              <Users className="w-8 h-8 text-white" />
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+              <Users className="h-5 w-5 text-indigo-400" />
             </div>
             <div>
-              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold tracking-tight text-zinc-50">
                 Manage Team
               </h1>
-              <p className="text-gray-400 text-lg mt-2">
+              <p className="mt-1 text-sm text-zinc-400">
                 Manage your startup team members and roles
               </p>
             </div>
@@ -256,162 +250,144 @@ const FounderManageTeam = () => {
 
         {/* KPI Stats */}
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          className="grid grid-cols-1 gap-4 md:grid-cols-3"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           <motion.div
             variants={itemVariants}
-            whileHover={{ y: -4, scale: 1.02 }}
-            className="group relative overflow-hidden rounded-2xl"
+            whileHover={{ y: -2 }}
+            className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition-colors hover:border-zinc-700"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative bg-slate-900/90 backdrop-blur border border-white/10 group-hover:border-blue-500/50 rounded-2xl p-6 space-y-3 transition-all">
-              <div className="flex items-center justify-between">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <Building2 className="w-5 h-5 text-blue-400" />
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide">
-                  Total Startups
-                </p>
-                <p className="text-3xl font-bold text-white mt-2">
-                  {startups.length}
-                </p>
-              </div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500/10">
+              <Building2 className="h-4.5 w-4.5 text-indigo-400" />
             </div>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Total Startups
+            </p>
+            <p className="mt-1 text-2xl font-bold text-zinc-50">{startups.length}</p>
           </motion.div>
 
           <motion.div
             variants={itemVariants}
-            whileHover={{ y: -4, scale: 1.02 }}
-            className="group relative overflow-hidden rounded-2xl"
+            whileHover={{ y: -2 }}
+            className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition-colors hover:border-zinc-700"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative bg-slate-900/90 backdrop-blur border border-white/10 group-hover:border-purple-500/50 rounded-2xl p-6 space-y-3 transition-all">
-              <div className="flex items-center justify-between">
-                <div className="p-2 bg-purple-500/20 rounded-lg">
-                  <Users className="w-5 h-5 text-purple-400" />
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide">
-                  Total Members
-                </p>
-                <p className="text-3xl font-bold text-white mt-2">
-                  {totalMembers}
-                </p>
-              </div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/10">
+              <Users className="h-4.5 w-4.5 text-violet-400" />
             </div>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Total Members
+            </p>
+            <p className="mt-1 text-2xl font-bold text-zinc-50">{totalMembers}</p>
           </motion.div>
 
           <motion.div
             variants={itemVariants}
-            whileHover={{ y: -4, scale: 1.02 }}
-            className="group relative overflow-hidden rounded-2xl"
+            whileHover={{ y: -2 }}
+            className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition-colors hover:border-zinc-700"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative bg-slate-900/90 backdrop-blur border border-white/10 group-hover:border-green-500/50 rounded-2xl p-6 space-y-3 transition-all">
-              <div className="flex items-center justify-between">
-                <div className="p-2 bg-green-500/20 rounded-lg">
-                  <Shield className="w-5 h-5 text-green-400" />
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide">
-                  Admin Members
-                </p>
-                <p className="text-3xl font-bold text-white mt-2">
-                  {totalAdmins}
-                </p>
-              </div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10">
+              <Shield className="h-4.5 w-4.5 text-emerald-400" />
             </div>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Admin Members
+            </p>
+            <p className="mt-1 text-2xl font-bold text-zinc-50">{totalAdmins}</p>
           </motion.div>
         </motion.div>
 
-        {/* Search and Filters */}
+        {/* Search */}
         <motion.div
-          className="space-y-4"
+          className="space-y-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.15 }}
         >
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 z-10" />
-            <input
+          <div className="relative max-w-md">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+            <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by startup or member name..."
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-white/20"
+              className="border border-zinc-700 bg-zinc-900 pl-9 text-zinc-200 placeholder:text-zinc-500 focus-visible:ring-indigo-500"
             />
           </div>
 
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+              className="flex items-center gap-1 text-sm text-indigo-400 transition-colors hover:text-indigo-300"
             >
-              ✕ Clear Search
+              <X className="h-3.5 w-3.5" />
+              Clear search
             </button>
           )}
         </motion.div>
 
         {/* Messages */}
-        {success && (
-          <motion.div
-            className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex items-center gap-3 text-green-300 backdrop-blur"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-          >
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span>{success}</span>
-          </motion.div>
-        )}
+        <AnimatePresence>
+          {success && (
+            <motion.div
+              className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-300"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              <CheckCircle2 className="h-5 w-5 shrink-0" />
+              <span className="text-sm">{success}</span>
+            </motion.div>
+          )}
 
-        {error && (
-          <motion.div
-            className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3 text-red-300 backdrop-blur"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span>{error}</span>
-          </motion.div>
-        )}
+          {error && (
+            <motion.div
+              className="flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-300"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              <span className="text-sm">{error}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Startups List */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.2 }}
           className="space-y-3"
         >
           {loading ? (
-            <div className="flex justify-center py-12">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="rounded-full h-12 w-12 border-3 border-blue-500/20 border-t-blue-500"
-              />
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/60 px-6 py-5"
+                >
+                  <div className="space-y-2">
+                    <div className="h-4 w-40 animate-pulse rounded bg-zinc-800" />
+                    <div className="h-3 w-24 animate-pulse rounded bg-zinc-800" />
+                  </div>
+                  <div className="h-4 w-4 animate-pulse rounded bg-zinc-800" />
+                </div>
+              ))}
             </div>
           ) : filteredStartups.length === 0 ? (
             <motion.div
-              className="text-center py-20 bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-2xl backdrop-blur"
-              initial={{ opacity: 0, scale: 0.9 }}
+              className="rounded-2xl border border-zinc-800 bg-zinc-900/60 py-16 text-center"
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              <div className="flex justify-center mb-4">
-                <div className="p-4 bg-blue-500/20 rounded-full">
-                  <Building2 className="w-12 h-12 text-blue-400" />
+              <div className="mb-3 flex justify-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800/80">
+                  <Building2 className="h-6 w-6 text-zinc-500" />
                 </div>
               </div>
-              <p className="text-gray-300 text-lg font-semibold">
-                No startups found
-              </p>
-              <p className="text-gray-500 text-sm mt-2">
+              <p className="font-medium text-zinc-200">No startups found</p>
+              <p className="mt-1 text-sm text-zinc-500">
                 Create a startup to manage team members
               </p>
             </motion.div>
@@ -419,28 +395,26 @@ const FounderManageTeam = () => {
             filteredStartups.map((startup, startupIndex) => (
               <motion.div
                 key={startup.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: startupIndex * 0.05 }}
-                className="group relative overflow-hidden rounded-xl bg-slate-900/50 border border-white/10 hover:border-blue-500/30 transition-all backdrop-blur"
+                transition={{ delay: startupIndex * 0.04 }}
+                className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/60 transition-colors hover:border-zinc-700"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:via-blue-500/5 group-hover:to-transparent transition-all duration-300" />
-                
                 {/* Startup Header */}
-                <motion.button
+                <button
                   onClick={() =>
                     setExpandedStartup(
                       expandedStartup === startup.id ? null : startup.id
                     )
                   }
-                  className="relative w-full px-6 py-4 flex items-center justify-between hover:bg-blue-500/10 transition"
+                  className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-zinc-800/40"
                 >
-                  <div className="flex items-center gap-4 flex-1 text-left">
+                  <div className="flex flex-1 items-center gap-4 text-left">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
+                      <h3 className="text-base font-semibold text-zinc-100">
                         {startup.name}
                       </h3>
-                      <p className="text-sm text-gray-400 mt-1">
+                      <p className="mt-1 text-sm text-zinc-500">
                         {startup.members.length} member{startup.members.length !== 1 ? "s" : ""}
                       </p>
                     </div>
@@ -451,9 +425,9 @@ const FounderManageTeam = () => {
                     }}
                     transition={{ duration: 0.2 }}
                   >
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                    <ChevronDown className="h-5 w-5 text-zinc-500" />
                   </motion.div>
-                </motion.button>
+                </button>
 
                 {/* Members List */}
                 <motion.div
@@ -463,69 +437,63 @@ const FounderManageTeam = () => {
                     opacity: expandedStartup === startup.id ? 1 : 0,
                   }}
                   transition={{ duration: 0.2 }}
-                  className="overflow-hidden border-t border-white/10"
+                  className="overflow-hidden border-t border-zinc-800"
                 >
-                  <div className="relative p-6 space-y-4">
+                  <div className="space-y-4 p-6">
                     {startup.members.length === 0 ? (
-                      <p className="text-gray-400 text-center py-8">
+                      <p className="py-8 text-center text-zinc-500">
                         No members in this startup yet
                       </p>
                     ) : (
                       <>
                         {/* Add Member Button */}
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                        <Button
                           onClick={() => {
                             setSelectedStartupId(startup.id);
                             setIsAddMemberOpen(true);
                           }}
-                          className="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-medium flex items-center justify-center gap-2 transition-all"
+                          className="w-full bg-indigo-600 text-white hover:bg-indigo-500"
                         >
-                          <UserPlus className="w-4 h-4" />
+                          <UserPlus className="mr-2 h-4 w-4" />
                           Add Member
-                        </motion.button>
+                        </Button>
 
                         {/* Members */}
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           {startup.members.map((member, memberIndex) => (
                             <motion.div
                               key={member.id}
-                              initial={{ opacity: 0, x: -20 }}
+                              initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: memberIndex * 0.05 }}
-                              whileHover={{
-                                y: -2,
-                                borderColor: "rgba(59, 130, 246, 0.5)",
-                              }}
-                              className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center p-4 rounded-lg bg-slate-800/50 border border-white/5 hover:border-blue-500/30 transition-all"
+                              transition={{ delay: memberIndex * 0.04 }}
+                              className="flex flex-col items-start justify-between gap-4 rounded-lg border border-zinc-800 bg-zinc-950/40 p-4 transition-colors hover:bg-zinc-800/40 md:flex-row md:items-center"
                             >
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <Avatar className="h-10 w-10 shrink-0">
                                   <AvatarImage src={getProfilePicture(member)} />
-                                  <AvatarFallback className="bg-blue-600 text-white text-sm font-medium">
+                                  <AvatarFallback className="bg-indigo-600 text-sm font-medium text-white">
                                     {member.firstName?.[0]}
                                     {member.lastName?.[0]}
                                   </AvatarFallback>
                                 </Avatar>
 
                                 <div className="min-w-0 flex-1">
-                                  <p className="font-semibold text-white truncate">
+                                  <p className="truncate font-medium text-zinc-100">
                                     {member.firstName} {member.lastName}
                                   </p>
-                                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                    <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs capitalize">
+                                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                                    <Badge className="border border-indigo-500/20 bg-indigo-500/10 text-xs capitalize text-indigo-400 hover:bg-indigo-500/10">
                                       {member.role}
                                     </Badge>
                                     {member.admin && (
-                                      <Badge className="bg-green-500/20 text-green-300 border-green-500/30 text-xs flex items-center gap-1">
-                                        <Shield className="w-3 h-3" />
+                                      <Badge className="flex items-center gap-1 border border-emerald-500/20 bg-emerald-500/10 text-xs text-emerald-400 hover:bg-emerald-500/10">
+                                        <Shield className="h-3 w-3" />
                                         Admin
                                       </Badge>
                                     )}
                                     {member.joinedAt && (
-                                      <p className="text-xs text-gray-400 flex items-center gap-1">
-                                        <Calendar className="w-3 h-3" />
+                                      <p className="flex items-center gap-1 text-xs text-zinc-500">
+                                        <Calendar className="h-3 w-3" />
                                         {new Date(member.joinedAt).toLocaleDateString()}
                                       </p>
                                     )}
@@ -533,46 +501,46 @@ const FounderManageTeam = () => {
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2 flex-shrink-0 w-full md:w-auto">
+                              <div className="flex w-full shrink-0 items-center gap-2 md:w-auto">
                                 {!member.admin ? (
-                                  <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
                                     onClick={() =>
                                       handlePromoteToAdmin(startup.id, member.id)
                                     }
-                                    className="px-3 py-2 rounded-lg bg-green-500/20 border border-green-500/30 text-green-300 hover:bg-green-500/30 transition font-medium text-sm flex items-center gap-1 whitespace-nowrap"
+                                    className="border-emerald-500/30 bg-transparent text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
                                   >
-                                    <Crown className="w-4 h-4" />
+                                    <Crown className="mr-1.5 h-3.5 w-3.5" />
                                     Make Admin
-                                  </motion.button>
+                                  </Button>
                                 ) : (
-                                  <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
                                     onClick={() =>
                                       handleDemoteAdmin(startup.id, member.id)
                                     }
-                                    className="px-3 py-2 rounded-lg bg-yellow-500/20 border border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/30 transition font-medium text-sm whitespace-nowrap"
+                                    className="border-amber-500/30 bg-transparent text-amber-400 hover:bg-amber-500/10 hover:text-amber-300"
                                   >
                                     Demote
-                                  </motion.button>
+                                  </Button>
                                 )}
                                 {startup?.creator?.id !== member.userId && (
-                                  <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
                                     onClick={() =>
                                       setIsDeleteConfirmOpen({
                                         startupId: startup.id,
                                         member: member.id,
                                       })
                                     }
-                                    className="px-3 py-2 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30 transition font-medium text-sm flex items-center gap-1 whitespace-nowrap"
+                                    className="border-red-500/30 bg-transparent text-red-400 hover:bg-red-500/10 hover:text-red-300"
                                   >
-                                    <Trash2 className="w-4 h-4" />
+                                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                                     Remove
-                                  </motion.button>
+                                  </Button>
                                 )}
                               </div>
                             </motion.div>

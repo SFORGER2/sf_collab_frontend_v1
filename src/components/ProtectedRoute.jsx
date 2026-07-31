@@ -9,35 +9,33 @@ import { hasPermission } from "../utils/permissionCheck";
 // ── Permission Denied Page ────────────────────────────────────────────────
 const PermissionDeniedPage = ({ onRequestAccess }) => {
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-8 text-center">
+    <div className="min-h-screen bg-gradient-to-br from-black via-[#0a0b10] to-[#11131a] flex items-center justify-center p-4">
+      <div className="max-w-md w-full space-y-8 text-center bg-[#0d0f17] border border-slate-800 rounded-xl shadow-lg p-6">
+        <h1 className="text-3xl font-bold text-white">🚫 Access Denied</h1>
+        <p className="text-slate-400">
+          You don’t have permission to access this page.
+        </p>
         <div className="space-y-4">
-          <h1 className="text-3xl font-bold text-black">Access Denied</h1>
-          <p className="text-gray-600">
-            You don't have permission to access this page.
-          </p>
-          <div className="space-y-4">
-            <button
-              onClick={onRequestAccess}
-              className="w-full py-3 px-4 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors shadow-[0_4px_14px_0_rgba(255,255,255,0.3)]"
-            >
-              Request Access
-            </button>
-            <button
-              onClick={() => window.history.back()}
-              className="w-full py-3 px-4 border border-black text-black rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Go Back
-            </button>
-          </div>
+          <button
+            onClick={onRequestAccess}
+            className="w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg hover:opacity-90 transition-all shadow-md"
+          >
+            Request Access
+          </button>
+          <button
+            onClick={() => window.history.back()}
+            className="w-full py-3 px-4 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-800 transition-all"
+          >
+            Go Back
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-// ── ProtectedRoute (uses Outlet for nested routes) ──────────────────────
-export const ProtectedRoute = ({ requiredPermission }) => {
+// ── ProtectedRoute (supports role + permission) ───────────────────────────
+export const ProtectedRoute = ({ role, requiredPermission }) => {
   const location = useLocation();
   const { access_token, loading, user } = useSelector((state) => state.auth);
   const [showAccessModal, setShowAccessModal] = useState(false);
@@ -49,7 +47,12 @@ export const ProtectedRoute = ({ requiredPermission }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If permission is required, check it
+  // Role check (admin vs member)
+  if (role && user?.role !== role) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  // Permission check (optional granular permissions)
   if (requiredPermission) {
     const hasPerm = hasPermission(user, requiredPermission);
     if (!hasPerm) {
