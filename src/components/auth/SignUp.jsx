@@ -315,7 +315,7 @@ export default function SignUp() {
         <div style={{ 
         position: 'relative', 
         overflow: 'hidden',
-        backgroundColor: '#060010',
+        backgroundColor: 'var(--surface-splash)',
         zIndex:999
       }}
       onMouseMove={(e) => {

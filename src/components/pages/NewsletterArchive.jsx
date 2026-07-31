@@ -61,7 +61,7 @@ export default function NewsletterArchive() {
   }, [newsletters, searchTerm, selectedTag]);
 
   return (
-    <div className="min-h-screen bg-[#060606] text-white flex flex-col font-sans">
+    <div className="landing-page min-h-screen bg-[#060606] text-white flex flex-col font-sans">
       <NavBar />
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative">

@@ -75,7 +75,7 @@ const About = () => {
   return (
     <>
       <NavBar/>
-      <div ref={main} className="bg-[#0b0b0b] text-white relative overflow-hidden">
+      <div ref={main} className="landing-page bg-[#0b0b0b] text-white relative overflow-hidden">
         {/* Floating Blobs Background */}
         <div className="parallax-bg absolute inset-0 -z-10">
           <div className="blob absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-indigo-600/30 to-purple-700/30 rounded-full blur-3xl"></div>

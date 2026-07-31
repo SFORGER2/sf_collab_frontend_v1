@@ -76,7 +76,7 @@ export default function MembershipBenefits() {
   return (
     <>
       <NavBar />
-      <div ref={main} className="bg-[#0b0b0b] text-white min-h-screen py-20 px-6 lg:px-20">
+      <div ref={main} className="landing-page bg-[#0b0b0b] text-white min-h-screen py-20 px-6 lg:px-20">
         <div className="w-full mx-auto">
           {/* Header */}
           <div className="benefits-header text-center mb-20">

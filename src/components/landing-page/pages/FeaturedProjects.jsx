@@ -159,7 +159,7 @@ export default function FeaturedProjects() {
     return (
       <>
         <Navbar />
-      <section ref={mainRef} className="bg-[#0b0b0b] text-white py-20 px-6 lg:px-20 overflow-hidden">
+      <section ref={mainRef} className="landing-page bg-[#0b0b0b] text-white py-20 px-6 lg:px-20 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="projects-header text-center mb-16">

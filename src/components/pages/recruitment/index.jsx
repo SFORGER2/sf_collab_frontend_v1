@@ -7,11 +7,11 @@ function Modal({ title, onClose, children }) {
       display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:16 }}>
       <div onClick={onClose} style={{ position:"absolute",inset:0 }}/>
       <div style={{ position:"relative",zIndex:1,width:"100%",maxWidth:480,
-        background:"#111827",border:"1px solid #1f2937",borderRadius:16,
+        background:"var(--surface-card-2)",border:"1px solid #1f2937",borderRadius:16,
         boxShadow:"0 25px 60px rgba(0,0,0,0.6)",fontFamily:"inherit" }}>
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",
           padding:"18px 22px 16px",borderBottom:"1px solid #1f2937" }}>
-          <h2 style={{ margin:0,fontSize:15,fontWeight:600,color:"#f9fafb" }}>{title}</h2>
+          <h2 style={{ margin:0,fontSize:15,fontWeight:600,color:"var(--color-star)" }}>{title}</h2>
           <button onClick={onClose} style={{ background:"none",border:"none",color:"#6b7280",
             fontSize:20,cursor:"pointer",lineHeight:1,padding:0 }}>×</button>
         </div>
@@ -24,7 +24,7 @@ function Modal({ title, onClose, children }) {
 function Field({ label, children }) {
   return (
     <div style={{ display:"flex",flexDirection:"column",gap:5 }}>
-      <label style={{ fontSize:10,fontWeight:600,color:"#9ca3af",textTransform:"uppercase",letterSpacing:"0.08em" }}>
+      <label style={{ fontSize:10,fontWeight:600,color:"var(--color-dim)",textTransform:"uppercase",letterSpacing:"0.08em" }}>
         {label}
       </label>
       {children}
@@ -33,8 +33,8 @@ function Field({ label, children }) {
 }
 
 const inp = {
-  width:"100%",background:"#0d1117",border:"1px solid #374151",borderRadius:8,
-  padding:"9px 12px",color:"#f9fafb",fontSize:13,fontFamily:"inherit",
+  width:"100%",background:"var(--surface-deep)",border:"1px solid var(--border-strong)",borderRadius:8,
+  padding:"9px 12px",color:"var(--color-star)",fontSize:13,fontFamily:"inherit",
   boxSizing:"border-box",outline:"none",
 };
 const btnSave = {
@@ -67,7 +67,7 @@ export function CreateJobModal({ onClose, onCreated }) {
           <Field label="Location"><input style={inp} placeholder="Lagos, NG" value={form.location} onChange={e=>set("location",e.target.value)}/></Field>
         </div>
         <Field label="Description"><textarea style={{...inp,resize:"vertical"}} rows={3} placeholder="What will this person do?" value={form.description} onChange={e=>set("description",e.target.value)}/></Field>
-        <label style={{ display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:13,color:"#9ca3af" }}>
+        <label style={{ display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:13,color:"var(--color-dim)" }}>
           <input type="checkbox" style={{ accentColor:"#fbbf24" }} checked={form.isRemote} onChange={e=>set("isRemote",e.target.checked)}/> Remote role
         </label>
         {error&&<p style={{ margin:0,fontSize:12,color:"#f87171" }}>{error}</p>}
@@ -111,7 +111,7 @@ export function AddApplicantModal({ jobId, onClose, onCreated }) {
         <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:10 }}>
           <Field label="Initial Stage">
             <select style={{...inp,appearance:"none"}} value={form.stage} onChange={e=>set("stage",e.target.value)}>
-              {STAGES.map(s=><option key={s} value={s} style={{ background:"#111827" }}>{s.replace("_"," ")}</option>)}
+              {STAGES.map(s=><option key={s} value={s} style={{ background:"var(--surface-card-2)" }}>{s.replace("_"," ")}</option>)}
             </select>
           </Field>
           <Field label="Fit Score (0–100)"><input style={inp} type="number" min="0" max="100" placeholder="e.g. 82" value={form.score} onChange={e=>set("score",e.target.value)}/></Field>
@@ -143,12 +143,12 @@ export function LogOutreachModal({ applicantId, onClose, onLogged }) {
         <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:10 }}>
           <Field label="Channel">
             <select style={{...inp,appearance:"none"}} value={form.channel} onChange={e=>set("channel",e.target.value)}>
-              {["email","linkedin","twitter","phone","referral","other"].map(c=><option key={c} value={c} style={{ background:"#111827" }}>{c}</option>)}
+              {["email","linkedin","twitter","phone","referral","other"].map(c=><option key={c} value={c} style={{ background:"var(--surface-card-2)" }}>{c}</option>)}
             </select>
           </Field>
           <Field label="Status">
             <select style={{...inp,appearance:"none"}} value={form.status} onChange={e=>set("status",e.target.value)}>
-              {["sent","opened","replied","bounced","no_reply"].map(s=><option key={s} value={s} style={{ background:"#111827" }}>{s.replace("_"," ")}</option>)}
+              {["sent","opened","replied","bounced","no_reply"].map(s=><option key={s} value={s} style={{ background:"var(--surface-card-2)" }}>{s.replace("_"," ")}</option>)}
             </select>
           </Field>
         </div>

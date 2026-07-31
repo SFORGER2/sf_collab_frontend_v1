@@ -17,7 +17,7 @@ import {
 } from "../ui/tooltip";
 import { Label } from "../ui/label";
 import { Send, AlertCircle } from "lucide-react";
-import { cn } from "../lib/utils";
+import { cn } from "../../lib/utils";
 import { FcAbout } from "react-icons/fc";
 import { RiFeedbackLine } from "react-icons/ri";
 import { useSelector } from "react-redux";

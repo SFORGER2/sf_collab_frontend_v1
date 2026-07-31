@@ -112,7 +112,7 @@ const Navbar = () => {
   return (
     <>
       {/* Menu Overlay */}
-      <div ref={overlayRef} className='fixed inset-0 z-40 hidden bg-[#0f0f0f] text-white items-center justify-center'>
+      <div ref={overlayRef} className='landing-page fixed inset-0 z-40 hidden bg-[#0f0f0f] text-white items-center justify-center'>
         <div className='w-full h-full flex items-center lg:pt-5 pt-10 justify-between p-4'>
 
           {/* Left Menu */}
@@ -171,7 +171,7 @@ const Navbar = () => {
       </div>
       <div 
         ref={navbarRef}
-        className='fixed z-40 flex justify-between items-center w-full px-4 h-16 lg:h-20 transition-transform  '
+        className='landing-page fixed z-40 flex justify-between items-center w-full px-4 h-16 lg:h-20 transition-transform  '
       >
         <Link to="/" className="flex-1 h-full flex items-center md:pl-0 ">
         <div className="md:pt-0 h-full flex-1 items-center">

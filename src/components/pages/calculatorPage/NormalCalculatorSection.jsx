@@ -136,15 +136,15 @@ export default function NormalCalculator() {
       onKeyDown={handleKeyDown}
       className="outline-none"
     >
-      <Card className="bg-gradient-to-br from-gray-900 to-black border-gray-700 max-w-sm mx-auto shadow-2xl">
+      <Card className="bg-gradient-to-br from-[var(--color-panel)] to-[var(--color-void)] border-[var(--border)] max-w-sm mx-auto shadow-2xl">
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle className="text-white text-2xl font-bold flex-1 text-center">
+            <CardTitle className="text-[var(--color-star)] text-2xl font-bold flex-1 text-center">
               SF Calculator
             </CardTitle>
             <Button
               onClick={() => setIsScientific(!isScientific)}
-              className="bg-purple-600 hover:bg-purple-700 text-sm"
+              className="bg-[var(--color-violet)] hover:bg-[var(--color-violet)]/85 text-sm text-white"
             >
               {isScientific ? "Normal" : "Scientific"}
             </Button>
@@ -153,12 +153,12 @@ export default function NormalCalculator() {
 
         <CardContent className="space-y-5">
           {/* History */}
-          <div className="text-right text-sm text-gray-400 font-mono min-h-[20px] px-2">
+          <div className="text-right text-sm text-[var(--color-dim)] font-mono min-h-[20px] px-2">
             {history}
           </div>
 
           {/* Display */}
-          <div className="bg-black/60 text-right text-4xl font-mono p-6 rounded-xl text-white overflow-x-auto border border-gray-700 shadow-inner">
+          <div className="bg-[var(--color-void)] text-right text-4xl font-mono p-6 rounded-xl text-[var(--color-star)] overflow-x-auto border border-[var(--border)] shadow-inner">
             {display}
           </div>
 
@@ -168,17 +168,17 @@ export default function NormalCalculator() {
               <Button
                 key={btn}
                 onClick={() => handleClick(btn)}
-                className={`h-12 text-sm font-semibold text-white
-                  ${btn === "=" ? "bg-blue-600 hover:bg-blue-700 col-span-2" : ""}
+                className={`h-12 text-sm font-semibold
+                  ${btn === "=" ? "bg-blue-600 hover:bg-blue-700 col-span-2 text-white" : ""}
                   ${["+", "-", "*", "/", "%", "^"].includes(btn)
-                    ? "bg-orange-600 hover:bg-orange-700"
+                    ? "bg-orange-600 hover:bg-orange-700 text-white"
                     : ""}
                   ${["sin", "cos", "tan", "log", "ln", "e", "√", "π", "!"].includes(btn)
-                    ? "bg-green-600 hover:bg-green-700"
+                    ? "bg-green-600 hover:bg-green-700 text-white"
                     : ""}
-                  ${btn === "AC" ? "bg-red-600 hover:bg-red-700" : ""}
+                  ${btn === "AC" ? "bg-red-600 hover:bg-red-700 text-white" : ""}
                   ${!["=", "+", "-", "*", "/", "%", "^", "AC", "sin", "cos", "tan", "log", "ln", "e", "√", "π", "!"].includes(btn)
-                    ? "bg-gray-700 hover:bg-gray-600"
+                    ? "bg-[color-mix(in_srgb,var(--color-star)_10%,var(--color-panel))] hover:bg-[color-mix(in_srgb,var(--color-star)_20%,var(--color-panel))] text-[var(--color-star)]"
                     : ""}
                 `}
               >

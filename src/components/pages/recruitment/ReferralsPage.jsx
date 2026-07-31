@@ -58,7 +58,7 @@ export default function ReferralsPage() {
       {referrals.length > 0 && (
         <div style={s.grid3}>
           {[
-            { label: "Total Referrals", value: referrals.length,                             color: "#f9fafb" },
+            { label: "Total Referrals", value: referrals.length,                             color: "var(--color-star)" },
             { label: "In Pipeline",     value: referrals.filter(r => r.applicantId).length,  color: "#60a5fa" },
             { label: "Unpaid Bonuses",  value: unpaid, color: unpaid > 0 ? "#fbbf24" : "#4ade80" },
           ].map(stat => (
@@ -79,14 +79,14 @@ export default function ReferralsPage() {
       {!selectedJob ? (
         <div style={{ textAlign: "center", padding: "50px 0", color: "#6b7280" }}>
           <p style={{ fontSize: 34, marginBottom: 10 }}>📋</p>
-          <p style={{ fontSize: 14, color: "#9ca3af" }}>No open roles. Create a job first.</p>
+          <p style={{ fontSize: 14, color: "var(--color-dim)" }}>No open roles. Create a job first.</p>
         </div>
       ) : loading ? (
         <Spinner />
       ) : !referrals.length ? (
         <div style={{ textAlign: "center", padding: "50px 0", color: "#6b7280" }}>
           <p style={{ fontSize: 30, marginBottom: 10 }}>🔗</p>
-          <p style={{ fontSize: 14, color: "#9ca3af", margin: "0 0 8px" }}>No referrals for this role yet.</p>
+          <p style={{ fontSize: 14, color: "var(--color-dim)", margin: "0 0 8px" }}>No referrals for this role yet.</p>
           <button onClick={() => setShowCreate(true)}
             style={{ background: "none", border: "none", color: "#fbbf24", fontSize: 13, cursor: "pointer", fontWeight: 500 }}>
             Submit the first referral →
@@ -98,15 +98,15 @@ export default function ReferralsPage() {
             <div key={r.id} style={s.card}>
               <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                 {/* Avatar */}
-                <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#1f2937",
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface-card)",
                   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: 14, color: "#9ca3af", fontWeight: 600 }}>
+                  <span style={{ fontSize: 14, color: "var(--color-dim)", fontWeight: 600 }}>
                     {r.candidateName?.[0]?.toUpperCase() ?? "?"}
                   </span>
                 </div>
                 <div style={{ flex: 1, minWidth: 160 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: "#f9fafb" }}>{r.candidateName}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "var(--color-star)" }}>{r.candidateName}</span>
                     {r.bonusPaid && (
                       <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20,
                         background: "rgba(34,197,94,0.15)", color: "#4ade80", fontWeight: 600 }}>
@@ -172,12 +172,12 @@ function Spinner() {
 
 const s = {
   topBar:    { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 },
-  h1:        { fontSize: 24, fontWeight: 700, color: "#f9fafb", margin: 0 },
+  h1:        { fontSize: 24, fontWeight: 700, color: "var(--color-star)", margin: 0 },
   sub:       { color: "#6b7280", fontSize: 13, marginTop: 4, margin: "4px 0 0" },
-  card:      { background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 20, marginBottom: 0 },
+  card:      { background: "var(--surface-card-2)", border: "1px solid #1f2937", borderRadius: 12, padding: 20, marginBottom: 0 },
   grid3:     { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 16 },
   tabRow:    { display: "flex", gap: 4, marginBottom: 16, flexWrap: "wrap" },
-  tab:       { background: "#1f2937", border: "1px solid #374151", borderRadius: 6, padding: "6px 14px", color: "#9ca3af", fontSize: 13, cursor: "pointer" },
+  tab:       { background: "var(--surface-card)", border: "1px solid var(--border-strong)", borderRadius: 6, padding: "6px 14px", color: "var(--color-dim)", fontSize: 13, cursor: "pointer" },
   tabActive: { background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)", borderRadius: 6, padding: "6px 14px", color: "#fbbf24", fontSize: 13, fontWeight: 600, cursor: "pointer" },
   btnPrimary:{ background: "#fbbf24", border: "none", borderRadius: 8, padding: "8px 18px", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer" },
 };

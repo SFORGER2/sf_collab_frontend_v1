@@ -63,19 +63,18 @@
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .notification-bell-button {
-    color: #d1d5db;
-  }
+/* Dark mode support — follows the app's data-theme switch (see
+   services/theme/theme.js), NOT the OS prefers-color-scheme media query. */
+:root[data-theme='dark'] .notification-bell-button {
+  color: #d1d5db;
+}
 
-  .notification-bell-button:hover {
-    background: #374151;
-    color: #f9fafb;
-  }
+:root[data-theme='dark'] .notification-bell-button:hover {
+  background: #374151;
+  color: #f9fafb;
+}
 
-  .notification-bell-button.active {
-    background: #4b5563;
-    color: #f9fafb;
-  }
+:root[data-theme='dark'] .notification-bell-button.active {
+  background: #4b5563;
+  color: #f9fafb;
 }

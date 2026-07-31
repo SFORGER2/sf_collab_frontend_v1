@@ -97,7 +97,7 @@ export function Select({ options = [], placeholder = 'Select…', className = ''
         const value = typeof o === 'string' ? o : o.value;
         const label = typeof o === 'string' ? o : o.label;
         return (
-          <option key={value} value={value} style={{ background: '#12102a', color: '#efeaff' }}>
+          <option key={value} value={value} style={{ background: 'var(--surface-option)', color: "var(--color-star)" }}>
             {label}
           </option>
         );

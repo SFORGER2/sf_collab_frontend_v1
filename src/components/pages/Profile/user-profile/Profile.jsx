@@ -167,7 +167,7 @@ const Profile = () => {
   const levelProgress = ((xp % 1000) / 1000) * 100;
 
   return (
-    <div className="min-h-screen text-white">
+    <div className="min-h-screen text-white profile-page">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent"></div>
 
       <div className="relative w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">

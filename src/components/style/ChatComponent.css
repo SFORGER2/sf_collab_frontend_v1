@@ -484,12 +484,11 @@
     line-height: 1.4;
   }
   
-  /* For dark mode support */
-  @media (prefers-color-scheme: dark) {
-    .time-tag {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-      color: #1a1a1a;
-    }
+  /* For dark mode support — follows the app's data-theme switch (see
+     services/theme/theme.js), NOT the OS prefers-color-scheme media query. */
+  :root[data-theme='dark'] .time-tag {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: #1a1a1a;
   }
   
   /* Hover effect for time tags */

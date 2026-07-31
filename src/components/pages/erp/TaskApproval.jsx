@@ -102,7 +102,7 @@ export default function TaskApproval() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 className="p-6 rounded-2xl"
-                style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+                style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
               >
                 <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
                   <div>

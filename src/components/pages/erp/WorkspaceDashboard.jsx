@@ -164,7 +164,7 @@ export default function WorkspaceDashboard() {
           animate={{ opacity: 1, y: 0 }} 
           transition={{ delay: 0.1 }}
           className="p-6 rounded-2xl overflow-hidden relative"
-          style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}
+          style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}
         >
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500" />
           

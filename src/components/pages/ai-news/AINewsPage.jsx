@@ -148,7 +148,7 @@ const CategoryBadge = React.memo(({ label }) => {
   };
   const key = Object.keys(colorMap).find(k => label?.toLowerCase()?.includes(k)) || "all";
   return (
-    <span className={`text-[10px] font-roboto font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${colorMap[key]}`}>
+    <span className={`ai-news-badge text-[10px] font-roboto font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${colorMap[key]}`}>
       {label}
     </span>
   );
@@ -181,7 +181,7 @@ const NewsTicker = React.memo(({ articles, onRead }) => {
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRead(article); } }}
                 className="hover:text-white cursor-pointer transition-colors duration-150 inline-flex items-center gap-3 py-0.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 rounded"
               >
-                <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 font-sans">
+                <span className="ai-news-badge text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 font-sans">
                   {cat}
                 </span>
                 <span className="text-zinc-200 hover:text-white font-medium">{article.title}</span>
@@ -272,7 +272,7 @@ const FeaturedCard = React.memo(({ article, onRead }) => {
       onClick={() => onRead(article)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRead(article); } }}
       className="relative overflow-hidden rounded-xl border border-white/10 cursor-pointer group flex flex-col md:flex-row focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 transition-all duration-300"
-      style={{ background: "linear-gradient(135deg, #0d1a36 0%, #0a0a0a 60%, #1a0d2e 100%)" }}
+      style={{ background: "var(--gradient-featured)" }}
     >
       {/* Article Image Container */}
       <div className="w-full md:w-2/5 h-48 md:h-auto overflow-hidden relative min-h-[180px] bg-zinc-950 shrink-0">
@@ -662,7 +662,7 @@ const NewsletterWidget = React.memo(() => {
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-emerald-500/20 p-5 font-roboto"
-      style={{ background: "linear-gradient(135deg, #071a10 0%, #050a06 100%)" }}>
+      style={{ background: "var(--gradient-newsletter)" }}>
       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
       <div className="flex items-center gap-2 mb-3">
         <div className="p-1.5 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/20" aria-hidden="true">
@@ -692,7 +692,7 @@ const NewsletterWidget = React.memo(() => {
             placeholder="your@email.com"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className={`w-full text-xs bg-zinc-950/80 border border-white/10 focus:border-emerald-500/50 rounded-xl px-3 py-2.5 text-white placeholder:text-zinc-600 focus:outline-none transition-colors ${focusRing}`}
+            className={`w-full text-xs bg-[var(--surface-input)] border border-[var(--surface-border)] focus:border-emerald-500/50 rounded-xl px-3 py-2.5 text-[var(--color-star)] placeholder:text-[var(--color-dim)] focus:outline-none transition-colors ${focusRing}`}
           />
           <button
             type="submit"
@@ -1001,7 +1001,7 @@ export function AINewsPageCurrent() {
   }, [sortedArticles, currentPage, isUsingApiData]);
 
   return (
-    <div className="min-h-[100dvh] text-white font-roboto" style={{ background: "transparent" }}>
+    <div className="ai-news-page min-h-[100dvh] text-white font-roboto" style={{ background: "transparent" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&family=Roboto:wght@300;400;500;700&display=swap');
         .font-editorial {
@@ -1049,7 +1049,7 @@ export function AINewsPageCurrent() {
             <span className="text-xs font-semibold text-blue-400 uppercase tracking-widest">Community</span>
           </div>
           <h1 className="font-editorial text-4xl md:text-5xl font-bold text-white mb-2 leading-[1.15]">
-            AI <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-blue-400 bg-clip-text text-transparent">News</span>
+            AI <span className="ai-news-gradient-title bg-gradient-to-r from-blue-400 via-violet-400 to-blue-400 bg-clip-text text-transparent">News</span>
           </h1>
           <div className="flex items-center gap-2.5 mt-2.5 mb-4">
             <div className="flex -space-x-1.5 overflow-hidden">

@@ -25,6 +25,7 @@ import React, {
   useEffect, useRef, useState, useMemo,
 } from "react";
 import notificationAPI from "@/utils/APIs/notificationAPI";
+import { getSocketInstance, isSocketTokenValid } from "@/utils/getSocketInstance";
 
 // ─── Toast helper ─────────────────────────────────────────────────────────────
 export function showToast({ type = "info", title, message, data }) {
@@ -87,19 +88,14 @@ export function NotificationProvider({ children }) {
   //  Socket: get from SocketProvider via the global singleton
   // ─────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    // Retry until SocketProvider has initialised the socket
-    const tryAttach = () => {
-      // Works with the standard getSocketInstance pattern used across this project
-      try {
-        const { getSocketInstance } = require("@/components/pages/chat/getSocketInstance");
-        const sock = getSocketInstance();
-        if (sock) { socketRef.current = sock; return true; }
-      } catch {}
-      return false;
-    };
-    if (!tryAttach()) {
-      const id = setInterval(() => { if (tryAttach()) clearInterval(id); }, 500);
-      return () => clearInterval(id);
+    // Attach to the shared socket instance owned by SocketProvider.
+    // The old code retried a require() to a non-existent module forever;
+    // getSocketInstance is the single source of truth and is synchronous.
+    // Never spin up an unauthenticated connection — it would only spam the
+    // dev proxy with reconnect errors.
+    const rawToken = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    if (isSocketTokenValid(rawToken)) {
+      socketRef.current = getSocketInstance();
     }
   }, []);
 
@@ -265,12 +261,25 @@ export function NotificationProvider({ children }) {
       };
     };
 
-    // Retry if socket not yet ready
+    // Retry if socket not yet ready (covers login during the same SPA
+    // session). Re-reads the token each attempt and grabs the singleton
+    // socket as soon as authentication exists, so realtime events never
+    // silently stay dead. Bounded — gives up after 40 tries (~20s).
     if (socketRef.current) {
       return attach();
     }
+    let attempts = 0;
+    const MAX_ATTEMPTS = 40;
     const id = setInterval(() => {
-      if (socketRef.current) { clearInterval(id); attach(); }
+      if (!socketRef.current) {
+        const rawToken = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+        if (isSocketTokenValid(rawToken)) {
+          socketRef.current = getSocketInstance();
+        }
+      }
+      if (socketRef.current) { clearInterval(id); attach(); return; }
+      attempts += 1;
+      if (attempts >= MAX_ATTEMPTS) clearInterval(id);
     }, 500);
     return () => clearInterval(id);
   }, [prefs]); // re-bind when prefs change so toast logic is fresh

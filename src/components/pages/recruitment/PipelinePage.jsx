@@ -36,7 +36,7 @@ function KanbanColumn({ stage, applicants, onMoved, onApplicantClick }) {
       onDrop={handleDrop}
       style={{
         minWidth: 190, minHeight: 400, borderRadius: 10, display: "flex", flexDirection: "column",
-        background: "#111827",
+        background: "var(--surface-card-2)",
         border: over ? `1px solid ${stage.color}` : "1px solid #1f2937",
         transition: "border-color 0.15s",
       }}
@@ -46,7 +46,7 @@ function KanbanColumn({ stage, applicants, onMoved, onApplicantClick }) {
         display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: stage.color }} />
-          <span style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af",
+          <span style={{ fontSize: 10, fontWeight: 600, color: "var(--color-dim)",
             textTransform: "uppercase", letterSpacing: "0.06em" }}>{stage.label}</span>
         </div>
         <span style={{ fontSize: 10, color: "#6b7280", fontFamily: "monospace" }}>{applicants.length}</span>
@@ -60,14 +60,14 @@ function KanbanColumn({ stage, applicants, onMoved, onApplicantClick }) {
             draggable
             onDragStart={e => e.dataTransfer.setData("applicantId", a.id)}
             onClick={() => onApplicantClick(a.id)}
-            style={{ background: "#0d1117", border: "1px solid #1f2937", borderRadius: 8,
+            style={{ background: "var(--surface-deep)", border: "1px solid #1f2937", borderRadius: 8,
               padding: "10px 12px", cursor: "pointer", userSelect: "none" }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = "#374151"}
-            onMouseLeave={e => e.currentTarget.style.borderColor = "#1f2937"}
+            onMouseEnter={e => e.currentTarget.style.borderColor = "var(--border-strong)"}
+            onMouseLeave={e => e.currentTarget.style.borderColor = "var(--surface-card)"}
           >
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
               <div style={{ minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#f9fafb",
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--color-star)",
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name}</p>
                 {a.email && <p style={{ margin: "2px 0 0", fontSize: 11, color: "#6b7280",
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.email}</p>}
@@ -83,7 +83,7 @@ function KanbanColumn({ stage, applicants, onMoved, onApplicantClick }) {
         ))}
         {!applicants.length && (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontSize: 11, color: "#374151" }}>Drop here</span>
+            <span style={{ fontSize: 11, color: "var(--color-dim)" }}>Drop here</span>
           </div>
         )}
       </div>
@@ -167,7 +167,7 @@ export default function PipelinePage() {
 
 const s = {
   topBar: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 20, flexWrap: "wrap", gap: 12 },
-  h1:     { fontSize: 24, fontWeight: 700, color: "#f9fafb", margin: 0 },
+  h1:     { fontSize: 24, fontWeight: 700, color: "var(--color-star)", margin: 0 },
   sub:    { color: "#6b7280", fontSize: 13, marginTop: 4, margin: "4px 0 0" },
   btnPrimary: { background: "#fbbf24", border: "none", borderRadius: 8, padding: "8px 18px", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer" },
 };

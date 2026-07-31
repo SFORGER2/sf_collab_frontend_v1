@@ -23,7 +23,7 @@ const STATUS_META = {
   paid:       { label: "Paid",       color: "#22c55e", bg: "rgba(34,197,94,0.12)",   icon: CheckCircle },
   approved:   { label: "Approved",   color: "#6366f1", bg: "rgba(99,102,241,0.12)",  icon: CheckCircle },
   pending:    { label: "Pending",    color: "#f59e0b", bg: "rgba(245,158,11,0.12)",  icon: Clock },
-  held:       { label: "On Hold",    color: "#9ca3af", bg: "rgba(156,163,175,0.12)", icon: AlertCircle },
+  held:       { label: "On Hold",    color: "var(--color-dim)", bg: "rgba(156,163,175,0.12)", icon: AlertCircle },
   cancelled:  { label: "Cancelled",  color: "#ef4444", bg: "rgba(239,68,68,0.12)",   icon: XCircle },
 };
 

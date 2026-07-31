@@ -310,13 +310,13 @@ const AdminDashboard = () => {
             <div className="bg-slate-900/50 backdrop-blur border border-white/10 rounded-2xl p-6 shadow-xl">
               <h2 className="text-xl font-semibold mb-4 text-white">Overview Chart</h2>
               <div className="bg-gray-900/30 p-4 rounded-lg">
-                <Bar data={barData} options={{ maintainAspectRatio: true, plugins: { legend: { labels: { color: '#fff' } } } }} />
+                <Bar data={barData} options={{ maintainAspectRatio: true, plugins: { legend: { labels: { color: 'var(--color-star)' } } } }} />
               </div>
             </div>
             <div className="bg-slate-900/50 backdrop-blur border border-white/10 rounded-2xl p-6 shadow-xl">
               <h2 className="text-xl font-semibold mb-4 text-white">Revenue Distribution</h2>
               <div className="bg-gray-900/30 p-4 rounded-lg">
-                <Pie data={pieData} options={{ maintainAspectRatio: true, plugins: { legend: { labels: { color: '#fff' } } } }} />
+                <Pie data={pieData} options={{ maintainAspectRatio: true, plugins: { legend: { labels: { color: 'var(--color-star)' } } } }} />
               </div>
             </div>
           </motion.div>

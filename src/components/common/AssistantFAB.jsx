@@ -42,18 +42,20 @@ export default function AssistantFAB({
         'fixed bottom-20 right-4 z-[9999]',
         // Shape & spacing — pill, matching every other cosmos action
         'flex items-center gap-2 px-4 py-3 rounded-full',
-        // Typography
-        'text-sm font-medium text-[#d9cfff]',
+        // Typography — theme-aware ink so the label stays visible in both themes
+        'text-sm font-medium text-[var(--color-star)]',
         // Violet is the intelligence layer's colour across the whole product
-        'border border-violet/40 backdrop-blur-md',
-        'shadow-[0_8px_30px_-8px_rgba(139,108,255,0.7)]',
-        'transition-colors duration-200 hover:text-star hover:border-violet/70',
+        'border border-[var(--border)] backdrop-blur-md',
+        'shadow-[0_8px_30px_-8px_rgba(139,108,255,0.5)]',
+        'transition-colors duration-200 hover:text-[var(--color-violet)] hover:border-[var(--color-violet)]/60',
         FOCUS_RING,
         className
       )}
       style={{
+        // Translucent-violet glass over the surface; fully theme-aware so the
+        // pill never reads as light-with-light-text on the light theme.
         background:
-          'linear-gradient(135deg, rgba(139,108,255,0.22) 0%, rgba(139,108,255,0.12) 60%, rgba(8,12,22,0.9) 100%)',
+          'linear-gradient(135deg, color-mix(in_srgb, var(--color-violet) 22%, var(--color-panel)) 0%, var(--color-panel) 100%)',
       }}
       aria-label={`Open SF Assistant${workspaceId ? ` for workspace ${workspaceId}` : ''}`}
     >

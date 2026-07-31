@@ -31,8 +31,8 @@ const STATUS_META = {
   active:   { color: "#22c55e", bg: "#052e16", label: "Active",   dot: "●" },
   idle:     { color: "#f59e0b", bg: "#451a03", label: "Idle",     dot: "●" },
   inactive: { color: "#6366f1", bg: "#1e1b4b", label: "Inactive", dot: "●" },
-  dead:     { color: "#4b5563", bg: "#111827", label: "Offline",  dot: "○" },
-  unknown:  { color: "#6b7280", bg: "#111827", label: "Unknown",  dot: "○" },
+  dead:     { color: "#4b5563", bg: "var(--surface-card-2)", label: "Offline",  dot: "○" },
+  unknown:  { color: "#6b7280", bg: "var(--surface-card-2)", label: "Unknown",  dot: "○" },
 };
 
 const fmtAgo = (iso) => {
@@ -127,7 +127,7 @@ function HeartbeatBeacon() {
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <span style={{
         width: 8, height: 8, borderRadius: "50%",
-        background: beat ? "#22c55e" : "#374151",
+        background: beat ? "#22c55e" : "var(--surface-disabled)",
         transition: "background 0.3s",
       }} />
       <span style={{ fontSize: 12, color: "#6b7280" }}>Heartbeat active</span>
@@ -164,7 +164,7 @@ function MyActivityCard() {
       </div>
       <div style={{ flex: 1 }}>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span style={{ color: "#f9fafb", fontWeight: 600, fontSize: 14 }}>Your Status</span>
+          <span style={{ color: "var(--color-star)", fontWeight: 600, fontSize: 14 }}>Your Status</span>
           <StatusDot status={data.status} />
         </div>
         <p style={s.meta}>
@@ -204,7 +204,7 @@ function StatusSummaryPanel() {
     { key: "active",   label: "Active",   color: "#22c55e" },
     { key: "idle",     label: "Idle",     color: "#f59e0b" },
     { key: "inactive", label: "Inactive", color: "#6366f1" },
-    { key: "dead",     label: "Offline",  color: "#374151" },
+    { key: "dead",     label: "Offline",  color: "var(--color-dim)" },
   ];
 
   const total = data.total || 1;
@@ -217,12 +217,12 @@ function StatusSummaryPanel() {
         <p style={{ fontSize: 52, fontWeight: 800, color: "#22c55e", margin: 0 }}>
           {data.active + data.idle}
         </p>
-        <p style={{ color: "#9ca3af", fontSize: 13, margin: "4px 0 0" }}>
+        <p style={{ color: "var(--color-dim)", fontSize: 13, margin: "4px 0 0" }}>
           Online now ({onlinePct}% of {total} members)
         </p>
         {/* Stacked bar */}
         <div style={{ display: "flex", height: 8, borderRadius: 99, overflow: "hidden",
-          margin: "16px auto", maxWidth: 400, background: "#1f2937" }}>
+          margin: "16px auto", maxWidth: 400, background: "var(--surface-card)" }}>
           {segments.map((seg) => {
             const pct = (data[seg.key] / total) * 100;
             return pct > 0 ? (
@@ -237,7 +237,7 @@ function StatusSummaryPanel() {
       <div style={s.grid4}>
         {segments.map((seg) => (
           <div key={seg.key} style={{ ...s.card, borderTop: `3px solid ${seg.color}`, marginBottom: 0 }}>
-            <p style={{ color: "#9ca3af", fontSize: 11, fontWeight: 600,
+            <p style={{ color: "var(--color-dim)", fontSize: 11, fontWeight: 600,
               textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 6px" }}>
               {seg.label}
             </p>
@@ -356,7 +356,7 @@ function UserListPanel({ endpoint, emptyMsg }) {
               👤
             </div>
             <div>
-              <p style={{ color: "#f9fafb", fontSize: 13, fontWeight: 600, margin: 0 }}>
+              <p style={{ color: "var(--color-star)", fontSize: 13, fontWeight: 600, margin: 0 }}>
                 {r.name || `User #${r.user_id}`}
               </p>
               <p style={s.meta}>{fmtAgo(r.last_activity)}</p>
@@ -391,7 +391,7 @@ function Banner({ type, children }) {
   const border = { success: "#166534", error: "#991b1b", info: "#1d4ed8" };
   return (
     <div style={{ background: bg[type], border: `1px solid ${border[type]}`,
-      borderRadius: 8, padding: "10px 16px", fontSize: 13, color: "#e5e7eb", marginBottom: 12 }}>
+      borderRadius: 8, padding: "10px 16px", fontSize: 13, color: "var(--color-star)", marginBottom: 12 }}>
       {children}
     </div>
   );
@@ -401,7 +401,7 @@ function EmptyState({ icon, title, sub }) {
   return (
     <div style={{ textAlign: "center", padding: "48px 0", color: "#6b7280" }}>
       <div style={{ fontSize: 36, marginBottom: 12 }}>{icon}</div>
-      <p style={{ fontSize: 15, color: "#9ca3af", margin: "0 0 4px" }}>{title}</p>
+      <p style={{ fontSize: 15, color: "var(--color-dim)", margin: "0 0 4px" }}>{title}</p>
       {sub && <p style={{ fontSize: 12 }}>{sub}</p>}
     </div>
   );
@@ -425,25 +425,25 @@ const s = {
   page:       { padding: "28px 32px", maxWidth: 1100, margin: "0 auto", fontFamily: "'DM Sans', sans-serif" },
   topBar:     { display: "flex", justifyContent: "space-between", alignItems: "center",
                 marginBottom: 20, flexWrap: "wrap", gap: 12 },
-  h1:         { fontSize: 24, fontWeight: 700, color: "#f9fafb", margin: 0 },
+  h1:         { fontSize: 24, fontWeight: 700, color: "var(--color-star)", margin: 0 },
   sub:        { color: "#6b7280", fontSize: 13, marginTop: 4 },
-  card:       { background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 20 },
+  card:       { background: "var(--surface-card-2)", border: "1px solid #1f2937", borderRadius: 12, padding: 20 },
   cardTitle:  { fontSize: 13, fontWeight: 600, color: "#f3f4f6", marginBottom: 16, marginTop: 0 },
   meta:       { fontSize: 12, color: "#6b7280", margin: "4px 0 0" },
   grid4:      { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12, marginBottom: 16 },
   tabRow:     { display: "flex", gap: 4, marginBottom: 16, flexWrap: "wrap" },
-  tab:        { background: "#1f2937", border: "1px solid #374151", borderRadius: 6,
-                padding: "6px 14px", color: "#9ca3af", fontSize: 13, cursor: "pointer" },
+  tab:        { background: "var(--surface-card)", border: "1px solid var(--border-strong)", borderRadius: 6,
+                padding: "6px 14px", color: "var(--color-dim)", fontSize: 13, cursor: "pointer" },
   tabActive:  { background: "#1e1b4b", border: "1px solid #4338ca", borderRadius: 6,
                 padding: "6px 14px", color: "#a5b4fc", fontSize: 13, fontWeight: 600, cursor: "pointer" },
-  pageBtn:    { background: "#1f2937", border: "1px solid #374151", borderRadius: 6,
-                padding: "5px 12px", color: "#9ca3af", fontSize: 12, cursor: "pointer" },
+  pageBtn:    { background: "var(--surface-card)", border: "1px solid var(--border-strong)", borderRadius: 6,
+                padding: "5px 12px", color: "var(--color-dim)", fontSize: 12, cursor: "pointer" },
   empty:      { color: "#6b7280", fontSize: 13, textAlign: "center", padding: "20px 0" },
 };
 
 const thStyle = {
   padding: "8px 12px", textAlign: "left", fontSize: 11, fontWeight: 600,
-  color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em",
+  color: "var(--color-dim)", textTransform: "uppercase", letterSpacing: "0.05em",
   borderBottom: "1px solid #1f2937",
 };
 const tdStyle = {

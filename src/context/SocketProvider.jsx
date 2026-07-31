@@ -25,7 +25,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { getSocketInstance } from "@/utils/getSocketInstance";
+import { getSocketInstance, isSocketTokenValid } from "@/utils/getSocketInstance";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const IDLE_THRESHOLD_MS  = 5 * 60 * 1000;   // 5 minutes
@@ -122,13 +122,7 @@ export function SocketProvider({ token, children }) {
 
   // ── Socket setup ────────────────────────────────────────────────────────────
   useEffect(() => {
-    const rawToken       = typeof token === "string" ? token.trim() : "";
-    const normalizedToken = rawToken.startsWith("Bearer ") ? rawToken.slice(7).trim() : rawToken;
-    const isBadToken =
-      !normalizedToken ||
-      normalizedToken === "undefined" ||
-      normalizedToken === "null" ||
-      normalizedToken.length < 10;
+    const isBadToken = !isSocketTokenValid(token);
 
     if (isBadToken) {
       if (socketRef.current) { socketRef.current.close(); socketRef.current = null; }

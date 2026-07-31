@@ -139,7 +139,7 @@ const NavBar = ({
           className="hidden sm:block w-[9px] h-[9px] rounded-full bg-gold shrink-0"
           style={{ boxShadow: '0 0 12px 2px rgba(255,191,94,0.8)' }}
         />
-        <div className="logo h-8 sm:h-10 w-20 sm:w-auto">
+        <div className="logo h-12 sm:h-14 w-28 sm:w-auto">
           <Link to={user?.id ? `/dashboard` : '/'} className="group h-full cursor-pointer flex items-center">
             <img loading="lazy" data-aos="fade-right" data-aos-duration="600" src="/logo_white.svg" className="w-full h-full object-contain" alt="sf collab" />
           </Link>

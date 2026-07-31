@@ -256,7 +256,7 @@ export default function FileShareModal({ isOpen, onClose, file }) {
                     onClick={() => { setTab(key); setSearch(''); setResults([]); }}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
                     style={{
-                      background: tab === key ? 'rgba(99,102,241,0.15)' : '#1e2130',
+                      background: tab === key ? 'rgba(99,102,241,0.15)' : 'var(--surface-drive)',
                       color:      tab === key ? '#6366f1'               : '#64748b',
                       border:     `1px solid ${tab === key ? 'rgba(99,102,241,0.4)' : '#2a2d3e'}`,
                     }}

@@ -44,8 +44,8 @@ const MessageBubble = ({ msg, isOwn }) => {
         className={cn(
           'max-w-[88%] rounded-xl px-3 py-2.5 text-xs font-roboto leading-relaxed',
           isOwn
-            ? 'bg-blue-600/25 border border-blue-500/30 text-white'
-            : 'bg-zinc-900/60 border border-white/8 text-zinc-200'
+            ? 'bg-[var(--color-violet)] border border-[var(--color-violet)]/40 text-white'
+            : 'bg-[var(--muted)] border border-[var(--border)] text-[var(--color-star)]'
         )}
       >
         {msg.content}
@@ -60,7 +60,7 @@ const MessageBubble = ({ msg, isOwn }) => {
 
       {/* Timestamp */}
       {msg.timestamp && (
-        <span className="text-[9px] text-zinc-600 font-mono px-1">
+        <span className="text-[9px] text-[var(--color-dim)] font-mono px-1">
           {formatTime(msg.timestamp)}
         </span>
       )}
@@ -76,7 +76,7 @@ const ActionConfirmCard = ({ proposal, onConfirm, onCancel, loading }) => (
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.25, ease: 'easeOut' }}
     className="rounded-xl border border-amber-500/25 font-roboto overflow-hidden"
-    style={{ background: 'linear-gradient(135deg, #1a1100 0%, #0a0a0a 100%)' }}
+    style={{ background: 'linear-gradient(135deg, color-mix(in_srgb, var(--color-panel) 94%, #ffb547) 0%, var(--color-panel) 100%)' }}
     role="dialog"
     aria-modal="false"
     aria-label={`Confirm action: ${proposal.action}`}
@@ -91,7 +91,7 @@ const ActionConfirmCard = ({ proposal, onConfirm, onCancel, loading }) => (
 
     {/* Body */}
     <div className="px-3 py-3">
-      <p className="text-xs text-zinc-300 leading-relaxed mb-2.5">
+      <p className="text-xs text-[var(--color-star)] leading-relaxed mb-2.5">
         {proposal.description}
       </p>
 
@@ -100,8 +100,8 @@ const ActionConfirmCard = ({ proposal, onConfirm, onCancel, loading }) => (
         <div className="mb-3 space-y-1">
           {Object.entries(proposal.params).map(([k, v]) => (
             <div key={k} className="flex items-baseline gap-2">
-              <span className="text-[10px] text-zinc-500 uppercase tracking-wider w-20 shrink-0">{k}</span>
-              <span className="text-[11px] text-zinc-300 truncate">{String(v)}</span>
+              <span className="text-[10px] text-[var(--color-dim)] uppercase tracking-wider w-20 shrink-0">{k}</span>
+              <span className="text-[11px] text-[var(--color-star)] truncate">{String(v)}</span>
             </div>
           ))}
         </div>
@@ -130,7 +130,7 @@ const ActionConfirmCard = ({ proposal, onConfirm, onCancel, loading }) => (
           onClick={onCancel}
           disabled={loading}
           className={cn(
-            'flex-1 text-xs font-semibold py-2 rounded-xl border border-white/10 text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition-all duration-200 disabled:opacity-50',
+            'flex-1 text-xs font-semibold py-2 rounded-xl border border-[var(--border)] text-[var(--color-dim)] hover:text-[var(--color-star)] hover:bg-[var(--muted)] transition-all duration-200 disabled:opacity-50',
             FOCUS_RING
           )}
           aria-label="Cancel action"
@@ -344,14 +344,14 @@ export default function AIAssistant({ isOpen, onClose }) {
             exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 280, damping: 28 }}
             className={cn(
-              'fixed z-[1000000] flex font-roboto overflow-hidden',
-              'border border-white/10 shadow-2xl',
+              'ai-assistant-panel fixed z-[1000000] flex font-roboto overflow-hidden',
+              'border border-[var(--border)] shadow-2xl',
               // Mobile: fullscreen
               'inset-0 rounded-none flex-col',
               // Desktop: floating panel
               'md:inset-auto md:bottom-20 md:right-4 md:w-[380px] md:h-[72vh] md:rounded-2xl md:flex-row'
             )}
-            style={{ background: 'linear-gradient(160deg, #0d0d14 0%, #0a0a0f 100%)' }}
+            style={{ background: 'linear-gradient(160deg, var(--color-panel) 0%, var(--color-void) 100%)' }}
           >
             {/* ─── Conversation history sidebar (desktop only) ─────────── */}
             <AnimatePresence>
@@ -361,7 +361,7 @@ export default function AIAssistant({ isOpen, onClose }) {
                   animate={{ width: 160, opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   transition={{ duration: 0.2, ease: 'easeOut' }}
-                  className="hidden md:flex flex-col border-r border-white/8 bg-zinc-950/80 overflow-hidden shrink-0"
+                  className="hidden md:flex flex-col border-r border-[var(--border)] bg-[var(--color-panel)]/80 overflow-hidden shrink-0"
                 >
                   <ConversationHistory
                     activeConversationId={conversationId}
@@ -374,13 +374,13 @@ export default function AIAssistant({ isOpen, onClose }) {
             {/* ─── Main chat area ──────────────────────────────────────── */}
             <div className="flex flex-col flex-1 min-w-0 h-full">
               {/* Header */}
-              <div className="shrink-0 h-12 flex items-center justify-between px-3 bg-zinc-950/90 border-b border-white/8 backdrop-blur-sm">
+              <div className="shrink-0 h-12 flex items-center justify-between px-3 bg-[var(--color-panel)]/90 border-b border-[var(--border)] backdrop-blur-sm">
                 <div className="flex items-center gap-2">
                   {/* History toggle */}
                   <button
                     onClick={() => setShowHistory((v) => !v)}
                     className={cn(
-                      'hidden md:flex p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-800/60 transition-all duration-200',
+                      'hidden md:flex p-1.5 rounded-lg text-[var(--color-dim)] hover:text-[var(--color-star)] hover:bg-[var(--muted)] transition-all duration-200',
                       showHistory && 'text-blue-400 bg-blue-500/10',
                       FOCUS_RING
                     )}
@@ -397,10 +397,10 @@ export default function AIAssistant({ isOpen, onClose }) {
                   <div className="p-1.5 rounded-lg bg-blue-500/15 border border-blue-500/20" aria-hidden="true">
                     <Sparkles size={13} className="text-blue-400" />
                   </div>
-                  <span className="text-sm font-semibold text-white">SF Assistant</span>
+                  <span className="text-sm font-semibold text-[var(--color-star)]">SF Assistant</span>
 
                   {conversationId && (
-                    <span className="text-[9px] text-zinc-600 font-mono hidden sm:block">
+                    <span className="text-[9px] text-[var(--color-dim)] font-mono hidden sm:block">
                       #{conversationId}
                     </span>
                   )}
@@ -409,7 +409,7 @@ export default function AIAssistant({ isOpen, onClose }) {
                 <button
                   onClick={onClose}
                   className={cn(
-                    'p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition-all duration-200',
+                    'p-2 rounded-lg text-[var(--color-dim)] hover:text-[var(--color-star)] hover:bg-[var(--muted)] transition-all duration-200',
                     FOCUS_RING
                   )}
                   aria-label="Close SF Assistant"
@@ -420,7 +420,7 @@ export default function AIAssistant({ isOpen, onClose }) {
 
               {/* Messages */}
               <div
-                className="flex-1 overflow-y-auto overscroll-contain py-3 px-3 space-y-3 bg-zinc-950/40 scrollbar-visible"
+                className="flex-1 overflow-y-auto overscroll-contain py-3 px-3 space-y-3 bg-[var(--color-panel)]/40 scrollbar-visible"
                 role="log"
                 aria-label="Conversation"
                 aria-live="polite"
@@ -433,7 +433,7 @@ export default function AIAssistant({ isOpen, onClose }) {
                     >
                       <Sparkles size={18} className="text-blue-400" />
                     </div>
-                    <p className="text-xs text-zinc-500 leading-relaxed max-w-[200px]">
+                    <p className="text-xs text-[var(--color-dim)] leading-relaxed max-w-[200px]">
                       Ask me anything about your documents and workspaces.
                     </p>
                   </div>
@@ -469,9 +469,9 @@ export default function AIAssistant({ isOpen, onClose }) {
               </div>
 
               {/* Input */}
-              <div className="shrink-0 border-t border-white/8 bg-zinc-950/80">
+              <div className="shrink-0 border-t border-[var(--border)] bg-[var(--color-panel)]/80">
                 {currentUser.role === 'admin' && (
-                  <p className="text-[10px] text-zinc-600 px-3 pt-2 italic font-roboto">
+                  <p className="text-[10px] text-[var(--color-dim)] px-3 pt-2 italic font-roboto">
                     Admins can upload documents for context.
                   </p>
                 )}

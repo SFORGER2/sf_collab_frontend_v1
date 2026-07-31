@@ -9,7 +9,7 @@ import { FileText, ChevronRight } from 'lucide-react';
 const CONFIDENCE_STYLES = {
   high:   'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
   medium: 'bg-amber-500/15   text-amber-400   border-amber-500/25',
-  low:    'bg-zinc-500/15    text-zinc-400    border-zinc-500/25',
+  low:    'bg-zinc-500/15    text-[var(--color-dim)] border-zinc-500/25',
 };
 
 const CONFIDENCE_LABEL = {
@@ -43,20 +43,20 @@ export default function SourceCitations({ sources, confidence }) {
         {sources.map((src) => (
           <button
             key={src.document_id}
-            className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-xl bg-zinc-900/60 border border-white/8 hover:border-white/15 hover:bg-zinc-800/80 transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+            className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-xl bg-[var(--muted)] border border-[var(--border)] hover:border-[var(--border)] hover:bg-[var(--color-panel)] transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-void)]"
             aria-label={`Open document: ${src.title}`}
             title="Open referenced document"
           >
             <div className="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/15 shrink-0" aria-hidden="true">
               <FileText size={11} className="text-blue-400" />
             </div>
-            <span className="flex-1 text-xs font-roboto text-zinc-300 group-hover:text-white truncate transition-colors duration-200">
+            <span className="flex-1 text-xs font-roboto text-[var(--color-star)] group-hover:text-[var(--color-star)] truncate transition-colors duration-200">
               {src.title}
             </span>
-            <span className="text-[10px] font-roboto text-zinc-600 shrink-0">
+            <span className="text-[10px] font-roboto text-[var(--color-dim)] shrink-0">
               {Math.round((src.score || 0) * 100)}% match
             </span>
-            <ChevronRight size={11} className="text-zinc-600 group-hover:text-zinc-400 transition-colors shrink-0" aria-hidden="true" />
+            <ChevronRight size={11} className="text-[var(--color-dim)] group-hover:text-[var(--color-star)] transition-colors shrink-0" aria-hidden="true" />
           </button>
         ))}
       </div>

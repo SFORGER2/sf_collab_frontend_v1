@@ -33,13 +33,13 @@ const TYPE_META = {
   late_attendance:    { icon: "⏰", color: "#f59e0b", bg: "#451a03" },
   missing_update:     { icon: "📝", color: "#6366f1", bg: "#1e1b4b" },
   task_overdue:       { icon: "🔥", color: "#f97316", bg: "#431407" },
-  inactive_user:      { icon: "💤", color: "#6b7280", bg: "#111827" },
+  inactive_user:      { icon: "💤", color: "#6b7280", bg: "var(--surface-card-2)" },
 };
 
 const PRIORITY_COLOR = {
   HIGH:   { text: "#ef4444", bg: "#450a0a", border: "#7f1d1d" },
   MEDIUM: { text: "#f59e0b", bg: "#451a03", border: "#78350f" },
-  LOW:    { text: "#6b7280", bg: "#111827", border: "#374151" },
+  LOW:    { text: "#6b7280", bg: "var(--surface-card-2)", border: "var(--border-strong)" },
 };
 
 const fmtTime = (iso) =>
@@ -143,7 +143,7 @@ export function AlertsPage() {
           ))}
         </select>
 
-        <label style={{ display: "flex", alignItems: "center", gap: 8, color: "#9ca3af", fontSize: 13 }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--color-dim)", fontSize: 13 }}>
           <input
             type="checkbox"
             checked={showResolved}
@@ -207,7 +207,7 @@ function DigestBar({ digest }) {
   const groups = digest?.groups || [];
   return (
     <div style={s.digestBar}>
-      <span style={{ color: "#9ca3af", fontSize: 12, fontWeight: 600, textTransform: "uppercase" }}>
+      <span style={{ color: "var(--color-dim)", fontSize: 12, fontWeight: 600, textTransform: "uppercase" }}>
         Today's Digest
       </span>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -226,7 +226,7 @@ function DigestBar({ digest }) {
         {groups.length === 0 && <span style={{ color: "#6b7280", fontSize: 12 }}>No open alerts today</span>}
       </div>
       <span style={{ color: "#4b5563", fontSize: 12, marginLeft: "auto" }}>
-        Total open: <strong style={{ color: "#f9fafb" }}>{digest?.total_open ?? 0}</strong>
+        Total open: <strong style={{ color: "var(--color-star)" }}>{digest?.total_open ?? 0}</strong>
       </span>
     </div>
   );
@@ -263,7 +263,7 @@ function AlertCard({ alert, isAdmin, onResolve, resolving, resolved }) {
             )}
           </div>
 
-          <p style={{ color: "#e5e7eb", fontSize: 14, margin: "0 0 6px" }}>{alert.message}</p>
+          <p style={{ color: "var(--color-star)", fontSize: 14, margin: "0 0 6px" }}>{alert.message}</p>
 
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
             {alert.user && (
@@ -274,7 +274,7 @@ function AlertCard({ alert, isAdmin, onResolve, resolving, resolved }) {
               <span style={s.metaChip}>✓ {fmtTime(alert.resolved_at)}</span>
             )}
             {alert.resolution_note && (
-              <span style={{ ...s.metaChip, color: "#9ca3af" }}>📎 {alert.resolution_note}</span>
+              <span style={{ ...s.metaChip, color: "var(--color-dim)" }}>📎 {alert.resolution_note}</span>
             )}
           </div>
         </div>
@@ -301,13 +301,13 @@ function ResolveModal({ alert, onClose, onConfirm, loading }) {
     <div style={s.overlay}>
       <div style={s.modal}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-          <h3 style={{ color: "#f9fafb", fontSize: 16, margin: 0 }}>
+          <h3 style={{ color: "var(--color-star)", fontSize: 16, margin: 0 }}>
             {m.icon} Resolve Alert
           </h3>
           <button onClick={onClose} style={s.btnGhost}>✕</button>
         </div>
 
-        <p style={{ color: "#9ca3af", fontSize: 13, marginBottom: 12 }}>{alert.message}</p>
+        <p style={{ color: "var(--color-dim)", fontSize: 13, marginBottom: 12 }}>{alert.message}</p>
 
         <label style={s.label}>Resolution note (optional)</label>
         <textarea
@@ -339,7 +339,7 @@ function Banner({ type, children }) {
   return (
     <div style={{
       background: bg[type], border: `1px solid ${border[type]}`,
-      borderRadius: 8, padding: "10px 16px", fontSize: 13, color: "#e5e7eb", marginBottom: 12,
+      borderRadius: 8, padding: "10px 16px", fontSize: 13, color: "var(--color-star)", marginBottom: 12,
     }}>
       {children}
     </div>
@@ -350,7 +350,7 @@ function EmptyState({ icon, title, sub }) {
   return (
     <div style={{ textAlign: "center", padding: "60px 0", color: "#6b7280" }}>
       <div style={{ fontSize: 40, marginBottom: 12 }}>{icon}</div>
-      <p style={{ fontSize: 16, fontWeight: 600, color: "#9ca3af", margin: "0 0 6px" }}>{title}</p>
+      <p style={{ fontSize: 16, fontWeight: 600, color: "var(--color-dim)", margin: "0 0 6px" }}>{title}</p>
       <p style={{ fontSize: 13 }}>{sub}</p>
     </div>
   );
@@ -375,23 +375,23 @@ function Spinner() {
 const s = {
   page:        { padding: "28px 32px", maxWidth: 900, margin: "0 auto", fontFamily: "'DM Sans', sans-serif" },
   topBar:      { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 },
-  h1:          { fontSize: 24, fontWeight: 700, color: "#f9fafb", margin: 0 },
+  h1:          { fontSize: 24, fontWeight: 700, color: "var(--color-star)", margin: 0 },
   sub:         { color: "#6b7280", fontSize: 13, marginTop: 4 },
   filterRow:   { display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap",
-                 background: "#111827", border: "1px solid #1f2937", borderRadius: 10,
+                 background: "var(--surface-card-2)", border: "1px solid #1f2937", borderRadius: 10,
                  padding: "12px 16px", marginBottom: 16 },
-  select:      { background: "#1f2937", border: "1px solid #374151", borderRadius: 6,
-                 padding: "7px 12px", color: "#f9fafb", fontSize: 13 },
-  digestBar:   { background: "#111827", border: "1px solid #1f2937", borderRadius: 10,
+  select:      { background: "var(--surface-card)", border: "1px solid var(--border-strong)", borderRadius: 6,
+                 padding: "7px 12px", color: "var(--color-star)", fontSize: 13 },
+  digestBar:   { background: "var(--surface-card-2)", border: "1px solid #1f2937", borderRadius: 10,
                  padding: "12px 16px", marginBottom: 16,
                  display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" },
-  alertCard:   { background: "#111827", border: "1px solid #1f2937", borderRadius: 10,
+  alertCard:   { background: "var(--surface-card-2)", border: "1px solid #1f2937", borderRadius: 10,
                  padding: 16, marginBottom: 10 },
   metaChip:    { color: "#6b7280", fontSize: 12, display: "inline-flex", gap: 4, alignItems: "center" },
   sectionDivider: { color: "#4b5563", fontSize: 12, fontWeight: 600, textTransform: "uppercase",
                     letterSpacing: "0.06em", padding: "16px 0 8px" },
-  btnGhost:    { background: "transparent", border: "1px solid #374151", borderRadius: 6,
-                 padding: "6px 14px", color: "#9ca3af", fontSize: 13, cursor: "pointer" },
+  btnGhost:    { background: "transparent", border: "1px solid var(--border-strong)", borderRadius: 6,
+                 padding: "6px 14px", color: "var(--color-dim)", fontSize: 13, cursor: "pointer" },
   btnResolve:  { background: "#1e1b4b", border: "1px solid #4338ca", borderRadius: 6,
                  padding: "6px 14px", color: "#a5b4fc", fontSize: 13, cursor: "pointer",
                  whiteSpace: "nowrap", flexShrink: 0 },
@@ -401,10 +401,10 @@ const s = {
                  padding: "8px 16px", color: "#fca5a5", fontSize: 13, cursor: "pointer" },
   overlay:     { position: "fixed", inset: 0, background: "rgba(0,0,0,.7)",
                  display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 },
-  modal:       { background: "#111827", border: "1px solid #1f2937", borderRadius: 14,
+  modal:       { background: "var(--surface-card-2)", border: "1px solid #1f2937", borderRadius: 14,
                  padding: 24, width: "100%", maxWidth: 460 },
-  label:       { display: "block", fontSize: 12, color: "#9ca3af", marginBottom: 6 },
-  textarea:    { width: "100%", background: "#1f2937", border: "1px solid #374151", borderRadius: 6,
-                 padding: "10px 12px", color: "#f9fafb", fontSize: 13, resize: "vertical",
+  label:       { display: "block", fontSize: 12, color: "var(--color-dim)", marginBottom: 6 },
+  textarea:    { width: "100%", background: "var(--surface-card)", border: "1px solid var(--border-strong)", borderRadius: 6,
+                 padding: "10px 12px", color: "var(--color-star)", fontSize: 13, resize: "vertical",
                  fontFamily: "inherit", boxSizing: "border-box" },
 };

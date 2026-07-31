@@ -23,11 +23,16 @@ if (import.meta.env.DEV) {
     });
   }
 } else {
+  // autoUpdate mode (vite.config.js): reload automatically when the service
+  // worker finds a new version, so every browser serves the same fresh bundle.
+  // No confirm() prompt — a stale cached build left different browsers on
+  // different layouts until the user happened to accept the reload.
   registerSW({
     onNeedRefresh() {
-      if (confirm('New content available. Reload?')) {
-        window.location.reload();
-      }
+      window.location.reload();
+    },
+    onOfflineReady() {
+      // App shell is cached and ready for offline use — nothing to do.
     },
   });
 }

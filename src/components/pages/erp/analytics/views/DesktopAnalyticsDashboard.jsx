@@ -94,7 +94,7 @@ export default function AnalyticsDashboard() {
           actions={
             <div className="flex items-center gap-2">
               {/* Period selector */}
-              <div className="flex items-center gap-1 p-1 rounded-xl" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="flex items-center gap-1 p-1 rounded-xl" style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}>
                 {PERIODS.map((p) => (
                   <button
                     key={p.value}
@@ -206,8 +206,8 @@ function AnalyticsKPI({ label, value, numericValue, icon, accent, trend, sub }) 
       transition={{ duration: 0.2 }}
       className="relative overflow-hidden rounded-2xl p-5 group"
       style={{
-        background: "#111115",
-        border: "1px solid rgba(255,255,255,0.06)",
+        background: "var(--surface-panel)",
+        border: "1px solid var(--surface-border)",
         borderTop: `2px solid ${accent}`,
       }}
     >
@@ -249,7 +249,7 @@ function MetricBreakdown({ metrics }) {
   ];
 
   return (
-    <div className="rounded-2xl p-6" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+    <div className="rounded-2xl p-6" style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}>
       <div className="flex items-center gap-2 mb-5">
         <Activity size={15} className="text-zinc-400" />
         <h3 className="text-sm font-semibold text-zinc-200">Performance Overview</h3>
@@ -304,7 +304,7 @@ function DetailsPanel({ details }) {
   ];
 
   return (
-    <div className="rounded-2xl p-6" style={{ background: "#111115", border: "1px solid rgba(255,255,255,0.06)" }}>
+    <div className="rounded-2xl p-6" style={{ background: "var(--surface-panel)", border: "1px solid var(--surface-border)" }}>
       <div className="flex items-center gap-2 mb-5">
         <TrendingUp size={15} className="text-zinc-400" />
         <h3 className="text-sm font-semibold text-zinc-200">Period Breakdown</h3>

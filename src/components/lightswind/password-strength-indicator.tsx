@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { cn } from "../lib/utils";
-import { Input, InputProps  } from "./input";
+import { cn } from "../../lib/utils";
+import { Input } from "./input";
+import type { InputProps } from "./input"; // type-only: InputProps is an interface, not a runtime export
 import { Label } from "../ui/label";
 import { Eye, EyeOff, Check, X } from "lucide-react";
 
