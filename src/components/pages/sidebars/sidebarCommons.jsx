@@ -381,17 +381,14 @@ export function wallet(id) {
  * why founders could not find it.
  */
 export function ideation(id, role = "member") {
-  const founderExtras = [
-    { id: "create-vision", href: "/vision/new", label: "Create a Vision", icon: <Lightbulb size={18} /> },
-  ];
-
   return {
     id,
     icon: <LightbulbIcon size={22} />,
     href: "/ideation",
     label: "Visions",
     subItems: [
-      ...(role === "founder" ? founderExtras : []),
+      // /vision/new has no role restriction — every role can create a Vision.
+      { id: "create-vision", href: "/vision/new", label: "Create a Vision", icon: <Lightbulb size={18} /> },
       { id: "vision-board", href: "/ideation", label: "Explore Visions", icon: <LightbulbIcon size={18} /> },
       { id: "saved-visions", href: "/saved-ideas", label: "Saved Visions", icon: <Bookmark size={18} /> },
     ],

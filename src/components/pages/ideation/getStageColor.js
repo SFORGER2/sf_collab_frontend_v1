@@ -1,12 +1,12 @@
 export const getStageColor = (stage) => {
-  if (!stage) return "bg-gray-500/20 text-gray-400 border border-gray-500/30";
+  if (!stage) return "bg-slate-800/80 text-gray-300 border border-slate-700/50 font-medium";
   const s = stage.toLowerCase();
-  if (s.includes("idea")) return "bg-blue-500/20 text-blue-400 border border-blue-500/30";
-  if (s.includes("concept")) return "bg-amber-500/20 text-amber-400 border border-amber-500/30";
-  if (s.includes("dev") || s.includes("prototype")) return "bg-green-500/20 text-green-400 border border-green-500/30";
-  if (s.includes("research")) return "bg-purple-500/20 text-purple-400 border border-purple-500/30";
-  if (s.includes("mvp") || s.includes("launch")) return "bg-red-500/20 text-red-400 border border-red-500/30";
-  return "bg-gray-500/20 text-gray-400 border border-gray-500/30";
+  if (s.includes("idea")) return "bg-blue-500/10 text-blue-300 border border-blue-500/25 font-medium";
+  if (s.includes("concept")) return "bg-amber-500/10 text-amber-300 border border-amber-500/25 font-medium";
+  if (s.includes("dev") || s.includes("prototype")) return "bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 font-medium";
+  if (s.includes("research")) return "bg-purple-500/10 text-purple-300 border border-purple-500/25 font-medium";
+  if (s.includes("mvp") || s.includes("launch")) return "bg-rose-500/10 text-rose-300 border border-rose-500/25 font-medium";
+  return "bg-slate-800/80 text-gray-300 border border-slate-700/50 font-medium";
 };
 
 export const getCategoryColor = (category) => {

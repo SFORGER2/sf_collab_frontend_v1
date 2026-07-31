@@ -288,12 +288,30 @@ const MyApplications = () => {
           className="space-y-4"
         >
           {loading && applications.length === 0 ? (
-            <div className="flex justify-center py-12">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="rounded-full h-12 w-12 border-3 border-blue-500/20 border-t-blue-500"
-              />
+            /* Loading Skeleton Cards */
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 overflow-hidden relative"
+                  style={{ opacity: 1 - i * 0.15 }}
+                >
+                  <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+                  <div className="flex items-center gap-4">
+                    <div className="h-11 w-11 rounded-xl bg-white/10 shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3.5 w-44 rounded-full bg-white/10" />
+                      <div className="h-2.5 w-28 rounded-full bg-white/[0.07]" />
+                    </div>
+                    <div className="h-6 w-20 rounded-full bg-white/10" />
+                  </div>
+                  <div className="mt-4 flex gap-3">
+                    <div className="h-2 w-20 rounded-full bg-white/[0.06]" />
+                    <div className="h-2 w-16 rounded-full bg-white/[0.06]" />
+                    <div className="h-2 w-24 rounded-full bg-white/[0.06]" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : applications.length === 0 ? (
             <motion.div 

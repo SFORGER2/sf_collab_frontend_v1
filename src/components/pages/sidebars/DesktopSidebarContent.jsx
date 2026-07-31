@@ -115,15 +115,13 @@ export default function DesktopSidebarContent({
 
       {/* Sidebar container */}
       <motion.div
-        className={`flex flex-col justify-between h-full overflow-hidden py-2.5 ${
-          isHovered ? 'scrollbar-visible' : 'scrollbar-hide'
-        }`}
+        className={`flex flex-col justify-between h-full overflow-hidden py-2.5 ${isHovered ? 'scrollbar-visible' : 'scrollbar-hide'
+          }`}
         animate={{ width: isHovered ? 250 : 60 }}
         transition={{ duration: 0.25, ease: "easeInOut" }}
       >
-        <div className={`flex flex-col gap-1 overflow-y-auto px-2.5 ${
-          isHovered ? 'scrollbar-visible' : 'scrollbar-hide'
-        }`}>
+        <div className={`flex flex-col gap-1 overflow-y-auto px-2.5 ${isHovered ? 'scrollbar-visible' : 'scrollbar-hide'
+          }`}>
           {links.map((link) => {
             // Section divider entries (e.g. { isSection: true, sectionLabel: "Grow" })
             // are not real nav items — skip them so they don't create a gap or label.
@@ -131,44 +129,10 @@ export default function DesktopSidebarContent({
               return null;
             }
 
-            // Task 5: Workspace links are locked until user registers a Vision
-            if (isWorkspaceLocked(link)) {
-              return (
-                <div key={link.id}>
-                  <button
-                    onClick={() => navigate('/vision/create')}
-                    title="Create a Vision to unlock this Workspace feature"
-                    className={`
-                      w-full flex items-center
-                      ${isHovered ? "gap-3 px-3 justify-start" : "justify-center px-0"}
-                      py-3 rounded-lg transition-colors min-w-0
-                      text-slate-600 hover:text-gold hover:bg-gold/5
-                      opacity-60 hover:opacity-90
-                    `}
-                  >
-                    <div className="flex items-center justify-center w-6">
-                      <Lock size={20} className="text-slate-600" />
-                    </div>
-                    {isHovered && (
-                      <>
-                        <motion.span
-                          initial={false}
-                          animate={{ opacity: 1 }}
-                          className="text-xs font-medium whitespace-nowrap overflow-hidden text-slate-500"
-                        >
-                          {link.label}
-                        </motion.span>
-                        <Sparkles size={12} className="ml-auto text-gold/60 shrink-0" />
-                      </>
-                    )}
-                  </button>
-                </div>
-              );
-            }
-
-            // FIX: removed duplicate declarations; expandedId → expandedItems[link.id]
-            const isActive   = getAllRoutes(link).includes(location.pathname);
-            const showSubs   = expandedItems[link.id] ?? false;
+            const isActive = getAllRoutes(link).some(
+              (r) => location.pathname === r || location.pathname.startsWith(r + '/') || (r === '/ideation' && (location.pathname === '/ideation-details' || location.pathname.startsWith('/vision')))
+            );
+            const showSubs = expandedItems[link.id] ?? false;
             const isUpcoming = link.isUpcoming;
 
             return (
@@ -242,44 +206,46 @@ export default function DesktopSidebarContent({
 
                 {/* Sub Items */}
                 {isHovered && showSubs && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      transition={{ duration: 0.2 }}
-                      className="flex flex-col gap-0.5 mt-1 ml-4 pl-3 border-l border-zinc-700/50 overflow-hidden"
-                    >
-                      {(link.subItems || []).map((subItem) => {
-                      const isSubActive = location.pathname === subItem.href;
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    transition={{ duration: 0.2 }}
+                    className="flex flex-col gap-0.5 mt-1 ml-4 pl-3 border-l border-zinc-700/50 overflow-hidden"
+                  >
+                    {(link.subItems || []).map((subItem) => {
+                      const isSubActive =
+                        location.pathname === subItem.href ||
+                        (subItem.href === "/ideation" && (location.pathname === "/ideation-details" || location.pathname.startsWith("/vision")));
 
 
-                        return (
-                          <button
-                            key={subItem.id}
-                            onClick={() => {
-                              if (subItem.isUpcoming) return;
-                              if (subItem.onLinkClick) {
-                                subItem.onLinkClick();
-                                return;
-                              }
-                              navigate(subItem.href);
-                              onLinkClick?.();
-                            }}
-                            style={isSubActive ? activeStyle : undefined}
-                            className={`
+                      return (
+                        <button
+                          key={subItem.id}
+                          onClick={() => {
+                            if (subItem.isUpcoming) return;
+                            if (subItem.onLinkClick) {
+                              subItem.onLinkClick();
+                              return;
+                            }
+                            navigate(subItem.href);
+                            onLinkClick?.();
+                          }}
+                          style={isSubActive ? activeStyle : undefined}
+                          className={`
                               flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-colors
                               ${isSubActive ? "" : "text-slate-500 hover:bg-white/[0.06] hover:text-star"}
                             `}
-                          >
-                            {subItem.icon || (
-                              <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
-                            )}
-                            <span className="text-xs font-medium flex-1 whitespace-nowrap">
-                              {subItem.label}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </motion.div>
+                        >
+                          {subItem.icon || (
+                            <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                          )}
+                          <span className="text-xs font-medium flex-1 whitespace-nowrap">
+                            {subItem.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </motion.div>
                 )}
               </div>
             );

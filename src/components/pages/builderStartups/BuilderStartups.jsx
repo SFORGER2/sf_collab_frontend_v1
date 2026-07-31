@@ -117,7 +117,7 @@ const BuilderStartups = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/ideation')}
+              onClick={() => navigate('/vision/new')}
               className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap"
             >
               <Plus className="w-4 h-4" />

@@ -55,6 +55,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     deltaThreshold: 4,
     topReveal: 10,
   });
+  const mainScrollRef = useRef(null);
 
   const [unreadMessagesCount] = useState(0);
   const navContainerRef = useRef(null);
@@ -233,7 +234,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     <>
       {location.pathname === "/dashboard" && <Tutorial activeRole={activeRole} />}
       <SkipToContent />
-      <div className="relative min-h-screen w-screen flex flex-col">
+      <div className="relative min-h-screen w-full flex flex-col">
         {/* Background — cosmos atmosphere: three nebula blobs over the void,
             matching the landing page. Fixed so it doesn't scroll away. */}
         <div className="fixed inset-0 z-0 cosmos-atmosphere" aria-hidden="true" />
@@ -267,7 +268,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           </header>
         )}
 
-        <MotionDiv className="relative flex-1 w-full flex">
+        <MotionDiv className="relative flex-1 w-full flex" style={{ minHeight: 0, overflow: "hidden" }}>
           {/* Left sidebar - Aside with complementary landmark */}
           {!isRootPath && (
             <aside aria-label="Sidebar navigation">
@@ -278,14 +279,14 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           {/* Main content area - Main landmark */}
           <main
             id="main-content"
+            ref={mainScrollRef}
             role="main"
             tabIndex={-1}
-            className="text-white relative flex flex-col items-center w-full overflow-hidden lg:ml-0"
+            onScroll={isRootPath ? undefined : onScroll}
+            className="text-white relative flex flex-col items-center w-full min-w-0 lg:ml-0 overflow-y-auto custom-scrollbar"
+            style={{ height: "100%", maxHeight: "100%", scrollbarGutter: "stable" }}
           >
-            <div
-              className={`relative w-full scroll-smooth overflow-x-hidden`}
-              onScroll={isRootPath ? undefined : onScroll}
-            >
+            <div className="relative w-full max-w-full min-w-0 scroll-smooth">
               {/* Shared top ad. Placed here rather than per-page so it is
                   always in the same position, always above the fold, and the
                   route policy lives in one file instead of twenty. */}

@@ -12,12 +12,13 @@ export default function VisionCard({ vision }) {
     return 'text-orange-400';
   };
 
+  const visionId = vision?.id || vision?.original_id || vision?._id;
   return (
-    <Link to={`/ideation-details?ideaId=${vision?.original_id}`}>
+    <Link to={`/ideation-details?id=${visionId}`}>
       <Card className="cursor-pointer border border-gray-700 bg-gradient-to-br from-gray-900 to-gray-950 hover:border-gray-500 transition-all overflow-hidden group h-full flex flex-col">
         
         {/* Header / Banner area */}
-        <div className="relative h-28 w-full">
+        <div className="relative h-20 max-[359px]:h-20 sm:h-28 w-full">
           {vision?.imageUrl ? (
             <img
               src={vision.imageUrl}
@@ -30,72 +31,72 @@ export default function VisionCard({ vision }) {
 
           <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-gray-900/30 to-transparent" />
           
-          <div className="absolute top-3 right-3 flex gap-2">
-            <Badge className="bg-purple-500/20 text-purple-300 border-none">
+          <div className="absolute top-2 right-2 sm:top-3 sm:right-3 flex gap-2">
+            <Badge className="bg-purple-500/20 text-purple-300 border-none text-[10px] sm:text-xs">
               Idea / Vision
             </Badge>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-5 flex-1 flex flex-col space-y-4 z-10">
-          <div className="-mt-12">
-            <div className="h-16 w-16 rounded-xl bg-gray-800 flex items-center justify-center border-2 border-gray-900 shadow-xl relative overflow-hidden">
+        <div className="p-3 max-[359px]:p-3 sm:p-5 flex-1 flex flex-col space-y-2.5 max-[359px]:space-y-2.5 sm:space-y-4 z-10">
+          <div className="-mt-8 max-[359px]:-mt-8 sm:-mt-12">
+            <div className="h-12 w-12 max-[359px]:h-12 max-[359px]:w-12 sm:h-16 sm:w-16 rounded-xl bg-gray-800 flex items-center justify-center border-2 border-gray-900 shadow-xl relative overflow-hidden">
                {vision?.imageUrl ? (
                   <img src={vision.imageUrl} alt={vision?.name} className="w-full h-full object-cover" />
                ) : (
-                 <Lightbulb className="w-8 h-8 text-purple-400" />
+                  <Lightbulb className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400" />
                )}
             </div>
           </div>
           
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-xl font-semibold text-white line-clamp-1">
+          <div className="flex justify-between items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base max-[359px]:text-base sm:text-xl font-semibold text-white line-clamp-1">
                 {vision?.name || 'Unnamed Vision'}
               </h3>
-              <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                <Target className="w-3.5 h-3.5" />
+              <p className="text-[11px] sm:text-xs text-gray-500 flex items-center gap-1 mt-0.5 sm:mt-1 truncate">
+                <Target className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
                 {vision?.sector || 'General'}
               </p>
             </div>
             
             {vision?.readinessScore !== undefined && (
-               <div className="text-right">
-                  <div className={`text-xl font-black ${getScoreColor(vision.readinessScore)}`}>
+               <div className="text-right flex-shrink-0">
+                  <div className={`text-base max-[359px]:text-base sm:text-xl font-black ${getScoreColor(vision.readinessScore)}`}>
                     {vision.readinessScore}%
                   </div>
                </div>
             )}
           </div>
 
-          <p className="text-sm text-gray-300 leading-relaxed line-clamp-2 min-h-[40px] flex-1">
+          <p className="text-xs sm:text-sm text-gray-300 leading-relaxed line-clamp-2 min-h-[32px] sm:min-h-[40px] flex-1">
             {vision?.description || 'No description available'}
           </p>
 
-          <div className="grid grid-cols-2 gap-3 mt-auto">
-            <div className="bg-white/5 rounded-lg p-2.5 border border-white/5">
-              <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1">
-                <Users className="w-3.5 h-3.5" />
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-auto">
+            <div className="bg-white/5 rounded-lg p-2 max-[359px]:p-2 sm:p-2.5 border border-white/5">
+              <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1">
+                <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 Team Size
               </div>
-              <div className="text-sm font-semibold text-white">{vision?.teamSize || 0} Members</div>
+              <div className="text-xs sm:text-sm font-semibold text-white">{vision?.teamSize || 0} Members</div>
             </div>
             
-            <div className="bg-white/5 rounded-lg p-2.5 border border-white/5">
-              <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1">
-                <Eye className="w-3.5 h-3.5" />
+            <div className="bg-white/5 rounded-lg p-2 max-[359px]:p-2 sm:p-2.5 border border-white/5">
+              <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1">
+                <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 Interest
               </div>
-              <div className="text-sm font-semibold text-white">{vision?.interestedBuilders || 0} Builders</div>
+              <div className="text-xs sm:text-sm font-semibold text-white">{vision?.interestedBuilders || 0} Builders</div>
             </div>
           </div>
 
           <div>
-             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Roles Needed</div>
-             <div className="flex flex-wrap gap-2">
+             <div className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 sm:mb-2">Roles Needed</div>
+             <div className="flex flex-wrap gap-1.5 sm:gap-2">
                {vision?.rolesNeeded?.slice(0, 3).map((role, i) => (
-                 <Badge key={i} variant="outline" className="bg-transparent border-gray-700 text-gray-300 text-[10px] py-0">
+                 <Badge key={i} variant="outline" className="bg-transparent border-gray-700 text-gray-300 text-[10px] py-0 px-1.5">
                    {role}
                  </Badge>
                ))}
@@ -108,7 +109,7 @@ export default function VisionCard({ vision }) {
              </div>
           </div>
 
-          <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white mt-2 pb-0 mb-0">
+          <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white mt-1 sm:mt-2 min-h-[38px] sm:min-h-[44px] text-xs sm:text-sm">
             Request Collaboration
           </Button>
         </div>

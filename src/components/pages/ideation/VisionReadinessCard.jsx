@@ -283,7 +283,7 @@ const VisionReadinessCard = ({ ideaId, initialData = null, isCreator = false, on
   const dashOffset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="relative bg-gradient-to-b from-[#0e1118] to-[#07090d] border border-white/[0.08] rounded-3xl p-6 shadow-[0_24px_48px_rgba(0,0,0,0.5)] overflow-hidden h-full">
+    <div className="relative bg-gradient-to-b from-[#0e1118] to-[#07090d] border border-white/[0.08] rounded-3xl p-4 sm:p-6 shadow-[0_24px_48px_rgba(0,0,0,0.5)] overflow-hidden h-full">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-3xl pointer-events-none" />
       <div className="relative z-10">
       {/* Header */}
@@ -372,7 +372,7 @@ const VisionReadinessCard = ({ ideaId, initialData = null, isCreator = false, on
                   <Icon className="w-3.5 h-3.5 text-gray-500" />
                   <span className="text-[11px] text-gray-400">{meta.label}</span>
                 </div>
-                <span className="text-[10px] text-gray-650 font-bold">{earned}/{meta.max}</span>
+                <span className="text-[10px] text-zinc-400 font-bold">{earned}/{meta.max}</span>
               </div>
               <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
                 <motion.div

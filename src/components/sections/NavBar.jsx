@@ -381,7 +381,7 @@ const NavBar = ({
             <CosmosButton variant="quiet" size="sm" onClick={() => navigate('/login')}>
               Sign In
             </CosmosButton>
-            <CosmosButton variant="primary" size="sm" onClick={() => navigate('/signup')}>
+            <CosmosButton variant="primary" size="sm" onClick={() => navigate('/signup', { state: { redirectTo: '/vision/new' } })}>
               Create a Vision
             </CosmosButton>
           </div>

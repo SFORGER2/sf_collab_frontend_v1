@@ -8,22 +8,13 @@ const ScrollToTop = () => {
   // Handle scroll to show/hide scroll to top button
   useEffect(() => {
     const handleScroll = () => {
-      // The scrollable container is in the Layout, not in this component
-      // We need to find it by traversing up the DOM tree
-      const scrollableContainer = document.querySelector(
-        "div.overflow-y-auto.overflow-x-hidden"
-      );
+      const scrollableContainer = document.getElementById("main-content");
       const containerScrollTop = scrollableContainer?.scrollTop || 0;
-
-      // Show button if container has scrolled
       setShowScrollTop(containerScrollTop > 100);
     };
 
-    // Wait for the DOM to be ready
     const timer = setTimeout(() => {
-      const scrollableContainer = document.querySelector(
-        "div.overflow-y-auto.overflow-x-hidden"
-      );
+      const scrollableContainer = document.getElementById("main-content");
       if (scrollableContainer) {
         scrollableContainer.addEventListener("scroll", handleScroll);
         scrollContainerRef.current = scrollableContainer;
@@ -40,24 +31,13 @@ const ScrollToTop = () => {
 
   // Scroll to top function
   const scrollToTop = () => {
-    // Use the ref if available
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-
-    // Fallback: find the container again
-    const scrollableContainer = document.querySelector(
-      "div.overflow-y-auto.overflow-x-hidden"
-    );
+    const scrollableContainer = document.getElementById("main-content");
     if (scrollableContainer) {
-      scrollableContainer.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
+      scrollableContainer.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 

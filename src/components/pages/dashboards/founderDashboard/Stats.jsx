@@ -37,7 +37,7 @@ function FounderStats({ totals, startups }) {
 function FounderQuickActions() {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-      <QuickAction label="Create Vision" href="/ideation" icon={Plus} accent="#ffbf5e" />
+      <QuickAction label="Create Vision" href="/vision/new" icon={Plus} accent="#ffbf5e" />
       <QuickAction label="Ideation" href="/ideation" icon={Lightbulb} accent="#ffbf5e" />
       <QuickAction label="Find Builders" href="/discover-users" icon={Users} accent="#4fd8ff" />
       <QuickAction label="AI Tools" href="/ai-dashboard" icon={BrainCircuit} accent="#8b6cff" />

@@ -279,7 +279,7 @@ export default function NewIdeaForm({
             animate="visible"
           >
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-xs font-mono tracking-wider uppercase text-dim mb-1.5 font-medium">
                 Industry *
               </label>
               <motion.select
@@ -290,14 +290,18 @@ export default function NewIdeaForm({
                     setErrors({ ...errors, industry: "" });
                   }
                 }}
-                className={`w-full px-4 py-3 bg-white/10 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white text-xs transition-all ${
-                  errors.industry ? "border-red-500" : "border-white/20"
+                className={`w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border text-[0.88rem] font-medium text-star hover:bg-white/[0.06] hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-amber-500/20 appearance-none bg-no-repeat transition-all duration-200 cursor-pointer min-h-[44px] ${
+                  errors.industry ? "border-red-500" : "border-white/10"
                 }`}
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.45)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                  backgroundPosition: 'right 0.85rem center',
+                }}
                 required
-                whileFocus={{ scale: 1.01 }}
+                whileFocus={{ scale: 1.005 }}
               >
-                <option value="" className="bg-gray-800">
-                  Select Industry
+                <option value="" className="bg-[#12141d] text-dim">
+                  Select Industry…
                 </option>
                 {industries
                   .filter((industry) => industry !== "All Industries")
@@ -305,19 +309,19 @@ export default function NewIdeaForm({
                     <option
                       key={index}
                       value={industry}
-                      className="bg-gray-800"
+                      className="bg-[#12141d] text-star"
                     >
                       {industry}
                     </option>
                   ))}
               </motion.select>
               {errors.industry && (
-                <p className="text-red-500 text-sm mt-1">{errors.industry}</p>
+                <p className="text-red-400 text-xs mt-1.5 font-medium">{errors.industry}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-xs font-mono tracking-wider uppercase text-dim mb-1.5 font-medium">
                 Stage *
               </label>
               <motion.select
@@ -328,25 +332,29 @@ export default function NewIdeaForm({
                     setErrors({ ...errors, stage: "" });
                   }
                 }}
-                className={`w-full px-4 py-3 bg-white/10 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white text-xs transition-all ${
-                  errors.stage ? "border-red-500" : "border-white/20"
+                className={`w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border text-[0.88rem] font-medium text-star hover:bg-white/[0.06] hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-amber-500/20 appearance-none bg-no-repeat transition-all duration-200 cursor-pointer min-h-[44px] ${
+                  errors.stage ? "border-red-500" : "border-white/10"
                 }`}
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.45)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                  backgroundPosition: 'right 0.85rem center',
+                }}
                 required
-                whileFocus={{ scale: 1.01 }}
+                whileFocus={{ scale: 1.005 }}
               >
-                <option value="" className="bg-gray-800">
-                  Select Stage
+                <option value="" className="bg-[#12141d] text-dim">
+                  Select Stage…
                 </option>
                 {stages
                   .filter((stage) => stage !== "All Stages")
                   .map((stage, index) => (
-                    <option key={index} value={stage} className="bg-gray-800">
+                    <option key={index} value={stage} className="bg-[#12141d] text-star">
                       {stage}
                     </option>
                   ))}
               </motion.select>
               {errors.stage && (
-                <p className="text-red-500 text-sm mt-1">{errors.stage}</p>
+                <p className="text-red-400 text-xs mt-1.5 font-medium">{errors.stage}</p>
               )}
             </div>
           </motion.div>

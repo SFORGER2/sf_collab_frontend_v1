@@ -23,18 +23,16 @@ const SearchBar = ({ searchQuery, setSearchQuery, searchTimeoutRef }) => {
     }, [searchQuery]);
 
     return (
-        <div className="relative sm:w-auto">
-            <div className="relative">
-                <input
-                    ref={inputRef}
-                    type="text"
-                    value={localValue}
-                    onChange={handleInputChange}
-                    placeholder="Search brilliant visions..."
-                    className="w-full sm:w-[320px] px-4 py-2.5 pr-12 bg-white/10 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-white placeholder-gray-400 transition-all duration-200"
-                />
-                <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-4 text-gray-400" />
-            </div>
+        <div className="relative w-full">
+            <input
+                ref={inputRef}
+                type="text"
+                value={localValue}
+                onChange={handleInputChange}
+                placeholder="Search visions..."
+                className="w-full px-3.5 sm:px-4.5 py-3 sm:py-3 pr-10 sm:pr-11 min-h-[46px] sm:min-h-[48px] bg-white/10 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-white text-xs sm:text-sm placeholder-gray-400 transition-all duration-200"
+            />
+            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
         </div>
     );
 };

@@ -71,152 +71,206 @@ const IdeationHeader = ({
     { value: "discussed", label: "Most Discussed", icon: MessageSquare },
   ];
 
-  const toggleDropdown = (dropdownName) => {
+  const toggleDropdown = (dropdownName, e) => {
+    e?.stopPropagation?.();
     setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
   };
-
-
 
   const FilterButton = ({
     icon,
     label,
     dropdownName,
-    options,
+    options = [],
     selected,
     onSelect,
+    alignRight = false,
   }) => (
-    <div className="relative">
+    <div className={`relative shrink-0 w-auto ${activeDropdown === dropdownName ? "z-[100]" : "z-10"}`}>
       <button
-        onClick={() => toggleDropdown(dropdownName)}
-        className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-200 w-full sm:w-auto border border-white/10 hover:border-white/20"
+        onClick={(e) => toggleDropdown(dropdownName, e)}
+        className={`flex items-center justify-between gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl transition-all duration-200 w-auto min-h-[40px] sm:min-h-[44px] border text-[0.82rem] sm:text-[0.88rem] font-medium shadow-sm whitespace-nowrap cursor-pointer ${
+          selected
+            ? "bg-amber-500/12 text-amber-400 border-amber-500/40 shadow-[0_0_12px_-2px_rgba(255,191,94,0.2)]"
+            : "bg-white/[0.04] hover:bg-white/[0.06] text-star border-white/10 hover:border-white/20"
+        }`}
       >
-        {icon}
-        <span className="text-sm font-medium">{selected || label}</span>
-        <ChevronDown className="h-4 w-4 opacity-60" />
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {icon}
+          <span className="text-[0.82rem] sm:text-[0.88rem] font-medium whitespace-nowrap">{selected || label}</span>
+        </div>
+        <ChevronDown className={`h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 transition-transform duration-200 ${activeDropdown === dropdownName ? "rotate-180 text-amber-400" : "text-dim/70"}`} />
       </button>
 
       {activeDropdown === dropdownName && (
-        <div className="absolute top-full left-0 mt-2 w-48 bg-[#1A1A1A] border border-white/20 rounded-xl shadow-2xl py-2 z-50 backdrop-blur-sm">
-          {options.map((option, index) => (
-            <button
-              key={index}
-              className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
-              onClick={() => {
-                onSelect(option);
-                setActiveDropdown(null);
-              }}
-            >
-              {option}
-            </button>
-          ))}
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className={`absolute top-full mt-2 min-w-[200px] sm:w-56 bg-[#12141d] border border-white/20 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.95)] p-1.5 z-[9999] backdrop-blur-2xl max-h-[60vh] overflow-y-auto ${alignRight ? "right-0 left-auto" : "left-0"}`}
+        >
+          {options && options.length > 0 ? (
+            options.map((option, index) => {
+              const isSelected = selected === option || (!selected && typeof option === "string" && option.startsWith("All"));
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  className={`w-full text-left px-3.5 py-2.5 text-xs sm:text-[0.88rem] transition-colors flex items-center justify-between min-h-[40px] rounded-lg cursor-pointer ${
+                    isSelected
+                      ? "bg-amber-500/15 text-amber-400 font-medium"
+                      : "text-gray-300 hover:bg-white/[0.08] hover:text-white"
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelect(option);
+                    setActiveDropdown(null);
+                  }}
+                >
+                  <span className="truncate">{option}</span>
+                </button>
+              );
+            })
+          ) : (
+            <div className="px-3.5 py-2.5 text-xs text-gray-400">No options available</div>
+          )}
         </div>
       )}
     </div>
   );
 
-  const SortButton = () => (
-    <div className="relative">
-      <button
-        onClick={() => toggleDropdown("sort")}
-        className=" bg-[#1A1A1A] flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 w-full sm:w-auto border border-white/20"
-      >
-        <TrendingUp className="h-4 w-4" />
-        <span className="text-sm font-medium">
-          {sortOptions.find((opt) => opt.value === sortBy)?.label || "Sort"}
-        </span>
-        <ChevronDown className="h-4 w-4 opacity-60" />
-      </button>
+  const SortButton = () => {
+    const currentOption = sortOptions.find((opt) => opt.value === sortBy) || sortOptions[1];
+    const CurrentIcon = currentOption.icon || TrendingUp;
 
-      {activeDropdown === "sort" && (
-        <div className="absolute top-full left-0 mt-2 w-52 bg-[#1A1A1A] border border-white/20 rounded-xl shadow-2xl py-2 z-50 backdrop-blur-sm">
-          {sortOptions.map((option) => (
-            <button
-              key={option.value}
-              className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-colors flex items-center gap-2"
-              onClick={() => {
-                setSortBy(option.value);
-                setActiveDropdown(null);
-              }}
-            >
-              <option.icon className="h-4 w-4" />
-              {option.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+    return (
+      <div className={`relative shrink-0 w-auto ${activeDropdown === "sort" ? "z-[100]" : "z-10"}`}>
+        <button
+          onClick={(e) => toggleDropdown("sort", e)}
+          className={`bg-white/[0.04] hover:bg-white/[0.06] flex items-center justify-between gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl transition-all duration-200 w-auto min-h-[40px] sm:min-h-[44px] border border-white/10 hover:border-white/20 text-[0.82rem] sm:text-[0.88rem] font-medium text-star shadow-sm whitespace-nowrap cursor-pointer ${
+            activeDropdown === "sort" ? "border-amber-500/40 bg-amber-500/12 text-amber-400" : ""
+          }`}
+        >
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <CurrentIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400 shrink-0" />
+            <span className="text-[0.82rem] sm:text-[0.88rem] font-medium whitespace-nowrap">
+              {currentOption.label}
+            </span>
+          </div>
+          <ChevronDown className={`h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 transition-transform duration-200 ${activeDropdown === "sort" ? "rotate-180 text-amber-400" : "text-dim/70"}`} />
+        </button>
 
-
+        {activeDropdown === "sort" && (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="absolute top-full left-0 mt-2 min-w-[200px] sm:w-56 bg-[#12141d] border border-white/20 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.95)] p-1.5 z-[9999] backdrop-blur-2xl max-h-[60vh] overflow-y-auto"
+          >
+            {sortOptions.map((option) => {
+              const Icon = option.icon;
+              const isSelected = sortBy === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`w-full text-left px-3.5 py-2.5 text-xs sm:text-[0.88rem] transition-colors flex items-center justify-between min-h-[40px] rounded-lg cursor-pointer ${
+                    isSelected
+                      ? "bg-amber-500/15 text-amber-400 font-medium"
+                      : "text-gray-300 hover:bg-white/[0.08] hover:text-white"
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSortBy(option.value);
+                    setActiveDropdown(null);
+                  }}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Icon className={`h-4 w-4 shrink-0 ${isSelected ? "text-amber-400" : "text-gray-400"}`} />
+                    <span className="truncate">{option.label}</span>
+                  </div>
+                  {isSelected && <span className="text-amber-400 text-xs font-bold">✓</span>}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
-    <div className="w-full p-4 px-2 space-y-4">
+    <div className="w-full p-4 px-2 space-y-4 relative">
+      {/* Click outside backdrop for closing dropdowns */}
+      {activeDropdown && (
+        <div
+          className="fixed inset-0 z-40 bg-transparent"
+          onClick={() => setActiveDropdown(null)}
+        />
+      )}
 
-            <div className="w-full flex justify-center items-center flex-col mb-2">
-              <h1 className="text-5xl  sm:text-6xl lg:text-7xl font-bold mb-8 animate-slide-up text-center w-full">
-                <span className="bg-linear-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent text-center w-full">
-                  Explore Ideas
-                </span>
-                <br />
-                
+      <div className="w-full flex flex-col items-center justify-center text-center mb-4">
+        <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold mb-2 animate-slide-up text-center w-full">
+          <span className="bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent text-center w-full">
+            Explore Ideas
+          </span>
         </h1>
-      <div className=" relative inline-block w-full">
-                  <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-90 h-px bg-linear-to-r from-transparent via-blue-500 to-transparent animate-shimmer" />
-                </div>
+        <div className="relative w-48 sm:w-80 h-0.5 mt-3 overflow-hidden rounded-full bg-gradient-to-r from-transparent via-blue-500/40 to-transparent">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-shimmer" />
+        </div>
       </div>
         
-        {/* Controls Section */}
-      <div
-        className={`${
-          isMobileMenuOpen ? "flex" : "hidden"
-        } sm:flex flex-col justify-between sm:flex-row gap-3 w-full`}
-      >
-        <div className="">
-          <SearchBar
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            searchTimeoutRef={searchTimeoutRef}
-          />
-        </div>
+      {/* Controls Section — 1 Line on Desktop (>=1024px) when space permits; 2 Lines on Mobile/Tablet (<1024px) */}
+      <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3 w-full">
+        {/* Search Bar & Mobile/Tablet Create Button (Expands fully across available width) */}
+        <div className="flex flex-row items-center gap-2 sm:gap-3 flex-1 min-w-0">
+          <div className="flex-1 min-w-0">
+            <SearchBar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              searchTimeoutRef={searchTimeoutRef}
+            />
+          </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <SortButton />
-          <FilterButton
-            icon={<Filter className="h-4 w-4" />}
-            label="Stage"
-            dropdownName="stages"
-            options={stages}
-            selected={selectedStage !== "All Stages" ? selectedStage : ""}
-            onSelect={setSelectedStage}
-          />
-          <FilterButton
-            icon={<Building2 className="h-4 w-4" />}
-            label="Industry"
-            dropdownName="industries"
-            options={industries}
-            selected={
-              selectedIndustry !== "All Industries" ? selectedIndustry : ""
-            }
-            onSelect={setSelectedIndustry}
-          />
-          {/* Was a modal "Post an Idea" form. Visions are what this ecosystem
-              actually creates — structured, with roles, a banner and a roadmap —
-              so this now goes to the Vision creator instead of a cut-down
-              duplicate that produced half a Vision. */}
           <Link
             to="/vision/new"
-            className="create-idea flex items-center justify-center gap-2 rounded-xl transition-all duration-200 w-full px-4 py-2.5 sm:w-auto text-sm font-medium border border-gold/45 bg-gold/10 text-gold hover:bg-gold/20 hover:border-gold/70"
+            className="lg:hidden create-idea shrink-0 flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl transition-all duration-200 px-4 sm:px-6 py-3 min-h-[46px] sm:min-h-[48px] text-xs sm:text-sm font-semibold tracking-wide border border-gold/60 bg-gold/15 text-gold hover:bg-gold/25 hover:border-gold/80 shadow-md shadow-gold/10"
           >
-            <Plus className="h-4 w-4" />
-            <span>Create a Vision</span>
+            <Plus className="h-4 w-4 sm:h-4.5 sm:w-4.5 shrink-0 stroke-[2.5]" />
+            <span className="whitespace-nowrap">Create a Vision</span>
+          </Link>
+        </div>
+
+        {/* Filters Block (Trending, Stage, Industry as 1 unit) + Desktop Create Button */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full lg:w-auto min-w-0 relative z-30">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 w-full sm:w-auto relative z-30 overflow-visible">
+            <SortButton />
+            <FilterButton
+              icon={<Filter className="h-3.5 w-3.5 text-blue-400 shrink-0" />}
+              label="Stage"
+              dropdownName="stages"
+              options={stages}
+              selected={selectedStage !== "All Stages" ? selectedStage : ""}
+              onSelect={setSelectedStage}
+            />
+            <FilterButton
+              icon={<Building2 className="h-3.5 w-3.5 text-purple-400 shrink-0" />}
+              label="Industry"
+              dropdownName="industries"
+              options={industries}
+              selected={
+                selectedIndustry !== "All Industries" ? selectedIndustry : ""
+              }
+              onSelect={setSelectedIndustry}
+              alignRight
+            />
+          </div>
+
+          <Link
+            to="/vision/new"
+            className="hidden lg:flex create-idea shrink-0 items-center justify-center gap-2 rounded-xl transition-all duration-200 px-6 lg:px-7 py-3 min-h-[48px] text-base font-semibold tracking-wide border border-gold/60 bg-gold/15 text-gold hover:bg-gold/25 hover:border-gold/80 shadow-md shadow-gold/10"
+          >
+            <Plus className="h-4.5 w-4.5 shrink-0 stroke-[2.5]" />
+            <span className="whitespace-nowrap">Create a Vision</span>
           </Link>
         </div>
       </div>
 
-      {/* The old cut-down "new idea" modal produced half a Vision — no banner,
-          no roles, no roadmap — and then people had to redo it properly. It is
-          disabled rather than deleted so nothing that still references
-          `showNewIdeaForm` breaks; delete both once no caller sets it. */}
       {false && showNewIdeaForm && <NewIdeaForm
         onClose={() => setShowNewIdeaForm(false)}
         onCreateIdea={onCreateIdea}

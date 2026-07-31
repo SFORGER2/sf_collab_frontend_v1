@@ -426,15 +426,15 @@ const StartupDetailPage = () => {
 
   if (!startup) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="p-8 bg-gray-800 border-gray-700 text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">Startup Not Found</h2>
-          <p className="text-gray-400 mb-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="p-5 sm:p-8 bg-gray-800 border-gray-700 text-center max-w-md w-full mx-auto shadow-2xl">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Startup Not Found</h2>
+          <p className="text-sm sm:text-base text-gray-400 mb-5 leading-relaxed">
             This startup doesn't exist, or there was a problem loading it.
           </p>
-          <div className="flex gap-3 justify-center">
-            <Button variant="outline" onClick={fetchStartupData}>Try Again</Button>
-            <Button onClick={() => navigate('/discover-startups')}>Back to Discover</Button>
+          <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-center w-full">
+            <Button variant="outline" onClick={fetchStartupData} className="w-full sm:w-auto min-h-[44px]">Try Again</Button>
+            <Button onClick={() => navigate('/discover-startups')} className="w-full sm:w-auto min-h-[44px]">Back to Discover</Button>
           </div>
         </Card>
       </div>
@@ -567,9 +567,9 @@ const StartupDetailPage = () => {
       {/* Main Content with Tabs */}
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full grid-cols-1 md:grid-cols-7 bg-gray-800/50 p-1 rounded-xl backdrop-blur-sm">
-            <TabsTrigger value="overview" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              <BarChart3 className="w-4 h-4 mr-2" />
+          <TabsList className="flex items-center gap-1.5 overflow-x-auto w-full max-w-full p-1.5 rounded-xl bg-gray-800/50 backdrop-blur-md no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden select-none shrink-0">
+            <TabsTrigger value="overview" className="flex-none px-3.5 py-2 text-xs sm:text-sm whitespace-nowrap rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white cursor-pointer transition-all">
+              <BarChart3 className="w-4 h-4 mr-2 shrink-0" />
               <ShinyText
                 text="Overview"
                 disabled={false}
@@ -577,8 +577,8 @@ const StartupDetailPage = () => {
               //   className='custom-title' 
               />
             </TabsTrigger>
-            <TabsTrigger value="members" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              <Users className="w-4 h-4 mr-2" />
+            <TabsTrigger value="members" className="flex-none px-3.5 py-2 text-xs sm:text-sm whitespace-nowrap rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white cursor-pointer transition-all">
+              <Users className="w-4 h-4 mr-2 shrink-0" />
               <ShinyText
                 text="Members"
                 disabled={false}
@@ -586,8 +586,8 @@ const StartupDetailPage = () => {
               //   className='custom-title' 
               />
             </TabsTrigger>
-            <TabsTrigger value="documents" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              <FileText className="w-4 h-4 mr-2" />
+            <TabsTrigger value="documents" className="flex-none px-3.5 py-2 text-xs sm:text-sm whitespace-nowrap rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white cursor-pointer transition-all">
+              <FileText className="w-4 h-4 mr-2 shrink-0" />
               <ShinyText
                 text="Documents"
                 disabled={false}
@@ -595,8 +595,8 @@ const StartupDetailPage = () => {
               //   className='custom-title' 
               />
             </TabsTrigger>
-            <TabsTrigger value="tasks" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              <ClipboardList className="w-4 h-4 mr-2" />
+            <TabsTrigger value="tasks" className="flex-none px-3.5 py-2 text-xs sm:text-sm whitespace-nowrap rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white cursor-pointer transition-all">
+              <ClipboardList className="w-4 h-4 mr-2 shrink-0" />
               <ShinyText
                 text="Project Tasks"
                 disabled={false}
@@ -605,8 +605,8 @@ const StartupDetailPage = () => {
               />
 
             </TabsTrigger>
-            <TabsTrigger value="goals" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              <Target className="w-4 h-4 mr-2" />
+            <TabsTrigger value="goals" className="flex-none px-3.5 py-2 text-xs sm:text-sm whitespace-nowrap rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white cursor-pointer transition-all">
+              <Target className="w-4 h-4 mr-2 shrink-0" />
               <ShinyText
                 text="Project Goals"
                 disabled={false}
@@ -615,8 +615,8 @@ const StartupDetailPage = () => {
               />
 
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              <Calendar className="w-4 h-4 mr-2" />
+            <TabsTrigger value="calendar" className="flex-none px-3.5 py-2 text-xs sm:text-sm whitespace-nowrap rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white cursor-pointer transition-all">
+              <Calendar className="w-4 h-4 mr-2 shrink-0" />
               <ShinyText
                 text="Calendar"
                 disabled={false}
@@ -625,8 +625,8 @@ const StartupDetailPage = () => {
               />
 
             </TabsTrigger>
-            <TabsTrigger value="investors" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              <Coins className="w-4 h-4 mr-2" />
+            <TabsTrigger value="investors" className="flex-none px-3.5 py-2 text-xs sm:text-sm whitespace-nowrap rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white cursor-pointer transition-all">
+              <Coins className="w-4 h-4 mr-2 shrink-0" />
               <ShinyText
                 text="Investors"
                 disabled={false}
@@ -713,12 +713,13 @@ const StartupDetailPage = () => {
         <SendJoinRequestModal
           isOpen={isSendJoinRequestModalOpen}
           onClose={() => setIsSendJoinRequestModalOpen(false)}
-          startupId={id}
-          startupRoles={startup?.roles || []}
-          startupName={startup?.name || ''}
+          startupId={startup?.id || id}
+          startupRoles={startup?.roles || startup?.rolesNeeded || []}
+          startupName={startup?.name || 'this startup'}
           onSuccess={() => {
             setIsSendJoinRequestModalOpen(false);
-            toast.success('Join request sent successfully!');
+            if (typeof fetchStartupData === 'function') fetchStartupData();
+            if (typeof fetchUserInvitation === 'function') fetchUserInvitation();
           }}
         />
       )}
@@ -852,7 +853,7 @@ const GamifiedStatsOverview = ({ goals, startup, stats }) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
       {gamifiedStats.map((stat, index) => (
         <motion.div
           key={stat.label}

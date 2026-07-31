@@ -226,6 +226,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   // Feed fetching effect
   useEffect(() => {
     if (mode === 'discover' && access_token) {
+      let isMounted = true;
       const fetchDiscoveryFeed = async () => {
         setFeedLoading(true);
         try {
@@ -233,22 +234,31 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
             sector: selectedIndustry !== 'All' ? selectedIndustry : '',
             search: searchQuery,
           }, access_token);
-          if (response.success && response.sections) {
+          if (isMounted && response.success && response.sections) {
             setFeedSections(response.sections);
           }
         } catch (error) {
-          console.error('Error fetching discovery feed:', error);
-          setError('Failed to load discovery feed');
+          if (isMounted) {
+            console.error('Error fetching discovery feed:', error);
+            setError('Failed to load discovery feed');
+          }
         } finally {
-          setFeedLoading(false);
+          if (isMounted) setFeedLoading(false);
         }
       };
+
+      // Debounce only when actively filtering/searching, fetch immediately on initial mount
+      const isInitialMount = !searchQuery && selectedIndustry === 'All' && selectedStage === 'All';
+      const delay = isInitialMount ? 0 : 300;
       
       const timeoutId = setTimeout(() => {
         fetchDiscoveryFeed();
-      }, 500);
+      }, delay);
       
-      return () => clearTimeout(timeoutId);
+      return () => {
+        isMounted = false;
+        clearTimeout(timeoutId);
+      };
     }
   }, [mode, access_token, searchQuery, selectedIndustry, selectedStage, selectedFundingRange, customMinFunding, customMaxFunding]);
 

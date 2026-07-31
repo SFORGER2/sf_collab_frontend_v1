@@ -57,7 +57,7 @@ export default function AccountSecurity({
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6 w-full max-w-full min-w-0">
       <SectionHead
         icon={Shield}
         title="Account & Security"
@@ -101,32 +101,33 @@ export default function AccountSecurity({
           </Field>
         </FieldGrid>
 
-        <ul className="flex flex-wrap gap-x-5 gap-y-1.5 mt-4">
+        <ul className="flex flex-wrap gap-x-6 gap-y-2 pt-3 border-t border-white/[0.04]">
           {rules.map((r) => (
             <li
               key={r.label}
-              className="flex items-center gap-1.5 text-[0.8rem]"
+              className="flex items-center gap-1.5 text-[0.81rem] font-medium transition-all duration-200"
               style={{ color: r.met ? "#3ee6a0" : "var(--color-dim)" }}
             >
-              {r.met ? <Check size={12} /> : <X size={12} className="opacity-50" />}
+              {r.met ? <Check size={13} className="shrink-0" /> : <X size={13} className="shrink-0 opacity-40" />}
               {r.label}
             </li>
           ))}
         </ul>
 
-        <div className="flex flex-wrap items-center gap-3 mt-5">
+        <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3.5 pt-1 w-full min-w-0">
           <CosmosButton
             variant="primary"
             size="sm"
             disabled={!canChangePassword}
             onClick={handlePasswordUpdate}
+            className="w-full sm:w-auto min-h-[44px] justify-center"
           >
             <KeyRound size={14} /> Update password
           </CosmosButton>
           <button
             type="button"
             onClick={() => toast.info("Password reset by email needs the backend endpoint")}
-            className="text-[0.82rem] text-dim hover:text-star transition-colors"
+            className="w-full sm:w-auto inline-flex items-center justify-center min-h-[44px] text-[0.82rem] font-medium text-dim/80 hover:text-star transition-colors px-1 cursor-pointer text-center sm:text-left"
           >
             Forgot your password?
           </button>
@@ -160,8 +161,8 @@ export default function AccountSecurity({
           </Field>
         </FieldGrid>
 
-        <div className="mt-4">
-          <CosmosButton variant="ghost" size="sm" onClick={handleEmailUpdate}>
+        <div>
+          <CosmosButton variant="ghost" size="sm" onClick={handleEmailUpdate} className="w-full sm:w-auto min-h-[44px] justify-center">
             <Mail size={14} /> Change email
           </CosmosButton>
         </div>
@@ -170,21 +171,21 @@ export default function AccountSecurity({
       {/* Danger zone */}
       <SettingsCard title="Delete account" accent="#ff6f6f">
         <Notice tone="error">
-          <span className="flex items-start gap-2">
-            <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-            <span>
+          <span className="flex items-start gap-2.5">
+            <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+            <span className="break-words">
               This removes your profile, your visions, your contributions and your wallet
               balance. It cannot be undone, and the same email cannot be reused.
             </span>
           </span>
         </Notice>
 
-        <div className="flex flex-wrap gap-2.5 mt-4">
+        <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 mt-5 w-full min-w-0">
           {!confirmedDelete ? (
             <button
               type="button"
               onClick={() => setConfirmedDelete(true)}
-              className="px-4 py-2 rounded-xl border border-red-500/30 text-[0.85rem] text-red-400 hover:bg-red-500/10 transition-colors"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-xl border border-red-500/35 bg-red-500/5 text-[0.84rem] font-medium text-red-400 hover:bg-red-500/15 hover:border-red-500/50 active:scale-[0.98] transition-all duration-200 shadow-xs cursor-pointer"
             >
               Delete my account
             </button>
@@ -193,14 +194,14 @@ export default function AccountSecurity({
               <button
                 type="button"
                 onClick={deleteAccount}
-                className="px-4 py-2 rounded-xl border border-red-500/60 bg-red-500/15 text-[0.85rem] text-red-300 hover:bg-red-500/25 transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-xl border border-red-500/70 bg-red-500/20 text-[0.84rem] font-semibold text-red-300 hover:bg-red-500/30 active:scale-[0.98] transition-all duration-200 shadow-[0_0_18px_-4px_rgba(255,112,112,0.3)] cursor-pointer"
               >
                 Yes, delete it permanently
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmedDelete(false)}
-                className="px-4 py-2 rounded-xl border border-white/10 text-[0.85rem] text-dim hover:text-star hover:bg-white/[0.05] transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-xl border border-white/10 text-[0.84rem] font-medium text-dim hover:text-star hover:bg-white/[0.06] active:scale-[0.98] transition-all duration-200 cursor-pointer"
               >
                 Keep my account
               </button>
@@ -221,13 +222,14 @@ function SecretInput({ value, onChange, show, onToggle, ...props }) {
         type={show ? "text" : "password"}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="pr-11"
+        className="pr-12"
       />
       <button
         type="button"
         onClick={onToggle}
         aria-label={show ? "Hide password" : "Show password"}
-        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-dim hover:text-star transition-colors"
+        className="absolute right-1 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-dim/70 hover:text-star hover:bg-white/10 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-white/20 cursor-pointer"
+        style={{ minWidth: '44px', minHeight: '44px' }}
       >
         {show ? <EyeOff size={16} /> : <Eye size={16} />}
       </button>

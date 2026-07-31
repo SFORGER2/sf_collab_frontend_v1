@@ -61,7 +61,9 @@ export default function MobileSidebarContent({
         animate="visible"
       >
         {links.map((link) => {
-          const isActive = getAllRoutes(link).includes(location.pathname);
+          const isActive = getAllRoutes(link).some(
+            (r) => location.pathname === r || location.pathname.startsWith(r + '/') || (r === '/ideation' && (location.pathname === '/ideation-details' || location.pathname.startsWith('/vision')))
+          );
           const showSubs = expandedItems[link.id] ?? false;
           const isUpcoming = link.isUpcoming;
 
@@ -132,7 +134,9 @@ export default function MobileSidebarContent({
                     className="flex flex-col gap-0.5 mt-1 ml-4 pl-3 border-l border-zinc-700/50"
                   >
                     {(link.subItems || []).map((subItem) => {
-                      const isSubActive = location.pathname === subItem.href;
+                      const isSubActive =
+                        location.pathname === subItem.href ||
+                        (subItem.href === "/ideation" && (location.pathname === "/ideation-details" || location.pathname.startsWith("/vision")));
                       const isSubUpcoming = subItem.isUpcoming;
 
                       return (

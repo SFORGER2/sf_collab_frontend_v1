@@ -63,6 +63,9 @@ export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) 
 export function getAllRoutes(element) {
   let routes = [];
   if (element.href) routes.push(element.href);
+  if (element.href === "/ideation") {
+    routes.push("/ideation-details", "/vision");
+  }
   if (Array.isArray(element.subItems)) {
     for (const item of element.subItems) {
       if (routes.includes(item.href)) continue;

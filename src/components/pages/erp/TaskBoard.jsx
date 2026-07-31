@@ -221,82 +221,85 @@ return (
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-6 pb-20">
+    <div className="min-h-screen bg-[#0a0a0a] text-white p-3.5 sm:p-6 pb-20 max-w-full min-w-0 overflow-x-hidden">
       <PageHeader
         title="Task Management"
         subtitle="Track and organize workspace tasks efficiently."
         actions={
-          <>
-            <div className="flex bg-[#1a1a1a] rounded-lg p-1 border border-[#262626]">
-              <button onClick={() => setView("kanban")} className={`p-1.5 rounded ${view === 'kanban' ? 'bg-[#262626] text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <div className="flex bg-[#1a1a1a] rounded-lg p-1 border border-[#262626] shrink-0">
+              <button onClick={() => setView("kanban")} className={`p-1.5 rounded min-h-[36px] min-w-[36px] flex items-center justify-center ${view === 'kanban' ? 'bg-[#262626] text-white' : 'text-gray-500 hover:text-gray-300'}`}>
                 <LayoutGrid size={18} />
               </button>
-              <button onClick={() => setView("list")} className={`p-1.5 rounded ${view === 'list' ? 'bg-[#262626] text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+              <button onClick={() => setView("list")} className={`p-1.5 rounded min-h-[36px] min-w-[36px] flex items-center justify-center ${view === 'list' ? 'bg-[#262626] text-white' : 'text-gray-500 hover:text-gray-300'}`}>
                 <List size={18} />
               </button>
             </div>
-            <Button onClick={() => setIsModalOpen(true)}>
+            <Button onClick={() => setIsModalOpen(true)} className="flex-1 sm:flex-none justify-center min-h-[44px]">
               <Plus size={18} className="mr-2" /> New Task
             </Button>
-          </>
+          </div>
         }
       />
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <SearchBar value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search tasks..." />
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm"><Filter size={16} className="mr-1" /> Filter</Button>
-          <Button variant="outline" size="sm">Sort by: Priority</Button>
+      <div className="flex flex-col sm:flex-row gap-3 mb-6 w-full min-w-0">
+        <div className="flex-1 min-w-0">
+          <SearchBar value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search tasks..." />
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none justify-center"><Filter size={16} className="mr-1" /> Filter</Button>
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none justify-center">Sort by: Priority</Button>
         </div>
       </div>
 
       {loading ? (
         <Spinner />
       ) : view === "kanban" ? (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 w-full min-w-0">
           {columns.map(column => renderColumn(column))}
         </div>
       ) : (
-        <GlassCard className="overflow-hidden p-0">
-          <Table
-            headers={["Task Name", "Status", "Assignee", "Deadline", "Actions"]}
-            rows={filteredTasks.map(task => [
-              <span className="font-medium text-white">{task.title}</span>,
-              task.status === "approved" ? (
-                <Badge color="purple"><Award size={12} className="mr-1" /> Approved</Badge>
-              ) : (
-                <select
-                  value={task.status}
-                  onChange={(e) => { e.stopPropagation(); handleStatusChange(task.id, e.target.value); }}
-                  className="bg-[#1a1a1a] border border-[#262626] rounded px-2 py-1 text-xs text-white"
-                >
-                  <option value="todo">To Do</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="done">Done</option>
-                </select>
-              ),
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white">
-                  {task.assignee.avatar}
-                </div>
-                <span className="text-gray-300">{task.assignee.name}</span>
-              </div>,
-              <span className="text-gray-400">{task.deadline}</span>,
-              canDelete(task) && (
-                <button onClick={() => handleDeleteTask(task.id)} className="text-gray-400 hover:text-red-400">
-                  <Trash2 size={16} />
-                </button>
-              )
-            ])}
-          />
+        <GlassCard className="overflow-hidden p-0 w-full min-w-0">
+          <div className="overflow-x-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <Table
+              headers={["Task Name", "Status", "Assignee", "Deadline", "Actions"]}
+              rows={filteredTasks.map(task => [
+                <span className="font-medium text-white break-words">{task.title}</span>,
+                task.status === "approved" ? (
+                  <Badge color="purple"><Award size={12} className="mr-1" /> Approved</Badge>
+                ) : (
+                  <select
+                    value={task.status}
+                    onChange={(e) => { e.stopPropagation(); handleStatusChange(task.id, e.target.value); }}
+                    className="bg-[#1a1a1a] border border-[#262626] rounded px-2 py-1 text-xs text-white"
+                  >
+                    <option value="todo">To Do</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="done">Done</option>
+                  </select>
+                ),
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                    {task.assignee.avatar}
+                  </div>
+                  <span className="text-gray-300 truncate">{task.assignee.name}</span>
+                </div>,
+                <span className="text-gray-400 whitespace-nowrap">{task.deadline}</span>,
+                canDelete(task) && (
+                  <button onClick={() => handleDeleteTask(task.id)} className="text-gray-400 hover:text-red-400 p-1">
+                    <Trash2 size={16} />
+                  </button>
+                )
+              ])}
+            />
+          </div>
         </GlassCard>
       )}
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-          {/* modal content unchanged */}
-          <div className="bg-[#1a1a1a] border border-[#262626] rounded-2xl p-8 w-full max-w-md">
-            <h2 className="text-lg font-semibold text-white mb-6">New Task</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-[#1a1a1a] border border-[#262626] rounded-2xl p-5 sm:p-8 w-full max-w-md my-auto shadow-2xl">
+            <h2 className="text-lg font-semibold text-white mb-5">New Task</h2>
             <div className="space-y-4">
               <input type="text" placeholder="Task title *" value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
                 className="w-full bg-[#0a0a0a] border border-[#262626] rounded-lg py-2.5 px-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50" />
@@ -308,12 +311,12 @@ return (
                   className="w-full bg-[#0a0a0a] border border-[#262626] rounded-lg py-2.5 px-4 text-sm text-white focus:outline-none focus:border-blue-500/50" />
               </div>
             </div>
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 bg-[#262626] text-white rounded-lg text-sm font-medium hover:bg-[#333] transition-colors">
+            <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 mt-6">
+              <button onClick={() => setIsModalOpen(false)} className="w-full sm:flex-1 py-2.5 bg-[#262626] text-white rounded-lg text-sm font-medium hover:bg-[#333] transition-colors min-h-[44px]">
                 Cancel
               </button>
               <button onClick={handleCreateTask} disabled={submitting || !newTask.title.trim()}
-                className="flex-1 py-2.5 bg-white text-black rounded-lg text-sm font-bold hover:bg-gray-200 disabled:opacity-50 transition-colors">
+                className="w-full sm:flex-1 py-2.5 bg-white text-black rounded-lg text-sm font-bold hover:bg-gray-200 disabled:opacity-50 transition-colors min-h-[44px]">
                 {submitting ? "Creating…" : "Create Task"}
               </button>
             </div>

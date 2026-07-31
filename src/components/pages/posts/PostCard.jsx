@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Eye, Trash2, Edit, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardHeader } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
@@ -20,6 +21,7 @@ const cardVariants = {
 };
 
 export default function PostCard({ post, onPostDeleted }) {
+  const navigate = useNavigate();
   const currentUser = useSelector((state) => state.auth.user);
 
   const [liked, setLiked] = useState(Boolean(post.isLiked || post.liked_by_current_user));
@@ -195,8 +197,14 @@ export default function PostCard({ post, onPostDeleted }) {
       <Card className="bg-zinc-900/50 backdrop-blur-xl border-zinc-800/50 hover:border-zinc-700/50 shadow-xl transition-all duration-300 overflow-hidden">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10 ring-2 ring-blue-400/50">
+            <div
+              className="flex items-center gap-3 cursor-pointer group/author"
+              onClick={() => {
+                const authorId = post.author?.id || post.author?._id || post.userId;
+                if (authorId) navigate(`/user-profile?userId=${authorId}`);
+              }}
+            >
+              <Avatar className="w-10 h-10 ring-2 ring-blue-400/50 group-hover/author:ring-blue-400">
                 <AvatarImage src={authorAvatarSrc} />
                 <AvatarFallback>
                   {(post.author?.firstName || post.author?.first_name || "U")[0]}
@@ -204,7 +212,7 @@ export default function PostCard({ post, onPostDeleted }) {
               </Avatar>
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="font-semibold text-sm text-white">
+                  <p className="font-semibold text-sm text-white group-hover/author:text-blue-300 transition-colors">
                     {post.author?.firstName || post.author?.first_name}{" "}
                     {post.author?.lastName || post.author?.last_name}
                   </p>

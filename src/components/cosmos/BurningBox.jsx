@@ -53,12 +53,16 @@ export function StreakBadge({ item, className = '' }) {
 
   return (
     <span
-      className={`cosmos-streak inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-mono text-[9px] tracking-[0.14em] uppercase whitespace-nowrap ${className}`}
-      style={{ '--heat': tier.accent, '--heat-2': '#ff3c2f' }}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur-md shadow-sm transition-all whitespace-nowrap ${className}`}
+      style={{
+        background: 'rgba(11, 15, 25, 0.75)',
+        border: `1px solid ${tier.accent}35`,
+        color: tier.accent,
+      }}
       title={momentumReason(item)}
     >
-      <Flame size={9} />
-      {tier.label}
+      <Flame size={12} className="shrink-0" style={{ color: tier.accent }} />
+      <span>{tier.label}</span>
     </span>
   );
 }

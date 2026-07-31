@@ -50,7 +50,7 @@ export const SAMPLE_VISIONS = [
     description: 'Connects non-technical founders with developers on actual skills and shared interests, not resume buzzwords.',
     stage: 'Prototype', category: 'AI / SaaS', privacy: 'public',
     author: author(1, 'Ada Okonkwo', 'Founder & CEO'), creatorId: 'sample-1',
-    likes: 184, comments: 37, collaborators: 6, views: 3100,
+    likes: 184, comments: 37, collaborators: 4, views: 3100,
     lastActivityAt: hoursAgo(2), timeAgo: '2 hours ago', createdAt: 'March 4, 2026',
     tags: ['Matchmaking', 'Startup Tool', 'Community'], readinessScore: 68, visionState: 'team_forming',
   },

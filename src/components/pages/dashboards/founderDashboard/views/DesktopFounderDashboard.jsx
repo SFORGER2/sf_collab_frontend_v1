@@ -143,7 +143,7 @@ export default function DesktopFounderDashboard({
       <DashboardMasthead
         role="founder"
         name={user?.firstName}
-        primaryAction={{ label: "Create a Vision", to: "/ideation" }}
+        primaryAction={{ label: "Create a Vision", to: "/vision/new" }}
       >
         Turn one idea into an operating startup.
       </DashboardMasthead>

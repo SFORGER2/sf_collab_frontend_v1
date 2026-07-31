@@ -406,7 +406,7 @@ const RequestMentorModal = ({ mentor, onClose, onSuccess }) => {
                     <p>You don't have any visions or startups yet — that's fine, this is optional. You can still send your request below.</p>
                     <button
                       type="button"
-                      onClick={() => { onClose(); navigate('/ideation'); }}
+                      onClick={() => { onClose(); navigate('/vision/new'); }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20
                                  text-blue-400 border border-blue-500/30 hover:bg-blue-600/30 transition-colors"
                     >
