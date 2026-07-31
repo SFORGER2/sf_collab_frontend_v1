@@ -13,7 +13,7 @@ import React, { useMemo, useState, useCallback, useRef, useEffect } from "react"
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { X, Download, FileText, ExternalLink, Check, CheckCheck, MoreVertical, Edit2, Trash2, Star, Pin, ListTodo, BookmarkCheck, Reply as ReplyIcon, Copy as CopyIcon, Link as LinkIcon, Forward as ForwardIcon, Flag, CheckSquare, Square } from "lucide-react";
+import { X, Download, FileText, ExternalLink, Check, CheckCheck, Clock, RotateCcw, AlertCircle, MoreVertical, Edit2, Trash2, Star, Pin, ListTodo, BookmarkCheck, Reply as ReplyIcon, Copy as CopyIcon, Link as LinkIcon, Forward as ForwardIcon, Flag, CheckSquare, Square } from "lucide-react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import { chatAPI } from "@/utils/APIs/chatApi";
@@ -108,7 +108,11 @@ function hideAutoFileText({ fileUrl, isImage, content, fileName }) {
 }
 
 function getMsgStatus(msg) {
+  // Optimistic messages have status 'sending' or an ID starting with 'optimistic-'.
+  // Check these first so the clock icon appears until the backend confirms.
   const s = String(msg?.status || msg?.delivery_status || "").toLowerCase();
+  if (s === "failed") return "failed";
+  if (s === "sending" || String(msg?.id || "").startsWith("optimistic-")) return "sending";
   if (s === "read" || s === "seen" || msg?.read_at || msg?.seen_at) return "read";
   if (s === "delivered" || msg?.delivered_at) return "delivered";
   return "sent";
@@ -116,6 +120,14 @@ function getMsgStatus(msg) {
 
 // Read receipt tick icon component
 function ReadReceipt({ status, size = 14 }) {
+  if (status === "sending") {
+    // Clock icon = message is being sent (optimistic, not yet confirmed)
+    return <Clock size={size} className="text-zinc-500 opacity-70" />;
+  }
+  if (status === "failed") {
+    // Red circle = message failed to send
+    return <AlertCircle size={size} className="text-red-400" />;
+  }
   if (status === "read") {
     // Double green tick = read
     return <CheckCheck size={size} className="text-emerald-400" />;
@@ -187,6 +199,8 @@ export default function MessageBubble({
   isSelected = false,
   onToggleSelect = null,
   onEnterSelectMode = null,
+  // Item 3: retry callback for failed messages
+  onRetry = null,
 }) {
   const navigate = useNavigate();
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -1175,6 +1189,22 @@ export default function MessageBubble({
           <span className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1">
             <span>{formatTime(ts)}</span>
             {isOwn && <ReadReceipt status={getMsgStatus(message)} size={12} />}
+            {/* ── Item 3: Failed send indicator + retry button ─────────── */}
+            {isOwn && getMsgStatus(message) === 'failed' && (
+              <>
+                <span className="text-red-400 font-medium">Failed</span>
+                {onRetry && (
+                  <button
+                    onClick={() => onRetry(message.id, message._retryContent || message.content)}
+                    className="flex items-center gap-0.5 text-red-400 hover:text-red-300 transition-colors ml-0.5"
+                    title="Retry sending"
+                  >
+                    <RotateCcw size={11} />
+                    <span className="text-[10px]">Retry</span>
+                  </button>
+                )}
+              </>
+            )}
             {copyFeedback && (
               <span className="text-indigo-400 font-medium">
                 {copyFeedback === "link" ? "Link copied!" : "Copied!"}

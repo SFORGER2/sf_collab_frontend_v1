@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Edit3, MessageCircle, HamburgerIcon, Menu, Archive, ChevronRight, ChevronDown } from 'lucide-react';
+import { Search, Edit3, MessageCircle, HamburgerIcon, Menu, Archive, ChevronRight, ChevronDown, RotateCcw, AlertTriangle } from 'lucide-react';
 
 // Import chat components
 import Avatar from '@/components/chat (previous)/Avatar';
@@ -202,6 +202,9 @@ const ChatPage = () => {
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  // ─── Item 4: per-conversation message fetch state ─────────────────────────
+  const [isMessagesLoading, setIsMessagesLoading] = useState(false);
+  const [messagesError, setMessagesError] = useState(false);
   const [typingUsers, setTypingUsers] = useState([]);
   const [lastActiveAt, setLastActiveAt] = useState(() => readPresenceMap(LS_LAST_ACTIVE_KEY));
   const [lastSeenAt, setLastSeenAt] = useState(() => readPresenceMap(LS_LAST_SEEN_KEY));
@@ -267,6 +270,9 @@ const ChatPage = () => {
   // ============================================
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  // ─── Stale-response guard: always reflects the ID of the currently active
+  // conversation, readable synchronously inside async callbacks. ────────────
+  const activeConversationIdRef = useRef(null);
 
   // ─── Feature 2: Per-tab unread badge counts ──────────────────────────────
   const tabUnreadCounts = useTabUnreadCounts(conversations);
@@ -329,9 +335,13 @@ const ChatPage = () => {
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (conversationId) => {
     if (!token) return;
-    
+    // ─── Item 4: show per-conversation spinner, clear any previous error ──────
+    setIsMessagesLoading(true);
+    setMessagesError(false);
     try {
       const data = await chatAPI.getMessages(conversationId, 100, 0);
+      // ─── Stale-response guard: discard if the user has already switched ────
+      if (String(activeConversationIdRef.current) !== String(conversationId)) return;
       const messagesPayload = Array.isArray(data?.messages)
         ? data.messages
         : Array.isArray(data?.data?.messages)
@@ -341,6 +351,15 @@ const ChatPage = () => {
       socket?.emit('mark_read', { conversation_id: conversationId });
     } catch (error) {
       console.error('Failed to fetch messages:', error);
+      // Discard error state if the user has already moved to another conversation
+      if (String(activeConversationIdRef.current) !== String(conversationId)) return;
+      // ─── Item 4: surface error so the UI can show Retry ───────────────────
+      setMessagesError(true);
+    } finally {
+      // Only clear the loading spinner if this response is still relevant
+      if (String(activeConversationIdRef.current) === String(conversationId)) {
+        setIsMessagesLoading(false);
+      }
     }
   }, [token, socket]);
 
@@ -792,8 +811,11 @@ useEffect(() => {
       }
       
       setActiveConversation(conversation);
+      activeConversationIdRef.current = conversation.id; // keep ref in sync
       setMessages([]);
       setTypingUsers([]);
+      // ─── Item 4: clear error state when switching conversations ──────────
+      setMessagesError(false);
       fetchMessages(conversation.id);
 
       // ─── Feature 3: restore draft for the conversation we're entering ────
@@ -921,6 +943,41 @@ useEffect(() => {
     }
   };
 
+  // ─── Item 3: Core send logic, shared by initial send and retry ──────────────
+  // Returns true on success, false on failure.
+  const _persistAndFanout = async ({ optimisticId, content, conversationId }) => {
+    const response = await chatAPI.sendMessage(conversationId, content);
+    const serverMessage = response?.data?.message || response?.message || null;
+
+    if (serverMessage) {
+      const normalizedServerMessage = normalizeMessage(serverMessage);
+      setMessages((prev) => {
+        let replaced = false;
+        const next = prev.map((m) => {
+          if (!replaced && String(m.id) === String(optimisticId)) {
+            replaced = true;
+            return normalizedServerMessage;
+          }
+          return m;
+        });
+        return replaced ? next : [...next, normalizedServerMessage];
+      });
+
+      // Trigger server-side real-time fanout without re-persisting.
+      if (socket && serverMessage?.id) {
+        socket.emit('send_message', {
+          conversation_id: conversationId,
+          skip_persist: true,
+          persisted_message_id: serverMessage.id,
+        });
+      }
+    }
+
+    if (socket) {
+      socket.emit('typing_stop', { conversation_id: conversationId });
+    }
+  };
+
   // Send a message - FIX #1: Optimistic update so message appears instantly
   const handleSendMessage = async (content) => {
     if (!content || !activeConversation) return;
@@ -946,46 +1003,65 @@ useEffect(() => {
     setMessages((prev) => [...prev, optimisticMsg]);
 
     try {
-      // Persist first through REST so the message survives refresh.
-      const response = await chatAPI.sendMessage(activeConversation.id, content);
-      const serverMessage = response?.data?.message || response?.message || null;
-
-      if (serverMessage) {
-        const normalizedServerMessage = normalizeMessage(serverMessage);
-        setMessages((prev) => {
-          let replaced = false;
-          const next = prev.map((m) => {
-            if (!replaced && String(m.id) === String(optimisticId)) {
-              replaced = true;
-              return normalizedServerMessage;
-            }
-            return m;
-          });
-          return replaced ? next : [...next, normalizedServerMessage];
-        });
-
-        // Trigger server-side real-time fanout to user rooms without re-persisting.
-        if (socket && serverMessage?.id) {
-          socket.emit('send_message', {
-            conversation_id: activeConversation.id,
-            skip_persist: true,
-            persisted_message_id: serverMessage.id,
-          });
+      await _persistAndFanout({
+        optimisticId,
+        content,
+        conversationId: activeConversation.id,
+      });
+      // ─── Clear input and draft only if the user hasn't already started typing
+      // a new message while the request was in flight (race condition guard).
+      setMessageInput((prev) => (prev === content ? '' : prev));
+      try {
+        const saved = localStorage.getItem('chatPage:draft:' + String(activeConversation.id));
+        if (!saved || saved === content) {
+          localStorage.removeItem('chatPage:draft:' + String(activeConversation.id));
         }
-      }
-
-      if (socket) {
-        socket.emit('typing_stop', { conversation_id: activeConversation.id });
-      }
+      } catch {}
     } catch (error) {
-      // Roll back optimistic message when persistence fails.
-      setMessages((prev) => prev.filter((m) => String(m.id) !== String(optimisticId)));
+      // ─── Item 3: Keep the message visible as 'failed' ─────────────────────
+      // The input is NOT cleared — the user's text remains available.
+      // They can also click Retry on the failed bubble without retyping.
+      setMessages((prev) =>
+        prev.map((m) =>
+          String(m.id) === String(optimisticId)
+            ? { ...m, status: 'failed', _retryContent: content }
+            : m
+        )
+      );
       console.error('Failed to persist message:', error);
     }
-    
-    setMessageInput('');
-    // ─── Feature 3: clear draft on send ──────────────────────────────────
-    try { localStorage.removeItem('chatPage:draft:' + String(activeConversation.id)); } catch {}
+  };
+
+  // ─── Item 3: Retry handler — called from the failed message bubble ────────
+  const handleRetryMessage = async (failedMsgId, content) => {
+    if (!activeConversation) return;
+
+    // Flip status back to 'sending' so the clock icon returns while we retry
+    setMessages((prev) =>
+      prev.map((m) =>
+        String(m.id) === String(failedMsgId)
+          ? { ...m, status: 'sending', _retryContent: undefined }
+          : m
+      )
+    );
+
+    try {
+      await _persistAndFanout({
+        optimisticId: failedMsgId,
+        content,
+        conversationId: activeConversation.id,
+      });
+    } catch (error) {
+      // Retry also failed — put it back to 'failed' state
+      setMessages((prev) =>
+        prev.map((m) =>
+          String(m.id) === String(failedMsgId)
+            ? { ...m, status: 'failed', _retryContent: content }
+            : m
+        )
+      );
+      console.error('Retry failed:', error);
+    }
   };
 
   const shouldShowAvatar = (message, index) => {
@@ -1020,10 +1096,27 @@ useEffect(() => {
     // ─── Feature 5: use archived list when on archived tab ───────────────
     const source = activeTab === 'archived' ? archivedConversations : conversations;
     return source.filter(c => {
-      // Filter by search
+      // Filter by search — matches conversation name, description (startup/vision context),
+      // and every participant's full name (covers username, startup name, vision name).
       if (searchTerm) {
-        const name = c.name || c.participants?.find((p) => String(resolveUserId(p) ?? "") !== currentUserId)?.firstName || '';
-        if (!name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+        const q = searchTerm.toLowerCase();
+
+        // 1. Conversation-level name (group name, startup team name, etc.)
+        const convName = (c.name || '').toLowerCase();
+
+        // 2. Description (set for startup/team chats, may contain startup or vision name)
+        const convDesc = (c.description || '').toLowerCase();
+
+        // 3. All participants' full names and individual first/last names
+        const participantMatch = (c.participants || []).some((p) => {
+          if (String(resolveUserId(p) ?? '') === currentUserId) return false;
+          const first = (p.firstName || '').toLowerCase();
+          const last  = (p.lastName  || '').toLowerCase();
+          const full  = `${first} ${last}`.trim();
+          return first.includes(q) || last.includes(q) || full.includes(q);
+        });
+
+        if (!convName.includes(q) && !convDesc.includes(q) && !participantMatch) return false;
       }
       
       // Filter by tab
@@ -1343,7 +1436,26 @@ useEffect(() => {
 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto max-h-[calc(100vh-200px)] py-2 md:py-4 px-2 md:px-4">
-              {messages.length === 0 ? (
+              {/* ── Item 4: per-conversation loading spinner ──────────────── */}
+              {isMessagesLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : messagesError ? (
+                /* ── Item 4: error state with Retry ────────────────────────── */
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-zinc-500">
+                  <AlertTriangle size={36} className="text-red-400 opacity-80" />
+                  <p className="text-sm font-medium text-zinc-300">Couldn't load messages</p>
+                  <p className="text-xs text-zinc-500">Check your connection and try again.</p>
+                  <button
+                    onClick={() => fetchMessages(activeConversation.id)}
+                    className="mt-1 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-sm transition-colors border border-zinc-700"
+                  >
+                    <RotateCcw size={14} />
+                    Retry
+                  </button>
+                </div>
+              ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-zinc-500">
                   <Avatar
                     src={
@@ -1385,6 +1497,7 @@ useEffect(() => {
                           activeConversation?.conversation_type !== "direct" &&
                           shouldShowSenderName(messages, index)
                         }
+                        onRetry={handleRetryMessage}
                       />
 
                     </React.Fragment>

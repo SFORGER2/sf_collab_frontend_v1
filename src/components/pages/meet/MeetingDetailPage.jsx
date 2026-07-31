@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Video, Calendar, Clock, FileText, ArrowLeft, Link2 } from "lucide-react";
+import { toast } from "react-toastify";
 import { meetAPI } from "@/utils/APIs/meetAPI";
 
 const STATUS_COLORS = {
@@ -64,6 +65,16 @@ export default function MeetingDetailPage() {
   async function handleJoin() {
     try { await meetAPI.startMeeting(id); } catch { /* silent — meeting may already be live */ }
     navigate(`/meet/room/${id}`);
+  }
+
+  async function handleCopyLink() {
+    const url = `${window.location.origin}/meet/room/${id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Meeting link copied!");
+    } catch {
+      toast.error("Could not copy link — please copy it manually: " + url);
+    }
   }
 
   if (loading) return (
@@ -132,6 +143,11 @@ export default function MeetingDetailPage() {
                 <FileText size={14} /> View Summary
               </button>
             )}
+            {/* ── Phase 3: Copy Meeting Link ────────────────────────────── */}
+            <button onClick={handleCopyLink}
+              className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-sm text-zinc-300 hover:text-white transition-colors">
+              <Link2 size={14} /> Copy Link
+            </button>
           </div>
         </div>
       </motion.div>

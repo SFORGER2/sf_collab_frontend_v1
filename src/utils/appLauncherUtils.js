@@ -68,13 +68,13 @@ const DRIVE_FALLBACK = {
 
 const MEET_FALLBACK = {
   id: 'app-meet',
-  href: '/sfmeet',
+  href: '/meet?create=true',
   label: 'SF Meet',
   subItems: [
-    { id: 'meet-home', href: '/sfmeet', label: 'Home' },
-    { id: 'meet-new', href: '/sfmeet/new', label: 'New Meeting' },
-    { id: 'meet-history', href: '/sfmeet/history', label: 'Meeting History' },
-    { id: 'meet-recordings', href: '/sfmeet/recordings', label: 'Recordings' },
+    { id: 'meet-home',       href: '/meet',                    label: 'Home' },
+    { id: 'meet-new',        href: '/meet?create=true',        label: 'New Meeting' },
+    { id: 'meet-history',    href: '/meet/past',               label: 'Meeting History' },
+    { id: 'meet-recordings', href: '/meet/recordings',         label: 'Recordings' },
   ],
 };
 
