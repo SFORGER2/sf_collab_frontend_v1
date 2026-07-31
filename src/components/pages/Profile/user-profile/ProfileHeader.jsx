@@ -145,7 +145,6 @@ const ProfileHeader = ({
         {/* Profile Picture */}
         <div className="relative -top-10 sm:-top-12 md:-top-14">
           <motion.div
-          <motion.div
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
             className="relative w-24 h-24 sm:w-28 md:w-32 sm:h-28 md:h-32 rounded-full border-[3.5px] border-slate-950 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-indigo-500/20 shadow-[0_8px_30px_rgba(0,0,0,0.7)] group/picture overflow-visible"
