@@ -10,7 +10,7 @@ import AppearanceSection from './AppearanceSection';
 import PreferencesSection from './PreferencesSection';
 import SavedSection from './SavedSection';
 import AccountSecurity from './AccountSecurity';
-import ProfileSection from './profileSection';
+import ProfileSection from './ProfileSection';
 import { updateUser as updateUserSlice } from '@/services/auth/authSlice';
 import { usersAPI } from '@/utils/APIs/userAPI';
 import { authAPI } from '@/utils/APIs/authAPI';
