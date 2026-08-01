@@ -1,4 +1,4 @@
-export const API_URL = (import.meta.env.VITE_API_URL || "/api").trim();
+export const API_URL = (import.meta.env.VITE_API_URL || "https://backend-sigma-pied-40.vercel.app/api").trim();
 export const API_URL_AUTH = (import.meta.env.VITE_API_URL_AUTH || "/api/auth").trim();
 export const API_BASE_URL_NO_API = API_URL.replace("/api", "");
 export const SOCKET_API_URL = (import.meta.env.VITE_SOCKET_API_URL || API_BASE_URL_NO_API).trim();
