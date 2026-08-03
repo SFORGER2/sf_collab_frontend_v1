@@ -1,6 +1,4 @@
 import api from './interceptors';
-import axios from 'axios';
-import { API_CONFIG, requestInterceptor, requestErrorInterceptor, responseInterceptor, responseErrorInterceptor } from './interceptors';
 
 export const aiNewsAPI = {
   /**
@@ -8,7 +6,7 @@ export const aiNewsAPI = {
    * GET /api/ai-news/ainews
    */
   getArticles: async () => {
-    const response = await api.get('/ai-news/ainews');
+    const response = await api.get('/ainews');
     return response.data;
   },
 
@@ -17,7 +15,7 @@ export const aiNewsAPI = {
    * POST /api/ai-news/ainews/scrape
    */
   scrapeNews: async () => {
-    const response = await api.post("/ai-news/ainews/scrape");
+    const response = await api.post("/ainews/scrape");
     return response.data;
   },
 
@@ -26,7 +24,7 @@ export const aiNewsAPI = {
    * POST /api/ai-news/ainews/enrich
    */
   enrichNews: async () => {
-    const response = await api.post("/ai-news/ainews/enrich");
+    const response = await api.post("/ainews/enrich");
     return response.data;
   },
 
@@ -35,7 +33,7 @@ export const aiNewsAPI = {
    * GET /api/ai-news/ainews/digest
    */
   getDigest: async (params = {}) => {
-    const response = await api.get('/ai-news/ainews/digest', { params });
+    const response = await api.get('/ainews/digest', { params });
     return response.data;
   },
 
@@ -44,7 +42,7 @@ export const aiNewsAPI = {
    * GET /api/ai-news/ainews
    */
   getAINews: async (params = {}) => {
-    const response = await api.get('/ai-news/ainews', { params });
+    const response = await api.get('/ainews', { params });
     return response.data;
   },
 
@@ -53,7 +51,7 @@ export const aiNewsAPI = {
    * GET /api/ai-news/ainews
    */
   getNews: async (params = {}) => {
-    const response = await api.get('/ai-news/ainews', { params });
+    const response = await api.get('/ainews', { params });
     return response.data;
   },
 
@@ -62,7 +60,7 @@ export const aiNewsAPI = {
    * GET /api/ai-news/ainews/categories
    */
   getCategories: async () => {
-    const response = await api.get('/ai-news/ainews/categories');
+    const response = await api.get('/ainews/categories');
     return response.data;
   },
 
@@ -71,7 +69,7 @@ export const aiNewsAPI = {
    * GET /api/ai-news/ainews/sources
    */
   getSources: async () => {
-    const response = await api.get('/ai-news/ainews/sources');
+    const response = await api.get('/ainews/sources');
     return response.data;
   },
 };

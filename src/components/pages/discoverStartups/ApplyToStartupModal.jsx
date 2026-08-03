@@ -3,8 +3,9 @@ import { useDraft } from "@/utils/hooks/useDraft";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "react-toastify";
 import { startupsAPI } from "@/utils/APIs/startupsAPI";
-import { Sparkles, X, Globe, Github, Linkedin, CheckCircle2, Building2, AlertCircle, Loader2 } from "lucide-react";
+import { Sparkles, X, Globe, CheckCircle2, Building2, AlertCircle, Loader2 } from "lucide-react";
 import { CosmosButton, Eyebrow, Tag } from "@/components/cosmos";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
 
 const DEFAULT_ROLES = [
   "Fullstack Engineer",
@@ -312,7 +313,7 @@ const ApplyToStartupModal = ({ isOpen, onClose, startup, roleSelected, roles: ro
 
                 <div>
                   <div className="relative">
-                    <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <FaGithub className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                     <input
                       type="text"
                       inputMode="url"
@@ -327,7 +328,7 @@ const ApplyToStartupModal = ({ isOpen, onClose, startup, roleSelected, roles: ro
 
                 <div>
                   <div className="relative">
-                    <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <FaLinkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                     <input
                       type="text"
                       inputMode="url"

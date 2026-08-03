@@ -137,7 +137,7 @@ export default function ProfileSetup() {
         const updatedUser = response.user || response.data;
         dispatch(setUser(updatedUser));
         toast.success("Profile setup completed successfully!");
-        setTimeout(() => navigate("/complete-profile"), 1000);
+        setTimeout(() => navigate("/ai-matchmaking"), 1000);
       } else {
         toast.error(response.message || "Failed to setup profile");
       }

@@ -1,7 +1,6 @@
 import axios from 'axios'
 import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
 
-
 const api = axios.create(API_CONFIG)
 
 api.interceptors.request.use(
@@ -16,8 +15,15 @@ api.interceptors.response.use(
 
 // Waitlist API
 export const waitlistAPI = {
-  register: async (email, name, id, accessToken) => {
-    const response = await api.post("/waitlist/register", { email, name, id }, {
+  // ***** FIX: Added phone, extension parameters and included them in payload *****
+  register: async (email, name, id, phone, extension, accessToken) => {
+    const response = await api.post("/waitlist/register", { 
+      email, 
+      name, 
+      id,
+      phone,
+      extension
+    }, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -118,7 +124,4 @@ export const waitlistAPI = {
   }
 };
 
-
-
 export default api
-

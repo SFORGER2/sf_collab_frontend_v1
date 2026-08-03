@@ -2,10 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
-  AlertCircle, ArrowLeft, Bookmark, Check, CheckCircle2, Clock, Github, Globe, Heart, Layers,
-  Linkedin, Lightbulb, Loader2, MessageCircle, Rocket, Share2, Sparkles, Target, Users,
+  AlertCircle, ArrowLeft, Bookmark, Check, CheckCircle2, Clock,
+  Globe, Heart, Layers, Lightbulb, Loader2, MessageCircle, Rocket, Share2, Sparkles, Target, Users,
   Wrench, X, Zap,
 } from 'lucide-react';
+
+import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { toast } from 'react-toastify';
 import { ideaAPI } from '@/utils/APIs/ideaAPI';
 import { momentumOf, momentumReason } from '@/services/vision/momentum';
@@ -13,36 +15,14 @@ import {
   AdSlot, BurningBox, CosmosButton, Display, Eyebrow, Lede, Panel,
   ProgressRail, Reveal, StreakBadge, Tag,
 } from '@/components/cosmos';
-import { SAMPLE_PEOPLE } from '@/services/mock/people';
 import ApplicationModal from '../discoverStartups/ApplicationModal';
-import { SAMPLE_VISIONS } from '@/services/mock/boards';
 import VisionNotFound from './VisionNotFound';
 import { VisionDetailSkeleton } from './VisionSkeletons';
 
 /**
- * The Vision page.
- *
- * A Vision is one star that might accrete into a company, and this page is
- * where someone decides whether to put their evenings into it. So it is built
- * around that decision rather than as a record: what the problem is, what
- * exists today, who is already in, what is still missing, and how to join.
- *
- * The old page was a stock card stack that answered none of those in order —
- * you had to read the whole thing to work out whether the Vision needed you.
- *
- * Structure, top to bottom:
- *   Hero        — the claim, its momentum, and the one action for your role
- *   Readiness   — how close to becoming a startup, and what is blocking it
- *   The case    — problem, solution, what exists
- *   The team    — who is in, what roles are open, apply
- *   Stack/tags  — what it's built with
- *
- * NOTE FOR BACKEND: reads GET /api/ideas/:id. `requiredRoles`, `techStack`,
- * `readinessScore` and `collaborators` all need to be on that payload; the
- * page degrades gracefully where they are missing rather than rendering empty
- * shells.
+ * The Vision page – fully backend-connected.
+ * No mock data fallbacks; shows empty states or errors when API fails.
  */
-
 const STATE_LABEL = {
   draft: 'Draft',
   public: 'Open',
@@ -71,7 +51,6 @@ export default function VisionDetailPage() {
   const [likeCount, setLikeCount] = useState(0);
   const [likeLoading, setLikeLoading] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
 
   // Application Modal state
@@ -89,82 +68,54 @@ export default function VisionDetailPage() {
   const [postingComment, setPostingComment] = useState(false);
   const [commentTab, setCommentTab] = useState('all'); // 'all' | 'suggestions'
 
+  // Fetch vision and comments from backend
   useEffect(() => {
     let cancelled = false;
 
-    const findSample = (targetId) => {
-      if (!targetId) return SAMPLE_VISIONS[0];
-      const match = SAMPLE_VISIONS.find(
-        (v) =>
-          String(v.id) === String(targetId) ||
-          String(v.id) === `sv-${targetId}` ||
-          String(v.creatorId) === String(targetId) ||
-          targetId === 'sample-1' ||
-          targetId === '1'
-      );
-      return match || SAMPLE_VISIONS[0];
-    };
-
     (async () => {
       try {
-        if (id) {
-          const res = await ideaAPI.getIdeaById?.(id).catch(() => null);
-          const data = res?.data?.idea || res?.data?.data?.idea || res?.data || res;
-          if (!cancelled && data && data.title) {
-            setVision(data);
-            setLiked(data.hasLiked || false);
-            setLikeCount(data.likes || 0);
-            setSaved(data.hasBookmarked || false);
-
-            // Fetch comments
-            const commentsRes = await ideaAPI.getIdeaComments?.({ idea_id: id }).catch(() => null);
-            const fetchedComments = commentsRes?.data?.comments || commentsRes?.data || [];
-            setComments(fetchedComments);
-            return;
-          }
+        setLoading(true);
+        if (!id) {
+          setVision(null);
+          setLoading(false);
+          return;
         }
-        // Fallback to SAMPLE_VISIONS when backend API returns no matching record or fails
-        if (!cancelled) {
-          const fallback = findSample(id);
-          setVision(fallback);
-          setLiked(fallback.hasLiked || false);
-          setLikeCount(fallback.likes || 0);
-          setSaved(fallback.hasBookmarked || false);
 
-          // Populate mock high-fidelity comments for sample vision
-          setComments([
-            {
-              id: 'mc-1',
-              content: "This looks like a really promising project! I've ran into this exact problem three times before. Definitely needed.",
-              createdAt: '2 hours ago',
-              author: { name: 'Sarah Chen', role: 'Fullstack Dev' },
-              likes: 4,
-              isSuggestion: false,
-            },
-            {
-              id: 'mc-2',
-              content: 'Suggest using GitHub OAuth to automatically analyze repositories and generate verified developer tags instead of manual input.',
-              createdAt: '4 hours ago',
-              author: { name: 'Elena Rostova', role: 'AI Researcher' },
-              likes: 6,
-              isSuggestion: true,
-            },
-          ]);
+        // Fetch vision data
+        const res = await ideaAPI.getIdeaById(id);
+        const data = res?.data?.idea || res?.data?.data?.idea || res?.data || res;
+
+        if (!cancelled && data && data.title) {
+          setVision(data);
+          setLiked(data.hasLiked || false);
+          setLikeCount(data.likes || 0);
+          setSaved(data.hasBookmarked || false);
+
+          // Fetch comments
+          const commentsRes = await ideaAPI.getIdeaComments({ idea_id: id }).catch(() => null);
+          const fetchedComments = commentsRes?.data?.comments || commentsRes?.data || [];
+          setComments(fetchedComments);
+        } else {
+          setVision(null);
         }
       } catch (err) {
+        console.error('Error fetching vision:', err);
         if (!cancelled) {
-          const fallback = findSample(id);
-          setVision(fallback);
-          setLiked(fallback.hasLiked || false);
-          setLikeCount(fallback.likes || 0);
-          setSaved(fallback.hasBookmarked || false);
+          setVision(null);
+          toast.error('Failed to load vision. Please try again.');
         }
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
+
     return () => { cancelled = true; };
   }, [id]);
+
+  // Reset applied state when vision changes
+  useEffect(() => {
+    setHasApplied(false);
+  }, [vision?.id]);
 
   const handleLikeToggle = async () => {
     if (likeLoading || !vision?.id) return;
@@ -174,25 +125,24 @@ export default function VisionDetailPage() {
       setLiked((prev) => !prev);
       setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
       toast.success(liked ? 'Unliked Vision' : 'Liked Vision!');
-    } catch {
-      setLiked((prev) => !prev);
-      setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
-      toast.info('Updated like locally');
+    } catch (err) {
+      console.error('Like toggle error:', err);
+      toast.error('Failed to update like. Please try again.');
     } finally {
       setLikeLoading(false);
     }
   };
 
   const handleSaveToggle = async () => {
-    if (saveLoading) return;
+    if (saveLoading || !vision?.id) return;
     setSaveLoading(true);
     try {
-      await ideaAPI.toggleIdeaBookmark({ idea_id: vision?.id, user_id: user?.id });
+      await ideaAPI.toggleIdeaBookmark({ idea_id: vision.id, user_id: user?.id });
       setSaved((prev) => !prev);
       toast.success(saved ? 'Removed from bookmarks' : 'Saved to bookmarks');
-    } catch {
-      setSaved((prev) => !prev);
-      toast.info('Saved state updated');
+    } catch (err) {
+      console.error('Save toggle error:', err);
+      toast.error('Failed to update bookmark. Please try again.');
     } finally {
       setSaveLoading(false);
     }
@@ -223,11 +173,6 @@ export default function VisionDetailPage() {
       setVisionSubmitError(null);
     }
   }, [showJoinModal]);
-
-  // Reset hasApplied when vision changes
-  useEffect(() => {
-    setHasApplied(false);
-  }, [vision?.id]);
 
   const isValidUrl = (str) => {
     if (!str || !str.trim()) return true;
@@ -275,8 +220,6 @@ export default function VisionDetailPage() {
 
     setSubmittingJoin(true);
     try {
-      // NOTE: Do NOT use .catch(() => null) here — it swallows errors and always
-      // shows a success toast even when the API fails. Let the outer try/catch handle it.
       await ideaAPI.createCollabRequest?.({
         idea_id: vision?.id,
         role: selectedRole,
@@ -288,9 +231,7 @@ export default function VisionDetailPage() {
       });
 
       toast.success(`🚀 Application submitted for ${selectedRole || 'Contributor'}! The creator will be notified.`);
-      // Mark as applied so the Apply button is disabled
       setHasApplied(true);
-      // Reset form data on success
       setShowJoinModal(false);
       setJoinMessage('');
       setJoinLinks({ portfolio: '', github: '', linkedin: '' });
@@ -301,7 +242,6 @@ export default function VisionDetailPage() {
         || (err?.response?.status === 409 ? "You have already applied for this vision" : err?.message || "Failed to submit application. Please try again.");
       setVisionSubmitError(errorMsg);
       toast.error(errorMsg);
-      // Form data is preserved — modal stays open so user can fix and retry
     } finally {
       setSubmittingJoin(false);
     }
@@ -309,32 +249,32 @@ export default function VisionDetailPage() {
 
   const handlePostComment = async (e) => {
     e.preventDefault();
-    if (!commentInput.trim()) return;
+    if (!commentInput.trim() || !vision?.id) return;
     setPostingComment(true);
-    const newCommentObj = {
-      id: `comment-${Date.now()}`,
-      content: commentInput.trim(),
-      createdAt: 'Just now',
-      author: {
-        name: user ? `${user.firstName || user.name || 'You'}` : 'Guest Builder',
-        role: 'Contributor',
-      },
-      likes: 0,
-      isSuggestion: commentTab === 'suggestions',
-    };
     try {
-      await ideaAPI.addComment?.({
-        idea_id: vision?.id,
+      const res = await ideaAPI.createIdeaComment({
+        idea_id: vision.id,
         content: commentInput.trim(),
-        is_suggestion: commentTab === 'suggestions',
-      }).catch(() => null);
-      setComments((prev) => [newCommentObj, ...prev]);
+        suggestion: commentTab === 'suggestions',
+        author_id: user?.id,
+        author_first_name: user?.firstName || '',
+        author_last_name: user?.lastName || '',
+      }, access_token);
+
+      const newComment = res?.data?.comment || {
+        id: `comment-${Date.now()}`,
+        content: commentInput.trim(),
+        createdAt: new Date().toISOString(),
+        author: { name: user ? `${user.firstName || user.name || 'You'}` : 'Guest Builder' },
+        likes: 0,
+        isSuggestion: commentTab === 'suggestions',
+      };
+      setComments((prev) => [newComment, ...prev]);
       setCommentInput('');
       toast.success('Comment posted!');
-    } catch {
-      setComments((prev) => [newCommentObj, ...prev]);
-      setCommentInput('');
-      toast.success('Comment posted!');
+    } catch (err) {
+      console.error('Comment error:', err);
+      toast.error('Failed to post comment. Please try again.');
     } finally {
       setPostingComment(false);
     }
@@ -360,7 +300,6 @@ export default function VisionDetailPage() {
   ];
   const isOwner = user?.id && String(user.id) === String(vision.author?.id || vision.creatorId);
 
-  const suggestions = SAMPLE_PEOPLE.slice(0, 4);
   const filteredComments = commentTab === 'suggestions' ? comments.filter((c) => c.isSuggestion) : comments;
 
   return (
@@ -372,23 +311,9 @@ export default function VisionDetailPage() {
         <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" /> Back
       </button>
 
-      {vision.isSample && (
-        <div
-          className="rounded-xl px-4 py-3 text-xs sm:text-sm flex items-center justify-between"
-          style={{
-            background: 'rgba(255,191,94,0.06)',
-            border: '1px solid rgba(255,191,94,0.22)',
-            color: '#ffbf5e',
-          }}
-        >
-          <span>Sample Vision — displaying preview data as the backend returned no record for this ID.</span>
-        </div>
-      )}
-
-      {/* ── Hero. The claim, the heat, the action. ─────────────────────── */}
+      {/* ── Hero ──────────────────────────────────────────────────────── */}
       <Reveal>
         <BurningBox item={vision} className="cosmos-panel relative overflow-hidden p-3.5 sm:p-6 lg:p-7 rounded-2xl border border-white/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-          {/* Subtle background glow keyed to readiness */}
           <span
             aria-hidden="true"
             className="pointer-events-none absolute transition-opacity duration-700"
@@ -409,7 +334,6 @@ export default function VisionDetailPage() {
                   {vision.stage && <Tag tone="neutral">{vision.stage}</Tag>}
                   <StreakBadge item={vision} />
                 </div>
-                {/* Readiness Ring inside top row on mobile */}
                 <div className="sm:hidden shrink-0">
                   <ReadinessRing value={readiness} size="sm" />
                 </div>
@@ -501,7 +425,6 @@ export default function VisionDetailPage() {
               </div>
             </div>
 
-            {/* Readiness ring on desktop */}
             <div className="hidden sm:block relative shrink-0">
               <ReadinessRing value={readiness} />
             </div>
@@ -664,7 +587,7 @@ export default function VisionDetailPage() {
                   <span className="text-xs font-semibold text-star">{c.author?.name || 'Builder'}</span>
                   {c.isSuggestion && <Tag tone="gold">Suggestion</Tag>}
                 </div>
-                <span className="text-[10px] text-dim">{c.createdAt || 'Recent'}</span>
+                <span className="text-[10px] text-dim">{c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'Recent'}</span>
               </div>
               <p className="text-xs sm:text-sm text-star/85 leading-relaxed pl-8">{c.content}</p>
             </div>
@@ -675,32 +598,13 @@ export default function VisionDetailPage() {
         </div>
       </Panel>
 
-      {/* Matchmaking — owner only, and metered elsewhere */}
+      {/* Matchmaking — owner only; uses real API via the "Find builders" link */}
       {isOwner && (
         <Panel className="p-6 rounded-2xl border border-white/[0.08]" accent="#8b6cff">
-          <Eyebrow className="mb-1">People who fit these roles</Eyebrow>
+          <Eyebrow className="mb-1">Find builders for this Vision</Eyebrow>
           <p className="text-xs sm:text-sm text-dim mb-4">
-            Matched on skills, availability and what they have actually shipped.
+            Use the matchmaking tool to find people who fit these roles.
           </p>
-          <div className="flex flex-col divide-y divide-white/[0.06]">
-            {suggestions.map((p) => (
-              <div key={p.id} className="flex flex-wrap items-center gap-3.5 py-3">
-                <span
-                  className="grid place-items-center w-9 h-9 rounded-full font-mono text-[11px] font-semibold shrink-0 border border-purple-500/30"
-                  style={{ background: 'rgba(139,108,255,0.15)', color: '#8b6cff' }}
-                >
-                  {p.firstName[0]}{p.lastName[0]}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <Link to={`/user-profile?userId=${p.id}`} className="block text-sm font-medium text-star hover:text-gold transition-colors">
-                    {p.name}
-                  </Link>
-                  <span className="block text-xs text-dim truncate">{p.headline}</span>
-                </span>
-                <Tag tone="dev">{p.match}% match</Tag>
-              </div>
-            ))}
-          </div>
           <div className="mt-4 pt-2">
             <CosmosButton variant="ai" size="sm" asChild>
               <Link to="/discover-users?matchFor=vision"><Sparkles size={14} /> See all matches</Link>
@@ -732,7 +636,7 @@ export default function VisionDetailPage() {
       )}
 
       {/* ── Join / Role Application Modal ─────────────────────────────── */}
-      {(showJoinModal || isApplicationModalOpen) && (
+      {showJoinModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
           <div className="bg-[#0a0b12] border border-white/15 rounded-2xl max-w-[780px] w-full p-0 text-star shadow-[0_0_50px_rgba(0,0,0,0.85)] relative overflow-hidden flex flex-col max-h-[90vh]">
             
@@ -922,7 +826,7 @@ export default function VisionDetailPage() {
 
                   <div>
                     <div className="relative">
-                      <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                      <FaGithub className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                       <input
                         type="text"
                         inputMode="url"
@@ -937,7 +841,7 @@ export default function VisionDetailPage() {
 
                   <div>
                     <div className="relative">
-                      <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                      <FaLinkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                       <input
                         type="text"
                         inputMode="url"
@@ -1095,4 +999,3 @@ function SaveAndShareGroup({ saved, saveLoading, onSave, onShare, className = ""
     </div>
   );
 }
-

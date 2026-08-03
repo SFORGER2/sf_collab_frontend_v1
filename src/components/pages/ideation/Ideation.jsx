@@ -1,7 +1,6 @@
 import { WifiOff, RefreshCw, Eye, Clock, Heart, MessageCircle, Users, AlertTriangle } from "lucide-react";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { byMomentum } from "@/services/vision/momentum";
-import { SAMPLE_VISIONS } from "@/services/mock/boards";
 import IdeationHeader from "./IdeationHeader";
 import { Link, useSearchParams } from "react-router-dom";
 import ScrollToTop from "../../sections/ScrollToTop";
@@ -13,9 +12,7 @@ import IdeationTutorial from "./IdeationTutorial";
 import { motion } from "framer-motion";
 import { IdeationCardSkeleton } from "../vision/VisionSkeletons";
 
-/* Twelve sample Visions spread across stage, industry and engagement — a
-   board where everything burns says as little as one where nothing does. */
-const MOCK_IDEAS = SAMPLE_VISIONS;
+// Removed MOCK_IDEAS import – no fallback
 
 const calculateTimeAgo = (createdAt) => {
   const now = new Date();
@@ -88,8 +85,6 @@ const Ideation = ({ activeRole }) => {
           year: "numeric",
         }),
         timeAgo: calculateTimeAgo(idea.createdAt),
-        // Raw ISO, kept alongside the formatted `createdAt` above — momentum
-        // decays signals by age, so it needs a real timestamp to parse.
         lastActivityAt: idea.updatedAt || idea.updated_at || idea.createdAt,
         likes: idea.likes,
         hasLiked: idea.hasLiked || false,
@@ -105,26 +100,19 @@ const Ideation = ({ activeRole }) => {
 
       setIdeas(mappedIdeas);
     } catch (err) {
-      console.error("Fetch error (using mock fallback):", err);
-      setNetworkError(false);
-      setError(null);
-      setIdeas(MOCK_IDEAS);
+      console.error(err);
+      setIdeas([]);
+      setNetworkError(true);
+      setError(err.response?.data?.error || err.message);
     } finally {
       setIsLoading(false);
     }
   }, [selectedIndustry, selectedStage, searchQuery, sortBy, activeRole]);
 
-  // Single effect — fetches whenever filters or sort changes
   useEffect(() => {
     fetchIdeas();
   }, [fetchIdeas]);
 
-  /**
-   * "Moving now" is sorted here rather than server-side, because momentum is a
-   * frontend weighting for now (services/vision/momentum.js) — the backend has
-   * no equivalent ordering yet. Every other sort is already applied by the API,
-   * so those pass through untouched.
-   */
   const orderedIdeas = useMemo(
     () => (sortBy === 'momentum' ? [...ideas].sort(byMomentum) : ideas),
     [ideas, sortBy]

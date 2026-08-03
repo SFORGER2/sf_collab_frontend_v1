@@ -24,7 +24,6 @@ import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 import VisionNotFound from './VisionNotFound';
 import { VisionWorkspaceSkeleton } from './VisionSkeletons';
-import { SAMPLE_VISIONS } from '@/services/mock/boards';
 import {
   ArrowLeft, Target, Users, TrendingUp, MessageSquare, Heart,
   Bookmark, Rocket, Loader2, X, CheckCircle, Circle, AlertCircle,
@@ -365,23 +364,16 @@ export default function VisionWorkspacePage() {
   }, [idea, isCreator, viewerRole]);
 
   const load = useCallback(async () => {
-    const findSample = (targetId) => {
-      if (!targetId) return SAMPLE_VISIONS[0];
-      const match = SAMPLE_VISIONS.find(
-        (v) =>
-          String(v.id) === String(targetId) ||
-          String(v.id) === `sv-${targetId}` ||
-          String(v.creatorId) === String(targetId) ||
-          targetId === 'sample-1' ||
-          targetId === '1'
-      );
-      return match || SAMPLE_VISIONS[0];
-    };
-
     try {
+      if (!id) {
+        setLoading(false);
+        setIdea(null);
+        return;
+      }
+
       const [ideaBody, commentsBody] = await Promise.all([
-        id ? ideaAPI.getIdeaById(id).catch(() => null) : Promise.resolve(null),
-        id ? ideaAPI.getIdeaComments({ idea_id: id, per_page: 6 }).catch(() => null) : Promise.resolve(null),
+        ideaAPI.getIdeaById(id).catch(() => null),
+        ideaAPI.getIdeaComments({ idea_id: id, per_page: 6 }).catch(() => null),
       ]);
 
       const ideaData = ideaBody?.data?.idea ?? ideaBody?.idea ?? null;
@@ -389,18 +381,17 @@ export default function VisionWorkspacePage() {
         setIdea(ideaData);
         setReadiness(normaliseReadiness(ideaData));
       } else {
-        const fallback = findSample(id);
-        setIdea(fallback);
-        setReadiness(normaliseReadiness(fallback));
+        // No data found — set idea to null (will trigger VisionNotFound)
+        setIdea(null);
+        setReadiness(null);
       }
 
       const comments = commentsBody?.data?.comments ?? [];
       setActivity(comments);
     } catch (err) {
       console.error('VisionWorkspacePage load error:', err);
-      const fallback = findSample(id);
-      setIdea(fallback);
-      setReadiness(normaliseReadiness(fallback));
+      setIdea(null);
+      setReadiness(null);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -463,9 +454,6 @@ export default function VisionWorkspacePage() {
   }
 
   const score = readiness.score;
-  // The activation threshold is enforced by the backend; 70 is its current
-  // default (see readiness_routes.py / Idea.compute_readiness_score()).
-  // We display it dynamically once the eligibility check has run at least once.
   const threshold = 70;
   const pointsRemaining = Math.max(0, threshold - score);
   const progressPct = Math.min(100, Math.round((score / threshold) * 100));
@@ -475,18 +463,13 @@ export default function VisionWorkspacePage() {
   const teamMembers = idea.teamMembers || [];
   const roadmapItems = idea.roadmapItems || [];
 
-  // "Next available milestones" = readiness needs, each mapped to the
-  // roadmap/points category it unlocks.
   const nextMilestones = readiness.needs || [];
 
-  // Interested breakdown — the backend doesn't yet segment interest by role
-  // (user / builder / investor / customer), so we surface what real signal
-  // exists today and label the rest as not-yet-tracked rather than fake it.
   const interested = {
     users: idea.likes ?? 0,
-    builders: idea.bookmarks ?? 0, // collaborators bookmarking = builder interest proxy
-    investors: null, // not tracked yet
-    customers: null, // not tracked yet
+    builders: idea.bookmarks ?? 0,
+    investors: null,
+    customers: null,
   };
 
   return (
@@ -507,14 +490,10 @@ export default function VisionWorkspacePage() {
           onConvert={() => setShowConvert(true)}
         />
 
-        {/* What you can do here, from your role's point of view */}
         <VisionActions viewerRole={viewerRole} isCreator={isCreator} onApply={() => setIsApplicationModalOpen(true)} />
 
         {showAds && <AdSlot placement="vision-detail" format="banner" />}
 
-        {/* Workspace sections — Team / Signals / Builders & Investors /
-            Updates / Settings are each a real, reachable place instead of
-            just headings on one long scroll. */}
         <div
           role="tablist"
           aria-label="Vision workspace sections"
@@ -547,7 +526,6 @@ export default function VisionWorkspacePage() {
 
         {activeTab === 'signals' && (
           <div id="vision-panel-signals" role="tabpanel" aria-labelledby="vision-tab-signals" className="space-y-5">
-            {/* Signals — each milestone is a thing you can go and prove */}
             <section className="cosmos-panel p-4 sm:p-6">
               <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
                 <div>
@@ -611,7 +589,6 @@ export default function VisionWorkspacePage() {
               </div>
             </section>
 
-            {/* Next available milestones */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
               <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
                 <Map className="w-4 h-4 text-blue-400" />
@@ -649,7 +626,6 @@ export default function VisionWorkspacePage() {
 
         {activeTab === 'team' && (
           <div id="vision-panel-team" role="tabpanel" aria-labelledby="vision-tab-team">
-            {/* Team members */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
               <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
                 <Users className="w-4 h-4 text-blue-400" />
@@ -698,15 +674,12 @@ export default function VisionWorkspacePage() {
 
         {activeTab === 'builders-investors' && (
           <div id="vision-panel-builders-investors" role="tabpanel" aria-labelledby="vision-tab-builders-investors" className="space-y-5">
-            {/* Discovery, framed by the role you're viewing as. The creator
-                always gets the recruiting lens regardless of active role. */}
             <VisionDiscovery
               viewerRole={viewerRole}
               isCreator={isCreator}
               results={discoveryResults}
             />
 
-            {/* Interested users / builders / investors / customers */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
               <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-blue-400" />
@@ -744,7 +717,6 @@ export default function VisionWorkspacePage() {
 
         {activeTab === 'updates' && (
           <div id="vision-panel-updates" role="tabpanel" aria-labelledby="vision-tab-updates">
-            {/* Recent activity */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
               <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-blue-400" />
@@ -802,7 +774,6 @@ export default function VisionWorkspacePage() {
               </div>
             ) : (
               <>
-                {/* Visibility */}
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                   <h2 className="text-white font-semibold mb-1 flex items-center gap-2">
                     <Eye className="w-4 h-4 text-blue-400" />
@@ -837,7 +808,6 @@ export default function VisionWorkspacePage() {
                   )}
                 </div>
 
-                {/* Danger zone */}
                 <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-6">
                   <h2 className="text-red-300 font-semibold mb-1 flex items-center gap-2">
                     <AlertCircle className="w-4 h-4" />

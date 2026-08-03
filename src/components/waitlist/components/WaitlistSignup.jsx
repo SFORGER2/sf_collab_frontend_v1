@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -12,7 +12,7 @@ import { useSelector } from 'react-redux'
 import { LoadingSpinner } from './ui/loading-spinner'
 
 /* ------------------------------------------------------------------
-   PhoneInput — extension + number side by side, dark-theme safe
+   PhoneInput
 ------------------------------------------------------------------ */
 function PhoneInput({ extension, onExtensionChange, phone, onPhoneChange }) {
   return (
@@ -44,23 +44,7 @@ function PhoneInput({ extension, onExtensionChange, phone, onPhoneChange }) {
 }
 
 /* ------------------------------------------------------------------
-   ReadOnlyField — consistent display for email / name
------------------------------------------------------------------- */
-function ReadOnlyField({ label, value }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label className="text-xs font-medium uppercase tracking-wider text-neutral-500">
-        {label}
-      </Label>
-      <p className="text-sm text-neutral-200 bg-neutral-800/60 border border-white/10 rounded-lg px-3 py-2 min-h-[38px] flex items-center">
-        {value || <span className="text-neutral-500 italic">Not provided</span>}
-      </p>
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------------
-   OTPInput — 6-digit verification code boxes
+   OTPInput
 ------------------------------------------------------------------ */
 function OTPInput({ value, onChange }) {
   const digits = value.padEnd(6, '').split('').slice(0, 6)
@@ -105,7 +89,7 @@ function OTPInput({ value, onChange }) {
 }
 
 /* ------------------------------------------------------------------
-   WaitlistSignup — main export
+   Main component
 ------------------------------------------------------------------ */
 export function WaitlistSignup() {
   const [email, setEmail] = useState('')
@@ -116,7 +100,7 @@ export function WaitlistSignup() {
   const [truthyVerificationCode, setTruthyVerificationCode] = useState('')
   const [verified, setVerified] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState(false)
+  const [result, setResult] = useState(null)
   const [isOnWaitlist, setIsOnWaitlist] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [maxCount, setMaxCount] = useState(1000)
@@ -124,72 +108,155 @@ export function WaitlistSignup() {
 
   const navigate = useNavigate()
   const { user, access_token } = useSelector((state) => state.auth)
+  const justRegistered = useRef(false)
+  const statusCheckInProgress = useRef(false) // prevent race
 
-  // Auto-verify when OTP matches
+  // Detect dev bypass user – this is the ONLY place we mock
+  const isDevUser = user?.email === 'dev@sfcollab.local' || user?.id === 'dev-preview-user'
+
+  // Auto‑verify OTP for real users
   useEffect(() => {
     if (
+      !isDevUser &&
       truthyVerificationCode.length === 6 &&
       verificationCode === truthyVerificationCode
     ) {
       setVerified(true)
       toast.success('Phone number verified successfully!')
     }
-  }, [verificationCode, truthyVerificationCode])
+  }, [verificationCode, truthyVerificationCode, isDevUser])
 
-  // Fetch total waitlist count
+  // Fetch total count
   useEffect(() => {
     async function fetchTotalCount() {
       try {
         const res = await waitlistAPI.getTotalCount()
         setTotalCount(res.total)
         setMaxCount(res.max_allowed)
-      } catch {
-        // silently fail — counter just shows 0
-      }
+      } catch { /* ignore */ }
     }
     fetchTotalCount()
   }, [])
 
-  // Pre-fill from logged-in user
+  // Pre‑fill from real user (skip dev)
   useEffect(() => {
-    if (user?.email) {
+    if (user && !isDevUser && user.email) {
       setEmail(user.email)
       setName((user.fullName || user.firstName || '').trim())
     }
-  }, [user])
+  }, [user, isDevUser])
 
-  // Check if already on waitlist
+  // ---- Check waitlist status (real users only) ----
   useEffect(() => {
-    async function checkWaitlist() {
-      if (!email) return
+    if (isDevUser) {
+      // For dev, do not set on waitlist (unless we want to show mock, but we skip)
+      setIsOnWaitlist(false)
+      setResult(null)
+      return
+    }
+
+    // If we just registered, skip the check – the state is already updated
+    if (justRegistered.current) {
+      justRegistered.current = false
+      return
+    }
+
+    if (!email || !access_token) return
+
+    const checkStatus = async () => {
+      // Avoid multiple simultaneous calls
+      if (statusCheckInProgress.current) return
+      statusCheckInProgress.current = true
+
       try {
+        // 1) Check localStorage cache, but only if it's fresh (≤ 5 minutes)
+        const cached = localStorage.getItem('waitlistStatus')
+        if (cached) {
+          try {
+            const data = JSON.parse(cached)
+            if (data.email === email && Date.now() - data.timestamp < 5 * 60 * 1000) {
+              // Cache is fresh
+              setIsOnWaitlist(true)
+              setResult({ position: data.position })
+              statusCheckInProgress.current = false
+              return
+            }
+          } catch (e) {}
+        }
+
+        // 2) Call API
         const res = await waitlistAPI.isOnWaitlist(email)
-        setIsOnWaitlist(res.on_waitlist)
-        if (res.on_waitlist) setResult({ position: res.position })
-      } catch {
-        // silently fail
+        if (res.on_waitlist) {
+          setIsOnWaitlist(true)
+          setResult({ position: res.position })
+          localStorage.setItem('waitlistStatus', JSON.stringify({
+            email,
+            position: res.position,
+            timestamp: Date.now()
+          }))
+        } else {
+          setIsOnWaitlist(false)
+          setResult(null)
+          localStorage.removeItem('waitlistStatus')
+        }
+      } catch (err) {
+        console.error('Waitlist check failed:', err.response || err)
+        // On error, fallback to cache if it exists (even if expired)
+        const cached = localStorage.getItem('waitlistStatus')
+        if (cached) {
+          try {
+            const data = JSON.parse(cached)
+            if (data.email === email) {
+              setIsOnWaitlist(true)
+              setResult({ position: data.position })
+            }
+          } catch (e) {}
+        }
+      } finally {
+        statusCheckInProgress.current = false
       }
     }
-    checkWaitlist()
-  }, [email])
 
+    checkStatus()
+  }, [email, access_token, isDevUser])
+
+  // ---------- Submit ----------
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
 
+    // ---- Authentication ----
+    if (!user || !access_token) {
+      toast.error('Please login before joining the waitlist.')
+      setLoading(false)
+      return
+    }
+
+    // ---- Dev user is blocked from real registration ----
+    if (isDevUser) {
+      toast.error('Dev user cannot join the real waitlist. Please log in with a real account.')
+      setLoading(false)
+      return
+    }
+
+    // ---- Already on waitlist ----
     if (isOnWaitlist) {
       toast.error('You are already on the waitlist')
       setLoading(false)
       return
     }
+
+    // ---- Terms ----
     if (!acceptedTerms) {
-      toast.error('You must accept the terms and conditions to join the waitlist.')
+      toast.error('You must accept the terms and conditions.')
       setLoading(false)
       return
     }
 
+    // ---- Phone verification step ----
     if (!verified) {
       try {
+        // If OTP code was sent and length is 6 but not verified, prompt to enter
         if (truthyVerificationCode.length === 6) {
           toast.error('Please enter the verification code sent to your phone.')
           setLoading(false)
@@ -206,10 +273,11 @@ export function WaitlistSignup() {
           toast.info('Verification code sent to your phone. Please enter the code to verify.')
         }
       } catch (err) {
-        if (err.status === 401) {
+        console.log('Send verification error:', err.response || err)
+        if (err.response?.status === 401) {
           toast.error('Phone number already in use. Please check and try again.')
         } else {
-          toast.error('Failed to send verification code. Please check your phone number and try again.')
+          toast.error(err.response?.data?.error || 'Failed to send verification code.')
         }
       } finally {
         setLoading(false)
@@ -217,12 +285,29 @@ export function WaitlistSignup() {
       return
     }
 
+    // ---- Registration ----
     try {
-      const response = await waitlistAPI.register(email, name || undefined, user.id, access_token)
-      setResult(response)
+      const response = await waitlistAPI.register(
+        email,
+        name || undefined,
+        user.id,
+        phone,
+        extension,
+        access_token
+      )
+      // Success – update state and cache
+      setIsOnWaitlist(true)
+      setResult({ position: response.position })
+      localStorage.setItem('waitlistStatus', JSON.stringify({
+        email,
+        position: response.position,
+        timestamp: Date.now()
+      }))
+      justRegistered.current = true  // prevent check effect from re‑running
       toast.success('Successfully joined the waitlist!')
       setTotalCount((c) => c + 1)
     } catch (error) {
+      console.log('Registration error:', error.response || error)
       if (error.response?.status === 409) {
         toast.error('The waitlist is full. We are no longer accepting new signups.')
       } else if (error.response?.status === 400) {
@@ -237,8 +322,9 @@ export function WaitlistSignup() {
 
   const progressPct = Math.min((totalCount / maxCount) * 100, 100)
 
-  /* ---- Already on waitlist ---- */
-  if (isOnWaitlist) {
+  // ---------- Screens ----------
+  // Show Already on Waitlist for real users
+  if (isOnWaitlist && !isDevUser) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -253,7 +339,7 @@ export function WaitlistSignup() {
           </p>
           <p className="text-white">
             Your Position:{' '}
-            <span className="font-bold text-green-400 text-lg">#{result.position}</span>
+            <span className="font-bold text-green-400 text-lg">#{result?.position || '—'}</span>
           </p>
           <Button
             onClick={() => navigate('/dashboard')}
@@ -266,8 +352,8 @@ export function WaitlistSignup() {
     )
   }
 
-  /* ---- Waitlist full ---- */
-  if (totalCount >= maxCount) {
+  // Waitlist full (real users only)
+  if (totalCount >= maxCount && !isDevUser) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -278,7 +364,7 @@ export function WaitlistSignup() {
           <Gift className="h-12 w-12 text-red-500 mx-auto animate-bounce" />
           <h2 className="text-2xl font-bold text-white">Waitlist Full</h2>
           <p className="text-neutral-400 text-sm leading-relaxed">
-            The waitlist has reached its maximum capacity. Please check back later for more opportunities to join.
+            The waitlist has reached its maximum capacity. Please check back later.
           </p>
         </div>
         <WaitlistCounter totalCount={totalCount} maxCount={maxCount} progressPct={progressPct} />
@@ -286,43 +372,7 @@ export function WaitlistSignup() {
     )
   }
 
-  /* ---- Success state ---- */
-  if (result) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, type: 'spring' }}
-        className="max-w-xl mx-auto"
-      >
-        <Card className="border-green-600/40 shadow-2xl bg-neutral-900 text-center">
-          <CardHeader className="px-6 pt-8 pb-4">
-            <CardTitle className="flex items-center justify-center gap-3 text-white text-2xl">
-              <CheckCircle2 className="h-8 w-8 text-green-500" />
-              Congratulations!
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-6 pb-8 space-y-5">
-            <div>
-              <p className="text-neutral-300 mb-2">You're on the waitlist</p>
-              <p className="text-5xl font-bold bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">
-                #{result.position}
-              </p>
-            </div>
-            <p className="text-neutral-300">🚀 The competition has started!</p>
-            <Button
-              onClick={() => navigate('/dashboard')}
-              className="bg-green-600 hover:bg-green-700 transition-colors px-8"
-            >
-              Go to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </motion.div>
-    )
-  }
-
-  /* ---- Main signup form ---- */
+  // ---------- Signup form (real users only; dev user is blocked) ----------
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
@@ -341,15 +391,41 @@ export function WaitlistSignup() {
         <CardContent className="px-6 pt-6 pb-6">
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
-            <ReadOnlyField label="Email" value={email} />
-            <ReadOnlyField label="Name" value={name} />
+            {/* Email – editable, placeholder faded */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="email" className="text-xs font-medium uppercase tracking-wider text-neutral-500">
+                Email <span className="text-red-400">*</span>
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="your@email.com"
+                className="bg-neutral-800 border border-white/10 text-white placeholder:text-neutral-500 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors"
+              />
+            </div>
+
+            {/* Name – editable, placeholder faded */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="name" className="text-xs font-medium uppercase tracking-wider text-neutral-500">
+                Full Name <span className="text-red-400">*</span>
+              </Label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="John Doe"
+                className="bg-neutral-800 border border-white/10 text-white placeholder:text-neutral-500 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors"
+              />
+            </div>
 
             {/* Phone */}
             <div className="flex flex-col gap-1.5">
-              <Label
-                htmlFor="phone"
-                className="text-xs font-medium uppercase tracking-wider text-neutral-500"
-              >
+              <Label htmlFor="phone" className="text-xs font-medium uppercase tracking-wider text-neutral-500">
                 Phone Number <span className="text-red-400">*</span>
               </Label>
               <PhoneInput
@@ -391,14 +467,14 @@ export function WaitlistSignup() {
               </label>
             </div>
 
-            {/* OTP — shown after SMS sent */}
+            {/* OTP */}
             {!verified && truthyVerificationCode.length === 6 && (
               <div className="flex flex-col gap-2">
                 <Label className="text-xs font-medium uppercase tracking-wider text-neutral-500">
                   Verification Code
                 </Label>
                 <p className="text-sm text-neutral-400">
-                  Enter the 6-digit code sent to your phone
+                  Enter the 6‑digit code sent to your phone
                 </p>
                 <OTPInput value={verificationCode} onChange={setVerificationCode} />
               </div>
@@ -420,7 +496,6 @@ export function WaitlistSignup() {
               )}
             </Button>
 
-            {/* Counter */}
             <WaitlistCounter totalCount={totalCount} maxCount={maxCount} progressPct={progressPct} />
 
           </form>
@@ -431,7 +506,7 @@ export function WaitlistSignup() {
 }
 
 /* ------------------------------------------------------------------
-   WaitlistCounter — reusable progress bar
+   Counter
 ------------------------------------------------------------------ */
 function WaitlistCounter({ totalCount, maxCount, progressPct }) {
   return (

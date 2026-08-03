@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-vars */
-import { SAMPLE_STARTUPS, withBoardFallback } from "@/services/mock/boards";
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -21,7 +20,6 @@ import { startupsAPI } from '@/utils/APIs/startupsAPI';
 import { discoveryFeedAPI } from '@/utils/APIs/discoveryFeedAPI';
 import usePaginatedFetch from '@/utils/hooks/usePaginated';
 import InfiniteList from '@/components/InfiniteList';
-
 import { parseApiError } from '@/utils/APIs/parseApiError';
 import ErrorState from '@/components/common/ErrorState';
 import EmptyState from '../../common/EmptyState';
@@ -77,10 +75,10 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [topStartups, setTopStartups] = useState([]);
   const [topStartupsLoading, setTopStartupsLoading] = useState(false);
-  const [error, setError] = useState(null);       // legacy plain-string errors
-  const [errorInfo, setErrorInfo] = useState(null); // parsed structured error
+  const [error, setError] = useState(null);
+  const [errorInfo, setErrorInfo] = useState(null);
 
-  // New discovery feed state
+  // Discovery feed state
   const [feedSections, setFeedSections] = useState({
     visions: [],
     startups: [],
@@ -89,34 +87,10 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   });
   const [feedLoading, setFeedLoading] = useState(false);
 
-  /**
-   * Discover mode renders `feedSections`, not the paginated list, so the
-   * fallback below the hook never reached it — the board stayed empty even
-   * with samples wired up. Same rule, applied to the feed.
-   */
-  const feedWithSamples = useMemo(() => {
-    const empty =
-      !feedSections?.startups?.length &&
-      !feedSections?.fastGrowing?.length &&
-      !feedSections?.visions?.length;
-    if (!empty || feedLoading) return { sections: feedSections, isSample: false };
-    return {
-      sections: {
-        ...feedSections,
-        startups: SAMPLE_STARTUPS,
-        fastGrowing: SAMPLE_STARTUPS.slice(0, 4),
-      },
-      isSample: true,
-    };
-  }, [feedSections, feedLoading]);
-
   const navigate = useNavigate();
-  
   const { user, access_token } = useSelector((state) => state.auth);
   const mode = myStartupsOnly ? 'myStartups' : 'discover';
   const modeConfig = MODES[mode];
-
-
 
   const getFundingRangeValues = () => {
     if (selectedFundingRange === 'Custom') {
@@ -125,7 +99,6 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
         max: customMaxFunding ? parseFloat(customMaxFunding) : null
       };
     }
-    
     const range = FUNDING_RANGES.find(r => r.label === selectedFundingRange);
     return {
       min: range?.min || null,
@@ -136,13 +109,11 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   const buildSearchString = () => {
     const fundingRange = getFundingRangeValues();
     const filters = [];
-    
     if (searchQuery) filters.push(`search:${searchQuery}`);
     if (selectedIndustry !== 'All') filters.push(`industry:${selectedIndustry}`);
     if (selectedStage !== 'All') filters.push(`stage:${selectedStage}`);
     if (fundingRange.min !== null) filters.push(`min_funding:${fundingRange.min}`);
     if (fundingRange.max !== null) filters.push(`max_funding:${fundingRange.max}`);
-    
     return filters.join('|');
   };
 
@@ -170,23 +141,15 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
     enabled: !!access_token && mode === 'myStartups',
   });
 
-  /**
-   * Sample startups when the API returns none. An empty board is
-   * indistinguishable from a broken one, and it makes every feature sitting on
-   * top of it — momentum flames, filters, sorting — impossible to review.
-   * Labelled in the UI, never blended with real records.
-   */
-  const { items: startups, isSample } = withBoardFallback(
-    rawStartups, SAMPLE_STARTUPS, { enabled: !loading }
-  );
+  // Use rawStartups directly – no fallback samples
+  const startups = rawStartups;
 
   const fetchFilters = async () => {
     try {
       const [industriesData, stagesData] = await Promise.all([
         startupsAPI.getIndustries(),
         startupsAPI.getStages()
-      ]); 
-  
+      ]);
       if (industriesData.success) setIndustries(industriesData.data.industries);
       if (stagesData.success) setStages(stagesData.data.stages);
     } catch (err) {
@@ -197,33 +160,13 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
     }
   };
 
-  const fetchTopStartups = async () => {
-    try {
-      setTopStartupsLoading(true);
-      setError(null);
-      setErrorInfo(null);
-      const data = await startupsAPI.getTopStartups();
-      if (data.success) {
-        setTopStartups(data.data.startups || []);
-      }
-    } catch (err) {
-      console.error('Error fetching top startups:', err);
-      const parsed = parseApiError(err);
-      setError(parsed.message);
-      setErrorInfo(parsed);
-    } finally {
-      setTopStartupsLoading(false);
-    }
-  };
-
   useEffect(() => {
     if (mode === 'discover') {
       fetchFilters();
-      // fetchTopStartups(); // Replaced by feedWithSamples.sections.fastGrowing
     }
   }, [mode]);
 
-  // Feed fetching effect
+  // Fetch discovery feed – no fallback
   useEffect(() => {
     if (mode === 'discover' && access_token) {
       let isMounted = true;
@@ -247,14 +190,11 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
         }
       };
 
-      // Debounce only when actively filtering/searching, fetch immediately on initial mount
       const isInitialMount = !searchQuery && selectedIndustry === 'All' && selectedStage === 'All';
       const delay = isInitialMount ? 0 : 300;
-      
       const timeoutId = setTimeout(() => {
         fetchDiscoveryFeed();
       }, delay);
-      
       return () => {
         isMounted = false;
         clearTimeout(timeoutId);
@@ -374,8 +314,6 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
             </motion.div>
           ) : null}
 
-          {/* Hidden Trending Now block, replaced via Feed Sections below filters */}
-
           <StartupSearchAndFilter
             mode={mode}
             industries={industries}
@@ -403,88 +341,82 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
           <div className="flex flex-wrap relative gap-8 mt-12">
             {mode === 'discover' ? (
               <div className="flex-1">
-              {feedLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                   {[...Array(6)].map((_, i) => <StartupCardSkeleton key={i} />)}
-                </div>
-              ) : (
-                (!feedWithSamples.sections?.visions?.length && !feedWithSamples.sections?.startups?.length && !feedWithSamples.sections?.fastGrowing?.length && !feedWithSamples.sections?.milestones?.length) ? (
-                  <EmptyState
-                    title="No startups found"
-                    description="Try adjusting your filters or search query to discover more opportunities."
-                    buttonText="Clear all filters"
-                    onButtonClick={clearFilters}
-                    icon={Search}
-                  />
+                {feedLoading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[...Array(6)].map((_, i) => <StartupCardSkeleton key={i} />)}
+                  </div>
                 ) : (
+                  (!feedSections.visions?.length && !feedSections.startups?.length && !feedSections.fastGrowing?.length && !feedSections.milestones?.length) ? (
+                    <EmptyState
+                      title="No startups found"
+                      description="Try adjusting your filters or search query to discover more opportunities."
+                      buttonText="Clear all filters"
+                      onButtonClick={clearFilters}
+                      icon={Search}
+                    />
+                  ) : (
                     <div className="space-y-16 mt-4">
-                       
-                       {/* Section: Trending Now */}
-                       {feedWithSamples.sections?.fastGrowing && feedWithSamples.sections.fastGrowing.length > 0 && (
-                          <motion.div variants={containerVariants} initial="hidden" animate="visible">
-                              {/* One row, paged with arrows. A wrapping grid
-                                  made "trending" fill half the screen and push
-                                  the rest of the board out of sight — trending
-                                  is a glance, not a section. */}
-                              <TrendingRail>
-                                 {feedWithSamples.sections.fastGrowing.map((startup, i) => (
-                                    <StartupCard key={startup.id} startup={startup} index={i} getStageBadgeVariant={getStageBadgeVariant} mode={mode} />
-                                 ))}
-                              </TrendingRail>
-                          </motion.div>
-                       )}
+                      {/* Trending Now */}
+                      {feedSections.fastGrowing && feedSections.fastGrowing.length > 0 && (
+                        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                          <TrendingRail>
+                            {feedSections.fastGrowing.map((startup, i) => (
+                              <StartupCard key={startup.id} startup={startup} index={i} getStageBadgeVariant={getStageBadgeVariant} mode={mode} />
+                            ))}
+                          </TrendingRail>
+                        </motion.div>
+                      )}
 
-                       {/* Section: Visions */}
-                       {feedWithSamples.sections?.visions && feedWithSamples.sections.visions.length > 0 && (
-                          <motion.div variants={containerVariants} initial="hidden" animate="visible">
-                              <div className="flex items-center gap-2 mb-6">
-                                <Lightbulb className="w-6 h-6 text-purple-400" />
-                                <h2 className="text-2xl font-bold text-white tracking-tight">Visions Exploring Ideas</h2>
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                 {feedWithSamples.sections.visions.map((vision, i) => (
-                                    <motion.div key={vision.id} variants={itemVariants}>
-                                      <VisionCard vision={vision} />
-                                    </motion.div>
-                                 ))}
-                              </div>
-                          </motion.div>
-                       )}
+                      {/* Visions */}
+                      {feedSections.visions && feedSections.visions.length > 0 && (
+                        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                          <div className="flex items-center gap-2 mb-6">
+                            <Lightbulb className="w-6 h-6 text-purple-400" />
+                            <h2 className="text-2xl font-bold text-white tracking-tight">Visions Exploring Ideas</h2>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {feedSections.visions.map((vision, i) => (
+                              <motion.div key={vision.id} variants={itemVariants}>
+                                <VisionCard vision={vision} />
+                              </motion.div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
 
-                       {/* Section: Startups Recruiting */}
-                       {feedWithSamples.sections?.startups && feedWithSamples.sections.startups.length > 0 && (
-                          <motion.div variants={containerVariants} initial="hidden" animate="visible">
-                              <div className="flex items-center gap-2 mb-6">
-                                <Briefcase className="w-6 h-6 text-blue-400" />
-                                <h2 className="text-2xl font-bold text-white tracking-tight">Startups Recruiting</h2>
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                 {feedWithSamples.sections.startups.map((startup, i) => (
-                                    <motion.div key={startup.id} variants={itemVariants}>
-                                      <StartupCard startup={startup} index={i} getStageBadgeVariant={getStageBadgeVariant} mode={mode} />
-                                    </motion.div>
-                                 ))}
-                              </div>
-                          </motion.div>
-                       )}
+                      {/* Startups Recruiting */}
+                      {feedSections.startups && feedSections.startups.length > 0 && (
+                        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                          <div className="flex items-center gap-2 mb-6">
+                            <Briefcase className="w-6 h-6 text-blue-400" />
+                            <h2 className="text-2xl font-bold text-white tracking-tight">Startups Recruiting</h2>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {feedSections.startups.map((startup, i) => (
+                              <motion.div key={startup.id} variants={itemVariants}>
+                                <StartupCard startup={startup} index={i} getStageBadgeVariant={getStageBadgeVariant} mode={mode} />
+                              </motion.div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
 
-                       {/* Section: Recent Activity */}
-                       {feedWithSamples.sections?.milestones && feedWithSamples.sections.milestones.length > 0 && (
-                          <motion.div variants={containerVariants} initial="hidden" animate="visible">
-                              <div className="flex items-center gap-2 mb-6">
-                                <AlertCircle className="w-6 h-6 text-green-400" />
-                                <h2 className="text-2xl font-bold text-white tracking-tight">Recent Activity</h2>
-                              </div>
-                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                 {feedWithSamples.sections.milestones.map((activity, i) => (
-                                    <motion.div key={activity.id} variants={itemVariants}>
-                                      <ActivityItem activity={activity} />
-                                    </motion.div>
-                                 ))}
-                              </div>
-                          </motion.div>
-                       )}
-
+                      {/* Recent Activity */}
+                      {feedSections.milestones && feedSections.milestones.length > 0 && (
+                        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                          <div className="flex items-center gap-2 mb-6">
+                            <AlertCircle className="w-6 h-6 text-green-400" />
+                            <h2 className="text-2xl font-bold text-white tracking-tight">Recent Activity</h2>
+                          </div>
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            {feedSections.milestones.map((activity, i) => (
+                              <motion.div key={activity.id} variants={itemVariants}>
+                                <ActivityItem activity={activity} />
+                              </motion.div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
                     </div>
                   )
                 )}
@@ -506,19 +438,6 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                     </motion.button>
                   )}
                 </div>
-
-                {isSample && (
-                  <div
-                    className="mb-4 rounded-xl px-3.5 py-2.5 text-[0.83rem]"
-                    style={{
-                      background: 'rgba(255,191,94,0.08)',
-                      border: '1px solid rgba(255,191,94,0.28)',
-                      color: '#ffbf5e',
-                    }}
-                  >
-                    Showing sample startups — none registered yet, or the backend is unreachable.
-                  </div>
-                )}
 
                 {loading && startups.length === 0 ? (
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">

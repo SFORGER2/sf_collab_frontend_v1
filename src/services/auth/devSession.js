@@ -26,50 +26,25 @@
  * is routinely available during frontend work.
  */
 
-export const DEV_AUTH_BYPASS =
-  import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH_BYPASS !== 'false';
+export const DEV_AUTH_BYPASS = 'false';
 
 /**
  * The fake user. Shaped to satisfy isUserProfileComplete() so the profile
  * completion modal stays shut. Returns null in any production build.
  */
 export function getDevUser() {
-  if (!import.meta.env.DEV) return null;
-  return {
-    id: 'dev-preview-user',
-    email: 'dev@sfcollab.local',
-    firstName: 'Dev',
-    lastName: 'Preview',
-    roles: ['founder', 'builder', 'mentor', 'influencer', 'investor'],
-    timezone: 'Europe/Warsaw',
-    isEmailVerified: true,
-    isAdmin: false,
-    profilePicture: null,
-  };
+  return null;
 }
 
 export function getDevRoles() {
-  if (!import.meta.env.DEV) return [];
-  return ['founder', 'builder', 'mentor', 'influencer', 'investor'];
+return [];
 }
 
 export function getDevToken() {
-  if (!import.meta.env.DEV) return null;
-  return 'dev-preview-session';
+  return null;  
 }
 
 let announced = false;
 
 /** Loud, once, so nobody mistakes the fake session for a real login. */
-export function announceDevBypass() {
-  if (!import.meta.env.DEV) return;
-  if (!DEV_AUTH_BYPASS || announced) return;
-  announced = true;
-  console.warn(
-    '%c⚠ DEV AUTH BYPASS ACTIVE',
-    'background:#ffbf5e;color:#241300;font-weight:bold;padding:2px 8px;border-radius:3px',
-    '\nYou are signed in as a fake local user. No backend is required, and no' +
-      '\nAPI call will succeed. Set VITE_DEV_AUTH_BYPASS=false in .env.local to' +
-      '\ndisable. This code is removed entirely from production builds.'
-  );
-}
+export function announceDevBypass() {}

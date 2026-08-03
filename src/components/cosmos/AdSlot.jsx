@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useEntitlements } from '@/services/entitlements/useEntitlements';
 
@@ -12,8 +11,8 @@ import { useEntitlements } from '@/services/entitlements/useEntitlements';
  * ad inventory yet, so the toggle in Admin → Monetisation starts off).
  *
  * Reserving these positions now means monetisation can be switched on later
- * without relayout work. Each slot is labelled and dismissible, and always
- * offers the ad-free upgrade path.
+ * without relayout work. Each slot is labelled and offers the ad-free upgrade
+ * path.
  *
  *   <AdSlot placement="dashboard-sidebar" format="square" />
  *
@@ -26,14 +25,10 @@ const FORMATS = {
   strip: 'min-h-[60px]',
 };
 
-export function AdSlot({ placement, format = 'banner', className, style, onDismiss }) {
+export function AdSlot({ placement, format = 'banner', className, style }) {
   const { showAds } = useEntitlements();
-  const [dismissed, setDismissed] = React.useState(false);
 
-  /* Tell the parent too — StickyTopAd holds a spacer that must go with it. */
-  const dismiss = () => { setDismissed(true); onDismiss?.(); };
-
-  if (!showAds || dismissed) return null;
+  if (!showAds) return null;
 
   /**
    * `strip` is the top-of-page placement, so it lays out as one row rather
@@ -77,15 +72,6 @@ export function AdSlot({ placement, format = 'banner', className, style, onDismi
             Ad-free →
           </Link>
         </span>
-
-        <button
-          type="button"
-          onClick={dismiss}
-          aria-label="Dismiss advertisement"
-          className="absolute top-1/2 right-2 -translate-y-1/2 p-1 rounded-md text-dim hover:text-star hover:bg-white/[0.06] transition-colors"
-        >
-          <X size={12} />
-        </button>
       </aside>
     );
   }
@@ -101,15 +87,6 @@ export function AdSlot({ placement, format = 'banner', className, style, onDismi
         className
       )}
     >
-      <button
-        type="button"
-        onClick={dismiss}
-        aria-label="Dismiss advertisement"
-        className="absolute top-2 right-2 p-1 rounded-md text-dim hover:text-star hover:bg-white/[0.06] transition-colors"
-      >
-        <X size={13} />
-      </button>
-
       <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-dim/70">
         Advertisement
       </span>

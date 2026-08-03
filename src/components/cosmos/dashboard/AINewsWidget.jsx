@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { ExternalLink } from 'lucide-react';
 import { CosmosButton } from '../CosmosButton';
 import { Tag } from '../primitives';
@@ -15,11 +16,19 @@ import { Tag } from '../primitives';
 export default function AINewsWidget({ limit = 4 }) {
   const [items, setItems] = useState([]);
   const [state, setState] = useState('loading');
+  const { access_token } = useSelector((state) => state.auth);
 
   useEffect(() => {
     let cancelled = false;
 
-    fetch(`/api/ai-news/ainews?page=1&per_page=${limit}`, { headers: { Accept: 'application/json' } })
+    const headers = {
+      Accept: 'application/json',
+    };
+    if (access_token) {
+      headers.Authorization = `Bearer ${access_token}`;
+    }
+
+    fetch(`/api/ainews?page=1&per_page=${limit}`, { headers })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
       .then((body) => {
         if (cancelled) return;
@@ -30,7 +39,7 @@ export default function AINewsWidget({ limit = 4 }) {
       .catch(() => !cancelled && setState('error'));
 
     return () => { cancelled = true; };
-  }, [limit]);
+  }, [limit, access_token]);
 
   return (
     <div className="flex flex-col gap-1" style={{ '--cosmos-accent': '#8b6cff' }}>

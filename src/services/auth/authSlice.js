@@ -44,8 +44,13 @@ const getStoredToken = () => {
 // Dev-only: fall back to a fake session so the UI can be reviewed without a
 // backend. Stripped from production builds — see devSession.js.
 announceDevBypass();
-const devUser = DEV_AUTH_BYPASS ? getDevUser() : null;
-const devToken = DEV_AUTH_BYPASS ? getDevToken() : null;
+const hasRealToken = !!localStorage.getItem("access_token");
+
+const devUser =
+  DEV_AUTH_BYPASS && !hasRealToken ? getDevUser() : null;
+
+const devToken =
+  DEV_AUTH_BYPASS && !hasRealToken ? getDevToken() : null;
 
 const initialState = {
   user: getStoredUser() || devUser,

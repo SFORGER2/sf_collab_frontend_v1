@@ -41,17 +41,32 @@ export default function MeetingDetailPage() {
   async function load() {
     setLoading(true);
     try {
-      const [mRes, fRes, dRes, aRes] = await Promise.allSettled([
-        meetAPI.getMeeting(id),
+      // 1. Fetch the meeting first
+      const mRes = await meetAPI.getMeeting(id);
+      const meetingData = mRes.data;
+      if (!meetingData) {
+        setMeeting(null);
+        setLoading(false);
+        return;
+      }
+      setMeeting(meetingData);
+
+      // 2. Only fetch sub-resources if the meeting exists
+      const [fRes, dRes, aRes] = await Promise.allSettled([
         meetAPI.getFiles(id),
         meetAPI.getDecisions(id),
         meetAPI.getActionItems(id),
       ]);
-      if (mRes.status === "fulfilled") setMeeting(mRes.value.data);
+
       if (fRes.status === "fulfilled") setFiles(fRes.value.data || []);
       if (dRes.status === "fulfilled") setDecisions(dRes.value.data?.decisions || []);
       if (aRes.status === "fulfilled") setActionItems(aRes.value.data?.action_items || []);
-    } finally { setLoading(false); }
+    } catch (err) {
+      // If meeting fetch fails, set meeting to null (will show not found)
+      setMeeting(null);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleEnd() {
@@ -143,7 +158,6 @@ export default function MeetingDetailPage() {
                 <FileText size={14} /> View Summary
               </button>
             )}
-            {/* ── Phase 3: Copy Meeting Link ────────────────────────────── */}
             <button onClick={handleCopyLink}
               className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-sm text-zinc-300 hover:text-white transition-colors">
               <Link2 size={14} /> Copy Link

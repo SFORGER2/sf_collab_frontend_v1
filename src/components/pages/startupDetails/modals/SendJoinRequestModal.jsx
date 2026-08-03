@@ -5,8 +5,9 @@ import {
 } from '../../../ui/dialog';
 import { toast } from 'react-toastify';
 import { startupsAPI } from '@/utils/APIs/startupsAPI';
-import { Building2, CheckCircle2, Globe, Github, Linkedin, Sparkles, X, AlertCircle, Loader2, Clock } from 'lucide-react';
+import { Building2, CheckCircle2, Globe, Sparkles, X, AlertCircle, Loader2, Clock } from 'lucide-react';
 import { CosmosButton, Eyebrow, Tag } from '@/components/cosmos';
+import { FaGithub, FaLinkedin } from "react-icons/fa";
 
 const AVAILABILITY_OPTIONS = [
   'Part-time · 5–10 h/week',
@@ -339,7 +340,7 @@ const SendJoinRequestModal = ({ isOpen, onClose, startupRoles = [], startupId, s
 
                 <div>
                   <div className="relative">
-                    <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <FaGithub className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                     <input
                       type="text"
                       inputMode="url"
@@ -354,7 +355,7 @@ const SendJoinRequestModal = ({ isOpen, onClose, startupRoles = [], startupId, s
 
                 <div>
                   <div className="relative">
-                    <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <FaLinkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                     <input
                       type="text"
                       inputMode="url"

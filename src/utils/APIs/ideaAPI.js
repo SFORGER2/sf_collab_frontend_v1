@@ -149,7 +149,11 @@ export const ideaAPI = {
     });
     return response.data;
   },
-
+  // Add this method to the ideaAPI object
+  createCollabRequest: async (data) => {
+    const response = await api.post('/ideas/collab-requests', data);
+    return response.data;
+  },
 
 
   deleteIdeaBookmark: async (bookmarkId, accessToken) => {

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { toast } from 'react-toastify';
-import { mockSuggestedContributors } from '@/services/mock/mockProfiles';
 import { DEV_AUTH_BYPASS } from '@/services/auth/devSession';
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -50,170 +49,7 @@ import AdSlot from "@/components/cosmos/AdSlot";
 const BASE_URL = API_BASE_URL + "/ideas";
 const API_URL = API_BASE_URL;
 
-const MOCK_IDEAS = [
-  {
-    id: "sv-1",
-    title: "Founder Match: Find Your Tech Co-Founder",
-    description: "A simple tool that connects non-technical founders with developers based on actual skills and shared interests, not just resume buzzwords.",
-    projectDetails: "We're building a platform to solve the biggest headache for early-stage startups: finding a technical co-founder. Instead of endless networking events, we use smart matching to connect you with builders who have the right skills, tech stack, and vibe.",
-    stage: "Prototype",
-    category: "AI / SaaS",
-    privacy: "public",
-    creatorId: "mock-user-1",
-    imageUrl: "",
-    creator: {
-      id: "mock-user-1",
-      firstName: "Oskar",
-      lastName: "K",
-    },
-    author: {
-      name: "Oskar K",
-      avatar: "",
-      id: "mock-user-1",
-      role: "Founder & CEO"
-    },
-    createdAt: new Date().toISOString(),
-    timeAgo: "1 hour ago",
-    likes: 12,
-    hasLiked: false,
-    hasBookmarked: false,
-    comments: [],
-    teamMembers: [
-      { name: "Alice Smith", role: "Frontend Developer" },
-      { name: "Bob Johnson", role: "Backend Developer" },
-      { name: "Charlie Davis", role: "UI/UX Designer" }
-    ],
-    collaborators: 1,
-    tags: ["Matchmaking", "Startup Tool", "Community"],
-    visionState: "public",
-    readinessScore: 85,
-    isConverted: false,
-    problemStatement: "Non-technical founders struggle to find developers who are both skilled and genuinely interested in their domain. Networking events and cold LinkedIn outreach produce low-quality matches and waste months.",
-    solution: "Matching on tech stack requirements *and* soft-signal alignment — build consistency, sector interest, availability — so introductions start warm instead of cold.",
-    whereItStands: "Working prototype matching on skills and availability. Next: bring in contribution history so the score reflects what people have actually shipped, not what they claim.",
-    requiredRoles: ["Fullstack Engineer", "Product Designer", "Growth Marketer"],
-    techStack: ["REACT", "NODE.JS", "POSTGRES", "TAILWIND", "WEBSOCKETS"]
-  },
-  {
-    id: "mock-idea-2",
-    title: "Builder Rep: Verified Portfolios",
-    description: "A transparent way for builders to prove their track record. We track real project outcomes and consistency so founders know who they can trust.",
-    projectDetails: "Our platform lets builders build a verified portfolio of their work. We track client satisfaction, real revenue generated, and consistency. This gives founders a transparent, BS-free way to evaluate a builder's actual experience before teaming up.",
-    stage: "Concept",
-    category: "Web3",
-    privacy: "public",
-    creatorId: "mock-user-2",
-    imageUrl: "",
-    creator: {
-      id: "mock-user-2",
-      firstName: "Marcus",
-      lastName: "Dupont",
-    },
-    author: {
-      name: "Marcus Dupont",
-      avatar: "",
-      id: "mock-user-2",
-      role: "Product Lead"
-    },
-    createdAt: new Date().toISOString(),
-    timeAgo: "2 days ago",
-    likes: 8,
-    hasLiked: false,
-    hasBookmarked: false,
-    comments: [],
-    teamMembers: [
-      { name: "Oskar K", avatar: "", role: "Smart Contract Developer" },
-      { name: "Sophia Martinez", avatar: "", role: "Frontend Developer" },
-      { name: "Lucas Silva", avatar: "", role: "Web3 UI Designer" },
-      { name: "Mia Wong", avatar: "", role: "Growth Marketer" },
-      { name: "Ryan Reynolds", avatar: "", role: "Solidity Auditor" },
-      { name: "Grace Hopper", avatar: "", role: "Protocol Engineer" }
-    ],
-    collaborators: 0,
-    tags: ["Trust Engine", "SaaS", "Portfolio"],
-    visionState: "public",
-    readinessScore: 50,
-    isConverted: false,
-    problemStatement: "It is currently impossible for a founder to verify a builder's actual track record of completed projects, code consistency, and client satisfaction. Portfolios are easily faked or embellished.",
-    solution: "A decentralized trust platform that logs real project milestones, client ratings, and developer stats on-chain, creating a verified 'Builder Reputation' score.",
-    requiredRoles: ["Solidity Developer", "React Developer", "UX Researcher"],
-    techStack: ["Solidity", "Ethers.js", "React", "Next.js", "Tailwind CSS"]
-  }
-];
-
-const MOCK_RECOMMENDATIONS = [
-  {
-    id: "mock-builder-1",
-    name: "Alex Rivera",
-    role: "Fullstack Engineer",
-    match_score: 95,
-    match_label: "Excellent Match",
-    skills: ["React", "Node.js", "GraphQL", "Tailwind CSS"],
-    explanation: [
-      "Has built solid React and Node.js apps in production.",
-      "Worked on a similar founder matching platform in the past.",
-      "Really interested in building tools that help people collaborate."
-    ],
-    profile_picture: null
-  },
-  {
-    id: "mock-builder-2",
-    name: "Sarah Chen",
-    role: "AI Engineer",
-    match_score: 88,
-    match_label: "Strong Match",
-    skills: ["Python", "PyTorch", "LLMs", "FastAPI"],
-    explanation: [
-      "Knows her way around Large Language Models and search algorithms.",
-      "Her skills perfectly match the AI requirements you listed.",
-      "Available to start part-time right away."
-    ],
-    profile_picture: null
-  },
-  {
-    id: "mock-builder-3",
-    name: "Marcus Dupont",
-    role: "Product Designer",
-    match_score: 72,
-    match_label: "Good Match",
-    skills: ["Figma", "UI/UX Design", "User Research", "Wireframing"],
-    explanation: [
-      "Great eye for design systems and dark-mode UI.",
-      "Has designed MVPs for 3 early-stage startups.",
-      "Excited to work on new workflow tools."
-    ],
-    profile_picture: null
-  },
-  {
-    id: "mock-builder-4",
-    name: "Elena Rostova",
-    role: "Frontend Developer",
-    match_score: 82,
-    match_label: "Solid Match",
-    skills: ["Vue.js", "React", "TypeScript", "UI Polish"],
-    explanation: [
-      "Has a strong background in creating pixel-perfect interfaces.",
-      "Matches your need for a dedicated frontend specialist.",
-      "Looking for a new project to contribute to."
-    ],
-    profile_picture: null
-  },
-  // Padded out to 24 in dev. With only four entries the metered states were
-  // unreachable — the free allowance is ten, so there was never anything to
-  // unlock and the credit gate never appeared. mockSuggestedContributors()
-  // returns [] in production builds.
-  ...mockSuggestedContributors(20).map((p, i) => ({
-    id: `mock-builder-${i + 5}`,
-    name: p.name,
-    role: p.role,
-    match_score: p.match,
-    match_label:
-      p.match >= 90 ? "Excellent Match" : p.match >= 80 ? "Strong Match" : p.match >= 70 ? "Good Match" : "Possible Match",
-    skills: p.skills,
-    explanation: p.reasons,
-    profile_picture: null,
-  })),
-];
+// Removed import of MOCK_IDEAS and mockSuggestedContributors
 
 const VisionDetails = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -253,7 +89,6 @@ const VisionDetails = () => {
   const { user, access_token } = useSelector((state) => state.auth);
   const { socket } = useSocket();
 
-
   // Co-developer requests state (creator only)
   const [collabRequests, setCollabRequests] = useState([]);
   const [collabRequestsLoading, setCollabRequestsLoading] = useState(false);
@@ -271,28 +106,9 @@ const VisionDetails = () => {
         headers: { Authorization: `Bearer ${access_token}` },
       });
       setCollabRequests(res.data.data?.collab_requests || []);
-    } catch {
-      // Fallback for mock ideas / offline mode
-      if (ideaId && ideaId.startsWith("mock-")) {
-        setCollabRequests([
-          {
-            id: "mcr-1",
-            message: "Hey! I am a senior Fullstack Dev with 5 years React experience. I'd love to help build this out!",
-            role: "co-developer",
-            status: "pending",
-            user: { id: "mock-builder-1", firstName: "Alex", lastName: "Rivera", email: "alex.rivera@example.com" }
-          },
-          {
-            id: "mcr-2",
-            message: "I am a UX Researcher and designer. I can help with wireframing and conducting user interviews.",
-            role: "co-developer",
-            status: "pending",
-            user: { id: "mock-builder-3", firstName: "Marcus", lastName: "Dupont", email: "marcus.dupont@example.com" }
-          }
-        ]);
-      } else {
-        setCollabRequests([]);
-      }
+    } catch (err) {
+      console.error('Error fetching collab requests:', err);
+      setCollabRequests([]); // No fallback; just empty
     } finally {
       setCollabRequestsLoading(false);
     }
@@ -313,7 +129,8 @@ const VisionDetails = () => {
         setMyCollabStatus(null);
         setMyCollabRequestId(null);
       }
-    } catch {
+    } catch (err) {
+      console.error('Error fetching my collab status:', err);
       setMyCollabStatus(null);
     }
   }, [ideaId, access_token]);
@@ -334,10 +151,10 @@ const VisionDetails = () => {
         res.data.recommendations ||
         res.data.matches ||
         (Array.isArray(res.data.data) ? res.data.data : Array.isArray(res.data) ? res.data : []);
-      setRecommendations(recs.length > 0 ? recs : MOCK_RECOMMENDATIONS);
+      setRecommendations(recs.length > 0 ? recs : []);
     } catch (err) {
-      console.error("Error fetching matchmaking recommendations (using mock fallback):", err);
-      setRecommendations(MOCK_RECOMMENDATIONS);
+      console.error("Error fetching matchmaking recommendations:", err);
+      setRecommendations([]); // No fallback
     } finally {
       setMatchmakingLoading(false);
     }
@@ -355,23 +172,9 @@ const VisionDetails = () => {
       const res = await ideaAPI.getIdeaById(ideaId, access_token);
       const ideaData = res.data.data?.idea || res.data.idea;
       if (ideaData) setIdea(ideaData);
-    } catch {
-      console.warn(`Failed to ${action} request, using mock fallback`);
-      toast.success((action === "approve" || action === "accept") ? "Request approved! (offline mode)" : "Request rejected. (offline mode)");
-      // Remove approved/rejected request locally
-      setCollabRequests(prev => prev.filter(r => r.id !== requestId));
-      if (action === "approve" || action === "accept") {
-        setIdea(prev => {
-          const approvedReq = collabRequests.find(r => r.id === requestId);
-          const newMember = approvedReq?.user
-            ? { name: `${approvedReq.user.firstName} ${approvedReq.user.lastName}`, role: approvedReq.role || "Co-Developer" }
-            : { name: "Approved Developer", role: "Co-Developer" };
-          return {
-            ...prev,
-            teamMembers: [...(prev?.teamMembers || []), newMember]
-          };
-        });
-      }
+    } catch (err) {
+      console.error(`Failed to ${action} request:`, err);
+      toast.error("Action failed. Please try again.");
     }
   };
 
@@ -401,53 +204,11 @@ const VisionDetails = () => {
           return;
         }
 
-        // Fallback to sample visions
-        const fallbackIdea = MOCK_IDEAS.find(i => String(i.id) === String(ideaId) || String(i.id) === `sv-${ideaId}`) || MOCK_IDEAS[0];
-        setIdea(fallbackIdea);
-        setLikes(fallbackIdea.likes || 0);
-        setLiked(false);
-        setBookmarked(false);
-
-        const mockComments = [
-          {
-            id: "mc-1",
-            content: "This looks like a really promising project! I've ran into this exact co-founder search problem three times before. Definitely needed.",
-            createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-            author: { firstName: "Sarah", lastName: "Chen", email: "sarah.chen@example.com" },
-            likes: 4,
-            userLiked: false
-          },
-          {
-            id: "mc-2",
-            content: "Agreed. Are you planning to add a portfolio verification mechanic or is it purely self-reported skill tags?",
-            createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-            author: { firstName: "Alex", lastName: "Rivera", email: "alex.rivera@example.com" },
-            likes: 2,
-            userLiked: false
-          }
-        ];
-
-        const mockSuggestions = [
-          {
-            id: "ms-1",
-            content: "Suggest using GitHub OAuth to automatically analyze repositories and generate verified developer tags instead of manual input.",
-            createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-            author: { firstName: "Elena", lastName: "Rostova", email: "elena.r@example.com" },
-            likes: 5,
-            userLiked: false,
-            suggestion: true
-          }
-        ];
-
-        setComments(mockComments);
-        setSuggestions(mockSuggestions);
+        // If no idea data found, set to null and show not found
+        setIdea(null);
       } catch (error) {
-        console.error("Error fetching vision (using mock fallback):", error);
-        const fallbackIdea = MOCK_IDEAS.find(i => String(i.id) === String(ideaId) || String(i.id) === `sv-${ideaId}`) || MOCK_IDEAS[0];
-        setIdea(fallbackIdea);
-        setLikes(fallbackIdea.likes || 0);
-        setLiked(false);
-        setBookmarked(false);
+        console.error("Error fetching vision:", error);
+        setIdea(null);
       } finally {
         setLoading(false);
       }
@@ -488,7 +249,6 @@ const VisionDetails = () => {
     return () => socket.off("new_collab_request", handleNewRequest);
   }, [socket, idea?.id, user?.id, ideaId]);
 
-
   useEffect(() => {
     async function getCreator() {
       if (idea?.creator?.id) {
@@ -499,10 +259,10 @@ const VisionDetails = () => {
           console.error("Error fetching vision creator:", err);
         }
       }
-
     }
     getCreator();
   }, [idea]);
+
   const handleBookmark = async (e) => {
     e?.stopPropagation?.();
 
@@ -525,9 +285,7 @@ const VisionDetails = () => {
       }
     } catch (error) {
       console.error("Bookmark toggle error:", error);
-      // Fallback for mock ideas / offline mode
-      setBookmarked(prev => !prev);
-      toast.info("Bookmark state updated locally (offline mode)");
+      toast.error("Failed to bookmark. Please try again.");
     }
   };
 
@@ -577,12 +335,7 @@ const VisionDetails = () => {
       setShowJoinModal(false);
     } catch (err) {
       console.error("Join request error:", err);
-      // Local fallback for mock ideas / offline mode
-      setMyCollabStatus("pending");
-      setMyCollabRequestId("mock-request-id");
-      toast.success("Request sent! (offline mode)");
-      setJoinMessage("");
-      setShowJoinModal(false);
+      toast.error("Failed to send request. Please try again.");
     }
   };
 
@@ -598,10 +351,8 @@ const VisionDetails = () => {
       setMyCollabRequestId(null);
       toast.info("Request cancelled");
     } catch (err) {
-      // Local fallback
-      setMyCollabStatus(null);
-      setMyCollabRequestId(null);
-      toast.info("Request cancelled (offline mode)");
+      console.error("Cancel request error:", err);
+      toast.error("Failed to cancel request. Please try again.");
     }
   };
 
@@ -620,13 +371,10 @@ const VisionDetails = () => {
       if (ideaData) setIdea(ideaData);
       toast.info("You have left the project");
     } catch (err) {
-      // Local fallback
-      setMyCollabStatus(null);
-      setMyCollabRequestId(null);
-      toast.info("You have left the project (offline mode)");
+      console.error("Leave idea error:", err);
+      toast.error("Failed to leave project. Please try again.");
     }
   };
-
 
   const handleCommentSubmit = async (e, isSuggestion = false) => {
     e.preventDefault();
@@ -651,35 +399,15 @@ const VisionDetails = () => {
         setComments((prev) => [...prev, res.data.comment]);
       }
       setComment("");
-
-
     } catch (err) {
       console.error("Comment error:", err);
-      // Local fallback for mock ideas / offline mode
-      const newComment = {
-        id: Math.random().toString(),
-        idea_id: ideaId,
-        content: comment.trim(),
-        suggestion: isSuggestion,
-        author: user || { firstName: "Guest", lastName: "User" },
-        createdAt: new Date().toISOString(),
-        likes: 0,
-        userLiked: false
-      };
-      if (isSuggestion) {
-        setSuggestions((prev) => [...prev, newComment]);
-      } else {
-        setComments((prev) => [...prev, newComment]);
-      }
-      setComment("");
-      toast.info("Comment posted locally (offline mode)");
+      toast.error("Failed to post comment. Please try again.");
     }
   };
 
   const handleDeleteIdea = async () => {
     try {
       const response = await ideaAPI.deleteIdea(ideaId, access_token)
-
       if (response.success) {
         setSuccessMsg(response?.message || "Idea deleted successfully");
         setShowDeleteModal(false);
@@ -715,14 +443,15 @@ const VisionDetails = () => {
         }
       } catch (err) {
         console.error("Error liking idea:", err);
+        toast.error("Failed to like. Please try again.");
       }
     },
     [ideaId, access_token, user]
   );
+
   const handleCommentLike = async (commentId) => {
     try {
       const response = await ideaAPI.toggleIdeaCommentLike(commentId);
-
       if (response.success) {
         // Update comments list
         setComments(prevComments =>
@@ -732,8 +461,6 @@ const VisionDetails = () => {
               : c
           )
         );
-
-        // Update suggestions list
         setSuggestions(prevSuggestions =>
           prevSuggestions.map(s =>
             s.id === commentId
@@ -744,20 +471,7 @@ const VisionDetails = () => {
       }
     } catch (error) {
       console.error("Error toggling comment like:", error);
-      // Fallback: toggle locally
-      const toggleLike = (list) =>
-        list.map((c) =>
-          c.id === commentId
-            ? {
-              ...c,
-              likes: (c.userLiked ? Math.max(0, c.likes - 1) : c.likes + 1),
-              userLiked: !c.userLiked,
-            }
-            : c
-        );
-      setComments(toggleLike);
-      setSuggestions(toggleLike);
-      toast.info("Comment like updated locally (offline mode)");
+      toast.error("Failed to like comment. Please try again.");
     }
   };
 
@@ -777,19 +491,13 @@ const VisionDetails = () => {
 
   const isCreator = useMemo(() => user?.id && idea?.creator?.id && user.id === idea.creator.id, [user, idea]);
 
-  // Only this Vision's owner recruits for it. A builder viewing someone else's
-  // Vision must not be shown a list of other builders — that is their own
-  // competition, not a useful panel.
-  //
-  // Under the dev auth bypass there is no real ownership (the fake user owns
-  // nothing), so the owner view would be unreachable for review. The override
-  // is dev-only and requires the founder role, so production gating is intact.
+  // Only this Vision's owner recruits for it.
   const canRecruitBuilders = Boolean(
     isCreator ||
     (DEV_AUTH_BYPASS && (localStorage.getItem('activeRole') || '') === 'founder')
   );
 
-  // B8c FIX: Vision → Startup activation
+  // Vision → Startup activation
   const [activating, setActivating] = useState(false);
   const [eligibility, setEligibility] = useState(null);
 
