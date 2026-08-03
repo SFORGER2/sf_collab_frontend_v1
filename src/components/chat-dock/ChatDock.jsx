@@ -1092,52 +1092,190 @@ useEffect(() => {
     openWindow,
   ]);
 
-  const sendMessage = useCallback(
-    (conversationId, payload) => {
-      if (!socket) return;
+  // ─── sendMessage: persists via REST + emits via socket ──────────────────────
+const sendMessage = useCallback(
+  async (conversationId, payload) => {
+    if (!socket) return;
 
-      const cid = String(conversationId);
-      if (!cid || !payload) return;
+    const cid = String(conversationId);
+    if (!cid || !payload) return;
 
-      // TEXT MESSAGE
-      if (typeof payload === "string") {
-        const text = payload.trim();
-        if (!text) return;
+    // ── TEXT MESSAGE ──
+    if (typeof payload === "string") {
+      const text = payload.trim();
+      if (!text) return;
 
+      const tempId = `temp_${Date.now()}`;
+
+      // 1. Optimistic add
+      setWindows((prev) =>
+        prev.map((w) => {
+          if (String(w.conversationId) === cid) {
+            const optimisticMsg = {
+              id: tempId,
+              content: text,
+              sender_id: currentUser?.id,
+              created_at: new Date().toISOString(),
+              status: "sending",
+              isOwn: true,
+            };
+            return { ...w, messages: [...(w.messages || []), optimisticMsg] };
+          }
+          return w;
+        })
+      );
+
+      try {
+        // 2. REST API – persist
+        const response = await chatAPI.sendMessage(cid, text);
+        const savedMessage = response?.data?.message;
+
+        if (!response?.success || !savedMessage?.id) {
+          throw new Error(response?.message || "Failed to save message");
+        }
+
+        // 3. Replace optimistic with server message
+        setWindows((prev) =>
+          prev.map((w) => {
+            if (String(w.conversationId) === cid) {
+              const updated = w.messages.map((m) =>
+                m.id === tempId ? { ...savedMessage, isOwn: true } : m
+              );
+              return { ...w, messages: updated };
+            }
+            return w;
+          })
+        );
+
+        // 4. Emit via socket for real‑time delivery
         socket.emit("send_message", {
           conversation_id: cid,
-          content: text || " ",
+          content: text,
+          message_id: savedMessage.id,
         });
-      }
 
-      // FILE OR MIXED MESSAGE
-      if (typeof payload === "object") {
-        const text = payload.content?.trim() || "";
+        // Clear unread if the window is active and not minimized
+        if (consideredActive && !isConvMinimized(cid)) {
+          clearUnread(cid);
+          socket.emit("mark_as_read", { conversation_id: cid });
+        }
+      } catch (error) {
+        console.error("Failed to send message via REST:", error);
+        toast.error("Message could not be saved. Please try again.");
+
+        // Mark as failed
+        setWindows((prev) =>
+          prev.map((w) => {
+            if (String(w.conversationId) === cid) {
+              const updated = w.messages.map((m) =>
+                m.id === tempId ? { ...m, status: "failed" } : m
+              );
+              return { ...w, messages: updated };
+            }
+            return w;
+          })
+        );
+      }
+    }
+
+    // ── FILE OR MIXED MESSAGE ──
+    if (typeof payload === "object") {
+      const text = payload.content?.trim() || "";
+      const file = payload.file;
+
+      const tempId = `temp_${Date.now()}`;
+
+      const optimisticMsg = {
+        id: tempId,
+        content: text || "Sent a file",
+        sender_id: currentUser?.id,
+        created_at: new Date().toISOString(),
+        file_url: null,
+        file_name: file?.name || "File",
+        file_type: file?.type || "",
+        is_image: file?.type?.startsWith("image/") || false,
+        status: "sending",
+        isOwn: true,
+      };
+
+      setWindows((prev) =>
+        prev.map((w) => {
+          if (String(w.conversationId) === cid) {
+            return { ...w, messages: [...(w.messages || []), optimisticMsg] };
+          }
+          return w;
+        })
+      );
+
+      try {
+        let savedMessage;
+        if (file) {
+          const response = await chatAPI.uploadFile(cid, file, text);
+          savedMessage = response?.data?.message;
+        } else {
+          // fallback – should rarely happen
+          const response = await chatAPI.sendMessage(cid, text);
+          savedMessage = response?.data?.message;
+        }
+
+        if (!savedMessage?.id) {
+          throw new Error("Failed to save file message");
+        }
+
+        setWindows((prev) =>
+          prev.map((w) => {
+            if (String(w.conversationId) === cid) {
+              const updated = w.messages.map((m) =>
+                m.id === tempId ? { ...savedMessage, isOwn: true } : m
+              );
+              return { ...w, messages: updated };
+            }
+            return w;
+          })
+        );
 
         socket.emit("send_message", {
           conversation_id: cid,
           content: text,
-          file_url: payload.file_url || null,
-          file_name: payload.file_name || null,
-          file_type: payload.file_type || null,
-          is_image: payload.is_image || false,
+          file_url: savedMessage.file_url || null,
+          file_name: savedMessage.file_name || null,
+          file_type: savedMessage.file_type || null,
+          is_image: savedMessage.is_image || false,
+          message_id: savedMessage.id,
         });
-      }
 
-      // clear draft
-      setWindows((prev) =>
-        prev.map((w) =>
-          String(w.conversationId) === cid ? { ...w, draft: "" } : w
-        )
-      );
+        if (consideredActive && !isConvMinimized(cid)) {
+          clearUnread(cid);
+          socket.emit("mark_as_read", { conversation_id: cid });
+        }
+      } catch (error) {
+        console.error("Failed to send file message:", error);
+        toast.error("File could not be uploaded. Please try again.");
 
-      if (consideredActive && !isConvMinimized(cid)) {
-        clearUnread(cid);
-        socket.emit("mark_as_read", { conversation_id: cid });
+        setWindows((prev) =>
+          prev.map((w) => {
+            if (String(w.conversationId) === cid) {
+              const updated = w.messages.map((m) =>
+                m.id === tempId ? { ...m, status: "failed" } : m
+              );
+              return { ...w, messages: updated };
+            }
+            return w;
+          })
+        );
       }
-    },
-    [socket, consideredActive, isConvMinimized, clearUnread]
-  );
+    }
+
+    // Clear draft
+    setWindows((prev) =>
+      prev.map((w) =>
+        String(w.conversationId) === cid ? { ...w, draft: "" } : w
+      )
+    );
+    try { localStorage.removeItem("chatDock:draft:" + cid); } catch {}
+  },
+  [socket, currentUser?.id, consideredActive, isConvMinimized, clearUnread]
+);
 
 
   const filteredConversations = useMemo(() => {

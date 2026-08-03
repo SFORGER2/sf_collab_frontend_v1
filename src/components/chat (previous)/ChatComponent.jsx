@@ -56,6 +56,12 @@ import { notificationAPI } from '@/utils/api/notificationAPI';
 import { toAbsoluteFileUrl } from "@/utils/toAbsoluteFileUrl";
 
 
+console.log("STEP 2: handleSendMessage called");
+console.log({
+    conversationId: selectedConversation?.id,
+    messageContent
+});
+
 async function downloadViaBlob(url, filename) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Download failed: ${res.status}`);
@@ -1352,6 +1358,7 @@ const handleSelectConversation = (conversation) => {
   //! handle send message:
   const handleSendMessage = async (messageContent, file = null) => {
   const conversationId = selectedConversation?.id;
+  
 
   if (!conversationId) {
     toast.error("Select a conversation first");
@@ -1374,6 +1381,7 @@ const handleSelectConversation = (conversation) => {
         messageContent?.trim() || "Sent a file"
       );
     } else {
+      console.log("STEP 3: Calling chatAPI.sendMessage");
       data = await chatAPI.sendMessage(
         conversationId,
         messageContent.trim()
@@ -2452,7 +2460,7 @@ const handleSelectConversation = (conversation) => {
                     </div>
                   </div>
                 ) : (
-                  {messages.map((message, index) => {
+                   messages.map((message, index) => {
   const senderId =
     message.sender_id ??
     message.sender?.id;
@@ -2493,7 +2501,7 @@ const handleSelectConversation = (conversation) => {
       variant="page"
     />
   );
-})}
+})
                 )}
                 <div ref={messagesEndRef} />
                       
